@@ -1,0 +1,68 @@
+/* Container */
+.register-container {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Left Side - Image */
+.register-left {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: white;
+}
+
+.register-left img {
+  width: 70%;
+  max-width: 500px;
+}
+
+/* Right Side */
+.register-right {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px; 
+}
+
+/* Form Box */
+.register-form-box {
+  width: 100%;
+  max-width: 400px;
+}
+
+/* Title */
+.register-title {
+  font-weight: bold !important;
+  color: #51b4f2 !important;
+  text-align: center;
+}
+
+/* Login link */
+.register-link {
+  text-decoration: none;
+  color: #185a9d;
+  font-weight: bold;
+}
+
+/* Button */
+.register-button {
+  margin-top: 8px !important;      
+  border-radius: 16px !important;  
+  text-transform: none !important;
+  font-weight: bold !important;
+  background-color: #51b4f2 !important;
+}
+
+.register-button:hover {
+  background-color: #51b4f2 !important;
+}
+
+
+@media (max-width: 899px) {
+  .register-left {
+    display: none; 
+  }
+}
