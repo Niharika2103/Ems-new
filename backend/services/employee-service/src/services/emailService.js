@@ -1,41 +1,30 @@
-// emailService.js
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-// Convert port from string to number
-const SMTP_PORT = Number(process.env.SMTP_PORT);
-
-// Auto-set secure: true for port 465
+// ================= SMTP Transporter =================
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
-  port: SMTP_PORT,
-  secure: SMTP_PORT === 465, // true for 465, false for 587/other
+  port: Number(process.env.SMTP_PORT),
+  secure: Number(process.env.SMTP_PORT) === 465, // true for 465, false for 587
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
+  requireTLS: Number(process.env.SMTP_PORT) === 587, // STARTTLS for 587
   tls: {
-    rejectUnauthorized: false, // allow self-signed certificates
+    rejectUnauthorized: false, // allow self-signed certs
   },
 });
 
 // Verify connection on startup
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("❌ SMTP connection error:", error.message);
-  } else {
-    console.log("✅ SMTP server is ready to send emails");
-  }
+transporter.verify((err, success) => {
+  if (err) console.error("❌ SMTP verify failed:", err.message);
+  else console.log("✅ SMTP server ready to send emails");
 });
 
-/**
- * Send an email
- * @param {string} to - Recipient email
- * @param {string} subject - Email subject
- * @param {string} html - Email HTML content
- */
+// ================== Send Email Function =================
 export async function sendEmail(to, subject, html) {
   try {
     const info = await transporter.sendMail({
