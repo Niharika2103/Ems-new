@@ -77,12 +77,15 @@ const Header = ({ isOpen, setIsOpen }) => {
       .catch((err) => toast.error(err.error || "Login failed"));
   };
   const Logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("role");
-    localStorage.removeItem("user");
-    localStorage.removeItem("is_temp_admin");
-    localStorage.removeItem("userId");
-    // window.location.href = "/";
+    localStorage.clear();
+
+ if (roleCheck === "admin") {
+      window.location.href = "/#/admin/login";
+    } else if (roleCheck === "superadmin") {
+      window.location.href = "/#/superadmin/login";
+    } else {
+      window.location.href = "/#/login"; 
+    }
     handleClose();
   };
 

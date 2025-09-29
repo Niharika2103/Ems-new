@@ -59,6 +59,7 @@ const [showconpassword, setShowConPassword] = useState(true);
     e.preventDefault();
     const validationErrors = validateRegistration(formData);
     if (Object.keys(validationErrors).length === 0) {
+      alert("hai");
       dispatch(adminRegister(formData))
         .unwrap()
         .then((response) => {

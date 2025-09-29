@@ -1,9 +1,9 @@
 const strongPasswordRegex =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
-// ✅ Org Email Validation (common)
+// Org Email Validation (common)
 export const validateOrgEmail = (email) => {
-  const orgDomain = "@zigmaneural.com"; // 🔹 your company domain
+  const orgDomain = "@zigmaneural.com"; // your company domain
   return email.endsWith(orgDomain);
 };
 
@@ -14,7 +14,7 @@ export const validateRegistration = (formData) => {
   if (!formData.fullName) {
     errors.fullName = "Full name is required";
   }else if (!/^[a-zA-Z\s]{1,15}$/.test(formData.fullName.trim())) {
-  errors.name = "Only letters and spaces allowed, max 15 characters";
+  errors.fullName = "Only letters and spaces allowed, max 15 characters";
 }
 
   if (!formData.email) {
@@ -53,7 +53,7 @@ export const validateEmployeeRegistration = (formData) => {
   if (!formData.fullName) {
     errors.fullName = "Full name is required";
   }else if (!/^[a-zA-Z\s]{1,15}$/.test(formData.fullName.trim())) {
-  errors.name = "Only letters and spaces allowed, max 15 characters";
+  errors.fullName = "Only letters and spaces allowed, max 15 characters";
 }
 
   if (!formData.email) {

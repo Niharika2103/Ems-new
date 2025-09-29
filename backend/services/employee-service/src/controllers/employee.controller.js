@@ -13,9 +13,9 @@ const USERS_TABLE = "user_employees_master";
 const REGISTRATIONS_TABLE = "registrations";
 
 // ================== JWT Helper ==================
-function issueJwt({ email, role, employee_id,id, is_temp_admin = false }) {
+function issueJwt({ email, role, employee_id,id, is_temp_admin = false,name }) {
   return jwt.sign(
-    { email, role, employee_id, is_temp_admin ,id},
+    { email, role, employee_id, is_temp_admin ,id,name},
     process.env.JWT_SECRET,
     { expiresIn: "1h" }
   );

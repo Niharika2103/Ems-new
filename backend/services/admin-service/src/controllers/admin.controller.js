@@ -30,9 +30,9 @@ const storage = multer.diskStorage({
 // Export upload so routes can use it
 export const upload = multer({ storage });
 // Helper to issue JWT
-function issueJwt({ email, role, is_temp_admin = false, id }) {
+function issueJwt({ email, role, is_temp_admin = false, id ,name}) {
   return jwt.sign(
-    { email, role, is_temp_admin, id },
+    { email, role, is_temp_admin, id ,name},
     process.env.JWT_SECRET,
     { expiresIn: "1h" }
   );
@@ -205,6 +205,7 @@ export const adminLogin = async (req, res) => {
       role: user.role,
       id: user.id,
       is_temp_admin: isTempAdmin,
+      name:user.name,
     });
 
     res.json({

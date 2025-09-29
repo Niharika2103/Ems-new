@@ -1,8 +1,10 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { Home, Users, Calendar, Settings, LogOut, CheckSquare } from "lucide-react";
 import { useSelector } from "react-redux";
 
 const Sidebar = ({ isOpen }) => {
+  const navigate = useNavigate();
+
   const role =
     useSelector((state) => state.adminSlice?.role) ||
     useSelector((state) => state.authSlice?.role) ||
@@ -34,10 +36,18 @@ const Sidebar = ({ isOpen }) => {
     ],
   };
 
-  // General menu items (common)
-  const generalMenu = [
-    { name: "Logout", icon: <LogOut size={20} />, path: "/" },
-  ];
+  // ✅ Logout function
+  const handleLogout = () => {
+    localStorage.clear();
+
+    if (role === "admin") {
+      navigate("/admin/login");
+    } else if (role === "superadmin") {
+      navigate("/superadmin/login");
+    } else {
+      navigate("/login");
+    }
+  };
 
   return (
     <aside
@@ -72,25 +82,33 @@ const Sidebar = ({ isOpen }) => {
                 >
                   {item.icon}
                 </span>
-                {isOpen && <span className="transition-colors duration-300 group-hover:text-sky-600">{item.name}</span>}
+                {isOpen && (
+                  <span className="transition-colors duration-300 group-hover:text-sky-600">
+                    {item.name}
+                  </span>
+                )}
               </NavLink>
             </li>
           ))}
 
-          {/* General menu */}
-          {generalMenu.map((item) => (
-            <li key={item.name}>
-              <NavLink
-                to={item.path}
-                className="group flex items-center p-2 rounded-l-full cursor-pointer transition-all duration-300 ease-in-out hover:bg-white hover:scale-105 hover:shadow-white text-white"
+          {/* ✅ Logout button instead of NavLink */}
+          <li>
+            <button
+              onClick={handleLogout}
+              className="w-full text-left group flex items-center p-2 rounded-l-full cursor-pointer transition-all duration-300 ease-in-out hover:bg-white hover:scale-105 hover:shadow-white text-white"
+            >
+              <span
+                className={`transition-colors duration-300 ${isOpen ? "mr-3" : ""} group-hover:text-sky-600`}
               >
-                <span className={`transition-colors duration-300 ${isOpen ? "mr-3" : ""} group-hover:text-sky-600`}>
-                  {item.icon}
+                <LogOut size={20} />
+              </span>
+              {isOpen && (
+                <span className="transition-colors duration-300 group-hover:text-sky-600">
+                  Logout
                 </span>
-                {isOpen && <span className="transition-colors duration-300 group-hover:text-sky-600">{item.name}</span>}
-              </NavLink>
-            </li>
-          ))}
+              )}
+            </button>
+          </li>
         </ul>
       </div>
     </aside>
