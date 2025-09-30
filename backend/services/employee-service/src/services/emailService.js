@@ -1,33 +1,26 @@
-import nodemailer from "nodemailer";
+import sgMail from "@sendgrid/mail";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: process.env.SMTP_PORT,
-  secure: false, // set to true if using port 465
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-  tls: {
-    rejectUnauthorized: false, // ✅ allow self-signed certificates
-  },
-});
+const VERIFIED_SENDER = process.env.FROM_EMAIL;
 
 export async function sendEmail(to, subject, html) {
   try {
-    await transporter.sendMail({
-      from: process.env.FROM_EMAIL,
+    const msg = {
       to,
+      from: VERIFIED_SENDER,
       subject,
       html,
-    });
+    };
+
+    const response = await sgMail.send(msg);
     console.log(`📧 Email sent to ${to}`);
+    console.log(response);
   } catch (err) {
-    console.error("❌ Email error:", err.message);
+    console.error("❌ Email error:", err.response?.body || err.message);
     throw err;
   }
 }
