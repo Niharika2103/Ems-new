@@ -9,6 +9,9 @@ import { sendEmail } from "../services/emailService.js";
 import fs from "fs";
 import speakeasy from "speakeasy";
 
+import dotenv from "dotenv";
+
+
 const USERS_TABLE = "user_employees_master";
 const REGISTRATIONS_TABLE = "registrations";
 
@@ -171,11 +174,17 @@ function validateEmployeeData(data) {
 
 
 // ================== Register Employee ==================
+
+
+
+
+dotenv.config();
+
 export const registerEmployee = async (req, res) => {
   try {
     const { fullName, email, phone, address, department, dateOfJoining } = req.body;
 
-     // ✅ Validation
+    // ✅ Validation
     const validationError = validateEmployeeData({ fullName, email, phone, address });
     if (validationError) {
       return res.status(400).json({ error: validationError });
@@ -183,6 +192,7 @@ export const registerEmployee = async (req, res) => {
 
     const employeeId = await generateEmployeeId();
     console.log("Generated Employee ID:", employeeId);
+
     // Check if employee exists
     const { data: existing, error: fetchError } = await supabase
       .from(USERS_TABLE)
@@ -194,49 +204,55 @@ export const registerEmployee = async (req, res) => {
     if (fetchError) throw fetchError;
     if (existing) return res.status(400).json({ error: "Employee already registered" });
 
+    // Generate password & hash
     const randomPassword = crypto.randomBytes(6).toString("base64").slice(0, 10);
     const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
+    // Reset token
     const resetToken = crypto.randomBytes(32).toString("hex");
     const resetExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
-        
-  const { data: newEmployee, error: insertError } = await supabase
-  // .schema("ems")
+    // Insert into users
+    const { data: newEmployee, error: insertError } = await supabase
       .from(USERS_TABLE)
-      .insert([{
-        employee_id: employeeId,
-        name: fullName,
-        email,
-        password: hashedPassword,
-        phone,
-        address,
-        department,
-        date_of_joining: dateOfJoining,
-        role: "employee",
-        access_flag: "y",
-      }])
+      .insert([
+        {
+          employee_id: employeeId,
+          name: fullName,
+          email,
+          password: hashedPassword,
+          phone,
+          address,
+          department,
+          date_of_joining: dateOfJoining,
+          role: "employee",
+          access_flag: "y",
+        },
+      ])
       .select("*")
       .single();
+
     if (insertError) throw insertError;
 
     // Insert into registrations
     const { error: regInsertError } = await supabase
-    // .schema("ems")
       .from(REGISTRATIONS_TABLE)
-      .insert([{
-        user_id: newEmployee.id,
-        otp_code: null,
-        otp_expiry: null,
-        reset_token: resetToken,
-        reset_token_expiry: resetExpiry,
-        is_approved: false,
-        is_temp_admin: false,
-        temp_admin_expiry: null,
-      }]);
+      .insert([
+        {
+          user_id: newEmployee.id,
+          otp_code: null,
+          otp_expiry: null,
+          reset_token: resetToken,
+          reset_token_expiry: resetExpiry,
+          is_approved: false,
+          is_temp_admin: false,
+          temp_admin_expiry: null,
+        },
+      ]);
+
     if (regInsertError) throw regInsertError;
 
-
+    // Send Email with Resend
     const loginUrl = `${process.env.FRONTEND_URL}/login`;
 
     await sendEmail(
@@ -258,6 +274,97 @@ export const registerEmployee = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+
+
+
+// export const registerEmployee = async (req, res) => {
+//   try {
+//     const { fullName, email, phone, address, department, dateOfJoining } = req.body;
+
+//      // ✅ Validation
+//     const validationError = validateEmployeeData({ fullName, email, phone, address });
+//     if (validationError) {
+//       return res.status(400).json({ error: validationError });
+//     }
+
+//     const employeeId = await generateEmployeeId();
+//     console.log("Generated Employee ID:", employeeId);
+//     // Check if employee exists
+//     const { data: existing, error: fetchError } = await supabase
+//       .from(USERS_TABLE)
+//       .select("*")
+//       .eq("email", email)
+//       .eq("role", "employee")
+//       .maybeSingle();
+
+//     if (fetchError) throw fetchError;
+//     if (existing) return res.status(400).json({ error: "Employee already registered" });
+
+//     const randomPassword = crypto.randomBytes(6).toString("base64").slice(0, 10);
+//     const hashedPassword = await bcrypt.hash(randomPassword, 10);
+
+//     const resetToken = crypto.randomBytes(32).toString("hex");
+//     const resetExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+        
+//   const { data: newEmployee, error: insertError } = await supabase
+//   // .schema("ems")
+//       .from(USERS_TABLE)
+//       .insert([{
+//         employee_id: employeeId,
+//         name: fullName,
+//         email,
+//         password: hashedPassword,
+//         phone,
+//         address,
+//         department,
+//         date_of_joining: dateOfJoining,
+//         role: "employee",
+//         access_flag: "y",
+//       }])
+//       .select("*")
+//       .single();
+//     if (insertError) throw insertError;
+
+//     // Insert into registrations
+//     const { error: regInsertError } = await supabase
+//     // .schema("ems")
+//       .from(REGISTRATIONS_TABLE)
+//       .insert([{
+//         user_id: newEmployee.id,
+//         otp_code: null,
+//         otp_expiry: null,
+//         reset_token: resetToken,
+//         reset_token_expiry: resetExpiry,
+//         is_approved: false,
+//         is_temp_admin: false,
+//         temp_admin_expiry: null,
+//       }]);
+//     if (regInsertError) throw regInsertError;
+
+
+//     const loginUrl = `${process.env.FRONTEND_URL}/login`;
+
+//     await sendEmail(
+//       email,
+//       "Your EMS Employee Account Credentials",
+//       `
+//         <p>Hello ${fullName},</p>
+//         <p>Your EMS account has been created.</p>
+//         <p><b>Login URL:</b> ${loginUrl}</p>
+//         <p><b>Email:</b> ${email}</p>
+//         <p><b>Password:</b> ${randomPassword}</p>
+//         <p>⚠️ On your first login, you will be required to reset your password for security.</p>
+//       `
+//     );
+
+//     res.status(201).json({ message: "Employee registered and credentials sent via email." });
+//   } catch (err) {
+//     console.error("Register Employee Error:", err.message);
+//     res.status(500).json({ error: err.message });
+//   }
+// };
 
 // ================== Employee Login ==================
 export const employeeLogin = async (req, res) => {
