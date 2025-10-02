@@ -10,7 +10,14 @@ app.use(cors({
   
 }));
 app.use(express.json());
-
+app.get("/test-email", async (req, res) => {
+  try {
+    await sendEmail("yourpersonal@gmail.com", "Test Email", "<b>Hello from EMS</b>");
+    res.send("Email sent!");
+  } catch (err) {
+    res.status(500).send("Email failed: " + err.response?.body || err.message);
+  }
+});
 app.use("/employee", employeeRoutes);
 
 const PORT = process.env.PORT || 5004;

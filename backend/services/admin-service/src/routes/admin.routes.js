@@ -26,7 +26,7 @@ router.post("/verify-mfa", verifyAdminMfaSetup);
 router.post("/login", adminLogin);
 // ========== Admin CRUD Routes ==========
 router.get("/fetchall",getAllAdmins);
-router.delete("/delete/:id", deleteAdmin);
+router.put("/status/:id", deleteAdmin);
 router.patch("/approve/:id", approveAdmin);
 router.get("/get/:id", getAdminById); // Get admin by ID
 

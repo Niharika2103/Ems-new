@@ -40,10 +40,10 @@ router.post("/bulk-insert", bulkInsertEmployees);
 
 // 📋 CRUD
 router.get("/get/:email", getEmployeeById);
-router.get("/get",getEmployees);
+router.get("/get", getEmployees);
 // router.get("/fetch", getEmployees);
 router.put("/edit/:id", updateEmployee);
-router.delete("/delete/:id", deleteEmployee);
+router.put("/status/:id", deleteEmployee);
 
 // 📤 Export employees as Excel
 router.get("/export", exportEmployees);

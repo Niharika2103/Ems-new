@@ -8,7 +8,6 @@ import path from "path";
 import { sendEmail } from "../services/emailService.js";
 import fs from "fs";
 import speakeasy from "speakeasy";
-
 import dotenv from "dotenv";
 
 
@@ -750,7 +749,7 @@ export const bulkInsertEmployees = async (req, res) => {
 // ================== Get All Employees ==================
 export const getEmployees = async (req, res) => {
   try {
-    const { data, error } = await supabase.from(USERS_TABLE).select("*").eq("role", "employee");
+    const { data, error } = await supabase.from(USERS_TABLE).select("*").in("role",  ["admin", "superadmin","employee"]);
     if (error) throw error;
 
     return res.json(data);
@@ -806,11 +805,13 @@ export const updateEmployee = async (req, res) => {
 export const deleteEmployee = async (req, res) => {
   try {
     const { id } = req.params;
-
-    const { error } = await supabase.from(USERS_TABLE).delete().eq("id", id);
+  const { status } = req.body; 
+    const { error } = await supabase.from(USERS_TABLE).update({ is_active: status }).eq("id", id);
     if (error) throw error;
 
-    return res.json({ message: "Employee deleted successfully" });
+    
+ 
+    return res.json({ message: `Employee ${status ? "activated" : "deactivated"} successfully` });
   } catch (err) {
     console.error("Delete Employee Error:", err.message);
     res.status(500).json({ message: err.message });
