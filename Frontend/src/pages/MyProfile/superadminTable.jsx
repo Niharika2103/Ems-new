@@ -1,8 +1,8 @@
-import React,{useState} from "react";
+import React, { useState } from "react";
 import { Button, Space, Popconfirm } from "antd";
 import { useDispatch } from "react-redux";
-import {deleteAdmin} from "../../features/auth/adminSlice"
-import {fetchallAdmin,approveAdmin} from "../../features/auth/authSlice"
+import { deleteAdmin } from "../../features/auth/adminSlice"
+import { fetchallAdmin, approveAdmin } from "../../features/auth/authSlice"
 import EmployeeTable from "../../components/MyProfile/table";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -12,33 +12,35 @@ export default function SuperAadminTable() {
   const dispatch = useDispatch();
   const [loadingId, setLoadingId] = useState(null);
 
-  const handleDelete = (id) => {
-    dispatch(deleteAdmin(id))
-      .unwrap()
-      .then(() => {
-        toast.success("Admin deleted successfully");
-        dispatch(fetchallAdmin());
-      })
-      .catch(() => {
-        toast.error("Failed to delete admin");
-      });
-  };
+  
+
+  // const handleDelete = (id) => {
+  //   dispatch(deleteAdmin(id))
+  //     .unwrap()
+  //     .then(() => {
+  //       toast.success("Admin deleted successfully");
+  //       dispatch(fetchallAdmin());
+  //     })
+  //     .catch(() => {
+  //       toast.error("Failed to delete admin");
+  //     });
+  // };
 
   // Approved by superAdmin
- const handleApproveToggle = (admin, status) => {
-  setLoadingId(admin.id);
+  const handleApproveToggle = (admin, status) => {
+    setLoadingId(admin.id);
 
-  dispatch(approveAdmin({ id: admin.id, is_approved: status }))
-    .unwrap()
-    .then((res) => {
-      toast.success(res.message);
-      dispatch(fetchallAdmin());
-    })
-    .catch((err) => toast.error(err.error || "Failed to update approval"))
-    .finally(() => setLoadingId(null));
-};
+    dispatch(approveAdmin({ id: admin.id, is_approved: status }))
+      .unwrap()
+      .then((res) => {
+        toast.success(res.message);
+        dispatch(fetchallAdmin());
+      })
+      .catch((err) => toast.error(err.error || "Failed to update approval"))
+      .finally(() => setLoadingId(null));
+  };
 
-//superAdminTable
+  //superAdminTable
 
 
   const columns = [
@@ -99,7 +101,7 @@ export default function SuperAadminTable() {
                   loading={loadingId === record.id}
                   onClick={() => handleApproveToggle(record, false)} // 🔹 Disable toggles to false
                 >
-                  Disable
+                  Rejected
                 </Button>
               </>
             ) : (
@@ -113,14 +115,28 @@ export default function SuperAadminTable() {
               </Button>
             )}
             <Popconfirm
-              title="Are you sure to delete this admin?"
-              onConfirm={() => handleDelete(record.id)}
+              title={`Are you sure to ${record.is_active ? "deactivate" : "activate"} this admin?`}
+              onConfirm={() =>
+                dispatch(deleteAdmin({ id: record.id, status: !record.is_active }))
+                  .unwrap()
+                  .then((res) => {
+                    toast.success(res.message);
+                    dispatch(fetchallAdmin());
+                  })
+                  .catch(() => toast.error("Failed to update admin status"))
+              }
               okText="Yes"
               cancelText="No"
             >
-              <Button type="primary" danger>
-                Delete
-              </Button>
+              {record.is_active ? (
+                <Button type="primary">
+                  Active
+                </Button>
+              ) : (
+                <Button type="default" danger>
+                  Deactivate
+                </Button>
+              )}
             </Popconfirm>
           </Space>
         );
@@ -130,7 +146,7 @@ export default function SuperAadminTable() {
 
   return (
     <>
-     <ToastContainer position="top-right" autoClose={2000} />
+      <ToastContainer position="top-right" autoClose={2000} />
       <h1 className="text-xl font-bold mb-4">Admin List</h1>
       <EmployeeTable columns={columns} />
     </>

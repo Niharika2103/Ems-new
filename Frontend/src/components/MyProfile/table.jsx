@@ -17,6 +17,10 @@ const EmployeeTable = ({ columns }) => {
   }));
 
   const [searchText, setSearchText] = useState("");
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: 10, // default 10 rows
+  });
 
   const role =
     useSelector((state) => state.adminSlice?.role) ||
@@ -33,19 +37,7 @@ const EmployeeTable = ({ columns }) => {
     }
   }, [dispatch, role]);
 
-  // Upload Excel (stubbed, backend integration needed)
-  const handleUpload = (file) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const workbook = XLSX.read(e.target.result, { type: "binary" });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(sheet);
-      console.log("Excel Data:", rows);
-      message.success("Excel parsed successfully (connect backend to save)");
-    };
-    reader.readAsBinaryString(file);
-    return false; // prevent auto-upload
-  };
+
 
   // Download Excel Template (only headers, no data)
   const handleDownload = () => {
@@ -90,12 +82,26 @@ const EmployeeTable = ({ columns }) => {
 
       {/* Data Table */}
       <Table
-        columns={columns}
+        columns={columns.map((col) =>
+          col.dataIndex === "id"
+            ? {
+              ...col,
+              render: (_text, _record, index) =>
+                (pagination.current - 1) * pagination.pageSize + (index + 1),
+            }
+            : col
+        )}
         dataSource={filteredData}
         rowKey="id"
         loading={loading}
-        pagination={{ pageSize: 5 }}
         bordered
+        pagination={{
+          ...pagination,
+          total: filteredData.length,
+          showSizeChanger: true,
+          onChange: (page, pageSize) => setPagination({ current: page, pageSize }),
+        }}
+        scroll={{x: true}}
       />
     </div>
   );

@@ -60,19 +60,19 @@ export default function Login() {
         .then((response) => {
 
           
-          toast.success(response.message);
+          // toast.success(response.message);
 
-    // Determine role
-    const role = response?.user?.role || "employee";
-    localStorage.setItem("role", role);
+    // // Determine role
+    // const role = response?.user?.role || "employee";
+    // localStorage.setItem("role", role);
 
-    // Determine temp admin
-    const isTempAdmin = response?.employee?.is_temp_admin || response?.user?.is_temp_admin || false;
-    if (isTempAdmin) localStorage.setItem("is_temp_admin", "true");
-    else localStorage.removeItem("is_temp_admin");
+    // // Determine temp admin
+    // const isTempAdmin = response?.employee?.is_temp_admin || response?.user?.is_temp_admin || false;
+    // if (isTempAdmin) localStorage.setItem("is_temp_admin", "true");
+    // else localStorage.removeItem("is_temp_admin");
 
-    // Save token
-    if (response?.token) localStorage.setItem("token", response.token);
+    // // Save token
+    // if (response?.token) localStorage.setItem("token", response.token);
 
     if (response.firstLogin) {
       localStorage.setItem("resetToken", response.resetToken);
@@ -96,14 +96,14 @@ export default function Login() {
         .unwrap()
         .then((response) => {
           toast.success(response.message);
-          const role = response?.user?.role || "employee";
-          localStorage.setItem("role", role);
+          // const role = response?.user?.role || "employee";
+          // localStorage.setItem("role", role);
 
-          const isTempAdmin = response?.employee?.is_temp_admin || response?.user?.is_temp_admin || false;
-          if (isTempAdmin) localStorage.setItem("is_temp_admin", "true");
-          else localStorage.removeItem("is_temp_admin");
+          // const isTempAdmin = response?.employee?.is_temp_admin || response?.user?.is_temp_admin || false;
+          // if (isTempAdmin) localStorage.setItem("is_temp_admin", "true");
+          // else localStorage.removeItem("is_temp_admin");
 
-          if (response?.token) localStorage.setItem("token", response.token);
+          // if (response?.token) localStorage.setItem("token", response.token);
 
           navigate("/dashboard");
 

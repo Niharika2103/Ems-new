@@ -85,8 +85,8 @@ export const updateAdminProfileApi = (data, id) => {
 export const FetchallAdminApi = () =>
   adminClient.get(`${AUTH_API.ADMIN}/fetchall`)
 
-export const DeleteAdminApi = (id) =>
-  adminClient.delete(`${AUTH_API.ADMIN}/delete/${id}`);
+export const DeleteAdminApi = (id,status) =>
+  adminClient.put(`${AUTH_API.ADMIN}/status/${id}`, { status });
 
 export const verifyEmailAdmin = (otp) =>
   adminClient.post(`${AUTH_API.ADMIN}/verify-email`, otp);
@@ -117,8 +117,8 @@ export const employeeFetchApi = () =>
   employeeClient.get(`${AUTH_API.EMPLOYEE}/get` );
 
 //Delete All Employee
-export const employeeDeleteApi = (id) =>
-  employeeClient.delete(`${AUTH_API.EMPLOYEE}/delete/${id}` );
+export const employeeDeleteApi = (id,status) =>
+  employeeClient.put(`${AUTH_API.EMPLOYEE}/status/${id}`, { status } );
 
 
 //Profile get by using email

@@ -29,17 +29,17 @@ export default function AdminTable() {
   });
   const [loading, setLoading] = useState(false);
 
-  const handleDelete = (id) => {
-    dispatch(deleteEmployee(id))
-      .unwrap()
-      .then(() => {
-        message.success("Employee deleted successfully");
-        dispatch(fetchAllEmployees());
-      })
-      .catch(() => {
-        message.error("Failed to delete employee");
-      });
-  };
+  // const handleDelete = (id) => {
+  //   dispatch(deleteEmployee(id))
+  //     .unwrap()
+  //     .then(() => {
+  //       message.success("Employee deleted successfully");
+  //       dispatch(fetchAllEmployees());
+  //     })
+  //     .catch(() => {
+  //       message.error("Failed to delete employee");
+  //     });
+  // };
 
   const handleGrant = async (email) => {
     const duration = prompt("Enter duration in hours:");
@@ -160,14 +160,28 @@ export default function AdminTable() {
 
           {/* Delete Button */}
           <Popconfirm
-            title="Are you sure to delete this employee?"
-            onConfirm={() => handleDelete(record.id)}
+            title={`Are you sure to ${record.is_active ? "deactivate" : "activate"} this admin?`}
+            onConfirm={() =>
+              dispatch(deleteEmployee({ id: record.id, status: !record.is_active }))
+                .unwrap()
+                .then((res) => {
+                  toast.success(res.message);
+                  dispatch(fetchAllEmployees());
+                })
+                .catch(() => toast.error("Failed to update admin status"))
+            }
             okText="Yes"
             cancelText="No"
           >
-            <Button type="primary" danger>
-              Delete
-            </Button>
+            {record.is_active ? (
+              <Button type="primary">
+                Active
+              </Button>
+            ) : (
+              <Button type="default" danger>
+                Deactivate
+              </Button>
+            )}
           </Popconfirm>
 
           {/* Grant Button */}

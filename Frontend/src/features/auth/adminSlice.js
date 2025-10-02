@@ -30,10 +30,10 @@ export const adminverifyOtp = createAsyncThunk("admin/mfa-verify", async (data, 
 
 //deleteadmin
 export const deleteAdmin = createAsyncThunk(
-  "admin/delete",
-  async (id, thunkAPI) => {
+  "admin/status",
+  async ({ id, status }, thunkAPI) => {
     try {
-      const response = await DeleteAdminApi(id);
+      const response = await DeleteAdminApi(id, status);
       return id; // return deleted id to remove from list
     } catch (err) {
       return thunkAPI.rejectWithValue(err.response?.data || err.message);

@@ -84,7 +84,7 @@ export const fetchAllEmployees = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       const response = await employeeFetchApi();
-      return response.data; 
+      return response.data;
     } catch (err) {
       return thunkAPI.rejectWithValue(err.response?.data || err.message);
     }
@@ -93,11 +93,11 @@ export const fetchAllEmployees = createAsyncThunk(
 
 //Delete Employee
 export const deleteEmployee = createAsyncThunk(
-  "employee/delete",
-  async (id, thunkAPI) => {
+  "employee/status",
+  async ({ id, status }, thunkAPI) => {
     try {
-      const response = await employeeDeleteApi(id);
-      return id; 
+      const response = await employeeDeleteApi(id, status);
+      return id;
     } catch (err) {
       return thunkAPI.rejectWithValue(err.response?.data || err.message);
     }

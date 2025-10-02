@@ -61,9 +61,9 @@ export const validateEmployeeRegistration = (formData) => {
   } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
     errors.email = "Email is not valid";
   } 
-  else if (!validateOrgEmail(formData.email)) {
-    errors.email = "Please use your organization email (e.g. @zigmaneural.com)";
-  }
+  // else if (!validateOrgEmail(formData.email)) {
+  //   errors.email = "Please use your organization email (e.g. @zigmaneural.com)";
+  // }
 
   if (!formData.role) {
     errors.role = "Role is required";
