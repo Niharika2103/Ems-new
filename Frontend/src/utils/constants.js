@@ -11,6 +11,7 @@ export const API_BASES = {
   EMPLOYEE: import.meta.env.VITE_EMPLOYEE_URL || "https://employee-service-5od6.onrender.com",
 };
 
+
 // Auth endpoints
 export const AUTH_API = {
   SUPERADMIN: `${API_BASES.SUPERADMIN}/auth/superadmin`,
