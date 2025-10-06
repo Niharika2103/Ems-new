@@ -1,5 +1,6 @@
+// Strong Password Regex: min 8, max 16, includes uppercase, lowercase, number, special char
 const strongPasswordRegex =
-  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,16}$/;
 
 // Org Email Validation (common)
 export const validateOrgEmail = (email) => {
@@ -13,16 +14,15 @@ export const validateRegistration = (formData) => {
 
   if (!formData.fullName) {
     errors.fullName = "Full name is required";
-  }else if (!/^[a-zA-Z\s]{1,15}$/.test(formData.fullName.trim())) {
-  errors.fullName = "Only letters and spaces allowed, max 15 characters";
-}
+  } else if (!/^[a-zA-Z\s]{1,15}$/.test(formData.fullName.trim())) {
+    errors.fullName = "Only letters and spaces allowed, max 15 characters";
+  }
 
   if (!formData.email) {
     errors.email = "Email is required";
   } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
     errors.email = "Email is not valid";
-  } 
-  else if (!validateOrgEmail(formData.email)) {
+  } else if (!validateOrgEmail(formData.email)) {
     errors.email = "Please use your organization email (e.g. @zigmaneural.com)";
   }
 
@@ -30,7 +30,7 @@ export const validateRegistration = (formData) => {
     errors.password = "Password is required";
   } else if (!strongPasswordRegex.test(formData.password)) {
     errors.password =
-      "Password must be at least 8 characters and include uppercase, lowercase, number, and special character";
+      "Password must be 8-16 characters and include uppercase, lowercase, number, and special character";
   }
 
   if (!formData.confirmPassword) {
@@ -52,18 +52,15 @@ export const validateEmployeeRegistration = (formData) => {
 
   if (!formData.fullName) {
     errors.fullName = "Full name is required";
-  }else if (!/^[a-zA-Z\s]{1,15}$/.test(formData.fullName.trim())) {
-  errors.fullName = "Only letters and spaces allowed, max 15 characters";
-}
+  } else if (!/^[a-zA-Z\s]{1,15}$/.test(formData.fullName.trim())) {
+    errors.fullName = "Only letters and spaces allowed, max 15 characters";
+  }
 
   if (!formData.email) {
     errors.email = "Email is required";
   } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
     errors.email = "Email is not valid";
-  } 
-  // else if (!validateOrgEmail(formData.email)) {
-  //   errors.email = "Please use your organization email (e.g. @zigmaneural.com)";
-  // }
+  }
 
   if (!formData.role) {
     errors.role = "Role is required";
@@ -109,23 +106,23 @@ export const validateLogin = (formData) => {
 
   if (!formData.password) {
     errors.password = "Password is required";
+  } else if (formData.password.length > 16) {
+    errors.password = "Password cannot exceed 16 characters";
   }
 
   return errors;
 };
 
-
-
 // Profile Validation
-export const validateProfileForm = (formData,roles) => {
+export const validateProfileForm = (formData, roles) => {
   const errors = {};
 
   // Full Name
   if (!formData.name?.trim()) {
     errors.name = "Full name is required";
   } else if (!/^[a-zA-Z\s]{1,15}$/.test(formData.name.trim())) {
-  errors.name = "Only letters and spaces allowed, max 15 characters";
-}
+    errors.name = "Only letters and spaces allowed, max 15 characters";
+  }
 
   // DOB
   if (!formData.dob) {
@@ -154,8 +151,7 @@ export const validateProfileForm = (formData,roles) => {
     errors.email = "Email is required";
   } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
     errors.email = "Invalid email format";
-  } 
-  else if (!validateOrgEmail(formData.email)) {
+  } else if (!validateOrgEmail(formData.email)) {
     errors.email = "Please use your organization email (e.g. @zigmaneural.com)";
   }
 
@@ -177,23 +173,23 @@ export const validateProfileForm = (formData,roles) => {
   }
 
   // Resume
-   if (roles === "employee") {
-  if (!formData.resume) {
-    errors.resume = "Resume is required";
-  } else {
-    const allowedTypes = [
-      "application/pdf",
-      "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    ];
-    if (!allowedTypes.includes(formData.resume.type)) {
-      errors.resume = "Only PDF, DOC, DOCX allowed";
-    }
-    if (formData.resume.size > 5 * 1024 * 1024) {
-      errors.resume = "Resume must be ≤ 5MB";
+  if (roles === "employee") {
+    if (!formData.resume) {
+      errors.resume = "Resume is required";
+    } else {
+      const allowedTypes = [
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ];
+      if (!allowedTypes.includes(formData.resume.type)) {
+        errors.resume = "Only PDF, DOC, DOCX allowed";
+      }
+      if (formData.resume.size > 5 * 1024 * 1024) {
+        errors.resume = "Resume must be ≤ 5MB";
+      }
     }
   }
-}
 
   // Profile Photo
   if (formData.profilePhoto) {

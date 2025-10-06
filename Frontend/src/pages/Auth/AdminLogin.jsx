@@ -43,24 +43,23 @@ export default function AdminLogin() {
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
 
+  // ✅ handle input changes
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // ✅ form validation on submit
   const handleLoginSubmit = (e) => {
     e.preventDefault();
 
     const validationErrors = validateLogin(formData);
 
-    
-
-    // OTP validation
+    // ✅ OTP validation added
     if (!formData.otp.trim()) {
-      validationErrors.otp = "Please enter the OTP"; // ✅ Added OTP field error
+      validationErrors.otp = "Please enter the OTP";
     }
 
     if (Object.keys(validationErrors).length === 0) {
-      // No errors → dispatch login
       dispatch(adminLogin(formData))
         .unwrap()
         .then((response) => {
@@ -68,17 +67,21 @@ export default function AdminLogin() {
           setTimeout(() => navigate("/dashboard"), 2000);
         })
         .catch((err) => toast.error(err.error || "Login failed"));
-
       setErrors({});
     } else {
-      setErrors(validationErrors); // ✅ Show field-level errors
+      setErrors(validationErrors);
     }
   };
+
+  // ✅ disable button until all inputs are filled
+  const isButtonDisabled =
+    !formData.email.trim() || !formData.password.trim() || !formData.otp.trim();
 
   return (
     <div className="admin-page">
       <ToastContainer position="top-right" autoClose={3000} />
 
+      {/* ✅ Image Carousel */}
       <div className="top-carousel">
         <Swiper
           modules={[Autoplay, EffectCoverflow]}
@@ -101,12 +104,16 @@ export default function AdminLogin() {
 
       <div className="bottom-area" />
 
+      {/* ✅ Login Card */}
       <div className="login-card">
         <div className="login-inner">
           <Card sx={{ borderRadius: 3, boxShadow: 6, width: "100%" }}>
             <CardContent>
               <Box textAlign="center" mb={2}>
-                <PersonIcon className="admin-icon" sx={{ fontSize: { xs: 35, sm: 40 } }} />
+                <PersonIcon
+                  className="admin-icon"
+                  sx={{ fontSize: { xs: 35, sm: 40 } }}
+                />
                 <Typography
                   variant="h6"
                   fontWeight="bold"
@@ -119,8 +126,8 @@ export default function AdminLogin() {
 
               <Divider sx={{ mb: 2 }} />
 
-
               <Box component="form" onSubmit={handleLoginSubmit} noValidate>
+                {/* ✅ Email */}
                 <TextField
                   label="Email"
                   name="email"
@@ -136,6 +143,7 @@ export default function AdminLogin() {
                   required
                 />
 
+                {/* ✅ Password */}
                 <TextField
                   label="Password"
                   name="password"
@@ -148,7 +156,7 @@ export default function AdminLogin() {
                   onChange={handleChange}
                   error={!!errors.password}
                   helperText={errors.password}
-                  required
+                  required 
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
@@ -170,9 +178,7 @@ export default function AdminLogin() {
                   }}
                 />
 
-               
-
-                {/* ✅ OTP field with error display */}
+                {/* ✅ OTP Field with proper error message display */}
                 <TextField
                   label="Enter OTP"
                   name="otp"
@@ -181,8 +187,8 @@ export default function AdminLogin() {
                   margin="normal"
                   value={formData.otp}
                   onChange={handleChange}
-                  error={!!errors.otp}          // ✅ show red border if error exists
-                  helperText={errors.otp}       // ✅ display error message below field
+                  error={!!errors.otp}
+                  helperText={errors.otp}
                   required
                 />
 
@@ -193,6 +199,7 @@ export default function AdminLogin() {
                   </a>
                 </Typography>
 
+                {/* ✅ Login button enable/disable logic */}
                 <Button
                   fullWidth
                   variant="contained"
@@ -200,7 +207,7 @@ export default function AdminLogin() {
                   className="!px-1 !py-1 !text-md admin-button"
                   sx={{ mt: 2, fontSize: { xs: "0.9rem", sm: "1rem" } }}
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || isButtonDisabled}
                 >
                   {loading ? "Logging in..." : "Log In"}
                 </Button>

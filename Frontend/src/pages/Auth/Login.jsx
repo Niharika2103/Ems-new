@@ -42,8 +42,18 @@ export default function Login() {
   const [step, setStep] = useState(1);
   const [showPassword, setShowPassword] = useState(true);
 
+  // ✅ Handle input changes and password validation
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    // Password length validation
+    if (name === "password" && value.length > 16) {
+      setErrors((prev) => ({ ...prev, password: "Password cannot exceed 16 characters" }));
+    } else {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleLoginSubmit = (e) => {
@@ -55,36 +65,26 @@ export default function Login() {
         return;
       }
 
+      // ✅ Prevent login if password exceeds 16
+      if (formData.password.length > 16) {
+        toast.error("Password cannot exceed 16 characters");
+        return;
+      }
+
       dispatch(employeeLogin({ email: formData.email, password: formData.password }))
         .unwrap()
         .then((response) => {
-
-          
-          // toast.success(response.message);
-
-    // // Determine role
-    // const role = response?.user?.role || "employee";
-    // localStorage.setItem("role", role);
-
-    // // Determine temp admin
-    // const isTempAdmin = response?.employee?.is_temp_admin || response?.user?.is_temp_admin || false;
-    // if (isTempAdmin) localStorage.setItem("is_temp_admin", "true");
-    // else localStorage.removeItem("is_temp_admin");
-
-    // // Save token
-    // if (response?.token) localStorage.setItem("token", response.token);
-
-    if (response.firstLogin) {
-      localStorage.setItem("resetToken", response.resetToken);
-      navigate("/login/reset-password");
-    } else if (response.otpRequired) {
-      setStep(2);
-      setOtp("");
-      toast.info(response.message);
-    } else {
-      navigate("/dashboard");
-    }
-  })
+          if (response.firstLogin) {
+            localStorage.setItem("resetToken", response.resetToken);
+            navigate("/login/reset-password");
+          } else if (response.otpRequired) {
+            setStep(2);
+            setOtp("");
+            toast.info(response.message);
+          } else {
+            navigate("/dashboard");
+          }
+        })
         .catch((err) => toast.error(err.error || "Login failed"));
     } else if (step === 2) {
       if (!otp) {
@@ -96,24 +96,13 @@ export default function Login() {
         .unwrap()
         .then((response) => {
           toast.success(response.message);
-          // const role = response?.user?.role || "employee";
-          // localStorage.setItem("role", role);
-
-          // const isTempAdmin = response?.employee?.is_temp_admin || response?.user?.is_temp_admin || false;
-          // if (isTempAdmin) localStorage.setItem("is_temp_admin", "true");
-          // else localStorage.removeItem("is_temp_admin");
-
-          // if (response?.token) localStorage.setItem("token", response.token);
-
           navigate("/dashboard");
-
-          
         })
         .catch((err) => toast.error(err.error || "OTP verification failed"));
     }
   };
 
-  // ✅ Enable Login button only if email and password are filled (step 1) or OTP is filled (step 2)
+  // Enable Login button only if fields are valid
   const isStep1Valid = formData.email.trim() !== "" && formData.password.trim() !== "";
   const isStep2Valid = otp.trim() !== "";
   const isButtonDisabled = loading || (step === 1 ? !isStep1Valid : !isStep2Valid);
@@ -176,7 +165,7 @@ export default function Login() {
                 <TextField
                   label="Password"
                   name="password"
-                  type={showPassword ? "password" : "text"}
+                  type={showPassword ? "text" : "password"}
                   fullWidth
                   size="small"
                   margin="normal"
@@ -186,10 +175,12 @@ export default function Login() {
                   error={!!errors.password}
                   helperText={errors.password}
                   required
+                  inputProps={{ maxLength: 16 }} // ✅ limit typing
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
-                        <IconButton onClick={() => setShowPassword((prev) => !prev)} edge="end">
+                        <IconButton edge="end" onClick={() => setShowPassword((prev) => !prev)}
+                         aria-label={showPassword ? "Hide password" : "Show password"} >
                           {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
                         </IconButton>
                       </InputAdornment>
@@ -210,7 +201,6 @@ export default function Login() {
                   />
                 )}
 
-                {/* ✅ Corrected Login button */}
                 <Button
                   fullWidth
                   variant="contained"
@@ -218,7 +208,7 @@ export default function Login() {
                   className="!px-1 !py-1 !text-md admin-button"
                   sx={{ mt: 2, fontSize: { xs: "0.9rem", sm: "1rem" } }}
                   type="submit"
-                  disabled={isButtonDisabled} // button disabled if fields are empty or loading
+                  disabled={isButtonDisabled} // ✅ disabled if invalid
                 >
                   {loading ? "Logging in..." : "Log In"}
                 </Button>
