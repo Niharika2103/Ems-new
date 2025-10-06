@@ -377,10 +377,10 @@ export const employeeLogin = async (req, res) => {
       .in("role", ["employee", "admin", "superadmin"])
       .maybeSingle();
 
-    if (error || !user) return res.status(401).json({ error: "Invalid credentials" });
+    if (error || !user) return res.status(401).json({ error: "Invalid Email" });
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) return res.status(401).json({ error: "Invalid credentials" });
+    if (!isPasswordValid) return res.status(401).json({ error: "Invalid Password" });
 
     if (["admin", "superadmin"].includes(user.role)) {
   // Step 1: Password verification

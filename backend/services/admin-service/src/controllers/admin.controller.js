@@ -234,95 +234,6 @@ export const adminRegister = async (req, res) => {
  * Admin Login (requires MFA if enabled)
  * Body: { email, password, otp }
  */
-// export const adminLogin = async (req, res) => {
-//   try {
-//     const { email, password, otp } = req.body;
-//     const role = "admin";
-
-//     const { data: user, error } = await supabase
-//       .from(USER_MASTER_TABLE)
-//       .select("*")
-//       .eq("email", email)
-//       .eq("role", role)
-//       .maybeSingle();
-
-//     if (error || !user) {
-//       return res.status(401).json({ error: "Invalid email or password" });
-//     }
-
-//     // Check password
-//     const isMatch = await bcrypt.compare(password, user.password);
-//     if (!isMatch) {
-//       return res.status(401).json({ error: "Invalid email or password" });
-//     }
-
-//     // Prevent login until MFA is verified
-//     if (!user.mfa_enabled) {
-//       return res.status(403).json({
-//         error: "MFA setup not completed. Please verify OTP first.",
-//       });
-//     }
-
-//     // Require OTP
-//     if (!otp) {
-//       return res.status(400).json({ error: "OTP required for login" });
-//     }
-
-//     const verified = speakeasy.totp.verify({
-//       secret: user.mfa_secret,
-//       encoding: "base32",
-//       token: otp,
-//       window: 1,
-//     });
-
-//     if (!verified) {
-//       return res.status(401).json({ error: "Invalid OTP" });
-//     }
-
-//     // ✅ Check temp admin status from registrations table
-//     const { data: regData, error: regError } = await supabase
-//       .from(REGISTRATIONS_TABLE)
-//       .select("is_temp_admin, temp_admin_expiry,is_approved")
-//       .eq("user_id", user.id)
-//       .maybeSingle();
-
-//     if (regError) throw regError;
-
-//     if (!regData.is_approved) {
-//       return res.status(403).json({
-//         error: "Access denied. Permission not granted by SuperAdmin.",
-//       });
-//     }
-
-//     const isTempAdmin =
-//       regData?.is_temp_admin && new Date(regData.temp_admin_expiry) > new Date();
-
-//     // Success → issue JWT with id
-//     const token = issueJwt({
-//       email: user.email,
-//       role: user.role,
-//       id: user.id,
-//       is_temp_admin: isTempAdmin,
-//       name:user.name,
-//     });
-
-//     res.json({
-//       message: "Admin login successful with MFA",
-//       token,
-//       user: {
-//         id: user.id,
-//         name: user.name,
-//         email: user.email,
-//         role: user.role,
-//         mfa_enabled: user.mfa_enabled,
-//         is_temp_admin: isTempAdmin,
-//       },
-//     });
-//   } catch (err) {
-//     console.error("Admin Login Error:", err.message);
-//     res.status(500).json({ error: err.message });
-//   }
-// };
 
 export const adminLogin = async (req, res) => {
   try {
@@ -334,20 +245,21 @@ export const adminLogin = async (req, res) => {
       .select("*")
       .eq("email", email)
       .maybeSingle();
+ //  Check if user exists → Invalid Email
+    if (!user) {
+      return res.status(401).json({ error: "Invalid email" });
+    }
 
-    if (error || !user) {
-      return res.status(401).json({ error: "Invalid email or password" });
+    //  Check password → Invalid Password
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(401).json({ error: "Invalid password" });
     }
 
     // ✅ Check if user is Admin by role OR role_1
     if (!(user.role === "admin" || user.role_1 === "admin")) {
       return res.status(403).json({ error: "Not authorized as Admin" });
-    }
-
-    // ✅ Check password
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({ error: "Invalid email or password" });
     }
 
     // ✅ Prevent login until MFA is verified
@@ -467,22 +379,7 @@ export const verifyAdminMfaSetup = async (req, res) => {
   }
 };
 
-// fetch all admin details
-// export const getAllAdmins = async (req, res) => {
-//   try {
-//     const { data, error } = await supabase
-//       .from(USER_MASTER_TABLE)
-//       .select("*")
-//       .eq("role", "admin");
 
-//     if (error) throw error;
-
-//     res.json(data);
-//   } catch (err) {
-//     console.error("Fetch Admins Error:", err.message);
-//     res.status(500).json({ error: err.message });
-//   }
-// }
 
 export const getAllAdmins = async (req, res) => {
   try {
@@ -493,10 +390,6 @@ export const getAllAdmins = async (req, res) => {
     registrations (*)
   `)
   .in("role", ["admin", "superadmin"]);
-
-      
-      
-
     if (error) throw error;
 
     return res.json(data);

@@ -56,9 +56,6 @@ export const superAdminRegister = async (req, res) => {
       .eq("access_flag", "y")
       .maybeSingle();
 
-     
-     
-
     if (fetchError) throw fetchError;
     if (!existingUser) {
       return res.status(400).json({

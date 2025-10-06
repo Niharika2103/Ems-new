@@ -1,4 +1,4 @@
-// Different base URLs per role
+// Different base URLs per r
 export const API_BASES = {
   SUPERADMIN: import.meta.env.VITE_SUPERADMIN_URL || "http://localhost:5001",
   ADMIN: import.meta.env.VITE_ADMIN_URL || "http://localhost:5002",
@@ -10,7 +10,6 @@ export const API_BASES = {
 //   ADMIN: import.meta.env.VITE_ADMIN_URL || "https://admin-service-vb0h.onrender.com",
 //   EMPLOYEE: import.meta.env.VITE_EMPLOYEE_URL || "https://employee-service-5od6.onrender.com",
 // };
-
 
 // Auth endpoints
 export const AUTH_API = {
