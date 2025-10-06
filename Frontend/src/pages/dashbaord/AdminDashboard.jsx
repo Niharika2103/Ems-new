@@ -6,6 +6,7 @@ import GroupIcon from "@mui/icons-material/Group";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import SettingsIcon from "@mui/icons-material/Settings";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -20,6 +21,15 @@ const AdminDashboard = () => {
       iconColor: "text-sky-600",
       onClick: () => navigate("/dashboard/emp_requestTable"),
     },
+     {
+          title: "Attendance",
+          // value: "18",
+          message: "Check your daily attendance",
+          icon: AccessTimeIcon,
+          iconBg: "bg-sky-100",
+          iconColor: "text-sky-600",
+          onClick: () => navigate("/attendance"),
+        },
     {
       title: "Reports",
       message: "View performance reports",

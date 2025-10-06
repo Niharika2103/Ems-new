@@ -24,6 +24,7 @@ const Dashboard = () => {
 
   if (role === "admin") {
     return <AdminDashboard />;
+    <AssignProjectPage/> 
   } else if (role === "superadmin") {
     return <SuperAdminDashboard />;
   } else if (role === "employee" && is_temp_admin) { 

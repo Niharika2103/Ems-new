@@ -22,6 +22,7 @@ const Sidebar = ({ isOpen }) => {
     admin: [
       { name: "Dashboard", icon: <Home size={20} />, path: "/dashboard" },
       { name: "Manage Employees", icon: <Users size={20} />, path: "/manage-employees" },
+      { name: "Attendance", icon: <Calendar size={20} />, path: "/attendance" },
       { name: "Reports", icon: <CheckSquare size={20} />, path: "/reports" },
       { name: "Accounts", icon: <Calendar size={20} />, path: "/accounts" },
       { name: "Settings", icon: <Settings size={20} />, path: "/settings" },
