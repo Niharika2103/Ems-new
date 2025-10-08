@@ -17,7 +17,7 @@ import LeaveCalendar from "../pages/Calender";
 import LeaveType from "../pages/Attendance/LeaveType";
 import AssignProjectPage from "../pages/Attendance/index";
 import ResetPassword from "../pages/Auth/ResetPassword";
-
+import EmpInfoDashboard from "../pages/dashbaord/EmpInfoDashboard";
 
 function AppRoutes() {
   return (
@@ -39,6 +39,7 @@ function AppRoutes() {
          {/*Employee List*/}
         <Route path="/dashboard/emp_requestTable" element={<AdminTable />} />
         <Route path="/dashboard/superadmin_requestTable" element={<SuperAadminTable />} />
+         <Route path="/dashboard/emp_info" element={<EmpInfoDashboard />} />
 
         <Route path="/cal" element={<LeaveCalendar />} />
            {/* employee Registeration */}

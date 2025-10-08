@@ -10,13 +10,23 @@ const EmployeeDashboard = () => {
 
   const stats = [
     {
-      title: "Attendance",
+      title: "Employee Info ",
       // value: "18",
       message: "Check your daily attendance",
       icon: AccessTimeIcon,
       iconBg: "bg-sky-100",
       iconColor: "text-sky-600",
-      onClick: () => navigate("/attendance"),
+      onClick: () => navigate("/dashboard/emp_info"),
+    },
+
+    {
+      title:"Attendance",
+
+      // value: "18",
+      message: "Check your daily attendance",
+      icon: AccessTimeIcon,
+      iconBg: "bg-sky-100",
+      iconColor: "text-sky-600",
     },
     {
       title: "HR",
