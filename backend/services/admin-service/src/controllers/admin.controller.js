@@ -247,7 +247,7 @@ export const adminLogin = async (req, res) => {
       .maybeSingle();
  //  Check if user exists → Invalid Email
     if (!user) {
-      return res.status(401).json({ error: "User does not exist." });
+      return res.status(401).json({ error:"invalid email or password" });
     }
 
     //  Check password → Invalid Password
