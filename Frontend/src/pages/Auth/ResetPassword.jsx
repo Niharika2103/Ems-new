@@ -18,6 +18,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./login.css";
+import { validateResetPassword } from "../../utils/validation";
 
 import company from "../../assets/company.jpg";
 import company1 from "../../assets/company1.jpg";
@@ -64,33 +65,40 @@ export default function ResetPassword() {
   }, [location.search]);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    if (name === "confirmPassword") {
-      if (value !== formData.newPassword) {
-        setFormError("Passwords do not match");
-      } else {
-        setFormError("");
-      }
+    const { name, value } = e.target;
+  setFormData((prev) => ({ ...prev, [name]: value }));
+
+  if (name === "confirmPassword") {
+    if (value !== formData.newPassword) {
+      setFormError("Passwords do not match");
+    } else {
+      setFormError("");
     }
+  }
   };
 
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit =async (e) => {
     e.preventDefault();
-    if (formData.newPassword !== formData.confirmPassword) {
-      setFormError("Passwords do not match");
-      return;
-    }
+    const validationErrors = validateResetPassword({
+    password: formData.newPassword,
+    confirmPassword: formData.confirmPassword,
+  });
 
-    dispatch(employeeResetPassword({ token: formData.token, newPassword: formData.newPassword }))
-      .unwrap()
-      .then((response) => {
-        if (response.resetToekn) {
-          setResetToken(response.resetToken);
-        }
-        navigate("/");
-      })
-      .catch((err) => toast.error(err.error || " failed"));
+  if (Object.keys(validationErrors).length > 0) {
+    setFormError(validationErrors.password || validationErrors.confirmPassword);
+    return;
   }
+
+  try {
+      await dispatch(
+        employeeResetPassword({ token: formData.token, newPassword: formData.newPassword })
+      ).unwrap();
+      toast.success("Password reset successful!");
+      navigate("/");
+    } catch (err) {
+      toast.error(err.error || "Password reset failed!");
+    }
+  };
 
   return (
     <div className="login-page">
@@ -232,7 +240,7 @@ export default function ResetPassword() {
                   type="submit"
                   disabled={loading}
                 >
-                  {loading ? "Logging in..." : "creaet Password"}
+                  {loading ? "Logging in..." : "create Password"}
                 </Button>
               </Box>
             </CardContent>

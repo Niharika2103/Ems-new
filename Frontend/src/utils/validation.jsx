@@ -221,3 +221,24 @@ export const validateOTP = (otp, otpExpirationTime) => {
 
   return errors;
 };
+
+// Reset Password Validation (used for first login or forgot password)
+export const validateResetPassword = (formData) => {
+  const errors = {};
+
+  if (!formData.password) {
+    errors.password = "Password is required";
+  } else if (!strongPasswordRegex.test(formData.password)) {
+    errors.password =
+      "Password must be 8-16 characters and include uppercase, lowercase, number, and special character";
+  }
+
+  if (!formData.confirmPassword) {
+    errors.confirmPassword = "Confirm Password is required";
+  } else if (formData.password !== formData.confirmPassword) {
+    errors.confirmPassword = "Passwords do not match";
+  }
+
+  return errors;
+};
+
