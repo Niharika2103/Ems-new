@@ -94,6 +94,9 @@ export const verifyEmailAdmin = (otp) =>
 export const sendVerifyEmailAdmin = () =>
   adminClient.post(`${AUTH_API.ADMIN}/send-email-verification`);
 
+export const promoteEmployeeApi = (employeeId) =>
+  adminClient.post(`${AUTH_API.ADMIN}/promote/${employeeId}`)
+
 
 // ================= Employee Auth =================
 export const employeeRegisterApi = (data) =>

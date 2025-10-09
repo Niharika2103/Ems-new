@@ -134,19 +134,115 @@ function getUserFromToken(req) {
 //   }
 // };
 
+// export const adminRegister = async (req, res) => {
+//   try {
+//     const { fullName, email, password } = req.body;
+//     const role = "admin";
+
+//     // ✅ Validate required fields
+//     if (!fullName || !email || !password) {
+//       return res.status(400).json({
+//         error: "Name, email, and password are required",
+//       });
+//     }
+
+//     // ✅ Check if user already exists (any role)
+//     const { data: existingUser, error: fetchError } = await supabase
+//       .from(USER_MASTER_TABLE)
+//       .select("*")
+//       .eq("email", email)
+//       .maybeSingle();
+
+//     if (fetchError) throw fetchError;
+
+//     // ✅ If superadmin exists with this email → block registration
+//     if (existingUser && existingUser.role === "superadmin") {
+//       return res.status(400).json({
+//         error: "Email already exists. Please login instead.",
+//       });
+//     }
+
+//     // ✅ If admin exists with this email → block
+//     if (existingUser && existingUser.role === "admin") {
+//       return res.status(400).json({
+//         error: "Admin already registered. Please login instead.",
+//       });
+//     }
+
+//     // ✅ Hash password
+//     const hashedPassword = await bcrypt.hash(password, 10);
+
+//     // ✅ Generate MFA secret
+//     const secret = speakeasy.generateSecret({
+//       name: `EMS-${email}`,
+//       issuer: "EMS Admin",
+//     });
+
+//     // ✅ Insert new Admin with role_2 = employee
+//     const { data: newUser, error: insertError } = await supabase
+//       .from(USER_MASTER_TABLE)
+//       .insert([
+//         {
+//           name: fullName,
+//           email,
+//           password: hashedPassword,
+//           role: "admin",     // 🔹 Admin role
+//           role_1: null,      // 🔹 No role_1 for Admin
+//           role_2: "employee",// 🔹 Always employee
+//           mfa_secret: secret.base32,
+//           mfa_enabled: false,
+//           is_email_verified: false,
+//           access_flag: "y",
+//         },
+//       ])
+//       .select()
+//       .single();
+
+//     if (insertError) throw insertError;
+
+//     // ✅ Create registration record (child table)
+//     const { error: regError } = await supabase
+//       .from(REGISTRATIONS_TABLE)
+//       .insert([
+//         {
+//           user_id: newUser.id,
+//           is_approved: false,
+//           is_temp_admin: false,
+//           temp_admin_expiry: null,
+//         },
+//       ]);
+
+//     if (regError) throw regError;
+
+//     // ✅ Generate QR code
+//     const qrCodeUrl = await qrcode.toDataURL(secret.otpauth_url);
+
+//     res.status(201).json({
+//       message: "Admin registered successfully. Complete MFA setup.",
+//       qrCodeUrl,
+//       secret: secret.base32,
+//     });
+
+//   } catch (err) {
+//     console.error("Admin Register Error:", err.message);
+//     res.status(500).json({ error: err.message });
+//   }
+// };
+
+
+
 export const adminRegister = async (req, res) => {
   try {
     const { fullName, email, password } = req.body;
     const role = "admin";
 
-    // ✅ Validate required fields
     if (!fullName || !email || !password) {
       return res.status(400).json({
         error: "Name, email, and password are required",
       });
     }
 
-    // ✅ Check if user already exists (any role)
+    // Check if user exists
     const { data: existingUser, error: fetchError } = await supabase
       .from(USER_MASTER_TABLE)
       .select("*")
@@ -155,72 +251,127 @@ export const adminRegister = async (req, res) => {
 
     if (fetchError) throw fetchError;
 
-    // ✅ If superadmin exists with this email → block registration
+    // Block superadmin emails
     if (existingUser && existingUser.role === "superadmin") {
       return res.status(400).json({
-        error: "Email already exists. Please login instead.",
+        error: "Email belongs to a SuperAdmin.",
       });
     }
 
-    // ✅ If admin exists with this email → block
-    if (existingUser && existingUser.role === "admin") {
-      return res.status(400).json({
-        error: "Admin already registered. Please login instead.",
+    //  CASE 1: New admin (not promoted)
+    if (!existingUser) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const secret = speakeasy.generateSecret({
+        name: `EMS-${email}`,
+        issuer: "EMS Admin",
+      });
+
+      const { data: newUser, error: insertError } = await supabase
+        .from(USER_MASTER_TABLE)
+        .insert([
+          {
+            name: fullName,
+            email,
+            password: hashedPassword,
+            role: "admin",
+            role_1: null,
+            role_2: "employee",
+            mfa_secret: secret.base32,
+            mfa_enabled: false,
+            is_email_verified: false,
+            access_flag: "y",
+            is_promoted: false,
+          },
+        ])
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      const { error: regError } = await supabase
+        .from(REGISTRATIONS_TABLE)
+        .insert([
+          {
+            user_id: newUser.id,
+            is_approved: false,
+            is_temp_admin: false,
+            temp_admin_expiry: null,
+          },
+        ]);
+
+      if (regError) throw regError;
+
+      const qrCodeUrl = await qrcode.toDataURL(secret.otpauth_url);
+
+      return res.status(201).json({
+        message: "Admin registered. Complete MFA setup.",
+        qrCodeUrl,
+        secret: secret.base32,
       });
     }
 
-    // ✅ Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    //  CASE 2: Existing user — check if promoted employee
+    if (
+      existingUser.is_promoted === true &&
+      existingUser.mfa_enabled === false &&
+      (existingUser.role === "employee" || existingUser.role === "admin")
+    ) {
+      // Allow setup: hash password, generate MFA secret
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const secret = speakeasy.generateSecret({
+        name: `EMS-${email}`,
+        issuer: "EMS Admin",
+      });
 
-    // ✅ Generate MFA secret
-    const secret = speakeasy.generateSecret({
-      name: `EMS-${email}`,
-      issuer: "EMS Admin",
-    });
-
-    // ✅ Insert new Admin with role_2 = employee
-    const { data: newUser, error: insertError } = await supabase
-      .from(USER_MASTER_TABLE)
-      .insert([
-        {
+      const { error: updateError } = await supabase
+        .from(USER_MASTER_TABLE)
+        .update({
           name: fullName,
-          email,
           password: hashedPassword,
-          role: "admin",     // 🔹 Admin role
-          role_1: null,      // 🔹 No role_1 for Admin
-          role_2: "employee",// 🔹 Always employee
+          role: "admin",
+          role_1: null,
+          role_2: "employee",
           mfa_secret: secret.base32,
-          mfa_enabled: false,
-          is_email_verified: false,
-          access_flag: "y",
-        },
-      ])
-      .select()
-      .single();
+          // mfa_enabled remains false until OTP verified
+        })
+        .eq("id", existingUser.id);
 
-    if (insertError) throw insertError;
+      if (updateError) throw updateError;
 
-    // ✅ Create registration record (child table)
-    const { error: regError } = await supabase
-      .from(REGISTRATIONS_TABLE)
-      .insert([
-        {
-          user_id: newUser.id,
-          is_approved: false,
-          is_temp_admin: false,
-          temp_admin_expiry: null,
-        },
-      ]);
+      // Ensure registration exists
+      const { data: reg, error: regErr } = await supabase
+        .from(REGISTRATIONS_TABLE)
+        .select("*")
+        .eq("user_id", existingUser.id)
+        .maybeSingle();
 
-    if (regError) throw regError;
+      if (regErr) throw regErr;
+      if (!reg) {
+        const { error: insErr } = await supabase
+          .from(REGISTRATIONS_TABLE)
+          .insert([
+            {
+              user_id: existingUser.id,
+              is_approved: false,
+              is_temp_admin: false,
+              temp_admin_expiry: null,
+            },
+          ]);
+        if (insErr) throw insErr;
+      }
 
-    // ✅ Generate QR code
-    const qrCodeUrl = await qrcode.toDataURL(secret.otpauth_url);
+      const qrCodeUrl = await qrcode.toDataURL(secret.otpauth_url);
 
-    res.status(201).json({
-      message: "Admin registered successfully. Complete MFA setup.",
-      qrCodeUrl,
-      secret: secret.base32,
+      return res.status(200).json({
+        message: "Promoted employee. Complete MFA setup.",
+        qrCodeUrl,
+        secret: secret.base32,
+      });
+    }
+
+    // All other cases: already registered admin
+    return res.status(400).json({
+      error: "User already registered as admin or not eligible for promotion.",
     });
 
   } catch (err) {
@@ -866,6 +1017,102 @@ export const verifyEmail = async (req, res) => {
     res.json({ message: "Email verified successfully." });
   } catch (err) {
     console.error("Verify Email Error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * Promote an Employee to Admin (by Admin or SuperAdmin)
+ * POST /api/admin/promote/:employeeId
+ * No SuperAdmin required for promotion — only for final approval
+ */
+export const promoteEmployee = async (req, res) => {
+  try {
+    const { employeeId } = req.params;
+
+    if (!employeeId) {
+      return res.status(400).json({ error: "Employee ID is required" });
+    }
+
+    // Fetch employee
+    const { data: employee, error: fetchError } = await supabase
+      .from(USER_MASTER_TABLE)
+      .select("*")
+      .eq("id", employeeId)
+      .eq("role", "employee")
+      .maybeSingle();
+
+    if (fetchError) throw fetchError;
+    if (!employee) {
+      return res.status(404).json({ error: "Employee not found or already promoted" });
+    }
+
+    // Update to admin + mark promoted
+    const { error: updateError } = await supabase
+      .from(USER_MASTER_TABLE)
+      .update({
+        role: "admin",
+        role_1: null,
+        role_2: "employee",
+        is_promoted: true, // ✅ Key flag
+        // mfa_secret and mfa_enabled will be set during registration
+      })
+      .eq("id", employeeId);
+
+    if (updateError) throw updateError;
+
+    // Ensure registration record exists
+    const { data: reg, error: regErr } = await supabase
+      .from(REGISTRATIONS_TABLE)
+      .select("*")
+      .eq("user_id", employeeId)
+      .maybeSingle();
+
+    if (regErr) throw regErr;
+
+    if (!reg) {
+      const { error: insertRegErr } = await supabase
+        .from(REGISTRATIONS_TABLE)
+        .insert([
+          {
+            user_id: employeeId,
+            is_approved: false, // Will need SuperAdmin approval later
+            is_temp_admin: false,
+            temp_admin_expiry: null,
+          },
+        ]);
+      if (insertRegErr) throw insertRegErr;
+    }
+
+    // Send email
+    try {
+      await sendEmail(
+        employee.email,
+        "You've Been Promoted to Admin!",
+        `
+          <p>Hello ${employee.name},</p>
+          <p>You have been promoted to <strong>Admin</strong>.</p>
+          <p>Please complete your admin registration by setting a password and enabling MFA.</p>
+          <p>Visit the admin registration page to proceed.</p>
+          <p>Note: Full access will be granted after SuperAdmin approval.</p>
+        `
+      );
+    } catch (emailErr) {
+      console.warn("Promotion email failed:", emailErr.message);
+    }
+
+    res.json({
+      message: "Employee promoted successfully. Awaiting registration and SuperAdmin approval.",
+      employee: {
+        id: employee.id,
+        name: employee.name,
+        email: employee.email,
+        is_promoted: true,
+      },
+    });
+
+  } catch (err) {
+    console.error("Promote Employee Error:", err.message);
     res.status(500).json({ error: err.message });
   }
 };

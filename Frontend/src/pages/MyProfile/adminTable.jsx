@@ -3,7 +3,7 @@ import { Button, Space, Popconfirm, message } from "antd";
 import { useDispatch } from "react-redux";
 import { deleteEmployee, fetchAllEmployees, updateEmployeebyAdmin } from "../../features/employeesDetails/employeesSlice";
 import EmployeeTable from "../../components/MyProfile/table";
-import { grantTempAdminApi, revokeTempAdminApi } from "../../api/authApi";
+import { grantTempAdminApi, revokeTempAdminApi,promoteEmployeeApi } from "../../api/authApi";
 import ReusableModal from "../../components/MyProfile/ReusableModal";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -47,20 +47,20 @@ export default function AdminTable() {
 
     try {
       await grantTempAdminApi(email, Number(duration));
-      message.success("Temporary Admin granted");
+      toast.success("Temporary Admin granted");
       dispatch(fetchAllEmployees());
     } catch (err) {
-      message.error("Failed to grant access");
+      toast.error("Failed to grant access");
     }
   };
 
   const handleRevoke = async (email) => {
     try {
       await revokeTempAdminApi(email);
-      message.success("Temporary Admin revoked");
+      toast.success("Temporary Admin revoked");
       dispatch(fetchAllEmployees());
     } catch (err) {
-      message.error("Failed to revoke access");
+      toast.error("Failed to revoke access");
     }
   };
   //Edit Register Model
@@ -76,7 +76,18 @@ export default function AdminTable() {
     });
     setIsModalOpen(true);
   };
+const handlePromote = async (record) => {
+  if (!window.confirm(`Promote ${record.name} to Admin?`)) return;
 
+  try {
+    await promoteEmployeeApi(record.id);
+    toast.success(`${record.name} promoted successfully!`);
+    dispatch(fetchAllEmployees()); // optional: refresh list
+  } catch (err) {
+    console.error("Promote error:", err);
+    toast.error("Failed to promote employee");
+  }
+};
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -200,6 +211,9 @@ export default function AdminTable() {
           >
             Revoke
           </Button>
+           <Button type="primary" onClick={() => handlePromote(record)}>
+        Promote
+      </Button>
         </Space>
       ),
     }

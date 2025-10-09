@@ -14,6 +14,7 @@ import {
   listTempAdmins,
   sendEmailVerification,
   verifyEmail,
+  promoteEmployee,
 
 } from "../controllers/admin.controller.js";
 const router = Router();
@@ -47,5 +48,5 @@ router.get("/temp-admins", listTempAdmins);              // List all active temp
 // Email Verification
 router.post("/send-email-verification", sendEmailVerification);
 router.post("/verify-email", verifyEmail);
-
+router.post("/promote/:employeeId", promoteEmployee);
 export default router;
