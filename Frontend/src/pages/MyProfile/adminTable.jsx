@@ -42,17 +42,24 @@ export default function AdminTable() {
   // };
 
   const handleGrant = async (email) => {
-    const duration = prompt("Enter duration in hours:");
-    if (!duration) return;
+  const duration = prompt("Enter duration in hours:");
+  if (!duration) return;
 
-    try {
-      await grantTempAdminApi(email, Number(duration));
-      toast.success("Temporary Admin granted");
-      dispatch(fetchAllEmployees());
-    } catch (err) {
-      toast.error("Failed to grant access");
-    }
-  };
+  try {
+    const res = await grantTempAdminApi(email, Number(duration));
+    toast.success(res?.message || "Temporary Admin granted");
+    dispatch(fetchAllEmployees());
+  } catch (err) {
+    // ✅ Extract backend error message
+    const msg =
+      err?.response?.data?.error ||  // if using Axios
+      err?.data?.error ||            // if using fetch wrapper
+      err?.error ||                  // fallback
+      "Failed to grant access";
+
+    toast.error(msg); // Show the actual message from backend
+  }
+};
 
   const handleRevoke = async (email) => {
     try {

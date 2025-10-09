@@ -776,6 +776,22 @@ export const grantTempAdminAccess = async (req, res) => {
     if (!user) {
       return res.status(404).json({ error: "Employee not found" });
     }
+    const { data: reg, error: regError } = await supabase
+      .from(REGISTRATIONS_TABLE)
+      .select("is_temp_admin, temp_admin_expiry")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (regError) throw regError;
+
+    // ✅ Check if employee already has active temporary admin access
+    if (reg?.is_temp_admin && new Date(reg.temp_admin_expiry) > new Date()) {
+      return res.status(400).json({
+        error: `Employee already has temporary admin access until ${new Date(
+          reg.temp_admin_expiry
+        ).toLocaleString()}.`,
+      });
+    }
 
     const expiry = new Date(Date.now() + durationHours * 60 * 60 * 1000);
 
