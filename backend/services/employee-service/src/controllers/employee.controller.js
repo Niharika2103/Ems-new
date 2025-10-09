@@ -166,7 +166,7 @@ function validateEmployeeData(data) {
 //     if (resume.size > 5 * 1024 * 1024) {
 //       return "Resume size must not exceed 5 MB.";
 //     }
-//   }
+//   }a
 
 //   return null;
 // }
