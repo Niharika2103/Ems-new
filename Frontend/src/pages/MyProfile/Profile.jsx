@@ -11,6 +11,7 @@ import {
 import { sendEmailOtp, verifyEmailOtp } from "../../features/verify/emailVerify";
 import { decodeToken } from "../../api/decodeToekn";
 import { ToastContainer, toast } from "react-toastify";
+import { Link, useLocation } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
 import {
   Typography,
@@ -69,6 +70,8 @@ const Profile = () => {
     useSelector((state) => state.employeeSlice?.role) ||
     localStorage.getItem("role");
 
+ const location = useLocation();
+  const pathnames = location.pathname.split("/").filter((x) => x);
 
   useEffect(() => {
     const getDecoded = async () => {
@@ -204,6 +207,40 @@ const Profile = () => {
   return (
     <>
       <ToastContainer position="top-right" autoClose={2000} />
+       <nav className="text-gray-600 text-sm mb-4" aria-label="breadcrumb">
+            <ol className="list-reset flex">
+              <li>
+                <Link to="/dashboard" className="text-sky-600 hover:underline">
+                  Dashboard
+                </Link>
+                 </li><li>
+                <span className="mx-2">/</span>
+                 <Link to="/dashboard/emp_info" className="text-sky-600 hover:underline">
+                Employee Info
+                </Link>
+              </li>
+              {pathnames.map((name, index) => {
+                const routeTo = `/${pathnames.slice(0, index + 1).join("/")}`;
+                const isLast = index === pathnames.length - 1;
+                return (
+                  <li key={routeTo} className="flex items-center">
+                    <span className="mx-2">/</span>
+                    {isLast ? (
+                      <span className="text-gray-400">
+                        {/* {name.charAt(0).toUpperCase() + name.slice(1)} */}
+                        MyInfo
+                        </span>
+                    ) : (
+                      <Link to={routeTo} className="text-sky-600 hover:underline">
+                        {/* {name.charAt(0).toUpperCase() + name.slice(1)} */}
+                         MyInfo
+                      </Link>
+                    )}
+                  </li>
+                );
+              })}
+            </ol>
+          </nav>
       <Box className="flex justify-center items-center bg-gray-100">
         <Paper
           elevation={4}

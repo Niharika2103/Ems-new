@@ -41,7 +41,7 @@ export default function AdminLogin() {
   });
 
   const [errors, setErrors] = useState({});
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(true);
 
   // ✅ handle input changes
   const handleChange = (e) => {
@@ -67,6 +67,12 @@ export default function AdminLogin() {
           setTimeout(() => navigate("/dashboard"), 2000);
         })
         .catch((err) => toast.error(err.error || "Login failed"));
+      //    .catch((err) => {
+      //   const message =
+      //     (err.response && err.response.data && err.response.data.error) ||
+      //     "Login failed";
+      //   setErrors({ email: message }); // shows error under the email field
+      // });
       setErrors({});
     } else {
       setErrors(validationErrors);

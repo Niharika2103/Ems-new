@@ -1,6 +1,6 @@
 // Strong Password Regex: min 8, max 16, includes uppercase, lowercase, number, special char
 const strongPasswordRegex =
-  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,16}$/;
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!-/:-@[-`{-~]).{8,16}$/; // ✅ all ASCII special chars
 
 // Org Email Validation (common)
 export const validateOrgEmail = (email) => {
@@ -106,8 +106,9 @@ export const validateLogin = (formData) => {
 
   if (!formData.password) {
     errors.password = "Password is required";
-  } else if (formData.password.length > 16) {
-    errors.password = "Password cannot exceed 16 characters";
+  } else if (!strongPasswordRegex.test(formData.password)) {
+    errors.password =
+      "Password must be 8-16 characters and include uppercase, lowercase, number, and special character";
   }
 
   return errors;
@@ -172,7 +173,7 @@ export const validateProfileForm = (formData, roles) => {
     errors.emergencyContact = "Enter valid 10-digit number";
   }
 
-  // Resume
+  // Resume (Only for employee role)
   if (roles === "employee") {
     if (!formData.resume) {
       errors.resume = "Resume is required";
@@ -200,6 +201,22 @@ export const validateProfileForm = (formData, roles) => {
     if (formData.profilePhoto.size > 2 * 1024 * 1024) {
       errors.profilePhoto = "Profile Photo must be ≤ 2MB";
     }
+  }
+
+  return errors;
+};
+
+// ✅ MFA / OTP Validation (Frontend now checks expiration)
+export const validateOTP = (otp, otpExpirationTime) => {
+  const errors = {};
+  const now = new Date().getTime(); // current timestamp
+
+  if (!otp) {
+    errors.otp = "OTP is required";
+  } else if (!/^\d{6}$/.test(otp)) {
+    errors.otp = "OTP must be 6 digits only";
+  } else if (now >= new Date(otpExpirationTime).getTime()) {
+    errors.otp = "OTP has expired"; // ✅ frontend immediately blocks expired OTP
   }
 
   return errors;
