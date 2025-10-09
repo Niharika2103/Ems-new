@@ -5,7 +5,9 @@ import speakeasy from "speakeasy";
 import qrcode from "qrcode";
 import { UserModel } from "../models/user.model.js";
 import { validateInput } from "../utils/validateInput.js";
+import { sendEmail } from "../services/emailservicesuperadmin.js";
 
+import dotenv from "dotenv";
 const USERS_TABLE = "user_employees_master";
 const SUPERADMINS_TABLE = "super_admins";
 
@@ -376,3 +378,80 @@ export const updateSuperAdminProfile = async (req, res) => {
   }
 };
 
+
+function getUserFromToken(req) {
+  const authHeader = req.headers["authorization"];
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    throw new Error("No token provided");
+  }
+  const token = authHeader.split(" ")[1];
+  return jwt.verify(token, process.env.JWT_SECRET);
+}
+dotenv.config();
+// ----------- Promote Admin to SuperAdmin -----------
+export const promoteAdminToSuperAdmin = async (req, res) => {
+  try {
+    const { adminId } = req.params;
+
+    // Ensure the request is from a logged-in superadmin
+    if (!req.user) return res.status(401).json({ error: "Unauthorized: no user info" });
+
+    // 1️⃣ Fetch admin
+    const { data: admin, error: adminError } = await supabase
+      .from(USERS_TABLE)
+      .select("*")
+      .eq("id", adminId)
+      .eq("role", "admin")
+      .maybeSingle();
+
+    if (adminError) throw adminError;
+    if (!admin) return res.status(404).json({ error: "Admin not found" });
+
+    // 2️⃣ Update role to superadmin
+    const { data: updatedAdmin, error: updateError } = await supabase
+      .from(USERS_TABLE)
+      .update({ role: "superadmin" })
+      .eq("id", adminId)
+      .select()
+      .maybeSingle();
+
+    if (updateError) throw updateError;
+
+    // 3️⃣ Add to SUPERADMINS_TABLE if not exists
+    const { data: existingSuper, error: checkError } = await supabase
+      .from(SUPERADMINS_TABLE)
+      .select("*")
+      .eq("email", updatedAdmin.email)
+      .maybeSingle();
+
+    if (checkError) throw checkError;
+
+    if (!existingSuper) {
+      const { error: insertError } = await supabase
+        .from(SUPERADMINS_TABLE)
+        .insert({
+          user_id: updatedAdmin.id,
+          name: updatedAdmin.name,
+          email: updatedAdmin.email,
+          password: updatedAdmin.password,
+          role: "superadmin",
+        });
+      if (insertError) throw insertError;
+    }
+
+    // 4️⃣ Send promotion email
+    await sendEmail(
+      updatedAdmin.email,
+      "🎉 Promotion to SuperAdmin",
+      `Dear ${updatedAdmin.name},\n\nYou have been promoted to SuperAdmin.\nYou can now log in with your existing credentials and MFA setup.\n\nRegards,\nEMS Team`
+    );
+
+    return res.status(200).json({
+      message: "Admin promoted to SuperAdmin successfully.",
+      promotedUser: updatedAdmin,
+    });
+  } catch (err) {
+    console.error("Promote Admin Error:", err.message);
+    return res.status(500).json({ error: err.message });
+  }
+};

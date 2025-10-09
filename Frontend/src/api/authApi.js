@@ -22,6 +22,9 @@ export const getSuperadminProfileApi = (id) =>
 export const superadminApproveAdminApi = (id, is_approved) =>
   adminClient.patch(`${AUTH_API.ADMIN}/approve/${id}`, { is_approved });
 
+export const promoteAdminToSuperadminApi = (adminId) =>
+  superadminClient.put(`${AUTH_API.SUPERADMIN}/promote/${adminId}`);
+
 export const updateSuperAdminProfileApi = (data, id) => {
   const formData = new FormData();
 
