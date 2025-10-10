@@ -20,14 +20,16 @@ const EmployeeDashboard = () => {
     },
 
     {
-      title:"Attendance",
+      title: "Attendance",
 
       // value: "18",
       message: "Check your daily attendance",
       icon: AccessTimeIcon,
       iconBg: "bg-sky-100",
       iconColor: "text-sky-600",
+      onClick: () => navigate("/dashboard/assign_project"),
     },
+
     {
       title: "HR",
       // value: "5",

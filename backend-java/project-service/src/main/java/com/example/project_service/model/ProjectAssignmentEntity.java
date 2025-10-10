@@ -1,27 +1,45 @@
 package com.example.project_service.model;
+
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import lombok.*;
+import java.util.UUID;
 
 @Entity
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 @Table(name = "project_assignments")
 public class ProjectAssignmentEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(columnDefinition = "UUID")
+    private UUID id;
 
-    private Long employeeId;
+    @Column(name = "employee_id", nullable = false)
+    private UUID employeeId;
+
+    @Column(nullable = false)
     private String role;
-    private LocalDateTime assignedAt = LocalDateTime.now();
+
+    
+    @Column(name = "assigned_at", nullable = false)
+    private LocalDateTime assignedAt;
 
     @ManyToOne
-    @JoinColumn(name = "project_id")
-    private ProjectsEntity project;
+    @JoinColumn(name = "project_id", nullable = false)
+    private Projects project;
 
+    // ✅ Getters and Setters
+    public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
+
+    public UUID getEmployeeId() { return employeeId; }
+    public void setEmployeeId(UUID employeeId) { this.employeeId = employeeId; }
+
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
+
+    public LocalDateTime getAssignedAt() { return assignedAt; }
+    public void setAssignedAt(LocalDateTime assignedAt) { this.assignedAt = assignedAt; }
+
+    public Projects getProject() { return project; }
+    public void setProject(Projects project) { this.project = project; }
 }

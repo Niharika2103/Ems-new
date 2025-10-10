@@ -18,7 +18,9 @@ import LeaveType from "../pages/Attendance/LeaveType";
 import AssignProjectPage from "../pages/Attendance/index";
 import ResetPassword from "../pages/Auth/ResetPassword";
 import EmpInfoDashboard from "../pages/dashbaord/EmpInfoDashboard";
-
+import ProjectForm from "../pages/Attendance/ProjectFrom";
+import EmployeeAssignedProjectPage from "../pages/Attendance/EmployeeAssignedProjectPage";
+import ProjectTable from "../pages/Attendance/ProjectTable";
 function AppRoutes() {
   return (
     <Routes>
@@ -30,21 +32,23 @@ function AppRoutes() {
       <Route path="/superadmin/login" element={<SuperAdminLogin />} />
       <Route path="/superadmin/register" element={<SuperAdminRegister />} />
       <Route path="/attendance/leavetype" element={<LeaveType />} />
-          <Route path="/login/reset-password" element={<ResetPassword/>}/>
+      <Route path="/login/reset-password" element={<ResetPassword />} />
       {/* With layout */}
       <Route element={<Layout />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<Profile />} />
-         <Route path="/attendance" element={<AssignProjectPage />} />
-         {/*Employee List*/}
+        <Route path="/dashboard/projects" element={<AssignProjectPage />} />
+        {/*Employee List*/}
         <Route path="/dashboard/emp_requestTable" element={<AdminTable />} />
         <Route path="/dashboard/superadmin_requestTable" element={<SuperAadminTable />} />
-         <Route path="/dashboard/emp_info" element={<EmpInfoDashboard />} />
-
+        <Route path="/dashboard/emp_info" element={<EmpInfoDashboard />} />
+        <Route path="/dashboard/add_project" element={<ProjectForm />} />
+        <Route path="/dashboard/fetch_project" element={<ProjectTable/>}/>
+        <Route path="/dashboard/assign_project" element={<EmployeeAssignedProjectPage/>}/>
         <Route path="/cal" element={<LeaveCalendar />} />
-           {/* employee Registeration */}
+        {/* employee Registeration */}
         <Route path="/employee_register" element={<EmployeeRegisterForm />} />
-    
+
       </Route>
     </Routes>
   );

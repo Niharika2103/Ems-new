@@ -1,6 +1,7 @@
 import { superadminClient } from "./axiosClient";
 import { adminClient } from "./axiosClient";
 import { employeeClient } from "./axiosClient";
+import { ProjectClient } from "./axiosClient";
 import { AUTH_API } from "../utils/constants";
 
 // ================= SuperAdmin =================
@@ -165,3 +166,29 @@ export const employeeUploadExcelApi = (formData) =>
 // Bulk Insert Employees
 export const employeeBulkInsertApi = (payload) =>
   employeeClient.post(`${AUTH_API.EMPLOYEE}/bulk-insert`, payload);
+
+
+//PRoject insert
+export const ProjectInsertApi = (data) =>
+  ProjectClient.post(`${AUTH_API.PROJECT}/projects`,data);
+//Project Getall
+export const ProjectFetchAllApi = () =>
+  ProjectClient.get(`${AUTH_API.PROJECT}/projects`);
+//project assign to employee
+export const ProjectAssignApi = (projectId, employeeId, role = "employee") => {
+  return ProjectClient.post(
+    `${AUTH_API.PROJECT}/projects/${projectId}/assign?employeeId=${employeeId}&role=${role}`
+  );
+};
+//assigned project 
+export const ProjectFetchAssignApi = (employeeId) => {
+  return ProjectClient.get(
+    `${AUTH_API.PROJECT}/projects/employee/${employeeId}`
+  );
+};
+//fetch all project and user 
+export const ProjectFetchAllDetailsApi = () => {
+  return ProjectClient.get(
+    `${AUTH_API.PROJECT}/projects/assignments`
+  );
+};

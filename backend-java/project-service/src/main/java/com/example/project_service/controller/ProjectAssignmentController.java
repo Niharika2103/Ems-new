@@ -2,33 +2,39 @@ package com.example.project_service.controller;
 
 import com.example.project_service.model.ProjectAssignmentEntity;
 import com.example.project_service.service.ProjectAssignmentService;
+import com.example.project_service.dto.ProjectAssignmentDTO;
 import org.springframework.web.bind.annotation.*;
-
+import java.util.UUID;
 import java.util.List;
 
 @RestController
-@RequestMapping("/assignments")
+@CrossOrigin(origins = "*")
+@RequestMapping("/api/projects")
 public class ProjectAssignmentController {
 
-    private final ProjectAssignmentService assignmentService;
+    private final ProjectAssignmentService projectAssignmentService;
 
-    public ProjectAssignmentController(ProjectAssignmentService assignmentService) {
-        this.assignmentService = assignmentService;
+    
+    public ProjectAssignmentController(ProjectAssignmentService projectAssignmentService) {
+        this.projectAssignmentService = projectAssignmentService;
     }
 
-    @PostMapping
-    public ProjectAssignmentEntity assignEmployee(@RequestBody ProjectAssignmentEntity assignment) {
-        return assignmentService.assignEmployee(assignment);
+    @PostMapping("/{projectId}/assign")
+    public ProjectAssignmentEntity assignProject(
+            @PathVariable UUID projectId,
+            @RequestParam UUID employeeId,
+            @RequestParam String role) {
+        return projectAssignmentService.assignProjectToEmployee(projectId, employeeId, role);
     }
-
+    
     @GetMapping("/employee/{employeeId}")
-    public List<ProjectAssignmentEntity> getAssignmentsByEmployee(@PathVariable Long employeeId) {
-        return assignmentService.getAssignmentsByEmployee(employeeId);
+    public List<ProjectAssignmentEntity> getProjectsByEmployee(@PathVariable UUID employeeId) {
+        return projectAssignmentService.getProjectsByEmployeeId(employeeId);
     }
 
-    @GetMapping("/project/{projectId}")
-    public List<ProjectAssignmentEntity> getAssignmentsByProject(@PathVariable Long projectId) {
-        return assignmentService.getAssignmentsByProject(projectId);
+
+    @GetMapping("/assignments")
+    public List<ProjectAssignmentDTO> getAllAssignments() {
+        return projectAssignmentService.getAllAssignments();
     }
 }
-

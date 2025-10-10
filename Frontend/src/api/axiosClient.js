@@ -33,4 +33,4 @@ const createAxiosClient = (baseURL) => {
 export const superadminClient = createAxiosClient(API_BASES.SUPERADMIN);
 export const adminClient = createAxiosClient(API_BASES.ADMIN);
 export const employeeClient = createAxiosClient(API_BASES.EMPLOYEE);
-
+export const ProjectClient =createAxiosClient(API_BASES.PROJECT);

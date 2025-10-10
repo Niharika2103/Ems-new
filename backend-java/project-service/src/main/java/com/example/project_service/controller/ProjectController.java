@@ -9,9 +9,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
-
+@CrossOrigin(origins = "*")
 @RestController
-@RequestMapping("/projects")
+@RequestMapping("/api/projects")
 public class ProjectController {
 
     private final ProjectService projectService;
@@ -19,6 +19,7 @@ public class ProjectController {
     public ProjectController(ProjectService projectService) {
         this.projectService = projectService;
     }
+
 
 
     @PostMapping
@@ -61,4 +62,3 @@ public class ProjectController {
 
     
 }
-
