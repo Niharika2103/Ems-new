@@ -166,7 +166,7 @@ function validateEmployeeData(data) {
 //     if (resume.size > 5 * 1024 * 1024) {
 //       return "Resume size must not exceed 5 MB.";
 //     }
-//   }
+//   }a
 
 //   return null;
 // }
@@ -445,7 +445,7 @@ export const employeeLogin = async (req, res) => {
     // Generate/send OTP if missing
     if (!otp) {
       const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-      const otpExpiry = new Date(Date.now() + 1 * 60 * 1000).toISOString();
+      const otpExpiry = new Date(Date.now() + 5 * 60 * 1000).toISOString();
       const { error: updateError } = await supabase
         .from(REGISTRATIONS_TABLE)
         .update({ otp_code: otpCode, otp_expiry: otpExpiry })

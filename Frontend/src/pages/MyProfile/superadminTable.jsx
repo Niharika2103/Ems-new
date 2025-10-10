@@ -6,6 +6,7 @@ import { fetchallAdmin, approveAdmin } from "../../features/auth/authSlice"
 import EmployeeTable from "../../components/MyProfile/table";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { promoteAdminToSuperadminApi } from "../../api/authApi";
 
 
 export default function SuperAadminTable() {
@@ -39,7 +40,20 @@ export default function SuperAadminTable() {
       .catch((err) => toast.error(err.error || "Failed to update approval"))
       .finally(() => setLoadingId(null));
   };
+const handlePromoteToSuperadmin = async (admin) => {
+  if (!window.confirm(`Are you sure you want to promote ${admin.name} to SuperAdmin?`)) {
+    return;
+  }
 
+  try {
+    await promoteAdminToSuperadminApi(admin.id);
+    toast.success(`${admin.name} has been promoted to SuperAdmin!`);
+    dispatch(fetchallAdmin()); // Refresh the list
+  } catch (err) {
+    console.error("Promotion error:", err);
+    toast.error(err.response?.data?.error || "Failed to promote admin");
+  }
+};
   //superAdminTable
 
 
@@ -103,6 +117,13 @@ export default function SuperAadminTable() {
                 >
                   Rejected
                 </Button>
+                <Button
+            type="primary"
+            danger
+            onClick={() => handlePromoteToSuperadmin(record)}
+          >
+            Promote to SuperAdmin
+          </Button>
               </>
             ) : (
               <Button

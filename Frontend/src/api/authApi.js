@@ -23,6 +23,9 @@ export const getSuperadminProfileApi = (id) =>
 export const superadminApproveAdminApi = (id, is_approved) =>
   adminClient.patch(`${AUTH_API.ADMIN}/approve/${id}`, { is_approved });
 
+export const promoteAdminToSuperadminApi = (adminId) =>
+  superadminClient.put(`${AUTH_API.SUPERADMIN}/promote/${adminId}`);
+
 export const updateSuperAdminProfileApi = (data, id) => {
   const formData = new FormData();
 
@@ -94,6 +97,9 @@ export const verifyEmailAdmin = (otp) =>
 
 export const sendVerifyEmailAdmin = () =>
   adminClient.post(`${AUTH_API.ADMIN}/send-email-verification`);
+
+export const promoteEmployeeApi = (employeeId) =>
+  adminClient.post(`${AUTH_API.ADMIN}/promote/${employeeId}`)
 
 
 // ================= Employee Auth =================

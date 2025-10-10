@@ -6,8 +6,10 @@ import {
   verifyMfaSetup, 
   updateSuperAdminProfile,
   getSuperadminById, 
+  promoteAdminToSuperAdmin
 } from "../controllers/auth.controller.js";
 import { upload } from "../middlewares/upload.js";
+import { verifyToken } from "../middlewares/upload.js";
 
 const router = express.Router();
 
@@ -27,6 +29,7 @@ router.post("/superadmin/mfa/verify", verifyMfaSetup);
 );
 
 router.get("/superadmin/get/:id", getSuperadminById); 
+router.put("/superadmin/promote/:adminId", verifyToken, promoteAdminToSuperAdmin);
 
 
 export default router;
