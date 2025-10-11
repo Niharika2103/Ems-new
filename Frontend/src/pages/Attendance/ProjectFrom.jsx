@@ -9,12 +9,13 @@ import {
   CircularProgress,
   Alert,
 } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import { ProjectSave } from "../../features/Project/projectsSlice";
 
 const ProjectForm = () => {
   const dispatch = useDispatch();
   const { loading, error } = useSelector((state) => state.project);
-
+const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -41,6 +42,7 @@ const ProjectForm = () => {
           endDate: "",
           status: "IN_PROGRESS",
         });
+        navigate("/dashboard/fetch_project");
       }
     } catch (err) {
       console.error("Failed to save project:", err);

@@ -14,13 +14,17 @@ import Profile from "../pages/MyProfile/Profile";
 import AdminTable from "../pages/MyProfile/adminTable";
 import SuperAadminTable from "../pages/MyProfile/superadminTable";
 import LeaveCalendar from "../pages/Calender";
-import LeaveType from "../pages/Attendance/LeaveType";
+import EmpTimesheet from "../pages/Attendance/EmployeeTimesheet";
+import Timesheet from "../pages/Attendance/Timesheet";
 import AssignProjectPage from "../pages/Attendance/index";
 import ResetPassword from "../pages/Auth/ResetPassword";
 import EmpInfoDashboard from "../pages/dashbaord/EmpInfoDashboard";
 import ProjectForm from "../pages/Attendance/ProjectFrom";
 import EmployeeAssignedProjectPage from "../pages/Attendance/EmployeeAssignedProjectPage";
 import ProjectTable from "../pages/Attendance/ProjectTable";
+import TimesheetTable from "../components/Timesheettable";
+import ProjectDashboard from "../pages/dashbaord/ProjectDashboard";
+
 function AppRoutes() {
   return (
     <Routes>
@@ -31,13 +35,14 @@ function AppRoutes() {
       <Route path="/admin/register" element={<AdminRegisterPage />} />
       <Route path="/superadmin/login" element={<SuperAdminLogin />} />
       <Route path="/superadmin/register" element={<SuperAdminRegister />} />
-      <Route path="/attendance/leavetype" element={<LeaveType />} />
+    <Route path="/attendance/emptimesheet" element={<EmpTimesheet/>} />
+    <Route path="/attendance/timesheet" element={<Timesheet/>} />
       <Route path="/login/reset-password" element={<ResetPassword />} />
       {/* With layout */}
       <Route element={<Layout />}>
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<Profile />} />
-        <Route path="/dashboard/projects" element={<AssignProjectPage />} />
+        <Route path="/attendance/projects" element={<AssignProjectPage />} />
         {/*Employee List*/}
         <Route path="/dashboard/emp_requestTable" element={<AdminTable />} />
         <Route path="/dashboard/superadmin_requestTable" element={<SuperAadminTable />} />
@@ -48,6 +53,8 @@ function AppRoutes() {
         <Route path="/cal" element={<LeaveCalendar />} />
         {/* employee Registeration */}
         <Route path="/employee_register" element={<EmployeeRegisterForm />} />
+       <Route path="/dashboard/attendance" element={<ProjectDashboard/>}/>
+        <Route path="/attendance/timesheettable" element={<TimesheetTable />} />
 
       </Route>
     </Routes>

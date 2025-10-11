@@ -1,0 +1,23 @@
+.custom-calendar {
+  width: 250px !important;       /* smaller fixed width */
+  font-size: 11px !important;    /* smaller font */
+}
+
+.custom-calendar button {
+  padding: 2px 4px !important;   /* smaller buttons */
+  font-size: 11px !important;
+}
+
+.custom-calendar .react-calendar__tile {
+  height: 24px !important;       /* smaller date cells */
+  line-height: 24px !important;
+}
+
+.custom-calendar .react-calendar__month-view__weekdays {
+  font-size: 10px !important;    /* smaller weekday labels */
+}
+
+.custom-calendar .react-calendar__navigation button {
+  font-size: 11px !important;
+  padding: 2px 4px !important;
+}
