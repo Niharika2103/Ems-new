@@ -1,0 +1,129 @@
+package com.example.attendance_service.service;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+
+import com.example.attendance_service.model.AttendanceEntity;
+import com.example.attendance_service.model.ProjectEntity;
+import com.example.attendance_service.model.UserEmployeeMasterEntity;
+import com.example.attendance_service.repository.AttendanceRepository;
+import com.example.attendance_service.repository.ProjectRepository;
+import com.example.attendance_service.repository.UserEmployeeMasterRepository;
+
+import jakarta.transaction.Transactional;
+
+@Service
+public class AttendanceService {
+
+    private final AttendanceRepository attendanceRepository;
+    private final ProjectRepository projectRepository;
+    private final UserEmployeeMasterRepository userRepository;
+
+    public AttendanceService(AttendanceRepository attendanceRepository,
+                             ProjectRepository projectRepository,
+                             UserEmployeeMasterRepository userRepository) {
+        this.attendanceRepository = attendanceRepository;
+        this.projectRepository = projectRepository;
+        this.userRepository = userRepository;
+    }
+
+   
+    @Transactional
+    public String releseWeeklyAttendance(UUID employeeId, UUID projectId, List<AttendanceEntity> attendanceList) {
+
+        UserEmployeeMasterEntity employee = userRepository.findById(employeeId)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+        ProjectEntity project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Project not found"));
+
+        double cumulativeTotal = 0.0;
+
+        attendanceList.sort((a, b) -> a.getDate().compareTo(b.getDate()));
+
+        for (AttendanceEntity record : attendanceList) {
+
+            record.setEmployee(employee);
+            record.setProject(project);
+            
+            record.setGender(employee.getGender());
+
+            
+            if (record.getDate() == null) {
+                record.setDate(LocalDate.now());
+            }
+
+            // Normalize leave type
+            String leaveType = record.getLeaveType();
+            if (leaveType == null || leaveType.trim().isEmpty() || leaveType.equalsIgnoreCase("null")) {
+                record.setLeaveType(null);
+            }
+
+            // Force non-null workedHours
+            if (record.getWorkedHours() == null) {
+                record.setWorkedHours(0.0);
+            }
+            // ✅ Ensure date is set
+            if (record.getDate() == null) {
+                record.setDate(LocalDate.now());
+            }
+
+            // ✅ Always set year from date (system year if date = now)
+            record.setYear(record.getDate().getYear());
+
+            // ✅ Default worked hours
+            if (record.getWorkedHours() == null) {
+                record.setWorkedHours(0.0);
+            }
+
+
+            // Force non-null totalWorkedHours
+            if (record.getTotalWorkedHours() == null) {
+                record.setTotalWorkedHours(0.0);
+            }
+
+            // Leave logic: If leave day → workedHours = 0.0
+            if (record.getLeaveType() != null) {
+                record.setWorkedHours(0.0);
+            }
+ 
+            // Cumulative total (only add for working days)
+            if (record.getLeaveType() == null) {
+                cumulativeTotal += record.getWorkedHours();
+            }
+
+            record.setTotalWorkedHours(cumulativeTotal);
+            record.setStatus("draft");
+        }
+
+        attendanceRepository.saveAll(attendanceList);
+        return "Weekly attendance saved";
+    }
+
+    
+
+
+ // ✅ Get all attendance
+    public List<AttendanceEntity> getAllAttendance() {
+        return attendanceRepository.findAllByOrderByDateAsc();
+    }
+
+    // ✅ Get by employee
+    public List<AttendanceEntity> getAttendanceByEmployee(UUID employeeId) {
+        return attendanceRepository.findByEmployee_IdOrderByDateAsc(employeeId);
+    }
+
+    // ✅ Get by project
+    public List<AttendanceEntity> getAttendanceByProject(UUID projectId) {
+        return attendanceRepository.findByProject_IdOrderByDateAsc(projectId);
+    }
+
+    // ✅ Get by both employee + project
+    public List<AttendanceEntity> getAttendanceByEmployeeAndProject(UUID employeeId, UUID projectId) {
+        return attendanceRepository.findByEmployee_IdAndProject_IdOrderByDateAsc(employeeId, projectId);
+    }
+    
+
+}
