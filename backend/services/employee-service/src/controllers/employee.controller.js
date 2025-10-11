@@ -192,7 +192,7 @@ export const registerEmployee = async (req, res) => {
     const employeeId = await generateEmployeeId();
     console.log("Generated Employee ID:", employeeId);
 
-    // Check if employee exists
+    // ✅ Check if employee already exists
     const { data: existing, error: fetchError } = await supabase
       .from(USERS_TABLE)
       .select("*")
@@ -203,15 +203,15 @@ export const registerEmployee = async (req, res) => {
     if (fetchError) throw fetchError;
     if (existing) return res.status(400).json({ error: "Employee already registered" });
 
-    // Generate password & hash
+    // ✅ Generate password & hash
     const randomPassword = crypto.randomBytes(6).toString("base64").slice(0, 10);
     const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
-    // Reset token
+    // ✅ Reset token
     const resetToken = crypto.randomBytes(32).toString("hex");
     const resetExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
-    // Insert into users
+    // ✅ Insert into users table
     const { data: newEmployee, error: insertError } = await supabase
       .from(USERS_TABLE)
       .insert([
@@ -233,7 +233,7 @@ export const registerEmployee = async (req, res) => {
 
     if (insertError) throw insertError;
 
-    // Insert into registrations
+    // ✅ Insert into registrations
     const { error: regInsertError } = await supabase
       .from(REGISTRATIONS_TABLE)
       .insert([
@@ -251,7 +251,35 @@ export const registerEmployee = async (req, res) => {
 
     if (regInsertError) throw regInsertError;
 
-    // Send Email with Resend
+    // ✅ Insert default attendance record
+    const currentYear = new Date().getFullYear();
+
+    const { error: attendanceInsertError } = await supabase
+      .from("attendance")
+      .insert([
+        {
+          employee_id: newEmployee.id,
+          year: currentYear,
+          working_days: 0,
+          work_from_home: 315, // default
+          holidays: 10,
+          optional_holidays: 2,
+          el: 25,
+          sl: 10,
+          extra_milar: 2,
+          maternity_leave: 0,
+          paternity_leave: 0,
+          project_id: null,
+          date: new Date().toISOString().split("T")[0], // current date
+          status: "draft",
+          total_hours: 0,
+          worked_hours: 0,
+        },
+      ]);
+
+    if (attendanceInsertError) throw attendanceInsertError;
+
+    // ✅ Send Email with login credentials
     const loginUrl = `${process.env.FRONTEND_URL}/login`;
 
     await sendEmail(
@@ -259,15 +287,19 @@ export const registerEmployee = async (req, res) => {
       "Your EMS Employee Account Credentials",
       `
         <p>Hello ${fullName},</p>
-        <p>Your EMS account has been created.</p>
+        <p>Your EMS account has been created successfully.</p>
         <p><b>Login URL:</b> ${loginUrl}</p>
         <p><b>Email:</b> ${email}</p>
         <p><b>Password:</b> ${randomPassword}</p>
-        <p>⚠️ On your first login, you will be required to reset your password for security.</p>
+        <p>⚠️ Please reset your password on first login for security reasons.</p>
       `
     );
 
-    res.status(201).json({ message: "Employee registered and credentials sent via email." });
+    // ✅ Response
+    res.status(201).json({
+      message: "Employee registered successfully. Credentials sent via email, and attendance record created.",
+    });
+
   } catch (err) {
     console.error("Register Employee Error:", err.message);
     res.status(500).json({ error: err.message });
