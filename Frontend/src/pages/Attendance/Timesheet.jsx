@@ -18,8 +18,7 @@ import {
 import { ChevronLeft, ChevronRight, MoreVert, CalendarToday } from "@mui/icons-material";
 import Calendar from "react-calendar";
 
-export default function LeaveType() {
-  const [weekStart, setWeekStart] = useState(new Date());
+export default function Timesheet() {
   const [leaveType, setLeaveType] = useState("CL");
   const [hours, setHours] = useState(Array(7).fill(0));
   const [usedLeaveTypes, setUsedLeaveTypes] = useState(["CL"]); // ✅ CL by default
@@ -27,6 +26,7 @@ export default function LeaveType() {
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [menuRow, setMenuRow] = useState(null);
   const [lockedRows, setLockedRows] = useState({ CL: true }); // CL locked initially
+ const [weekStart, setWeekStart] = useState(getMonday(new Date()));
   const [calendarAnchor, setCalendarAnchor] = useState(null);
 
   const leaveTypes = ["CL", "SL", "PL", "WFH", "Comp Off"];
@@ -39,6 +39,23 @@ export default function LeaveType() {
     {}
   );
   const grandTotal = workedTotal + Object.values(rowTotals).reduce((s, v) => s + v, 0);
+  // --- utility functions ---
+  function getMonday(date) {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // adjust for Sunday
+    return new Date(d.setDate(diff));
+  }
+
+  function getSunday(monday) {
+    const d = new Date(monday);
+    d.setDate(d.getDate() + 6);
+    return d;
+  }
+
+
+   
+
 
   // Menu
   const handleMenuOpen = (e, row) => {
@@ -50,22 +67,16 @@ export default function LeaveType() {
     setMenuRow(null);
   };
 
-  // Week navigation
-  const changeWeek = (offset) => {
-    const newDate = new Date(weekStart);
-    newDate.setDate(weekStart.getDate() + offset * 7);
-    setWeekStart(newDate);
-  };
+const formatDateRange = () => {
+  const endDate = new Date(weekStart);
+  endDate.setDate(weekStart.getDate() + 6);
+  const fmt = (d) =>
+    `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1)
+      .toString()
+      .padStart(2, "0")}/${d.getFullYear()}`;
+  return `${fmt(weekStart)} - ${fmt(endDate)}`;
+};
 
-  const formatDateRange = () => {
-    const endDate = new Date(weekStart);
-    endDate.setDate(weekStart.getDate() + 6);
-    const fmt = (d) =>
-      `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1)
-        .toString()
-        .padStart(2, "0")}/${d.getFullYear()}`;
-    return `${fmt(weekStart)} - ${fmt(endDate)}`;
-  };
 
   const handleAddActivity = () => {
     if (leaveType && !usedLeaveTypes.includes(leaveType)) {
@@ -112,39 +123,38 @@ export default function LeaveType() {
       <IconButton onClick={() => changeWeek(-1)}>
         <ChevronLeft />
       </IconButton>
-     <Typography variant="subtitle1" className="font-semibold">
-            {formatDateRange()}
-          </Typography>
+
+      <Typography variant="subtitle1" className="font-semibold">
+        {formatDateRange()}
+      </Typography>
+
       <IconButton onClick={() => changeWeek(1)}>
         <ChevronRight />
       </IconButton>
+
       <IconButton onClick={(e) => setCalendarAnchor(e.currentTarget)}>
         <CalendarToday />
       </IconButton>
-     <Popover
-  open={Boolean(calendarAnchor)}
-  anchorEl={calendarAnchor}
-  onClose={() => setCalendarAnchor(null)}
-  anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
->
-  <Popover
-  open={Boolean(calendarAnchor)}
-  anchorEl={calendarAnchor}
-  onClose={() => setCalendarAnchor(null)}
-  anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
->
-  <div className="p-2">
-    <Calendar
-      onChange={setWeekStart}
-      value={weekStart}
-      className="custom-calendar"
-    />
-  </div>
-</Popover>
 
-</Popover>
-
+      <Popover
+        open={Boolean(calendarAnchor)}
+        anchorEl={calendarAnchor}
+        onClose={() => setCalendarAnchor(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <div className="p-2">
+          <Calendar
+            onChange={(date) => {
+              setWeekStart(getMonday(date));
+              setCalendarAnchor(null);
+            }}
+            value={weekStart}
+            className="custom-calendar"
+          />
+        </div>
+      </Popover>
     </div>
+
     
 
     {/* Center Typography */}
@@ -173,25 +183,32 @@ export default function LeaveType() {
   {/* TABLE-LIKE SECTION */}
   {/* <div className="bg-white shadow rounded-2xl p-4 mx-auto w-full md:w-4/5 flex flex-col gap-2"> */}
     {/* Header Row */}
-    <div className="flex justify-between font-semibold border-b pb-2">
-      <div className="flex-1">Project A</div>
-      <div className="flex gap-4 justify-end flex-1">
-        {days.map((d, i) => (
-          <div key={i} className="text-center w-12">
-            <div>{d}</div>
-            <div>
-              {(new Date(weekStart).getDate() + i)
-                .toString()
-                .padStart(2, "0")}/
-              {(new Date(weekStart).getMonth() + 1).toString().padStart(2, "0")}
-            </div>
-          </div>
-        ))}
-        <div className="text-center w-16">Total</div>
-        <div className="text-center w-16">Action</div>
+   <div className="flex justify-between font-semibold border-b pb-2">
+  <div className="flex-1">Project A</div>
+  <div className="flex gap-4 justify-end flex-1">
+    {days.map((day, i) => {
+      const currentDate = new Date(weekStart);
+      currentDate.setDate(weekStart.getDate() + i);
 
-      </div>
-    </div>
+      const formattedDate = `${currentDate
+        .getDate()
+        .toString()
+        .padStart(2, "0")}/${(currentDate.getMonth() + 1)
+        .toString()
+        .padStart(2, "0")}`;
+
+      return (
+        <div key={i} className="text-center w-12">
+          <div>{day}</div>
+          <div>{formattedDate}</div>
+        </div>
+      );
+    })}
+    <div className="text-center w-16">Total</div>
+    <div className="text-center w-16">Action</div>
+  </div>
+</div>
+
 
     {/* Worked Hours Row */}
     <div className="flex justify-between items-center py-1">

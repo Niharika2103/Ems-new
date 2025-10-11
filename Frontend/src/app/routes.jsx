@@ -14,7 +14,7 @@ import Profile from "../pages/MyProfile/Profile";
 import AdminTable from "../pages/MyProfile/adminTable";
 import SuperAadminTable from "../pages/MyProfile/superadminTable";
 import LeaveCalendar from "../pages/Calender";
-import LeaveType from "../pages/Attendance/LeaveType";
+import Timesheet from "../pages/Attendance/Timesheet";
 import AssignProjectPage from "../pages/Attendance/index";
 import ResetPassword from "../pages/Auth/ResetPassword";
 import EmpInfoDashboard from "../pages/dashbaord/EmpInfoDashboard";
@@ -31,7 +31,7 @@ function AppRoutes() {
       <Route path="/admin/register" element={<AdminRegisterPage />} />
       <Route path="/superadmin/login" element={<SuperAdminLogin />} />
       <Route path="/superadmin/register" element={<SuperAdminRegister />} />
-      <Route path="/attendance/leavetype" element={<LeaveType />} />
+    <Route path="/attendance/timesheet" element={<Timesheet/>} />
       <Route path="/login/reset-password" element={<ResetPassword />} />
       {/* With layout */}
       <Route element={<Layout />}>
