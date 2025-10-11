@@ -19,7 +19,7 @@ import { ChevronLeft, ChevronRight, MoreVert, CalendarToday } from "@mui/icons-m
 import Calendar from "react-calendar";
 import "./timesheet.css"
 
-export default function Timesheet() {
+export default function EmpTimesheet() {
   const [leaveType, setLeaveType] = useState("CL");
   const [hours, setHours] = useState(Array(7).fill(0));
   const [usedLeaveTypes, setUsedLeaveTypes] = useState(["CL"]); // CL by default
@@ -322,12 +322,14 @@ export default function Timesheet() {
         {/* Right Side */}
         <div className="flex gap-2 justify-between">
           <Button variant="contained" color="success" onClick={handleSaveAll}>
-            Approved
+            Save All
           </Button>
-          <Button variant="contained" color="danger" onClick={handleSaveAll}>
-            Rejected
+          <Button variant="contained" color="secondary">
+            Release end of the month
           </Button>
-         
+          <Button variant="contained" color="secondary">
+            Release Week
+          </Button>
         </div>
       </div>
 

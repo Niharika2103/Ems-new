@@ -37,7 +37,7 @@ const AdminDashboard = () => {
       icon: AccessTimeIcon,
       iconBg: "bg-sky-100",
       iconColor: "text-sky-600",
-      onClick: () => navigate("/dashboard/projects"),
+      onClick:()=>navigate("/dashboard/attendance"),
     },
     {
       title: "Projects",

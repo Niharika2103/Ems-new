@@ -41,7 +41,7 @@ export default function EmployeeAssignedProjectPage() {
     }
   }, [data, dispatch]);
   const handleNavigate = () => {
-    navigate("/attendance/leavetype");
+    navigate("/attendance/emptimesheet");
   };
   if (loading) return <p>Loading...</p>;
   if (error) return <p className="text-red-500">Error: {error}</p>;
