@@ -28,12 +28,22 @@ public class AttendanceController {
 
     // ✅ POST weekly attendance
     @PostMapping("/saveall")
+    public String saveallWeek(
+            @RequestParam UUID employeeId,
+            @RequestParam UUID projectId,
+            @RequestBody List<AttendanceEntity> attendanceList) {
+        return attendanceService.savedWeeklyAttendance(employeeId, projectId, attendanceList);
+    }
+    
+ // ✅ POST weekly attendance release
+    @PostMapping("/release-week")
     public String releaseWeek(
             @RequestParam UUID employeeId,
             @RequestParam UUID projectId,
             @RequestBody List<AttendanceEntity> attendanceList) {
-        return attendanceService.releseWeeklyAttendance(employeeId, projectId, attendanceList);
+        return attendanceService.releaseWeeklyAttendance(employeeId, projectId, attendanceList);
     }
+
 
     // ✅ GET all attendance
     @GetMapping

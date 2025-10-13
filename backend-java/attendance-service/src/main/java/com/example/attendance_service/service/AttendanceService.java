@@ -30,9 +30,10 @@ public class AttendanceService {
         this.userRepository = userRepository;
     }
 
-   
+ // Saves weekly attendance records as draft.
+    
     @Transactional
-    public String releseWeeklyAttendance(UUID employeeId, UUID projectId, List<AttendanceEntity> attendanceList) {
+    public String savedWeeklyAttendance(UUID employeeId, UUID projectId, List<AttendanceEntity> attendanceList) {
 
         UserEmployeeMasterEntity employee = userRepository.findById(employeeId)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
@@ -101,6 +102,68 @@ public class AttendanceService {
         attendanceRepository.saveAll(attendanceList);
         return "Weekly attendance saved";
     }
+    
+ // Submits weekly attendance records for approval.
+    @Transactional
+    public String releaseWeeklyAttendance(UUID employeeId, UUID projectId, List<AttendanceEntity> attendanceList) {
+
+        UserEmployeeMasterEntity employee = userRepository.findById(employeeId)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+        ProjectEntity project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Project not found"));
+
+        double cumulativeTotal = 0.0;
+
+        // Sort attendance by date
+        attendanceList.sort((a, b) -> a.getDate().compareTo(b.getDate()));
+
+        for (AttendanceEntity record : attendanceList) {
+
+            record.setEmployee(employee);
+            record.setProject(project);
+            record.setGender(employee.getGender());
+
+            if (record.getDate() == null) {
+                record.setDate(LocalDate.now());
+            }
+
+            // Normalize leave type
+            String leaveType = record.getLeaveType();
+            if (leaveType == null || leaveType.trim().isEmpty() || leaveType.equalsIgnoreCase("null")) {
+                record.setLeaveType(null);
+            }
+
+            // Default worked hours
+            if (record.getWorkedHours() == null) {
+                record.setWorkedHours(0.0);
+            }
+
+            record.setYear(record.getDate().getYear());
+
+            if (record.getTotalWorkedHours() == null) {
+                record.setTotalWorkedHours(0.0);
+            }
+
+            // If leave day → worked hours = 0
+            if (record.getLeaveType() != null) {
+                record.setWorkedHours(0.0);
+            }
+
+            // Cumulative total for working days only
+            if (record.getLeaveType() == null) {
+                cumulativeTotal += record.getWorkedHours();
+            }
+
+            record.setTotalWorkedHours(cumulativeTotal);
+
+            // ✅ Difference from saveAll:
+            record.setStatus("pending_approval");
+        }
+
+        attendanceRepository.saveAll(attendanceList);
+        return "Weekly attendance submitted for approval.";
+    }
+
 
     
 

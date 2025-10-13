@@ -3,6 +3,8 @@ package com.example.attendance_service.model;
 import java.time.LocalDate;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -24,6 +26,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 @Table(name = "attendance")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class AttendanceEntity {
 
 	@Id
@@ -33,10 +36,12 @@ public class AttendanceEntity {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "employee_id", referencedColumnName = "id", nullable = false)
+	@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 	private UserEmployeeMasterEntity employee;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "project_id", referencedColumnName = "id", nullable = false)
+	@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 	private ProjectEntity project;
 
 	@Column(name = "date", nullable = false)
@@ -56,11 +61,22 @@ public class AttendanceEntity {
 	private String leaveType;
 
 	@Column(name = "year", nullable = false)
-    private Integer year;
-	
+	private Integer year;
+
 	@Column(name = "gender", nullable = true)
-    private String gender;
+	private String gender;
+
+
 	
+	
+
+
+
+
+	
+
+	
+
 	
 
 	public String getGender() {

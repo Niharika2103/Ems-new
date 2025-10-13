@@ -1,6 +1,8 @@
 package com.example.attendance_service.model;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -18,6 +20,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @Builder
 @Table(name = "user_employees_master")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class UserEmployeeMasterEntity {
 
 	@Id
