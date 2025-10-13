@@ -140,11 +140,19 @@ const handleSaveAll = () => {
       leaveType: appliedLeaveType || "",
     };
   });
+const timesheets = attendance.map((item) => ({
+  id: item.id,
+  employee: item.employee?.employeeCode || "Unknown",
+  date: item.date,
+  hours: item.workedHours,
+  status: item.status === "pending_approval" ? "Pending" : item.status,
+}));
 
   console.log("Submitting Attendance:", dataToSend);
 
   // dispatch your thunk
-  dispatch(AttendanceSaveall({ employeeId, projectId, data: dataToSend }));
+  dispatch(AttendanceSaveall({ employeeId, projectId, formData: dataToSend }));
+
 };
 
 

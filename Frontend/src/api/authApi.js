@@ -197,14 +197,24 @@ export const ProjectFetchAllDetailsApi = () => {
 };
 
 //save all for attendance
-export const AttendanceSaveallApi =(employeeId, projectId, formData)=>{
+export const AttendanceSaveallApi = (employeeId, projectId, formData) => {
   return AttendanceClient.post(
-    `${AUTH_API.ATTENDANCE}/api/attendance/saveall/${employeeId}/${projectId}`,formData
+    `${AUTH_API.ATTENDANCE}/attendance/saveall`,
+    formData,
+    {
+      params: { employeeId, projectId } // this adds ?employeeId=...&projectId=...
+    }
   );
 };
+
 //fetch all data from attendance
 export const AttendanceFetchAllApi =()=>{
-  return AttendanceClient.post(
-    `${AUTH_API.ATTENDANCE}/api/attendance`
+  return AttendanceClient.get(
+    `${AUTH_API.ATTENDANCE}/attendance`
   );
+};
+
+// Fetch attendance by employee and project
+export const AttendanceFetchByEmployeeProjectApi = (employeeId, projectId) => {
+  return AttendanceClient.get(`/attendance/employee/${employeeId}/project/${projectId}`);
 };
