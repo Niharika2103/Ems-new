@@ -19,7 +19,7 @@ import { ChevronLeft, ChevronRight, MoreVert, CalendarToday } from "@mui/icons-m
 import Calendar from "react-calendar";
 import "./timesheet.css"
 import { useDispatch, useSelector } from "react-redux";
-import {AttendanceSaveall} from "../../features/attendance/attendanceSlice";
+import {AttendanceSaveall,AttendanceReleaseWeek} from "../../features/attendance/attendanceSlice";
 
 export default function EmpTimesheet() {
   const { projects, loading, error } = useSelector((state) => state.project);
@@ -140,13 +140,7 @@ const handleSaveAll = () => {
       leaveType: appliedLeaveType || "",
     };
   });
-const timesheets = attendance.map((item) => ({
-  id: item.id,
-  employee: item.employee?.employeeCode || "Unknown",
-  date: item.date,
-  hours: item.workedHours,
-  status: item.status === "pending_approval" ? "Pending" : item.status,
-}));
+
 
   console.log("Submitting Attendance:", dataToSend);
 
@@ -154,7 +148,37 @@ const timesheets = attendance.map((item) => ({
   dispatch(AttendanceSaveall({ employeeId, projectId, formData: dataToSend }));
 
 };
+const handleSaveWeek = () => {
+  const employeeId = projects[0]?.employeeId;
+  const projectId = projects[0]?.project?.id;
 
+  // build same JSON as Postman
+  const dataToSend = days.map((day, i) => {
+    const currentDate = new Date(weekStart);
+    currentDate.setDate(weekStart.getDate() + i);
+
+    let appliedLeaveType = "";
+    for (const lt of usedLeaveTypes) {
+      if (leaveRows[lt][i] > 0) {
+        appliedLeaveType = lt;
+        break;
+      }
+    }
+
+    return {
+      date: currentDate.toISOString().split("T")[0],
+      workedHours: Number(hours[i]) || 0,
+      leaveType: appliedLeaveType || "",
+    };
+  });
+
+
+  console.log("Submitting Attendance:", dataToSend);
+
+  // dispatch your thunk
+  dispatch(AttendanceReleaseWeek({ employeeId, projectId, formData: dataToSend }));
+
+};
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -369,7 +393,7 @@ const timesheets = attendance.map((item) => ({
           <Button variant="contained" color="success" onClick={handleSaveAll}>
             Save All
           </Button>
-          <Button variant="contained" color="secondary">
+          <Button variant="contained" color="secondary" onClick={handleSaveWeek}>
             Release end of the month
           </Button>
           <Button variant="contained" color="secondary">

@@ -3,6 +3,7 @@ package com.example.attendance_service.service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -12,6 +13,7 @@ import com.example.attendance_service.model.UserEmployeeMasterEntity;
 import com.example.attendance_service.repository.AttendanceRepository;
 import com.example.attendance_service.repository.ProjectRepository;
 import com.example.attendance_service.repository.UserEmployeeMasterRepository;
+import com.example.attendance_service.responsedto.AttendanceResponseDTO;
 
 import jakarta.transaction.Transactional;
 
@@ -167,10 +169,30 @@ public class AttendanceService {
 
     
 
+    public List<AttendanceResponseDTO> getAllAttendance() {
+        List<AttendanceEntity> entities = attendanceRepository.findAllByOrderByDateAsc();
 
- // ✅ Get all attendance
-    public List<AttendanceEntity> getAllAttendance() {
-        return attendanceRepository.findAllByOrderByDateAsc();
+        return entities.stream()
+                .map(a -> new AttendanceResponseDTO(
+                        a.getId(),
+                        a.getDate(),
+                        a.getWorkedHours(),
+                        a.getTotalWorkedHours(),
+                        a.getStatus(),
+                        a.getLeaveType(),
+                        a.getYear(),
+                        a.getGender(),
+
+                        // Employee details
+                        a.getEmployee() != null ? a.getEmployee().getId() : null,
+                        a.getEmployee() != null ? a.getEmployee().getEmployeeName() : null,
+                        a.getEmployee() != null ? a.getEmployee().getGender() : null,
+
+                        // Project details
+                        a.getProject() != null ? a.getProject().getId() : null,
+                        a.getProject() != null ? a.getProject().getProjectName() : null
+                ))
+                .collect(Collectors.toList());
     }
 
     // ✅ Get by employee
