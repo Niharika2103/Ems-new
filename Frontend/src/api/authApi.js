@@ -218,3 +218,14 @@ export const AttendanceFetchAllApi =()=>{
 export const AttendanceFetchByEmployeeProjectApi = (employeeId, projectId) => {
   return AttendanceClient.get(`/attendance/employee/${employeeId}/project/${projectId}`);
 };
+
+//fetch release-week
+    export const AttendanceReleaseWeekApi = (employeeId, projectId, formData) => {
+  return AttendanceClient.post(
+    `${AUTH_API.ATTENDANCE}/attendance/release-week`,
+    formData,
+    {
+      params: { employeeId, projectId }
+    }
+  );
+};
