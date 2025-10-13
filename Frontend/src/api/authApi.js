@@ -1,7 +1,4 @@
-import { superadminClient } from "./axiosClient";
-import { adminClient } from "./axiosClient";
-import { employeeClient } from "./axiosClient";
-import { ProjectClient } from "./axiosClient";
+import { superadminClient,employeeClient,adminClient,ProjectClient,AttendanceClient} from "./axiosClient";
 import { AUTH_API } from "../utils/constants";
 
 // ================= SuperAdmin =================
@@ -196,5 +193,18 @@ export const ProjectFetchAssignApi = (employeeId) => {
 export const ProjectFetchAllDetailsApi = () => {
   return ProjectClient.get(
     `${AUTH_API.PROJECT}/projects/assignments`
+  );
+};
+
+//save all for attendance
+export const AttendanceSaveallApi =(employeeId, projectId, formData)=>{
+  return AttendanceClient.post(
+    `${AUTH_API.ATTENDANCE}/api/attendance/saveall/${employeeId}/${projectId}`,formData
+  );
+};
+//fetch all data from attendance
+export const AttendanceFetchAllApi =()=>{
+  return AttendanceClient.post(
+    `${AUTH_API.ATTENDANCE}/api/attendance`
   );
 };

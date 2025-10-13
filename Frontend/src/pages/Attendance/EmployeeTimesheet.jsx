@@ -18,8 +18,14 @@ import {
 import { ChevronLeft, ChevronRight, MoreVert, CalendarToday } from "@mui/icons-material";
 import Calendar from "react-calendar";
 import "./timesheet.css"
+import { useDispatch, useSelector } from "react-redux";
+import {AttendanceSaveall} from "../../features/attendance/attendanceSlice";
 
 export default function EmpTimesheet() {
+  const { projects, loading, error } = useSelector((state) => state.project);
+  console.log(projects, "projects");
+  const dispatch = useDispatch();
+  const projectName = projects[0]?.project?.name;
   const [leaveType, setLeaveType] = useState("CL");
   const [hours, setHours] = useState(Array(7).fill(0));
   const [usedLeaveTypes, setUsedLeaveTypes] = useState(["CL"]); // CL by default
@@ -103,13 +109,44 @@ export default function EmpTimesheet() {
   };
 
   // General Save button outside menu
-  const handleSaveAll = () => {
-    const updated = {};
-    usedLeaveTypes.forEach((lt) => {
-      updated[lt] = true; // lock all rows
-    });
-    setLockedRows(updated);
-  };
+  // const handleSaveAll = () => {
+  //   const updated = {};
+  //   usedLeaveTypes.forEach((lt) => {
+  //     updated[lt] = true; // lock all rows
+  //   });
+  //   setLockedRows(updated);
+  // };
+  // --- inside EmpTimesheet component ---
+const handleSaveAll = () => {
+  const employeeId = projects[0]?.employeeId;
+  const projectId = projects[0]?.project?.id;
+
+  // build same JSON as Postman
+  const dataToSend = days.map((day, i) => {
+    const currentDate = new Date(weekStart);
+    currentDate.setDate(weekStart.getDate() + i);
+
+    let appliedLeaveType = "";
+    for (const lt of usedLeaveTypes) {
+      if (leaveRows[lt][i] > 0) {
+        appliedLeaveType = lt;
+        break;
+      }
+    }
+
+    return {
+      date: currentDate.toISOString().split("T")[0],
+      workedHours: Number(hours[i]) || 0,
+      leaveType: appliedLeaveType || "",
+    };
+  });
+
+  console.log("Submitting Attendance:", dataToSend);
+
+  // dispatch your thunk
+  dispatch(AttendanceSaveall({ employeeId, projectId, data: dataToSend }));
+};
+
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -178,7 +215,7 @@ export default function EmpTimesheet() {
       {/* <div className="bg-white shadow rounded-2xl p-4 mx-auto w-full md:w-4/5 flex flex-col gap-2"> */}
       {/* Header Row */}
       <div className="flex justify-between font-semibold border-b pb-2 text-sm">
-        <div className="flex-1">Project A</div>
+        <div className="flex-1">{projectName}</div>
         <div className="flex gap-2 justify-end flex-1">
           {days.map((day, i) => {
             const currentDate = new Date(weekStart);
@@ -207,26 +244,26 @@ export default function EmpTimesheet() {
       <div className="flex justify-between items-center py-1 text-sm">
         <div className="flex-1 font-semibold">Worked Hours</div>
         <div className="flex gap-5 justify-end flex-1">
-          {hours.map((h, i) =>  {
-      const isWeekend = i >= hours.length - 2; 
-        return (
-            <input
-              key={i}
-              type="number"
-              value={h}
-              min="0"
-              max="9"
-               disabled={lockedRows[h] || isWeekend}
-            className={`w-17 h-8 text-center border rounded-md ${
-            isWeekend ? 'bg-gray-200 cursor-not-allowed' : 'bg-white'
-          }`}
-              onChange={(e) => {
-                const newHours = [...hours];
-                newHours[i] = e.target.value;
-                setHours(newHours);
-              }}
-            />
-          )})}
+          {hours.map((h, i) => {
+            const isWeekend = i >= hours.length - 2;
+            return (
+              <input
+                key={i}
+                type="number"
+                value={h}
+                min="0"
+                max="9"
+                disabled={lockedRows[h] || isWeekend}
+                className={`w-17 h-8 text-center border rounded-md ${isWeekend ? 'bg-gray-200 cursor-not-allowed' : 'bg-white'
+                  }`}
+                onChange={(e) => {
+                  const newHours = [...hours];
+                  newHours[i] = e.target.value;
+                  setHours(newHours);
+                }}
+              />
+            )
+          })}
           <div className="text-center w-12">{workedTotal}/45</div>
           <IconButton onClick={(e) => handleMenuOpen(e, lt)}>
             <MoreVert />
@@ -239,29 +276,29 @@ export default function EmpTimesheet() {
         <div key={lt} className="flex justify-between items-center py-1 text-sm">
           <div className="flex-1 font-semibold">{lt}</div>
           <div className="flex gap-5 justify-end flex-1">
-            {leaveRows[lt].map((v, i) =>  {
-        const isWeekend = i >= leaveRows[lt].length - 2; 
-        return (
-              <input
-                key={i}
-                type="number"
-                value={v}
-                min="0"
-                max="9"
-                 disabled={lockedRows[lt] || isWeekend}
-            className={`w-17 h-8 text-center border rounded-md ${
-              isWeekend ? 'bg-gray-200 cursor-not-allowed' : 'bg-white'
-            }`}
-                onChange={(e) => {
-                  const updated = [...leaveRows[lt]];
-                  updated[i] = e.target.value;
-                  setLeaveRows((prev) => ({ ...prev, [lt]: updated }));
-                }}
-              />
-            
-            
+            {leaveRows[lt].map((v, i) => {
+              const isWeekend = i >= leaveRows[lt].length - 2;
+              return (
+                <input
+                  key={i}
+                  type="number"
+                  value={v}
+                  min="0"
+                  max="9"
+                  disabled={lockedRows[lt] || isWeekend}
+                  className={`w-17 h-8 text-center border rounded-md ${isWeekend ? 'bg-gray-200 cursor-not-allowed' : 'bg-white'
+                    }`}
+                  onChange={(e) => {
+                    const updated = [...leaveRows[lt]];
+                    updated[i] = e.target.value;
+                    setLeaveRows((prev) => ({ ...prev, [lt]: updated }));
+                  }}
+                />
+
+
+              )
+            }
             )}
-          )}
             <div className="text-center w-12">{rowTotals[lt]}</div>
             <IconButton onClick={(e) => handleMenuOpen(e, lt)}>
               <MoreVert />

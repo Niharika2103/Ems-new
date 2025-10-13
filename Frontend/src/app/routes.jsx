@@ -24,6 +24,8 @@ import EmployeeAssignedProjectPage from "../pages/Attendance/EmployeeAssignedPro
 import ProjectTable from "../pages/Attendance/ProjectTable";
 import TimesheetTable from "../components/Timesheettable";
 import ProjectDashboard from "../pages/dashbaord/ProjectDashboard";
+import Letters from "../pages/documents/Letters";
+
 
 function AppRoutes() {
   return (
@@ -55,6 +57,7 @@ function AppRoutes() {
         <Route path="/employee_register" element={<EmployeeRegisterForm />} />
        <Route path="/dashboard/attendance" element={<ProjectDashboard/>}/>
         <Route path="/attendance/timesheettable" element={<TimesheetTable />} />
+        <Route path="/documents/letters" element={<Letters />} />
 
       </Route>
     </Routes>

@@ -3,7 +3,8 @@ export const API_BASES = {
   SUPERADMIN: import.meta.env.VITE_SUPERADMIN_URL || "http://localhost:5001",
   ADMIN: import.meta.env.VITE_ADMIN_URL || "http://localhost:5002",
   EMPLOYEE: import.meta.env.VITE_EMPLOYEE_URL || "http://localhost:5004",
-  PROJECT:import.meta.env.VITE_Project_URL || "http://localhost:8080/api"
+  PROJECT:import.meta.env.VITE_Project_URL || "http://localhost:8080/api",
+  ATTENDANCE:import.meta.env.VITE_Attendance_URL || "http://localhost:9090/api",
 };
 
 
@@ -19,6 +20,7 @@ export const AUTH_API = {
   ADMIN: `${API_BASES.ADMIN}/admin`,
   EMPLOYEE: `${API_BASES.EMPLOYEE}/employee`,
   PROJECT:`${API_BASES.PROJECT}`,
+  ATTENDANCE:`${API_BASES.ATTENDANCE}`,
 };
 
 export const ROLES = {
@@ -26,6 +28,7 @@ export const ROLES = {
   ADMIN: "admin",
   EMPLOYEE: "employee",
   PROJECT:"project",
+  ATTENDANCE:"attendance",
 };
 
 export const OTP_LENGTH = 6;

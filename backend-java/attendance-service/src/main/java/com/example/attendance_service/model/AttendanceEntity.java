@@ -49,7 +49,7 @@ public class AttendanceEntity {
 	@Column(name = "total_hours", nullable = false)
 	private Double totalWorkedHours = 0.0;
 
-	@Column(name = "status", nullable = false)
+	@Column(name = "weekly_status", nullable = false)
 	private String status;
 
 	@Column(name = "leave_type")
