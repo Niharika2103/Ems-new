@@ -32,6 +32,8 @@ public class AttendanceController {
             @RequestParam UUID employeeId,
             @RequestParam UUID projectId,
             @RequestBody List<AttendanceEntity> attendanceList) {
+    	System.out.println("@44"+ employeeId );
+    	System.out.println("@44"+projectId );
         return attendanceService.savedWeeklyAttendance(employeeId, projectId, attendanceList);
     }
     
@@ -41,6 +43,7 @@ public class AttendanceController {
             @RequestParam UUID employeeId,
             @RequestParam UUID projectId,
             @RequestBody List<AttendanceEntity> attendanceList) {
+    	
         return attendanceService.releaseWeeklyAttendance(employeeId, projectId, attendanceList);
     }
 

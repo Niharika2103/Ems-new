@@ -11,34 +11,41 @@ import {
   Paper,
   Typography,
   Chip,
+  TablePagination, // 🔹 Added
 } from "@mui/material";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { AttendanceFetchAll,AttendanceFetchByEmployeeProject } from "../../features/attendance/attendanceSlice";
+import {
+  AttendanceFetchAll,
+  AttendanceFetchByEmployeeProject,
+} from "../../features/attendance/attendanceSlice";
 
 const TimesheetTable = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-    const location = useLocation();
-  const { attendance, loading, error } = useSelector(state => state.attendance);
-   const { employeeId, projectId } = location.state || {};
+  const location = useLocation();
+  const { attendance, loading, error } = useSelector((state) => state.attendance);
+  const { employeeId, projectId } = location.state || {};
 
   const [newTimesheet, setNewTimesheet] = useState({ employee: "", date: "", hours: "" });
   const [localTimesheets, setLocalTimesheets] = useState([]);
+
+  // 🔹 Pagination states
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
 
   useEffect(() => {
     dispatch(AttendanceFetchAll());
   }, [dispatch]);
 
-  // Update local timesheets whenever Redux attendance changes
   useEffect(() => {
     if (attendance && Array.isArray(attendance)) {
-      const mapped = attendance.map(item => ({
+      const mapped = attendance.map((item) => ({
         id: item.id,
         employee: item.employee?.employeeCode || "Unknown",
         date: item.date,
         hours: item.workedHours,
-        status: item.status === "draft" ? "Pending" : capitalize(item.status)
+        status: item.status === "draft" ? "Pending" : capitalize(item.status),
       }));
       setLocalTimesheets(mapped);
     }
@@ -50,19 +57,22 @@ const TimesheetTable = () => {
     }
   }, [dispatch, employeeId, projectId]);
 
-    const handleView = (employeeId, projectId) => {
-    navigate("/attendance/timesheet", {
-      state: { employeeId, projectId }
-    });
-  };
   const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
 
+  const handleView = (employeeId, projectId) => {
+    navigate("/attendance/timesheet", { state: { employeeId, projectId } });
+  };
+
   const handleApprove = (id) => {
-    setLocalTimesheets(prev => prev.map(t => t.id === id ? { ...t, status: "Approved" } : t));
+    setLocalTimesheets((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, status: "Approved" } : t))
+    );
   };
 
   const handleReject = (id) => {
-    setLocalTimesheets(prev => prev.map(t => t.id === id ? { ...t, status: "Rejected" } : t));
+    setLocalTimesheets((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, status: "Rejected" } : t))
+    );
   };
 
   const handleDialogOpen = () => setOpenDialog(true);
@@ -83,7 +93,7 @@ const TimesheetTable = () => {
       employee: newTimesheet.employee,
       date: newTimesheet.date,
       hours: parseInt(newTimesheet.hours),
-      status: "Pending"
+      status: "Pending",
     };
     setLocalTimesheets([...localTimesheets, newEntry]);
     handleDialogClose();
@@ -91,10 +101,23 @@ const TimesheetTable = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "Approved": return "success";
-      case "Rejected": return "error";
-      default: return "warning";
+      case "Approved":
+        return "success";
+      case "Rejected":
+        return "error";
+      default:
+        return "warning";
     }
+  };
+
+  // 🔹 Pagination handlers
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
   };
 
   if (loading) return <p>Loading...</p>;
@@ -104,8 +127,12 @@ const TimesheetTable = () => {
     <Box sx={{ maxWidth: 1200, mx: "auto", mt: 5, p: 3 }}>
       {/* Header */}
       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3, alignItems: "center" }}>
-        <Typography variant="h6" fontWeight={400}>Timesheet Approval</Typography>
-        <Button variant="contained" color="primary" onClick={handleDialogOpen}>New Timesheet</Button>
+        <Typography variant="h6" fontWeight={400}>
+          Timesheet Approval
+        </Typography>
+        <Button variant="contained" color="primary" onClick={handleDialogOpen}>
+          New Timesheet
+        </Button>
       </Box>
 
       {/* Table */}
@@ -121,51 +148,64 @@ const TimesheetTable = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {localTimesheets.map(t => (
-              <TableRow key={t.id} hover>
-                <TableCell>{t.employee}</TableCell>
-                <TableCell>{t.date}</TableCell>
-                <TableCell>{t.hours}</TableCell>
-                <TableCell><Chip label={t.status} color={getStatusColor(t.status)} /></TableCell>
-                <TableCell>
-                   <Button
-                    variant="contained"
-                    color="primary"
-                    size="small"
-                    sx={{ mr: 1 }}
-                  onClick={() => handleView(t.employeeId, t.projectId)}
-                  >
-                    View
-                  </Button>
-                  {t.status === "Pending" && (
-                    <>
-                      <Button
-                        variant="contained"
-                        color="success"
-                        size="small"
-                        sx={{ mr: 1 }}
-                        onClick={() => handleApprove(t.id)}
-                      >
-                        Approve
-                      </Button>
-                      <Button
-                        variant="contained"
-                        color="error"
-                        size="small"
-                        onClick={() => handleReject(t.id)}
-                      >
-                        Reject
-                      </Button>
-                    </>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
+            {localTimesheets
+              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+              .map((t) => (
+                <TableRow key={t.id} hover>
+                  <TableCell>{t.employee}</TableCell>
+                  <TableCell>{t.date}</TableCell>
+                  <TableCell>{t.hours}</TableCell>
+                  <TableCell>
+                    <Chip label={t.status} color={getStatusColor(t.status)} />
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="contained"
+                      color="primary"
+                      size="small"
+                      sx={{ mr: 1 }}
+                      onClick={() => handleView(t.employeeId, t.projectId)}
+                    >
+                      View
+                    </Button>
+                    {t.status === "Pending" && (
+                      <>
+                        <Button
+                          variant="contained"
+                          color="success"
+                          size="small"
+                          sx={{ mr: 1 }}
+                          onClick={() => handleApprove(t.id)}
+                        >
+                          Approve
+                        </Button>
+                        <Button
+                          variant="contained"
+                          color="error"
+                          size="small"
+                          onClick={() => handleReject(t.id)}
+                        >
+                          Reject
+                        </Button>
+                      </>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
           </TableBody>
         </Table>
-      </TableContainer>
 
-  
+        {/* 🔹 Pagination Component */}
+        <TablePagination
+          component="div"
+          count={localTimesheets.length}
+          page={page}
+          onPageChange={handleChangePage}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          rowsPerPageOptions={[5, 10, 25]}
+        />
+      </TableContainer>
     </Box>
   );
 };
