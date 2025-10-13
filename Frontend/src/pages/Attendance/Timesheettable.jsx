@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
@@ -11,30 +11,58 @@ import {
   Paper,
   Typography,
   Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  TextField,
-  DialogActions
 } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { AttendanceFetchAll,AttendanceFetchByEmployeeProject } from "../../features/attendance/attendanceSlice";
 
 const TimesheetTable = () => {
-  const [timesheets, setTimesheets] = useState([
-    { id: 1, employee: "John Doe", date: "2025-10-11", hours: 8, status: "Pending" },
-    { id: 2, employee: "Jane Smith", date: "2025-10-10", hours: 7, status: "Approved" },
-    { id: 3, employee: "Alice Johnson", date: "2025-10-09", hours: 9, status: "Pending" },
-  ]);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+    const location = useLocation();
+  const { attendance, loading, error } = useSelector(state => state.attendance);
+   const { employeeId, projectId } = location.state || {};
 
-  const [openDialog, setOpenDialog] = useState(false);
   const [newTimesheet, setNewTimesheet] = useState({ employee: "", date: "", hours: "" });
-const navigate = useNavigate();
+  const [localTimesheets, setLocalTimesheets] = useState([]);
+
+  useEffect(() => {
+    dispatch(AttendanceFetchAll());
+  }, [dispatch]);
+
+  // Update local timesheets whenever Redux attendance changes
+  useEffect(() => {
+    if (attendance && Array.isArray(attendance)) {
+      const mapped = attendance.map(item => ({
+        id: item.id,
+        employee: item.employee?.employeeCode || "Unknown",
+        date: item.date,
+        hours: item.workedHours,
+        status: item.status === "draft" ? "Pending" : capitalize(item.status)
+      }));
+      setLocalTimesheets(mapped);
+    }
+  }, [attendance]);
+
+  useEffect(() => {
+    if (employeeId && projectId) {
+      dispatch(AttendanceFetchByEmployeeProject({ employeeId, projectId }));
+    }
+  }, [dispatch, employeeId, projectId]);
+
+    const handleView = (employeeId, projectId) => {
+    navigate("/attendance/timesheet", {
+      state: { employeeId, projectId }
+    });
+  };
+  const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+
   const handleApprove = (id) => {
-    setTimesheets(timesheets.map(t => t.id === id ? { ...t, status: "Approved" } : t));
+    setLocalTimesheets(prev => prev.map(t => t.id === id ? { ...t, status: "Approved" } : t));
   };
 
   const handleReject = (id) => {
-    setTimesheets(timesheets.map(t => t.id === id ? { ...t, status: "Rejected" } : t));
+    setLocalTimesheets(prev => prev.map(t => t.id === id ? { ...t, status: "Rejected" } : t));
   };
 
   const handleDialogOpen = () => setOpenDialog(true);
@@ -51,13 +79,13 @@ const navigate = useNavigate();
     if (!newTimesheet.employee || !newTimesheet.date || !newTimesheet.hours) return;
 
     const newEntry = {
-      id: timesheets.length + 1,
+      id: localTimesheets.length + 1,
       employee: newTimesheet.employee,
       date: newTimesheet.date,
       hours: parseInt(newTimesheet.hours),
       status: "Pending"
     };
-    setTimesheets([...timesheets, newEntry]);
+    setLocalTimesheets([...localTimesheets, newEntry]);
     handleDialogClose();
   };
 
@@ -68,6 +96,9 @@ const navigate = useNavigate();
       default: return "warning";
     }
   };
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {JSON.stringify(error)}</p>;
 
   return (
     <Box sx={{ maxWidth: 1200, mx: "auto", mt: 5, p: 3 }}>
@@ -90,25 +121,22 @@ const navigate = useNavigate();
             </TableRow>
           </TableHead>
           <TableBody>
-            {timesheets.map((t) => (
+            {localTimesheets.map(t => (
               <TableRow key={t.id} hover>
                 <TableCell>{t.employee}</TableCell>
                 <TableCell>{t.date}</TableCell>
                 <TableCell>{t.hours}</TableCell>
+                <TableCell><Chip label={t.status} color={getStatusColor(t.status)} /></TableCell>
                 <TableCell>
-                  <Chip label={t.status} color={getStatusColor(t.status)} />
-                </TableCell>
-                <TableCell>
-                  <Button
-                        variant="contained"
-                        color="primary"
-                        size="small"
-                        sx={{ mr: 1 }}
-                        // onClick={() => handleClick(t.id)}
-                        onClick={()=>navigate("/attendance/timesheet")}
-                      >
-                        View
-                      </Button>
+                   <Button
+                    variant="contained"
+                    color="primary"
+                    size="small"
+                    sx={{ mr: 1 }}
+                  onClick={() => handleView(t.employeeId, t.projectId)}
+                  >
+                    View
+                  </Button>
                   {t.status === "Pending" && (
                     <>
                       <Button
@@ -137,7 +165,7 @@ const navigate = useNavigate();
         </Table>
       </TableContainer>
 
-     
+  
     </Box>
   );
 };

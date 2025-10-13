@@ -22,7 +22,7 @@ import EmpInfoDashboard from "../pages/dashbaord/EmpInfoDashboard";
 import ProjectForm from "../pages/Attendance/ProjectFrom";
 import EmployeeAssignedProjectPage from "../pages/Attendance/EmployeeAssignedProjectPage";
 import ProjectTable from "../pages/Attendance/ProjectTable";
-import TimesheetTable from "../components/Timesheettable";
+import TimesheetTable from "../pages/Attendance/Timesheettable";
 import ProjectDashboard from "../pages/dashbaord/ProjectDashboard";
 import Letters from "../pages/documents/Letters";
 

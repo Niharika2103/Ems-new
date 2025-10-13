@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { AttendanceSaveallApi,AttendanceFetchAllApi } from "../../api/authApi";
+import { AttendanceSaveallApi,AttendanceFetchAllApi ,AttendanceFetchByEmployeeProjectApi} from "../../api/authApi";
 
 export const AttendanceSaveall = createAsyncThunk("attendance/saveall", async ({ employeeId, projectId, formData }, thunkAPI) => {
   try {
@@ -19,34 +19,59 @@ export const AttendanceFetchAll = createAsyncThunk("attendance/fetchall", async 
   }
 })
 
-
+// Fetch by employee & project
+export const AttendanceFetchByEmployeeProject = createAsyncThunk(
+  "attendance/fetchByEmployeeProject",
+  async ({ employeeId, projectId }, thunkAPI) => {
+    try {
+      const res = await AttendanceFetchByEmployeeProjectApi(employeeId, projectId);
+      return res.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
 const attendanceSlice = createSlice({
   name: "attendance",
   initialState: {
-    attendance: null,  
-    attedance:[],
+    attendance:[],
       loading: false,
     error: null,
   },
   reducers: {
     logout: (state) => {
-      state.attendance = null;
-      state.token = null;
+      state.attendance = [];
       localStorage.removeItem("token");
     },
   },
   extraReducers: (builder) => {
     builder
-      .addCase(adminRegister.pending, (state) => {
+      .addCase(AttendanceSaveall.pending, (state) => {
         state.loading = true;
       })
-      .addCase(adminRegister.fulfilled, (state) => {
+      .addCase(AttendanceSaveall.fulfilled, (state) => {
         state.loading = false;
       })
-      .addCase(adminRegister.rejected, (state, action) => {
+      .addCase(AttendanceSaveall.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      });
+      })
+       .addCase(AttendanceFetchAll.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(AttendanceFetchAll.fulfilled, (state,action) => {
+        state.loading = false;
+         state.attendance = action.payload;
+      })
+      .addCase(AttendanceFetchAll.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Fetch by employee & project
+      .addCase(AttendanceFetchByEmployeeProject.pending, (state) => { state.loading = true; })
+      .addCase(AttendanceFetchByEmployeeProject.fulfilled, (state, action) => { state.loading = false; state.attendance = action.payload; })
+      .addCase(AttendanceFetchByEmployeeProject.rejected, (state, action) => { state.loading = false; state.error = action.payload; });
+
   },
 });
 
