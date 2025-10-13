@@ -31,9 +31,20 @@ public class UserEmployeeMasterEntity {
     @Column(name = "employee_id")
     private String employeeCode;
     
+    @Column(name = "name", nullable = false)
+    private String employeeName;
+    
     @Column(name = "gender", nullable = false)
     private String gender;
     
+
+	public void setEmployeeName(String employeeName) {
+		this.employeeName = employeeName;
+	}
+
+	public String getEmployeeName() {
+		return employeeName;
+	}
 
 	public String getGender() {
 		return gender;
@@ -58,6 +69,7 @@ public class UserEmployeeMasterEntity {
 	public void setEmployeeCode(String employeeCode) {
 		this.employeeCode = employeeCode;
 	}
-    
+
+
     
 }

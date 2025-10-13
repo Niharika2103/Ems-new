@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.attendance_service.model.AttendanceEntity;
+import com.example.attendance_service.responsedto.AttendanceResponseDTO;
 import com.example.attendance_service.service.AttendanceService;
 
 @RestController
@@ -47,7 +48,7 @@ public class AttendanceController {
 
     // ✅ GET all attendance
     @GetMapping
-    public List<AttendanceEntity> getAllAttendance() {
+    public List<AttendanceResponseDTO> getAllAttendance() {
         return attendanceService.getAllAttendance();
     }
 

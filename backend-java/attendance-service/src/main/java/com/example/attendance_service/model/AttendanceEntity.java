@@ -67,17 +67,6 @@ public class AttendanceEntity {
 	private String gender;
 
 
-	
-	
-
-
-
-
-	
-
-	
-
-	
 
 	public String getGender() {
 		return gender;
