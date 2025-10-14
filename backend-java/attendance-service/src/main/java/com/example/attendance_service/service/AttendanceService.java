@@ -3,6 +3,7 @@ package com.example.attendance_service.service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -12,6 +13,7 @@ import com.example.attendance_service.model.UserEmployeeMasterEntity;
 import com.example.attendance_service.repository.AttendanceRepository;
 import com.example.attendance_service.repository.ProjectRepository;
 import com.example.attendance_service.repository.UserEmployeeMasterRepository;
+import com.example.attendance_service.responsedto.AttendanceResponseDTO;
 
 import jakarta.transaction.Transactional;
 
@@ -30,9 +32,10 @@ public class AttendanceService {
         this.userRepository = userRepository;
     }
 
-   
+ // Saves weekly attendance records as draft.
+    
     @Transactional
-    public String releseWeeklyAttendance(UUID employeeId, UUID projectId, List<AttendanceEntity> attendanceList) {
+    public String savedWeeklyAttendance(UUID employeeId, UUID projectId, List<AttendanceEntity> attendanceList) {
 
         UserEmployeeMasterEntity employee = userRepository.findById(employeeId)
                 .orElseThrow(() -> new RuntimeException("Employee not found"));
@@ -101,13 +104,95 @@ public class AttendanceService {
         attendanceRepository.saveAll(attendanceList);
         return "Weekly attendance saved";
     }
+    
+ // Submits weekly attendance records for approval.
+    @Transactional
+    public String releaseWeeklyAttendance(UUID employeeId, UUID projectId, List<AttendanceEntity> attendanceList) {
+
+        UserEmployeeMasterEntity employee = userRepository.findById(employeeId)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+        ProjectEntity project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Project not found"));
+
+        double cumulativeTotal = 0.0;
+
+        // Sort attendance by date
+        attendanceList.sort((a, b) -> a.getDate().compareTo(b.getDate()));
+
+        for (AttendanceEntity record : attendanceList) {
+
+            record.setEmployee(employee);
+            record.setProject(project);
+            record.setGender(employee.getGender());
+
+            if (record.getDate() == null) {
+                record.setDate(LocalDate.now());
+            }
+
+            // Normalize leave type
+            String leaveType = record.getLeaveType();
+            if (leaveType == null || leaveType.trim().isEmpty() || leaveType.equalsIgnoreCase("null")) {
+                record.setLeaveType(null);
+            }
+
+            // Default worked hours
+            if (record.getWorkedHours() == null) {
+                record.setWorkedHours(0.0);
+            }
+
+            record.setYear(record.getDate().getYear());
+
+            if (record.getTotalWorkedHours() == null) {
+                record.setTotalWorkedHours(0.0);
+            }
+
+            // If leave day → worked hours = 0
+            if (record.getLeaveType() != null) {
+                record.setWorkedHours(0.0);
+            }
+
+            // Cumulative total for working days only
+            if (record.getLeaveType() == null) {
+                cumulativeTotal += record.getWorkedHours();
+            }
+
+            record.setTotalWorkedHours(cumulativeTotal);
+
+            // ✅ Difference from saveAll:
+            record.setStatus("pending_approval");
+        }
+
+        attendanceRepository.saveAll(attendanceList);
+        return "Weekly attendance submitted for approval.";
+    }
+
 
     
 
+    public List<AttendanceResponseDTO> getAllAttendance() {
+        List<AttendanceEntity> entities = attendanceRepository.findAllByOrderByDateAsc();
 
- // ✅ Get all attendance
-    public List<AttendanceEntity> getAllAttendance() {
-        return attendanceRepository.findAllByOrderByDateAsc();
+        return entities.stream()
+                .map(a -> new AttendanceResponseDTO(
+                        a.getId(),
+                        a.getDate(),
+                        a.getWorkedHours(),
+                        a.getTotalWorkedHours(),
+                        a.getStatus(),
+                        a.getLeaveType(),
+                        a.getYear(),
+                        a.getGender(),
+
+                        // Employee details
+                        a.getEmployee() != null ? a.getEmployee().getId() : null,
+                        a.getEmployee() != null ? a.getEmployee().getEmployeeName() : null,
+                        a.getEmployee() != null ? a.getEmployee().getGender() : null,
+
+                        // Project details
+                        a.getProject() != null ? a.getProject().getId() : null,
+                        a.getProject() != null ? a.getProject().getProjectName() : null
+                ))
+                .collect(Collectors.toList());
     }
 
     // ✅ Get by employee
