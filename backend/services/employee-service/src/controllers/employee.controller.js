@@ -271,7 +271,8 @@ export const registerEmployee = async (req, res) => {
           paternity_leave: 0,
           project_id: null,
           date: new Date().toISOString().split("T")[0], // current date
-          status: "draft",
+          weekly_status: "draft",
+          monthly_status: "draft",
           total_hours: 0,
           worked_hours: 0,
         },
