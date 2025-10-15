@@ -15,6 +15,11 @@ import {
   sendEmailVerification,
   verifyEmail,
   promoteEmployee,
+  getPendingWeeklyApprovals,
+  updateWeeklyApprovalStatus,
+  getPendingMonthlyApprovals,
+  updateMonthlyApprovalStatus,
+  adminUpdateWorkedHours,
 
 } from "../controllers/admin.controller.js";
 const router = Router();
@@ -49,4 +54,11 @@ router.get("/temp-admins", listTempAdmins);              // List all active temp
 router.post("/send-email-verification", sendEmailVerification);
 router.post("/verify-email", verifyEmail);
 router.post("/promote/:employeeId", promoteEmployee);
+
+router.get("/attendance/pending-weekly", getPendingWeeklyApprovals);
+router.put("/attendance/update-weekly-status", updateWeeklyApprovalStatus);
+router.get("/attendance/pending-monthly", getPendingMonthlyApprovals);
+router.put("/attendance/update-monthly-status", updateMonthlyApprovalStatus);
+router.put("/attendance/admin-update-worked-hours", adminUpdateWorkedHours);
+
 export default router;

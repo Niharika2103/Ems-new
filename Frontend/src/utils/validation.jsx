@@ -241,4 +241,51 @@ export const validateResetPassword = (formData) => {
 
   return errors;
 };
+// Edit Employee Validation (for AdminTable edit form)
+export const validateEmployeeEdit = (formData) => {
+  let errors = {};
+
+  // Name
+  if (!formData.name?.trim()) {
+    errors.name = "Full name is required";
+  } else if (!/^[a-zA-Z\s]{1,15}$/.test(formData.name.trim())) {
+    errors.name = "Only letters and spaces allowed, max 15 characters";
+  }
+
+  // Email
+  if (!formData.email?.trim()) {
+    errors.email = "Email is required";
+  } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+    errors.email = "Email is not valid";
+  } 
+
+  // Phone
+  if (!formData.phone?.trim()) {
+    errors.phone = "Phone number is required";
+  } else if (!/^[0-9]{10}$/.test(formData.phone)) {
+    errors.phone = "Phone number must be 10 digits";
+  }
+
+  // Address
+  if (!formData.address?.trim()) {
+    errors.address = "Address is required";
+  }
+
+  // Date of Joining
+  if (!formData.date_of_joining) {
+    errors.date_of_joining = "Date of joining is required";
+  } else {
+    const today = new Date().toISOString().split("T")[0];
+    if (formData.date_of_joining > today) {
+      errors.date_of_joining = "Date of joining cannot be in the future";
+    }
+  }
+
+  // Department
+  if (!formData.department) {
+    errors.department = "Department is required";
+  }
+
+  return errors;
+};
 

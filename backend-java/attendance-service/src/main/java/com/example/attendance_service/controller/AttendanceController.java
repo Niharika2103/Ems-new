@@ -3,6 +3,8 @@ package com.example.attendance_service.controller;
 import java.util.List;
 import java.util.UUID;
 
+
+
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.attendance_service.model.AttendanceEntity;
+import com.example.attendance_service.requestdto.AttendanceRequestDTO;
 import com.example.attendance_service.responsedto.AttendanceResponseDTO;
 import com.example.attendance_service.service.AttendanceService;
 
@@ -26,17 +29,16 @@ public class AttendanceController {
     public AttendanceController(AttendanceService attendanceService) {
         this.attendanceService = attendanceService;
     }
-
-    // ✅ POST weekly attendance
+    
     @PostMapping("/saveall")
-    public String saveallWeek(
-            @RequestParam UUID employeeId,
-            @RequestParam UUID projectId,
-            @RequestBody List<AttendanceEntity> attendanceList) {
-    	System.out.println("@44"+ employeeId );
-    	System.out.println("@44"+projectId );
-        return attendanceService.savedWeeklyAttendance(employeeId, projectId, attendanceList);
-    }
+public String saveAllWeek(
+        @RequestParam UUID employeeId,
+        @RequestParam UUID projectId,
+        @RequestBody List<AttendanceRequestDTO> attendanceList) {
+
+    return attendanceService.savedWeeklyAttendance(employeeId, projectId, attendanceList);
+}
+
     
  // ✅ POST weekly attendance release
     @PostMapping("/release-week")

@@ -3,6 +3,8 @@ package com.example.attendance_service.model;
 import java.time.LocalDate;
 import java.util.UUID;
 
+import org.hibernate.annotations.DynamicInsert;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.Column;
@@ -67,6 +69,39 @@ public class AttendanceEntity {
 	private String gender;
 
 
+	@Column(name = "sl", columnDefinition = "int default 10")
+	private Double sl;
+
+	@Column(name = "el", columnDefinition = "int default 25")
+	private Double el;
+
+	@Column(name = "extra_milar", columnDefinition = "int default 2")
+	private Double extraMilar;
+
+
+	public Double getSl() {
+		return sl;
+	}
+
+	public void setSl(Double sl) {
+		this.sl = sl;
+	}
+
+	public Double getEl() {
+		return el;
+	}
+
+	public void setEl(Double el) {
+		this.el = el;
+	}
+
+	public Double getExtraMilar() {
+		return extraMilar;
+	}
+
+	public void setExtraMilar(Double extraMilar) {
+		this.extraMilar = extraMilar;
+	}
 
 	public String getGender() {
 		return gender;
@@ -147,8 +182,5 @@ public class AttendanceEntity {
 	public void setTotalWorkedHours(Double totalWorkedHours) {
 		this.totalWorkedHours = totalWorkedHours;
 	}
-
-
-
 }
 
