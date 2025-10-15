@@ -118,12 +118,18 @@ const handlePromoteToSuperadmin = async (admin) => {
                   Rejected
                 </Button>
                 <Button
-            type="primary"
-            danger
-            onClick={() => handlePromoteToSuperadmin(record)}
-          >
-            Promote to SuperAdmin
-          </Button>
+  type={record.role === "superadmin" ? "default" : "primary"}
+  style={{
+    backgroundColor: record.role === "superadmin" ? "#52c41a" : "",
+    color: record.role === "superadmin" ? "white" : "",
+    borderColor: record.role === "superadmin" ? "#52c41a" : "",
+  }}
+  disabled={record.role === "superadmin"}
+  onClick={() => handlePromoteToSuperadmin(record)}
+>
+  {record.role === "superadmin" ? "Promoted to SuperAdmin" : "Promote to SuperAdmin"}
+</Button>
+
               </>
             ) : (
               <Button

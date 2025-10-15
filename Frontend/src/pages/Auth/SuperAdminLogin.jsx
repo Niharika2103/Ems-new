@@ -54,7 +54,18 @@ export default function SuperAdminLogin() {
   }, 500);
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    // ✅ Password max length check
+  if (name === "password" && value.length > 16) {
+    setErrors((prev) => ({
+      ...prev,
+      password: "Password cannot exceed 16 characters",
+    }));
+    return; // stop updating
+  } else {
+    setErrors((prev) => ({ ...prev, [name]: "" }));
+  }
+
+  setFormData({ ...formData, [name]: value });
 
     if (name === "email") {
       // Only trigger email check if it looks like an email
@@ -73,6 +84,11 @@ export default function SuperAdminLogin() {
       return;
     }
     const validationErrors = validateLogin(formData);
+    if (formData.password.length > 16) {
+  toast.error("Password cannot exceed 16 characters");
+  return;
+}
+
 
     if (Object.keys(validationErrors).length === 0) {
 
@@ -183,6 +199,7 @@ export default function SuperAdminLogin() {
                 error={!!errors.password}
                 helperText={errors.password}
                 required
+                inputProps={{ maxLength: 16 }}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">

@@ -218,9 +218,19 @@ const handlePromote = async (record) => {
           >
             Revoke
           </Button>
-           <Button type="primary" onClick={() => handlePromote(record)}>
-        Promote
-      </Button>
+           <Button
+  type={record.is_promoted ? "default" : "primary"}
+  style={{
+    backgroundColor: record.is_promoted ? "#52c41a" : "",
+    color: record.is_promoted ? "white" : "",
+    borderColor: record.is_promoted ? "#52c41a" : "",
+  }}
+  disabled={record.is_promoted}
+  onClick={() => handlePromote(record)}
+>
+  {record.is_promoted ? "Promoted" : "Promote"}
+</Button>
+
         </Space>
       ),
     }

@@ -45,8 +45,22 @@ export default function AdminLogin() {
 
   // ✅ handle input changes
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const { name, value } = e.target;
+
+  // ✅ Prevent password longer than 16 chars
+  if (name === "password" && value.length > 16) {
+    setErrors((prev) => ({
+      ...prev,
+      password: "Password cannot exceed 16 characters",
+    }));
+    return; // stop updating state
+  } else {
+    setErrors((prev) => ({ ...prev, [name]: "" }));
+  }
+
+  setFormData({ ...formData, [name]: value });
+};
+
 
   // ✅ form validation on submit
   const handleLoginSubmit = (e) => {
@@ -58,6 +72,11 @@ export default function AdminLogin() {
     if (!formData.otp.trim()) {
       validationErrors.otp = "Please enter the OTP";
     }
+    if (formData.password.length > 16) {
+  toast.error("Password cannot exceed 16 characters");
+  return;
+}
+
 
     if (Object.keys(validationErrors).length === 0) {
       dispatch(adminLogin(formData))
@@ -162,7 +181,9 @@ export default function AdminLogin() {
                   onChange={handleChange}
                   error={!!errors.password}
                   helperText={errors.password}
-                  required 
+                  required
+                  inputProps={{ maxLength: 16 }}
+ 
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">

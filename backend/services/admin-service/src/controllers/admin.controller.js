@@ -1132,4 +1132,161 @@ export const promoteEmployee = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-//a
+
+export const getPendingWeeklyApprovals = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("attendance")
+      .select(`
+        *,
+        user_employees_master (id, name, email)
+      `)
+      .eq("weekly_status", "pending_approval");
+
+    if (error) throw error;
+
+    res.status(200).json({
+      message: "Pending weekly approvals fetched successfully",
+      count: data.length,
+      data,
+    });
+  } catch (err) {
+    console.error("Get Pending Weekly Approvals Error:", err.message);
+    res.status(500).json({ error: "Failed to fetch pending weekly approvals" });
+  }
+};
+
+/* -------------------------------------------------------------------------- */
+/*                          ADMIN APPROVE / REJECT WEEK                   */
+/* -------------------------------------------------------------------------- */
+export const updateWeeklyApprovalStatus = async (req, res) => {
+  try {
+    const { employeeId, from, to } = req.body;
+    const status = "approved"; // (or "rejected" if that button clicked)
+
+    const { data, error } = await supabase
+      .from("attendance")
+      .update({ weekly_status: status })
+      .eq("employee_id", employeeId)
+      .gte("date", from)
+      .lte("date", to)
+      .eq("weekly_status", "pending_approval")
+      .select();
+
+    if (error) throw error;
+
+    res.status(200).json({
+      message: `Weekly attendance ${status} successfully`,
+      updated_count: data.length,
+      data,
+    });
+  } catch (err) {
+    console.error("Update Weekly Status Error:", err.message);
+    res.status(500).json({ error: "Failed to update weekly attendance" });
+  }
+};
+
+
+/* -------------------------------------------------------------------------- */
+/*                      GET PENDING MONTHLY APPROVALS (ADMIN)                 */
+/* -------------------------------------------------------------------------- */
+export const getPendingMonthlyApprovals = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("attendance")
+      .select(`
+        *,
+        user_employees_master (id, name, email)
+      `)
+      .eq("monthly_status", "pending_approval");
+
+    if (error) throw error;
+
+    res.status(200).json({
+      message: "Pending monthly approvals fetched successfully",
+      count: data.length,
+      data,
+    });
+  } catch (err) {
+    console.error("Get Pending Monthly Approvals Error:", err.message);
+    res.status(500).json({ error: "Failed to fetch pending monthly approvals" });
+  }
+};
+
+/* -------------------------------------------------------------------------- */
+/*                       ADMIN APPROVES MONTHLY ATTENDANCE                    */
+/* -------------------------------------------------------------------------- */
+export const updateMonthlyApprovalStatus = async (req, res) => {
+  try {
+    const { employeeId, from, to } = req.body;
+    const status = "approved"; // Automatically set to approved (triggered by Approve button)
+
+    const { data, error } = await supabase
+      .from("attendance")
+      .update({ monthly_status: status })
+      .eq("employee_id", employeeId)
+      .gte("date", from)
+      .lte("date", to)
+      .eq("monthly_status", "pending_approval")
+      .select();
+
+    if (error) throw error;
+
+    res.status(200).json({
+      message: `Monthly attendance ${status} successfully`,
+      updated_count: data.length,
+      data,
+    });
+  } catch (err) {
+    console.error("Update Monthly Status Error:", err.message);
+    res.status(500).json({ error: "Failed to update monthly attendance" });
+  }
+};
+
+
+/* -------------------------------------------------------------------------- */
+/*        ADMIN UPDATES WORKED HOURS (Weekly or Monthly Pending Record)       */
+/* -------------------------------------------------------------------------- */
+export const adminUpdateWorkedHours = async (req, res) => {
+  try {
+    const { employeeId, date, worked_hours, type } = req.body;
+
+    
+
+    if (!employeeId || !date || worked_hours === undefined || !type) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // Determine which status to check
+    const statusField = type === "monthly" ? "monthly_status" : "weekly_status";
+
+    // Update only if record is pending approval
+    const { data, error } = await supabase
+      .from("attendance")
+      .update({
+        worked_hours,
+        last_updated_by: "admin",
+        last_updated_at: new Date(),
+      })
+      .eq("employee_id", employeeId)
+      .eq("date", date)
+      .eq(statusField, "pending_approval")
+      .select();
+
+    if (error) throw error;
+
+    if (data.length === 0) {
+      return res.status(400).json({
+        message: `No pending ${type} record found for this date (already approved or invalid)`,
+      });
+    }
+
+    res.status(200).json({
+      message: `Worked hours updated successfully for ${type}`,
+      data,
+    });
+  } catch (err) {
+    console.error("Admin Update Worked Hours Error:", err.message);
+    res.status(500).json({ error: "Failed to update worked hours" });
+  }
+};
