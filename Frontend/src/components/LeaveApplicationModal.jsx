@@ -116,5 +116,5 @@ const LeaveApplicationModal = ({ open, onClose, leaveType, onSubmit }) => {
     </Modal>
   );
 };
-
 export default LeaveApplicationModal;
+//hai//
