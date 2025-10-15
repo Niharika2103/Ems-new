@@ -109,7 +109,7 @@ export default function Login() {
 
   return (
     <div className="login-page">
-      <ToastContainer position="top-right" autoClose={3000} />
+      <ToastContainer position="top-right" autoClose={2000} />
 
       <div className="top-carousel login-top">
         <Swiper
