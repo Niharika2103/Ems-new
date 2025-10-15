@@ -92,8 +92,9 @@ export default function SuperAdminLogin() {
           dispatch(resetEmailStatus());
           setErrors({});
           setTimeout(() => {
-            navigate("/dashboard");
+            navigate("/dashboard",{ replace: true });
           }, 2000);
+          window.onpopstate = null;
         })
         .catch((err) => {
           toast.error(err.error || "Login failed");

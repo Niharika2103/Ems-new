@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
+  IconButton,
   Table,
   TableBody,
   TableCell,
@@ -11,8 +12,13 @@ import {
   Paper,
   Typography,
   Chip,
-  TablePagination, // 🔹 Added
+  TablePagination,
 } from "@mui/material";
+import { ChevronLeft, ChevronRight, CalendarToday } from "@mui/icons-material";
+import { DateRangePicker } from "@mui/x-date-pickers-pro/DateRangePicker";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import dayjs from "dayjs";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -27,13 +33,16 @@ const TimesheetTable = () => {
   const { attendance, loading, error } = useSelector((state) => state.attendance);
   const { employeeId, projectId } = location.state || {};
 
-  const [newTimesheet, setNewTimesheet] = useState({ employee: "", date: "", hours: "" });
   const [localTimesheets, setLocalTimesheets] = useState([]);
 
-  // 🔹 Pagination states
+  // Pagination
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
+  // Date range: default 1 month ago → today
+  const [dateRange, setDateRange] = useState([dayjs().subtract(1, "month"), dayjs()]);
+
+  // Fetch attendance data
   useEffect(() => {
     dispatch(AttendanceFetchAll());
   }, [dispatch]);
@@ -42,7 +51,9 @@ const TimesheetTable = () => {
     if (attendance && Array.isArray(attendance)) {
       const mapped = attendance.map((item) => ({
         id: item.id,
-        employee: item.employee?.employeeCode || "Unknown",
+        employeeId: item.employeeId,
+        projectId: item.projectId,
+        employee: item.employee?.name || item.employeeName || item.name || "N/A",
         date: item.date,
         hours: item.workedHours,
         status: item.status === "draft" ? "Pending" : capitalize(item.status),
@@ -75,30 +86,6 @@ const TimesheetTable = () => {
     );
   };
 
-  const handleDialogOpen = () => setOpenDialog(true);
-  const handleDialogClose = () => {
-    setOpenDialog(false);
-    setNewTimesheet({ employee: "", date: "", hours: "" });
-  };
-
-  const handleInputChange = (e) => {
-    setNewTimesheet({ ...newTimesheet, [e.target.name]: e.target.value });
-  };
-
-  const handleAddTimesheet = () => {
-    if (!newTimesheet.employee || !newTimesheet.date || !newTimesheet.hours) return;
-
-    const newEntry = {
-      id: localTimesheets.length + 1,
-      employee: newTimesheet.employee,
-      date: newTimesheet.date,
-      hours: parseInt(newTimesheet.hours),
-      status: "Pending",
-    };
-    setLocalTimesheets([...localTimesheets, newEntry]);
-    handleDialogClose();
-  };
-
   const getStatusColor = (status) => {
     switch (status) {
       case "Approved":
@@ -110,15 +97,20 @@ const TimesheetTable = () => {
     }
   };
 
-  // 🔹 Pagination handlers
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
+  // Shift range forward/backward by 1 day
+  const shiftRange = (direction) => {
+    if (direction === "prev") {
+      setDateRange([dateRange[0].subtract(1, "day"), dateRange[1].subtract(1, "day")]);
+    } else {
+      setDateRange([dateRange[0].add(1, "day"), dateRange[1].add(1, "day")]);
+    }
   };
 
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
+  // Filter timesheets by range
+  const filteredTimesheets = localTimesheets.filter((t) => {
+    const d = dayjs(t.date);
+    return d.isAfter(dateRange[0].startOf("day")) && d.isBefore(dateRange[1].endOf("day"));
+  });
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {JSON.stringify(error)}</p>;
@@ -126,13 +118,43 @@ const TimesheetTable = () => {
   return (
     <Box sx={{ maxWidth: 1200, mx: "auto", mt: 5, p: 3 }}>
       {/* Header */}
-      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3, alignItems: "center" }}>
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
         <Typography variant="h6" fontWeight={400}>
           Timesheet Approval
         </Typography>
-        <Button variant="contained" color="primary" onClick={handleDialogOpen}>
-          New Timesheet
-        </Button>
+
+        {/* Date range + navigation + calendar */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <IconButton onClick={() => shiftRange("prev")}>
+            <ChevronLeft />
+          </IconButton>
+
+          <Typography variant="subtitle1" sx={{ minWidth: 220, textAlign: "center" }}>
+            {`${dateRange[0].format("DD MMM YYYY")} → ${dateRange[1].format("DD MMM YYYY")}`}
+          </Typography>
+
+          <IconButton onClick={() => shiftRange("next")}>
+            <ChevronRight />
+          </IconButton>
+
+          {/* <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <DateRangePicker
+              value={dateRange}
+              onChange={(newValue) => {
+                if (newValue && newValue[0] && newValue[1]) setDateRange(newValue);
+              }}
+              calendars={1} // only one calendar visible
+              openTo="day" // default open at today
+              slotProps={{
+                textField: {
+                  size: "small",
+                  sx: { width: 250 },
+                  InputProps: { endAdornment: <CalendarToday /> },
+                },
+              }}
+            />
+          </LocalizationProvider> */}
+        </Box>
       </Box>
 
       {/* Table */}
@@ -148,7 +170,7 @@ const TimesheetTable = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {localTimesheets
+            {filteredTimesheets
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((t) => (
                 <TableRow key={t.id} hover>
@@ -195,14 +217,17 @@ const TimesheetTable = () => {
           </TableBody>
         </Table>
 
-        {/* 🔹 Pagination Component */}
+        {/* Pagination */}
         <TablePagination
           component="div"
-          count={localTimesheets.length}
+          count={filteredTimesheets.length}
           page={page}
-          onPageChange={handleChangePage}
+          onPageChange={(e, newPage) => setPage(newPage)}
           rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={handleChangeRowsPerPage}
+          onRowsPerPageChange={(e) => {
+            setRowsPerPage(parseInt(e.target.value, 10));
+            setPage(0);
+          }}
           rowsPerPageOptions={[5, 10, 25]}
         />
       </TableContainer>

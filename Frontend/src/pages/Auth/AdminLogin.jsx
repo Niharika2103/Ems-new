@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState ,useEffect} from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Box,
@@ -64,7 +64,8 @@ export default function AdminLogin() {
         .unwrap()
         .then((response) => {
           toast.success(response.message);
-          setTimeout(() => navigate("/dashboard"), 2000);
+          setTimeout(() => navigate("/dashboard",{ replace: true }), 2000);
+          window.onpopstate = null;
         })
         .catch((err) => toast.error(err.error || "Login failed"));
       //    .catch((err) => {
@@ -77,6 +78,7 @@ export default function AdminLogin() {
     } else {
       setErrors(validationErrors);
     }
+    
   };
 
   // ✅ disable button until all inputs are filled

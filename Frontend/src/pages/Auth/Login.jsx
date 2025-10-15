@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState ,useEffect} from "react";
+import { replace, useNavigate } from "react-router-dom";
 import {
   Box,
   Button,
@@ -82,7 +82,9 @@ export default function Login() {
             setOtp("");
             toast.info(response.message);
           } else {
-            navigate("/dashboard");
+            navigate("/dashboard",{ replace: true });
+    window.onpopstate = null;
+
           }
         })
         .catch((err) => toast.error(err.error || "Login failed"));
@@ -96,7 +98,9 @@ export default function Login() {
         .unwrap()
         .then((response) => {
           toast.success(response.message);
-          navigate("/dashboard");
+          navigate("/dashboard" ,{ replace: true });
+    window.onpopstate = null;
+
         })
         .catch((err) => toast.error(err.error || "OTP verification failed"));
     }

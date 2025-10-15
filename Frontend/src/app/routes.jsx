@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import Layout from "../components/Layout";
+import ProtectedRoute from "../components/Layout/ProtectedRoute";
 
 // Pages
 import LandingPage from "../pages/Auth/LandingPage";
@@ -26,39 +27,128 @@ import TimesheetTable from "../pages/Attendance/Timesheettable";
 import ProjectDashboard from "../pages/dashbaord/ProjectDashboard";
 import Letters from "../pages/documents/Letters";
 
-
 function AppRoutes() {
   return (
     <Routes>
-      {/* Without layout */}
+      {/* Public routes */}
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<Login />} />
       <Route path="/admin/login" element={<AdminLogin />} />
       <Route path="/admin/register" element={<AdminRegisterPage />} />
       <Route path="/superadmin/login" element={<SuperAdminLogin />} />
       <Route path="/superadmin/register" element={<SuperAdminRegister />} />
-    <Route path="/attendance/emptimesheet" element={<EmpTimesheet/>} />
-    <Route path="/attendance/timesheet" element={<Timesheet/>} />
       <Route path="/login/reset-password" element={<ResetPassword />} />
-      {/* With layout */}
+
+      <Route path="/attendance/emptimesheet" element={<EmpTimesheet />} />
+      <Route path="/attendance/timesheet" element={<Timesheet />} />
+
+      {/* Routes with Layout */}
       <Route element={<Layout />}>
+        {/* Employee routes */}
+        <Route
+          path="/dashboard/assign_project"
+          element={
+            <ProtectedRoute allowedRoles={["employee"]}>
+              <EmployeeAssignedProjectPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cal"
+          element={
+            <ProtectedRoute allowedRoles={["employee"]}>
+              <LeaveCalendar />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/attendance/projects"
+          element={
+            <ProtectedRoute allowedRoles={["employee"]}>
+              <AssignProjectPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Dashboard & profile (accessible to all logged-in users) */}
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<Profile />} />
-        <Route path="/attendance/projects" element={<AssignProjectPage />} />
-        {/*Employee List*/}
-        <Route path="/dashboard/emp_requestTable" element={<AdminTable />} />
-        <Route path="/dashboard/superadmin_requestTable" element={<SuperAadminTable />} />
-        <Route path="/dashboard/emp_info" element={<EmpInfoDashboard />} />
-        <Route path="/dashboard/add_project" element={<ProjectForm />} />
-        <Route path="/dashboard/fetch_project" element={<ProjectTable/>}/>
-        <Route path="/dashboard/assign_project" element={<EmployeeAssignedProjectPage/>}/>
-        <Route path="/cal" element={<LeaveCalendar />} />
-        {/* employee Registeration */}
-        <Route path="/employee_register" element={<EmployeeRegisterForm />} />
-       <Route path="/dashboard/attendance" element={<ProjectDashboard/>}/>
-        <Route path="/attendance/timesheettable" element={<TimesheetTable />} />
-        <Route path="/documents/letters" element={<Letters />} />
 
+        {/* Superadmin routes */}
+        <Route
+          path="/dashboard/superadmin_requestTable"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <SuperAadminTable />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Admin routes */}
+        <Route
+          path="/dashboard/emp_requestTable"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminTable />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/emp_info"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <EmpInfoDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/add_project"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <ProjectForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/fetch_project"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <ProjectTable />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/employee_register"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <EmployeeRegisterForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/attendance"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <ProjectDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/attendance/timesheettable"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <TimesheetTable />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/documents/letters"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <Letters />
+            </ProtectedRoute>
+          }
+        />
       </Route>
     </Routes>
   );

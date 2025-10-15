@@ -37,17 +37,29 @@ const Sidebar = ({ isOpen }) => {
     ],
   };
 
-  // ✅ Logout function
+  
   const handleLogout = () => {
     localStorage.clear();
 
-    if (role === "admin") {
-      navigate("/admin/login");
-    } else if (role === "superadmin") {
-      navigate("/superadmin/login");
-    } else {
-      navigate("/login");
-    }
+    
+     if (role === "admin") {
+    window.location.replace("/#/admin/login");
+  } else if (role === "superadmin") {
+    window.location.replace("/#/superadmin/login");
+  }   else if (role === "employee") {
+    window.location.replace("/#/login");
+  } else {
+    // ✅ If no role exists → go to main landing page
+    window.location.href("/#/");
+  }
+   
+     setTimeout(() => {
+      window.history.pushState(null, "", window.location.href);
+      window.onpopstate = () => {
+        window.history.go(1); // Force forward navigation
+      };
+    }, 0);
+     handleClose();
   };
 
   return (

@@ -65,6 +65,7 @@ const Header = ({ isOpen, setIsOpen }) => {
     localStorage.removeItem("role");
     localStorage.removeItem("user");
     handleClose();
+     
   };
 
   const handleLoginSubmit = () => {
@@ -79,14 +80,24 @@ const Header = ({ isOpen, setIsOpen }) => {
   const Logout = () => {
     localStorage.clear();
 
- if (roleCheck === "admin") {
-      window.location.href = "/#/admin/login";
-    } else if (roleCheck === "superadmin") {
-      window.location.href = "/#/superadmin/login";
-    } else {
-      window.location.href = "/#/login"; 
-    }
-    handleClose();
+     if (roleCheck === "admin") {
+    window.location.replace("/#/admin/login");
+  } else if (roleCheck === "superadmin") {
+    window.location.replace("/#/superadmin/login");
+  } else if (role === "employee") {
+    window.location.replace("/#/login");
+  } else {
+    // ✅ If no role exists → go to main landing page
+    window.location.href("/#/");
+  }
+   
+    setTimeout(() => {
+      window.history.pushState(null, "", window.location.href);
+      window.onpopstate = () => {
+        window.history.go(1); // Force forward navigation
+      };
+    }, 0);
+     handleClose();
   };
 
   return (
