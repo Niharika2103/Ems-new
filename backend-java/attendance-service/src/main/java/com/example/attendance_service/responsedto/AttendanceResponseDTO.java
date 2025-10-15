@@ -18,10 +18,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-
 public class AttendanceResponseDTO {
-	
-	private UUID id;
+
+    // --- Attendance fields ---
+    private UUID id;
     private LocalDate date;
     private Double workedHours;
     private Double totalWorkedHours;
@@ -38,10 +38,193 @@ public class AttendanceResponseDTO {
     // --- Project fields ---
     private UUID projectId;
     private String projectName;
-    
-    public AttendanceResponseDTO() {}
 
-    // ✅ Parameterized constructor
+    
+    
+    
+    public UUID getId() {
+		return id;
+	}
+
+
+
+
+	public void setId(UUID id) {
+		this.id = id;
+	}
+
+
+
+
+	public LocalDate getDate() {
+		return date;
+	}
+
+
+
+
+	public void setDate(LocalDate date) {
+		this.date = date;
+	}
+
+
+
+
+	public Double getWorkedHours() {
+		return workedHours;
+	}
+
+
+
+
+	public void setWorkedHours(Double workedHours) {
+		this.workedHours = workedHours;
+	}
+
+
+
+
+	public Double getTotalWorkedHours() {
+		return totalWorkedHours;
+	}
+
+
+
+
+	public void setTotalWorkedHours(Double totalWorkedHours) {
+		this.totalWorkedHours = totalWorkedHours;
+	}
+
+
+
+
+	public String getStatus() {
+		return status;
+	}
+
+
+
+
+	public void setStatus(String status) {
+		this.status = status;
+	}
+
+
+
+
+	public String getLeaveType() {
+		return leaveType;
+	}
+
+
+
+
+	public void setLeaveType(String leaveType) {
+		this.leaveType = leaveType;
+	}
+
+
+
+
+	public Integer getYear() {
+		return year;
+	}
+
+
+
+
+	public void setYear(Integer year) {
+		this.year = year;
+	}
+
+
+
+
+	public String getGender() {
+		return gender;
+	}
+
+
+
+
+	public void setGender(String gender) {
+		this.gender = gender;
+	}
+
+
+
+
+	public UUID getEmployeeId() {
+		return employeeId;
+	}
+
+
+
+
+	public void setEmployeeId(UUID employeeId) {
+		this.employeeId = employeeId;
+	}
+
+
+
+
+	public String getEmployeeName() {
+		return employeeName;
+	}
+
+
+
+
+	public void setEmployeeName(String employeeName) {
+		this.employeeName = employeeName;
+	}
+
+
+
+
+	public String getEmployeeGender() {
+		return employeeGender;
+	}
+
+
+
+
+	public void setEmployeeGender(String employeeGender) {
+		this.employeeGender = employeeGender;
+	}
+
+
+
+
+	public UUID getProjectId() {
+		return projectId;
+	}
+
+
+
+
+	public void setProjectId(UUID projectId) {
+		this.projectId = projectId;
+	}
+
+
+
+
+	public String getProjectName() {
+		return projectName;
+	}
+
+
+
+
+	public void setProjectName(String projectName) {
+		this.projectName = projectName;
+	}
+
+
+
+
+	// ✅ Custom parameterized constructor used by stream mapping
     public AttendanceResponseDTO(UUID id, LocalDate date, Double workedHours, Double totalWorkedHours,
                                  String status, String leaveType, Integer year, String gender,
                                  UUID employeeId, String employeeName, String employeeGender,
@@ -60,89 +243,4 @@ public class AttendanceResponseDTO {
         this.projectId = projectId;
         this.projectName = projectName;
     }
-
-	public String getEmployeeName() {
-		return employeeName;
-	}
-
-	public void setEmployeeName(String employeeName) {
-		this.employeeName = employeeName;
-	}
-
-	public UUID getId() {
-		return id;
-	}
-	public void setId(UUID id) {
-		this.id = id;
-	}
-	public LocalDate getDate() {
-		return date;
-	}
-	public void setDate(LocalDate date) {
-		this.date = date;
-	}
-	public Double getWorkedHours() {
-		return workedHours;
-	}
-	public void setWorkedHours(Double workedHours) {
-		this.workedHours = workedHours;
-	}
-	public Double getTotalWorkedHours() {
-		return totalWorkedHours;
-	}
-	public void setTotalWorkedHours(Double totalWorkedHours) {
-		this.totalWorkedHours = totalWorkedHours;
-	}
-	public String getStatus() {
-		return status;
-	}
-	public void setStatus(String status) {
-		this.status = status;
-	}
-	public String getLeaveType() {
-		return leaveType;
-	}
-	public void setLeaveType(String leaveType) {
-		this.leaveType = leaveType;
-	}
-	public Integer getYear() {
-		return year;
-	}
-	public void setYear(Integer year) {
-		this.year = year;
-	}
-	public String getGender() {
-		return gender;
-	}
-	public void setGender(String gender) {
-		this.gender = gender;
-	}
-	public UUID getEmployeeId() {
-		return employeeId;
-	}
-	public void setEmployeeId(UUID employeeId) {
-		this.employeeId = employeeId;
-	}
-
-	public String getEmployeeGender() {
-		return employeeGender;
-	}
-	public void setEmployeeGender(String employeeGender) {
-		this.employeeGender = employeeGender;
-	}
-	public UUID getProjectId() {
-		return projectId;
-	}
-	public void setProjectId(UUID projectId) {
-		this.projectId = projectId;
-	}
-	public String getProjectName() {
-		return projectName;
-	}
-	public void setProjectName(String projectName) {
-		this.projectName = projectName;
-	}
-    
-    
-
 }
