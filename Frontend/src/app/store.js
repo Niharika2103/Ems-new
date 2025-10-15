@@ -5,6 +5,8 @@ import admminReducer from "../features/auth/adminSlice";
 import employeeReducer from "../features/auth/employeeSlice";
 import emailReducer from "../features/verify/emailVerify";
 import projectSlice from "../features/Project/projectsSlice";
+import attendanceSlice from '../features/attendance/attendanceSlice';
+
 export const store = configureStore({
   reducer: {
     employeeDetails: employeesReducer,
@@ -13,5 +15,6 @@ export const store = configureStore({
     employee:employeeReducer,
     verifcation:emailReducer,
     project:projectSlice,
+    attendance:attendanceSlice,
   },
 });

@@ -13,7 +13,7 @@ import {
   TextField,
   MenuItem,
 } from "@mui/material";
-
+import { validateEmployeeEdit } from "../../utils/validation"; // adjust path as needed
 export default function AdminTable() {
   const dispatch = useDispatch();
 
@@ -98,35 +98,74 @@ const handlePromote = async (record) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (name === "date_of_joining") {
+    // Optional: reject values that aren't YYYY-MM-DD
+    if (value && !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      // Don't update if invalid format
+      return;
+    }
+  }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await dispatch(
-        updateEmployeebyAdmin({ id: editingRecord?.id, data: formData })
-      ).unwrap();
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   setLoading(true);
+  //   try {
+  //     const res = await dispatch(
+  //       updateEmployeebyAdmin({ id: editingRecord?.id, data: formData })
+  //     ).unwrap();
 
-      toast.success(res?.message || "Employee updated successfully");
+  //     toast.success(res?.message || "Employee updated successfully");
 
-      setIsModalOpen(false);
-      await dispatch(fetchAllEmployees());
-    } catch (err) {
-      console.error("Update error:", err);
-      toast.error(
-        err?.message ||
-        err?.error ||
-        err?.data?.message ||
-        "Failed to update employee"
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     setIsModalOpen(false);
+  //     await dispatch(fetchAllEmployees());
+  //   } catch (err) {
+  //     console.error("Update error:", err);
+  //     toast.error(
+  //       err?.message ||
+  //       err?.error ||
+  //       err?.data?.message ||
+  //       "Failed to update employee"
+  //     );
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
+  // ✅ Validate form data
+  const errors = validateEmployeeEdit(formData);
+  if (Object.keys(errors).length > 0) {
+    // Show first error or all errors
+    const firstError = Object.values(errors)[0];
+    toast.error(firstError);
+    return;
+  }
+
+  setLoading(true);
+  try {
+    const res = await dispatch(
+      updateEmployeebyAdmin({ id: editingRecord?.id, data: formData })
+    ).unwrap();
+
+    toast.success(res?.message || "Employee updated successfully");
+    setIsModalOpen(false);
+    await dispatch(fetchAllEmployees());
+  } catch (err) {
+    console.error("Update error:", err);
+    toast.error(
+      err?.message ||
+      err?.error ||
+      err?.data?.message ||
+      "Failed to update employee"
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
 
 

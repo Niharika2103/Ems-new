@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.attendance_service.model.AttendanceEntity;
+import com.example.attendance_service.responsedto.AttendanceResponseDTO;
 import com.example.attendance_service.service.AttendanceService;
 
 @RestController
@@ -28,16 +29,29 @@ public class AttendanceController {
 
     // ✅ POST weekly attendance
     @PostMapping("/saveall")
+    public String saveallWeek(
+            @RequestParam UUID employeeId,
+            @RequestParam UUID projectId,
+            @RequestBody List<AttendanceEntity> attendanceList) {
+    	System.out.println("@44"+ employeeId );
+    	System.out.println("@44"+projectId );
+        return attendanceService.savedWeeklyAttendance(employeeId, projectId, attendanceList);
+    }
+    
+ // ✅ POST weekly attendance release
+    @PostMapping("/release-week")
     public String releaseWeek(
             @RequestParam UUID employeeId,
             @RequestParam UUID projectId,
             @RequestBody List<AttendanceEntity> attendanceList) {
-        return attendanceService.releseWeeklyAttendance(employeeId, projectId, attendanceList);
+    	
+        return attendanceService.releaseWeeklyAttendance(employeeId, projectId, attendanceList);
     }
+
 
     // ✅ GET all attendance
     @GetMapping
-    public List<AttendanceEntity> getAllAttendance() {
+    public List<AttendanceResponseDTO> getAllAttendance() {
         return attendanceService.getAllAttendance();
     }
 
