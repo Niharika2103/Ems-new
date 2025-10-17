@@ -17,7 +17,7 @@ import "./timesheet.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useDispatch, useSelector } from "react-redux";
-import { AttendanceSaveall, AttendanceReleaseWeek } from "../../features/attendance/attendanceSlice";
+import { AttendanceSaveall, AttendanceReleaseWeek, AttendanceReleaseMonth } from "../../features/attendance/attendanceSlice";
 import LeaveApplicationModal from "../../components/LeaveApplicationModal";
 
 export default function MonthlyTimesheet({ onBack }) {
@@ -29,7 +29,7 @@ export default function MonthlyTimesheet({ onBack }) {
   const [hours, setHours] = useState([]);
   const [usedLeaveTypes, setUsedLeaveTypes] = useState(["CL"]);
   const [leaveRows, setLeaveRows] = useState({ CL: [] });
-  const [lockedRows, setLockedRows] = useState({ CL: true });
+  const [lockedRows, setLockedRows] = useState({ CL: false });
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [menuRow, setMenuRow] = useState(null);
   const [monthStart, setMonthStart] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
@@ -194,6 +194,31 @@ export default function MonthlyTimesheet({ onBack }) {
     setMonthStart(newDate);
   };
 
+  const handleSaveMonth = async () => {
+    const employeeId = projects[0]?.employeeId;
+    const projectId = projects[0]?.project?.id;
+  
+   
+//  const dataToSend = monthDays.map(() => ({
+//     status: "pending_approval",
+//     monthlyStatus: "Pending_Approval" // backend expects this
+//   }));
+  
+    try {
+      const resultAction = await dispatch(
+        AttendanceReleaseMonth({ employeeId, projectId})
+      );
+  
+      if (AttendanceReleaseWeek.fulfilled.match(resultAction)) {
+        toast.success("Week released successfully!");
+      } else {
+        throw new Error("Failed to release week");
+      }
+    } catch (err) {
+      toast.error("Error releasing week!");
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4 p-4">
       <ToastContainer position="top-right" autoClose={2000} />
@@ -220,10 +245,6 @@ export default function MonthlyTimesheet({ onBack }) {
         <Typography variant="h6" className="font-bold text-center flex-1">
           Monthly Attendance (Timesheet)
         </Typography>
-
-        <Button variant="outlined" color="primary" onClick={onBack}>
-          Back to Weekly
-        </Button>
       </div>
 
       {/* SCROLLABLE MAIN AREA */}
@@ -330,8 +351,7 @@ export default function MonthlyTimesheet({ onBack }) {
         </div>
 
         <div className="flex gap-2">
-          <Button variant="contained" color="success" onClick={handleSaveAll}>Save All</Button>
-          <Button variant="contained" color="secondary" onClick={handleReleaseMonth}>Release Month</Button>
+          <Button variant="contained" color="secondary" onClick={handleSaveMonth}>Release Month</Button>
         </div>
       </div>
 

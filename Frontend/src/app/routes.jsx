@@ -26,6 +26,7 @@ import ProjectTable from "../pages/Attendance/ProjectTable";
 import TimesheetTable from "../pages/Attendance/Timesheettable";
 import ProjectDashboard from "../pages/dashbaord/ProjectDashboard";
 import Letters from "../pages/documents/Letters";
+import MonthlyTimesheet from "../pages/Attendance/MonthlyTimesheet";
 
 function AppRoutes() {
   return (
@@ -41,7 +42,13 @@ function AppRoutes() {
 
       <Route path="/attendance/emptimesheet" element={<EmpTimesheet />} />
       <Route path="/attendance/timesheet" element={<Timesheet />} />
-
+      <Route path='/dashboard/timesheet/monthly'
+        element={
+          <ProtectedRoute allowedRoles={["employee"]}>
+            <MonthlyTimesheet />
+          </ProtectedRoute>
+        }
+      />
       {/* Routes with Layout */}
       <Route element={<Layout />}>
         {/* Employee routes */}
@@ -53,6 +60,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/cal"
           element={
@@ -73,6 +81,7 @@ function AppRoutes() {
         {/* Dashboard & profile (accessible to all logged-in users) */}
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<Profile />} />
+
 
         {/* Superadmin routes */}
         <Route

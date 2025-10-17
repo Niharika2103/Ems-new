@@ -62,6 +62,8 @@ public class AttendanceEntity {
 	@Column(name = "monthly_status", nullable = false)
 	private String monthlyStatus;
 
+	
+
 	@Column(name = "leave_type")
 	private String leaveType;
 
@@ -88,7 +90,7 @@ public class AttendanceEntity {
 	public void setMonthlyStatus(String monthlyStatus) {
 		this.monthlyStatus = monthlyStatus;
 	}
-	
+
 	public Double getSl() {
 		return sl;
 	}

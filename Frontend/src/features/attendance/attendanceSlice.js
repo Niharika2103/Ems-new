@@ -32,15 +32,23 @@ export const AttendanceFetchByEmployeeProject = createAsyncThunk(
   }
 );
 
-export const AttendanceReleaseWeek= createAsyncThunk("attendance/release-week", async ({ employeeId, projectId, formData }, thunkAPI) => {
+export const AttendanceReleaseWeek= createAsyncThunk("attendance/release-week", async ({ employeeId, projectId }, thunkAPI) => {
   try {
-    const res = await AttendanceReleaseWeekApi( employeeId, projectId, formData );
+    const res = await AttendanceReleaseWeekApi( employeeId, projectId );
     return res.data;
   } catch (err) {
     return thunkAPI.rejectWithValue(err.response?.data || err.message);
   }
 })
 
+export const AttendanceReleaseMonth= createAsyncThunk("attendance/release-Month", async ({ employeeId, projectId }, thunkAPI) => {
+  try {
+    const res = await AttendanceReleaseMonthApi( employeeId, projectId );
+    return res.data;
+  } catch (err) {
+    return thunkAPI.rejectWithValue(err.response?.data || err.message);
+  }
+})
 const attendanceSlice = createSlice({
   name: "attendance",
   initialState: {
@@ -88,6 +96,16 @@ const attendanceSlice = createSlice({
         state.loading = false;
       })
       .addCase(AttendanceReleaseWeek.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+       .addCase(AttendanceReleaseMonth.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(AttendanceReleaseMonth.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(AttendanceReleaseMonth.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
