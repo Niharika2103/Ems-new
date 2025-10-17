@@ -1290,3 +1290,57 @@ export const adminUpdateWorkedHours = async (req, res) => {
     res.status(500).json({ error: "Failed to update worked hours" });
   }
 };
+
+export const rejectWeeklyApproval = async (req, res) => {
+  try {
+    const { employeeId, from, to } = req.body;
+    const status = "rejected";
+
+    const { data, error } = await supabase
+      .from("attendance")
+      .update({ weekly_status: status })
+      .eq("employee_id", employeeId)
+      .gte("date", from)
+      .lte("date", to)
+      .eq("weekly_status", "pending_approval")
+      .select();
+
+    if (error) throw error;
+
+    res.status(200).json({
+      message: `Weekly attendance ${status} successfully`,
+      updated_count: data.length,
+      data,
+    });
+  } catch (err) {
+    console.error("Reject Weekly Status Error:", err.message);
+    res.status(500).json({ error: "Failed to reject weekly attendance" });
+  }
+};
+
+export const rejectMonthlyApproval = async (req, res) => {
+  try {
+    const { employeeId, from, to } = req.body;
+    const status = "rejected";
+
+    const { data, error } = await supabase
+      .from("attendance")
+      .update({ monthly_status: status })
+      .eq("employee_id", employeeId)
+      .gte("date", from)
+      .lte("date", to)
+      .eq("monthly_status", "pending_approval")
+      .select();
+
+    if (error) throw error;
+
+    res.status(200).json({
+      message: `Monthly attendance ${status} successfully`,
+      updated_count: data.length,
+      data,
+    });
+  } catch (err) {
+    console.error("Reject Monthly Status Error:", err.message);
+    res.status(500).json({ error: "Failed to reject monthly attendance" });
+  }
+};

@@ -20,6 +20,8 @@ import {
   getPendingMonthlyApprovals,
   updateMonthlyApprovalStatus,
   adminUpdateWorkedHours,
+  rejectWeeklyApproval,
+  rejectMonthlyApproval,
 
 } from "../controllers/admin.controller.js";
 const router = Router();
@@ -56,9 +58,11 @@ router.post("/verify-email", verifyEmail);
 router.post("/promote/:employeeId", promoteEmployee);
 
 router.get("/attendance/pending-weekly", getPendingWeeklyApprovals);
-router.put("/attendance/update-weekly-status", updateWeeklyApprovalStatus);
+router.put("/attendance/weekly/approve", updateWeeklyApprovalStatus);
 router.get("/attendance/pending-monthly", getPendingMonthlyApprovals);
-router.put("/attendance/update-monthly-status", updateMonthlyApprovalStatus);
-router.put("/attendance/admin-update-worked-hours", adminUpdateWorkedHours);
+router.put("/attendance/monthly/approve", updateMonthlyApprovalStatus);
+router.put("/attendance/update-worked-hours", adminUpdateWorkedHours);
+router.post("/attendance/weekly/reject", rejectWeeklyApproval);
+router.post("/attendance/monthly/reject", rejectMonthlyApproval);
 
 export default router;
