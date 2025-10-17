@@ -27,7 +27,7 @@ public class ProjectController {
         if (project.getName() == null || project.getName().isEmpty()) {
             return ResponseEntity.badRequest().body(null);
         }
-        System.out.println("@34::"+project.getStatus());
+      
         Projects savedProject = projectService.createProject(project);
         return ResponseEntity.ok(savedProject);
     }

@@ -220,10 +220,21 @@ export const AttendanceFetchByEmployeeProjectApi = (employeeId, projectId) => {
 };
 
 //fetch release-week
-    export const AttendanceReleaseWeekApi = (employeeId, projectId, formData) => {
+    export const AttendanceReleaseWeekApi = (employeeId, projectId) => {
   return AttendanceClient.post(
     `${AUTH_API.ATTENDANCE}/attendance/release-week`,
-    formData,
+    null,
+    {
+      params: { employeeId, projectId }
+    }
+  );
+};
+
+//fetch release-month
+    export const AttendanceReleaseMonthApi = (employeeId, projectId) => {
+  return AttendanceClient.post(
+    `${AUTH_API.ATTENDANCE}/attendance/release-month`,
+    null,
     {
       params: { employeeId, projectId }
     }

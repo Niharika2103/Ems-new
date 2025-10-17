@@ -23,10 +23,12 @@ import "react-toastify/dist/ReactToastify.css";
 import { useDispatch, useSelector } from "react-redux";
 import { AttendanceSaveall, AttendanceReleaseWeek } from "../../features/attendance/attendanceSlice";
 import LeaveApplicationModal from "../../components/LeaveApplicationModal";
+import { useNavigate } from "react-router-dom";
 
 export default function EmpTimesheet() {
   const { projects } = useSelector((state) => state.project);
   const dispatch = useDispatch();
+   const navigate = useNavigate();
   const projectName = projects[0]?.project?.name;
 
   // --- State ---
@@ -34,7 +36,7 @@ export default function EmpTimesheet() {
   const [hours, setHours] = useState(Array(7).fill(0));
   const [usedLeaveTypes, setUsedLeaveTypes] = useState(["CL"]);
   const [leaveRows, setLeaveRows] = useState({ CL: Array(7).fill(0) });
-  const [lockedRows, setLockedRows] = useState({ CL: true });
+  const [lockedRows, setLockedRows] = useState({ CL: false });
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [menuRow, setMenuRow] = useState(null);
   const [weekStart, setWeekStart] = useState(getMonday(new Date()));
@@ -156,43 +158,33 @@ export default function EmpTimesheet() {
     }
   };
 
-  const handleSaveWeek = async () => {
-    const employeeId = projects[0]?.employeeId;
-    const projectId = projects[0]?.project?.id;
-    const monday = getMonday(weekStart);
+const handleSaveWeek = async () => {
+  const employeeId = projects[0]?.employeeId;
+  const projectId = projects[0]?.project?.id;
+  const monday = getMonday(weekStart);
 
-    const dataToSend = days.map((_, i) => {
-      const currentDate = new Date(monday);
-      currentDate.setDate(monday.getDate() + i);
+  // Build the list of dates for the current week
+  // const dataToSend = days.map(() => ({
+  //   status: "pending_approval",
+  //   monthlyStatus: null // backend expects this
+  // }));
 
-      let appliedLeaveType = "";
-      for (const lt of usedLeaveTypes) {
-        if (leaveRows[lt][i] > 0) {
-          appliedLeaveType = lt;
-          break;
-        }
-      }
+  try {
+    // Dispatch release week action with minimal payload
+    const resultAction = await dispatch(
+      AttendanceReleaseWeek({ employeeId, projectId})
+    );
 
-      return {
-        date: currentDate.toISOString().split("T")[0],
-        workedHours: Number(hours[i]) || 0,
-        leaveType: appliedLeaveType || "",
-      };
-    });
-
-    try {
-      const resultAction = await dispatch(
-        AttendanceReleaseWeek({ employeeId, projectId, formData: dataToSend })
-      );
-      if (AttendanceReleaseWeek.fulfilled.match(resultAction)) {
-        toast.success("Week released successfully!");
-      } else {
-        throw new Error("Failed to release week");
-      }
-    } catch (err) {
-      toast.error("Error releasing week!");
+    if (AttendanceReleaseWeek.fulfilled.match(resultAction)) {
+      toast.success("Week released successfully!");
+    } else {
+      throw new Error("Failed to release week");
     }
-  };
+  } catch (err) {
+    toast.error("Error releasing week!");
+  }
+};
+
 
   // --- CALENDAR CHANGE ---
   const handleCalendarChange = (date) => {
@@ -359,6 +351,7 @@ export default function EmpTimesheet() {
         <div className="flex gap-2 justify-between">
           <Button variant="contained" color="success" onClick={handleSaveAll}>Save All</Button>
           <Button variant="contained" color="secondary" onClick={handleSaveWeek}>Release Week</Button>
+          <Button variant="contained"  color ="primary" onClick={()=>{navigate("/dashboard/timesheet/monthly")}} >View Monthly Attendance</Button>
         </div>
       </div>
 

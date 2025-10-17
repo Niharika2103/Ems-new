@@ -58,6 +58,11 @@ public class AttendanceEntity {
 
 	@Column(name = "weekly_status", nullable = false)
 	private String status;
+	
+	@Column(name = "monthly_status", nullable = false)
+	private String monthlyStatus;
+
+	
 
 	@Column(name = "leave_type")
 	private String leaveType;
@@ -78,6 +83,13 @@ public class AttendanceEntity {
 	@Column(name = "extra_milar", columnDefinition = "int default 2")
 	private Double extraMilar;
 
+	public String getMonthlyStatus() {
+		return monthlyStatus;
+	}
+
+	public void setMonthlyStatus(String monthlyStatus) {
+		this.monthlyStatus = monthlyStatus;
+	}
 
 	public Double getSl() {
 		return sl;
