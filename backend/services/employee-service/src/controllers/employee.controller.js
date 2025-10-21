@@ -992,60 +992,31 @@ export const verifyEmail = async (req, res) => {
 };
 
 
-export const updateEmployeeProfile = async (req, res) => {
+export const viewOwnProfile = async (req, res) => {
   try {
-    const { id } = req.params;
+    const decoded = getUserFromToken(req); // Extract user info from JWT
+    const email = decoded.email;
 
-    // ✅ Fetch existing employee row
-    const { data: existingData, error: fetchError } = await supabase
-      .from(USERS_TABLE)
-      .select("*")
-      .eq("id", id)
-      .single();
-
-    if (fetchError) throw fetchError;
-    if (!existingData) {
-      return res.status(404).json({ error: "Employee not found" });
-    }
-
-    // ✅ Merge old data with new updates
-    let updates = { ...existingData, ...req.body };
-
-    // 🚫 Prevent restricted fields from being changed
-    delete updates.employee_id;
-    delete updates.role;
-    delete updates.date_of_joining;
-
-    // 🔐 Hash password if it’s being updated
-    if (req.body.password) {
-      updates.password = await bcrypt.hash(req.body.password, 10);
-    }
-
-    // 📂 Handle file uploads
-    if (req.files?.profilePhoto?.[0]) {
-      updates.profile_photo = req.files.profilePhoto[0].filename;
-    }
-    if (req.files?.resume?.[0]) {
-      updates.resume = req.files.resume[0].filename;
-    }
-
-    // ✅ Save merged data back into DB
     const { data, error } = await supabase
-      .from(USERS_TABLE)
-      .update(updates)
-      .eq("id", id)
-      .select("*");
+      .from("user_employees_master")
+      .select(
+        "employee_id, name, email, phone, address, department, date_of_joining, permanent_address, emergency_contact, gender"
+      )
+      .eq("email", email)
+      .eq("role", "employee")
+      .maybeSingle();
 
     if (error) throw error;
+    if (!data) {
+      return res.status(404).json({ error: "Employee profile not found" });
+    }
 
-    return res.json({
-      message: "Employee updated successfully",
-      employee: data[0],
+    res.status(200).json({
+      message: "Profile fetched successfully",
+      profile: data,
     });
-
   } catch (err) {
-    console.error("Update Employee Error:", err);
-    res.status(500).json({ message: err.message });
+    console.error("View Own Profile Error:", err.message);
+    res.status(500).json({ error: "Failed to fetch profile" });
   }
 };
-

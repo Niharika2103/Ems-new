@@ -1134,14 +1134,27 @@ export const promoteEmployee = async (req, res) => {
 };
 
 export const getPendingWeeklyApprovals = async (req, res) => {
+  
   try {
+    const { employeeId, from, to } = req.query;
+
+    // Basic validation
+    if (!employeeId || !from || !to) {
+      return res.status(400).json({
+        error: "Missing required query parameters (employeeId, from, to)"
+      });
+    }
+
     const { data, error } = await supabase
       .from("attendance")
       .select(`
         *,
         user_employees_master (id, name, email)
       `)
-      .eq("weekly_status", "pending_approval");
+      .eq("employee_id", employeeId)
+      .eq("weekly_status", "Pending_approval")
+      .gte("date", from)
+      .lte("date", to);
 
     if (error) throw error;
 
@@ -1155,6 +1168,7 @@ export const getPendingWeeklyApprovals = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch pending weekly approvals" });
   }
 };
+
 
 /* -------------------------------------------------------------------------- */
 /*                          ADMIN APPROVE / REJECT WEEK                   */
@@ -1170,7 +1184,7 @@ export const updateWeeklyApprovalStatus = async (req, res) => {
       .eq("employee_id", employeeId)
       .gte("date", from)
       .lte("date", to)
-      .eq("weekly_status", "pending_approval")
+      .eq("weekly_status", "Pending_approval")
       .select();
 
     if (error) throw error;
@@ -1191,14 +1205,27 @@ export const updateWeeklyApprovalStatus = async (req, res) => {
 /*                      GET PENDING MONTHLY APPROVALS (ADMIN)                 */
 /* -------------------------------------------------------------------------- */
 export const getPendingMonthlyApprovals = async (req, res) => {
+  
   try {
+    const { employeeId, from, to } = req.query;
+
+    // Basic validation
+    if (!employeeId || !from || !to) {
+      return res.status(400).json({
+        error: "Missing required query parameters (employeeId, from, to)"
+      });
+    }
+
     const { data, error } = await supabase
       .from("attendance")
       .select(`
         *,
         user_employees_master (id, name, email)
       `)
-      .eq("monthly_status", "pending_approval");
+      .eq("employee_id", employeeId)
+      .eq("monthly_status", "Pending_approval")
+      .gte("date", from)
+      .lte("date", to);
 
     if (error) throw error;
 
@@ -1227,7 +1254,7 @@ export const updateMonthlyApprovalStatus = async (req, res) => {
       .eq("employee_id", employeeId)
       .gte("date", from)
       .lte("date", to)
-      .eq("monthly_status", "pending_approval")
+      .eq("monthly_status", "Pending_approval")
       .select();
 
     if (error) throw error;
@@ -1251,26 +1278,20 @@ export const adminUpdateWorkedHours = async (req, res) => {
   try {
     const { employeeId, date, worked_hours, type } = req.body;
 
-    
-
     if (!employeeId || !date || worked_hours === undefined || !type) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Determine which status to check
+    // Determine which status to check (weekly or monthly)
     const statusField = type === "monthly" ? "monthly_status" : "weekly_status";
 
-    // Update only if record is pending approval
+    // Update only worked_hours if record is still pending approval
     const { data, error } = await supabase
       .from("attendance")
-      .update({
-        worked_hours,
-        last_updated_by: "admin",
-        last_updated_at: new Date(),
-      })
+      .update({ worked_hours })
       .eq("employee_id", employeeId)
       .eq("date", date)
-      .eq(statusField, "pending_approval")
+      .eq(statusField, "Pending_approval")
       .select();
 
     if (error) throw error;
@@ -1291,6 +1312,7 @@ export const adminUpdateWorkedHours = async (req, res) => {
   }
 };
 
+
 export const rejectWeeklyApproval = async (req, res) => {
   try {
     const { employeeId, from, to } = req.body;
@@ -1302,7 +1324,7 @@ export const rejectWeeklyApproval = async (req, res) => {
       .eq("employee_id", employeeId)
       .gte("date", from)
       .lte("date", to)
-      .eq("weekly_status", "pending_approval")
+      .eq("weekly_status", "Pending_approval")
       .select();
 
     if (error) throw error;
@@ -1329,7 +1351,7 @@ export const rejectMonthlyApproval = async (req, res) => {
       .eq("employee_id", employeeId)
       .gte("date", from)
       .lte("date", to)
-      .eq("monthly_status", "pending_approval")
+      .eq("monthly_status", "Pending_approval")
       .select();
 
     if (error) throw error;

@@ -13,8 +13,9 @@ import {
   exportEmployees,
   upload,
   sendEmailVerification,
-  updateEmployeeProfile,
+  
   verifyEmail,
+  viewOwnProfile,
 } from "../controllers/employee.controller.js";
 
 const router = Router();
@@ -52,14 +53,8 @@ router.get("/export", exportEmployees);
 router.post("/send-email-verification", sendEmailVerification);
 router.post("/verify-email", verifyEmail);
 
-router.put(
-  "/profile-update/:id",
-  upload.fields([
-    { name: "profilePhoto", maxCount: 1 },
-    { name: "resume", maxCount: 1 },
-  ]),
-  updateEmployeeProfile
-);
+router.get("/profile", viewOwnProfile);
+
 
 export default router;
 
