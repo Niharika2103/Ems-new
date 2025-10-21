@@ -34,6 +34,14 @@ const ProjectDashboard = () => {
       onClick: () => navigate("/attendance/projects"),
     },
    
+    {
+      title: "Meternity & Peternity",
+      message: "Apply for leaves",
+      icon: MailOutlineIcon,
+      iconBg: "bg-pink-100",
+      iconColor: "text-pink-600",
+      onClick: () => navigate("/attendance/maternity-paternity-leaves"),
+    },
   ];
 
   return (

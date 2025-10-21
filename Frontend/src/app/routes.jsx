@@ -27,6 +27,7 @@ import TimesheetTable from "../pages/Attendance/Timesheettable";
 import ProjectDashboard from "../pages/dashbaord/ProjectDashboard";
 import Letters from "../pages/documents/Letters";
 import MonthlyTimesheet from "../pages/Attendance/MonthlyTimesheet";
+import MaternityPaternityLeaveTable from "../pages/Attendance/MaternityPaternityLeaveTable";
 
 function AppRoutes() {
   return (
@@ -55,7 +56,7 @@ function AppRoutes() {
         <Route
           path="/dashboard/assign_project"
           element={
-            <ProtectedRoute allowedRoles={["employee"]}>
+            <ProtectedRoute allowedRoles={["employee" ,"admin"]}>
               <EmployeeAssignedProjectPage />
             </ProtectedRoute>
           }
@@ -72,7 +73,7 @@ function AppRoutes() {
         <Route
           path="/attendance/projects"
           element={
-            <ProtectedRoute allowedRoles={["employee"]}>
+            <ProtectedRoute allowedRoles={["employee","admin"]}>
               <AssignProjectPage />
             </ProtectedRoute>
           }
@@ -105,7 +106,7 @@ function AppRoutes() {
         <Route
           path="/dashboard/emp_info"
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["admin","employee"]}>
               <EmpInfoDashboard />
             </ProtectedRoute>
           }
@@ -153,13 +154,30 @@ function AppRoutes() {
         <Route
           path="/documents/letters"
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["admin","employee"]}>
               <Letters />
+            </ProtectedRoute>
+          }
+        />
+
+         {/* 👇 Admin Dashboard page for Maternity & Paternity Leaves
+        <Route
+          path="/maternity-paternity-leaves"
+          element={<MaternityPaternityLeaveTable />}
+        /> */}
+
+         <Route
+          path="/attendance/maternity-paternity-leaves"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              < MaternityPaternityLeaveTable/>
             </ProtectedRoute>
           }
         />
       </Route>
     </Routes>
+
+    
   );
 }
 

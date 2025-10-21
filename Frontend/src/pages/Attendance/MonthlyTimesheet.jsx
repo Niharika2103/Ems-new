@@ -36,6 +36,7 @@ export default function MonthlyTimesheet({ onBack }) {
   const [calendarAnchor, setCalendarAnchor] = useState(null);
   const [leaveModalOpen, setLeaveModalOpen] = useState(false);
   const [modalLeaveType, setModalLeaveType] = useState("");
+  const [monthDays, setMonthDays] = useState([]);
 
   const leaveTypes = ["CL", "SL", "PL", "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave"];
 
@@ -47,24 +48,32 @@ export default function MonthlyTimesheet({ onBack }) {
     for (let i = 1; i <= numDays; i++) {
       const d = new Date(year, month, i);
       const dayName = d.toLocaleDateString("en-US", { weekday: "short" });
-      days.push({ day: i, label: `${i}/${month + 1}/${dayName}`, isWeekend: dayName === "Sat" || dayName === "Sun" });
+      days.push({
+        day: i,
+        label: `${i}/${month + 1}/${dayName}`,
+        isWeekend: dayName === "Sat" || dayName === "Sun",
+      });
     }
     return days;
   };
-
-  const monthDays = getMonthDays(monthStart);
 
   const formatMonthRange = () => {
     const monthName = monthStart.toLocaleString("default", { month: "long" });
     return `${monthName} ${monthStart.getFullYear()}`;
   };
 
+  // Sync monthDays, hours, leaveRows whenever monthStart changes
   useEffect(() => {
-    const daysInMonth = getMonthDays(monthStart).length;
-    setHours(Array(daysInMonth).fill(0));
+    const days = getMonthDays(monthStart);
+    setMonthDays(days);
+
+    setHours(Array(days.length).fill(0));
+
     setLeaveRows((prev) => {
       const updated = {};
-      Object.keys(prev).forEach((lt) => (updated[lt] = Array(daysInMonth).fill(0)));
+      Object.keys(prev).forEach((lt) => {
+        updated[lt] = Array(days.length).fill(prev[lt][0] || 0);
+      });
       return updated;
     });
   }, [monthStart]);
@@ -85,21 +94,19 @@ export default function MonthlyTimesheet({ onBack }) {
       return;
     }
     if (leaveType && !usedLeaveTypes.includes(leaveType)) {
-      const daysInMonth = getMonthDays(monthStart).length;
       setUsedLeaveTypes([...usedLeaveTypes, leaveType]);
-      setLeaveRows((prev) => ({ ...prev, [leaveType]: Array(daysInMonth).fill(0) }));
+      setLeaveRows((prev) => ({ ...prev, [leaveType]: Array(monthDays.length).fill(0) }));
       setLockedRows((prev) => ({ ...prev, [leaveType]: false }));
     }
   };
 
   const handleModalSubmit = () => {
     if (!usedLeaveTypes.includes(modalLeaveType)) {
-      const daysInMonth = getMonthDays(monthStart).length;
       setUsedLeaveTypes([...usedLeaveTypes, modalLeaveType]);
-      const leaveHours = Array(daysInMonth).fill(0);
-      setLeaveRows((prev) => ({ ...prev, [modalLeaveType]: leaveHours }));
+      setLeaveRows((prev) => ({ ...prev, [modalLeaveType]: Array(monthDays.length).fill(0) }));
       setLockedRows((prev) => ({ ...prev, [modalLeaveType]: true }));
     }
+    setLeaveModalOpen(false);
   };
 
   const handleDeleteRow = (row) => {
@@ -111,8 +118,7 @@ export default function MonthlyTimesheet({ onBack }) {
   };
 
   const handleResetRow = (row) => {
-    const daysInMonth = getMonthDays(monthStart).length;
-    setLeaveRows((prev) => ({ ...prev, [row]: Array(daysInMonth).fill(0) }));
+    setLeaveRows((prev) => ({ ...prev, [row]: Array(monthDays.length).fill(0) }));
     handleMenuClose();
   };
 
@@ -121,102 +127,14 @@ export default function MonthlyTimesheet({ onBack }) {
     handleMenuClose();
   };
 
-  const handleSaveAll = async () => {
-    const employeeId = projects[0]?.employeeId;
-    const projectId = projects[0]?.project?.id;
-    const year = monthStart.getFullYear();
-    const month = monthStart.getMonth();
-
-    const dataToSend = monthDays.map((d, i) => {
-      const currentDate = new Date(year, month, d.day);
-      let appliedLeaveType = "";
-      for (const lt of usedLeaveTypes) {
-        if (leaveRows[lt]?.[i] > 0) {
-          appliedLeaveType = lt;
-          break;
-        }
-      }
-      return {
-        date: currentDate.toISOString().split("T")[0],
-        workedHours: Number(hours[i]) || 0,
-        leaveType: appliedLeaveType || "",
-      };
-    });
-
-    try {
-      const resultAction = await dispatch(AttendanceSaveall({ employeeId, projectId, formData: dataToSend }));
-      if (AttendanceSaveall.fulfilled.match(resultAction)) toast.success("Saved successfully!");
-      else throw new Error("Save failed");
-    } catch (err) {
-      toast.error("Error saving monthly attendance!");
-    }
-  };
-
-  const handleReleaseMonth = async () => {
-    const employeeId = projects[0]?.employeeId;
-    const projectId = projects[0]?.project?.id;
-    const year = monthStart.getFullYear();
-    const month = monthStart.getMonth();
-
-    const dataToSend = monthDays.map((d, i) => {
-      const currentDate = new Date(year, month, d.day);
-      let appliedLeaveType = "";
-      for (const lt of usedLeaveTypes) {
-        if (leaveRows[lt]?.[i] > 0) {
-          appliedLeaveType = lt;
-          break;
-        }
-      }
-      return {
-        date: currentDate.toISOString().split("T")[0],
-        workedHours: Number(hours[i]) || 0,
-        leaveType: appliedLeaveType || "",
-      };
-    });
-
-    try {
-      const resultAction = await dispatch(AttendanceReleaseWeek({ employeeId, projectId, formData: dataToSend }));
-      if (AttendanceReleaseWeek.fulfilled.match(resultAction)) toast.success("Month released successfully!");
-      else throw new Error("Failed to release month");
-    } catch (err) {
-      toast.error("Error releasing month!");
-    }
+  const changeMonth = (offset) => {
+    const newDate = new Date(monthStart.getFullYear(), monthStart.getMonth() + offset, 1);
+    setMonthStart(newDate);
   };
 
   const handleCalendarChange = (date) => {
     setMonthStart(new Date(date.getFullYear(), date.getMonth(), 1));
     setCalendarAnchor(null);
-  };
-
-  const changeMonth = (offset) => {
-    const newDate = new Date(monthStart);
-    newDate.setMonth(monthStart.getMonth() + offset);
-    setMonthStart(newDate);
-  };
-
-  const handleSaveMonth = async () => {
-    const employeeId = projects[0]?.employeeId;
-    const projectId = projects[0]?.project?.id;
-  
-   
-//  const dataToSend = monthDays.map(() => ({
-//     status: "pending_approval",
-//     monthlyStatus: "Pending_Approval" // backend expects this
-//   }));
-  
-    try {
-      const resultAction = await dispatch(
-        AttendanceReleaseMonth({ employeeId, projectId})
-      );
-  
-      if (AttendanceReleaseWeek.fulfilled.match(resultAction)) {
-        toast.success("Week released successfully!");
-      } else {
-        throw new Error("Failed to release week");
-      }
-    } catch (err) {
-      toast.error("Error releasing week!");
-    }
   };
 
   return (
@@ -226,10 +144,16 @@ export default function MonthlyTimesheet({ onBack }) {
       {/* HEADER */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <IconButton onClick={() => changeMonth(-1)}><ChevronLeft /></IconButton>
+          <IconButton onClick={() => changeMonth(-1)}>
+            <ChevronLeft />
+          </IconButton>
           <Typography variant="subtitle2">{formatMonthRange()}</Typography>
-          <IconButton onClick={() => changeMonth(1)}><ChevronRight /></IconButton>
-          <IconButton onClick={(e) => setCalendarAnchor(e.currentTarget)}><CalendarToday /></IconButton>
+          <IconButton onClick={() => changeMonth(1)}>
+            <ChevronRight />
+          </IconButton>
+          <IconButton onClick={(e) => setCalendarAnchor(e.currentTarget)}>
+            <CalendarToday />
+          </IconButton>
           <Popover
             open={Boolean(calendarAnchor)}
             anchorEl={calendarAnchor}
@@ -255,9 +179,7 @@ export default function MonthlyTimesheet({ onBack }) {
           {monthDays.map((d) => (
             <div
               key={d.day}
-              className={`min-w-[70px] text-center mx-1 ${
-                d.isWeekend ? "text-gray-400" : "text-black"
-              }`}
+              className={`min-w-[70px] text-center mx-1 ${d.isWeekend ? "text-gray-400" : "text-black"}`}
             >
               {d.label}
             </div>
@@ -286,7 +208,9 @@ export default function MonthlyTimesheet({ onBack }) {
               }}
             />
           ))}
-          <IconButton onClick={(e) => handleMenuOpen(e, "Worked Hours")}><MoreVert /></IconButton>
+          <IconButton onClick={(e) => handleMenuOpen(e, "Worked Hours")}>
+            <MoreVert />
+          </IconButton>
         </div>
 
         {/* LEAVE ROWS */}
@@ -311,7 +235,9 @@ export default function MonthlyTimesheet({ onBack }) {
                 }}
               />
             ))}
-            <IconButton onClick={(e) => handleMenuOpen(e, lt)}><MoreVert /></IconButton>
+            <IconButton onClick={(e) => handleMenuOpen(e, lt)}>
+              <MoreVert />
+            </IconButton>
           </div>
         ))}
 
@@ -319,12 +245,7 @@ export default function MonthlyTimesheet({ onBack }) {
         <div className="flex items-center py-2 border-t font-bold text-sm">
           <div className="min-w-[150px]">Target</div>
           {monthDays.map((d, i) => (
-            <div
-              key={i}
-              className={`min-w-[70px] text-center mx-1 ${
-                d.isWeekend ? "text-gray-400" : "text-black"
-              }`}
-            >
+            <div key={i} className={`min-w-[70px] text-center mx-1 ${d.isWeekend ? "text-gray-400" : "text-black"}`}>
               0
             </div>
           ))}
@@ -343,21 +264,29 @@ export default function MonthlyTimesheet({ onBack }) {
               className="w-40"
             >
               {leaveTypes.map((lt) => (
-                <MenuItem key={lt} value={lt}>{lt}</MenuItem>
+                <MenuItem key={lt} value={lt}>
+                  {lt}
+                </MenuItem>
               ))}
             </Select>
           </FormControl>
-          <Button variant="contained" color="primary" onClick={handleAddActivity}>Add Activity</Button>
+          <Button variant="contained" color="primary" onClick={handleAddActivity}>
+            Add Activity
+          </Button>
         </div>
 
         <div className="flex gap-2">
-          <Button variant="contained" color="secondary" onClick={handleSaveMonth}>Release Month</Button>
+          <Button variant="contained" color="secondary">
+            Release Month
+          </Button>
         </div>
       </div>
 
       {/* MENU */}
       <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={handleMenuClose}>
-        <MenuItem onClick={() => handleEditRow(menuRow)} disabled={!lockedRows[menuRow]}>Edit</MenuItem>
+        <MenuItem onClick={() => handleEditRow(menuRow)} disabled={!lockedRows[menuRow]}>
+          Edit
+        </MenuItem>
         <MenuItem onClick={() => handleResetRow(menuRow)}>Reset</MenuItem>
         {menuRow !== "Worked Hours" && <MenuItem onClick={() => handleDeleteRow(menuRow)}>Delete</MenuItem>}
       </Menu>

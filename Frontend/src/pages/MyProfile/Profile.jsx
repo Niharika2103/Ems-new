@@ -52,15 +52,11 @@ const Profile = () => {
   const [touched, setTouched] = useState({});
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
-
-  // OTP & Email verification states
   const [emailOtp, setEmailOtp] = useState("");
   const [generatedOtp, setGeneratedOtp] = useState("");
   const [phoneVerified, setPhoneVerified] = useState(false);
-
   const [emailSent, setEmailSent] = useState(false);
   const [emailVerified, setEmailVerified] = useState(false);
-
   const [user, setUser] = useState(null);
   const [data, setData] = useState(null);
 
@@ -70,7 +66,7 @@ const Profile = () => {
     useSelector((state) => state.employeeSlice?.role) ||
     localStorage.getItem("role");
 
- const location = useLocation();
+  const location = useLocation();
   const pathnames = location.pathname.split("/").filter((x) => x);
 
   useEffect(() => {
@@ -85,25 +81,21 @@ const Profile = () => {
             dispatch(fetchAdminProfile(decoded.id));
           } else if (roles === "superadmin") {
             dispatch(fetchSuperAdminProfile(decoded.id));
-          } else if (roles === "employee") {
-            dispatch(fetchEmployeeProfile(decoded.email));
-          }
+          } 
+          // else if (roles === "employee") {
+          //   dispatch(fetchEmployeeProfile(decoded.email));
+          // }
         }
       } catch (error) {
         console.error("Error decoding token:", error);
       }
     };
-
     getDecoded();
   }, [dispatch, roles]);
 
-
   useEffect(() => {
     if (profile) {
-      setFormData({
-        ...formData,
-        ...profile,
-      });
+      setFormData({ ...formData, ...profile });
     }
   }, [profile]);
 
@@ -121,11 +113,9 @@ const Profile = () => {
   const handleBlur = (e) => {
     const { name } = e.target;
     setTouched({ ...touched, [name]: true });
-    const newErrors = validateProfileForm(formData);
-    setErrors(newErrors);
+    setErrors(validateProfileForm(formData));
   };
 
-  // Phone OTP
   const handleSendOtp = () => {
     if (!formData.phone.match(/^[0-9]{10}$/)) {
       alert("Enter a valid phone number first");
@@ -146,7 +136,6 @@ const Profile = () => {
     }
   };
 
-  // Email OTP
   const handleSendEmailOtp = () => {
     dispatch(sendEmailOtp());
     setEmailSent(true);
@@ -168,24 +157,11 @@ const Profile = () => {
     if (role === "employee") return updateEmployeeProfile({ data: formData, id });
   };
 
-  //update profile using role 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    // const validationErrors = validateProfileForm(formData,roles);
-    // setErrors(validationErrors);
-    // setTouched(
-    //   Object.keys(formData).reduce((acc, key) => ({ ...acc, [key]: true }), {})
-    // );
-
-    // if (Object.keys(validationErrors).length > 0) return;
-
-
-
     const id = data?.id;
 
     if (id && roles) {
-      // Dispatch update based on role
       dispatch(updateProfileByRole(roles, formData, id))
         .unwrap()
         .then((response) => {
@@ -207,164 +183,147 @@ const Profile = () => {
   return (
     <>
       <ToastContainer position="top-right" autoClose={2000} />
-       <nav className="text-gray-600 text-sm mb-4" aria-label="breadcrumb">
-            <ol className="list-reset flex">
-              <li>
-                <Link to="/dashboard" className="text-sky-600 hover:underline">
-                  Dashboard
-                </Link>
-                 </li><li>
-                <span className="mx-2">/</span>
-                 <Link to="/dashboard/emp_info" className="text-sky-600 hover:underline">
-                Employee Info
-                </Link>
-              </li>
-              {pathnames.map((name, index) => {
-                const routeTo = `/${pathnames.slice(0, index + 1).join("/")}`;
-                const isLast = index === pathnames.length - 1;
-                return (
-                  <li key={routeTo} className="flex items-center">
-                    <span className="mx-2">/</span>
-                    {isLast ? (
-                      <span className="text-gray-400">
-                        {/* {name.charAt(0).toUpperCase() + name.slice(1)} */}
-                        MyInfo
-                        </span>
-                    ) : (
-                      <Link to={routeTo} className="text-sky-600 hover:underline">
-                        {/* {name.charAt(0).toUpperCase() + name.slice(1)} */}
-                         MyInfo
-                      </Link>
-                    )}
-                  </li>
-                );
-              })}
-            </ol>
-          </nav>
-      <Box className="flex justify-center items-center bg-gray-100">
+      <Box className="flex justify-center items-center bg-gray-100 p-4">
         <Paper
           elevation={4}
           sx={{
             p: 4,
             width: "100%",
-            maxWidth: 800,
-            borderRadius: "16px",
+            maxWidth: 700,
+            borderRadius: 3,
             bgcolor: "white",
           }}
         >
-          <Typography variant="h5" align="center" gutterBottom sx={{ fontWeight: "bold", mb: 3 }}>
+          <Typography
+            variant="h5"
+            align="center"
+            gutterBottom
+            sx={{ fontWeight: "bold", mb: 3 }}
+          >
             {roles === "admin"
-              ? "Admin  Information"
+              ? "Admin Information"
               : roles === "superadmin"
-                ? "SuperAdmin  Information"
+                ? "SuperAdmin Information"
                 : roles === "employee"
-                  ? "Employee  Information"
+                  ? "Employee Information"
                   : "Profile Information"}
           </Typography>
 
           <Box component="form" onSubmit={handleSubmit}>
-            <Grid container spacing={3}>
+            <Grid container direction="column" spacing={1.5}>
               {/* Full Name */}
-              <Grid item xs={12}>
-                <Typography variant="subtitle1">Full Name</Typography>
+              <Grid item>
                 <TextField
+                  fullWidth
+                  label="Full Name"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
                   onBlur={handleBlur}
-                  fullWidth
                   size="small"
-                  error={touched.name && !!errors.name}
-                  helperText={touched.name && errors.name}
+                  sx={{ maxWidth: "60%" }}
                 />
               </Grid>
 
-              {/* Email */}
-              <Grid item xs={12}>
-                <Typography variant="subtitle1">Email</Typography>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
-                  {/* Email input */}
-                  <TextField
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    size="small"
-                  />
-
-                  {/* Send OTP button */}
-                  {!emailVerified && !emailSent && (
-                    <Button
-                      size="medium"
-                      variant="outlined"
-                      onClick={handleSendEmailOtp}
-                      // disabled={loading || !formData.email}
-                    >
-                      {loading ? "Sending..." : "Send OTP"}
-                    </Button>
-                  )}
-
-                  {/* OTP input + Verify button */}
-                  {!emailVerified && emailSent && (
-                    <>
-                      <TextField
-                        label="Enter OTP"
-                        value={emailOtp}
-                        onChange={(e) => setEmailOtp(e.target.value)}
-                        size="small"
-                      />
-                      <Button
-                        size="medium"
-                        variant="outlined"
-                        onClick={() => handleVerifyEmailOtp(emailOtp)}
-                        // disabled={loading || !emailOtp}
-                      >
-                        Verify
-                        {/* {loading ? "Verifying..." : "Verify"} */}
-                      </Button>
-                    </>
-                  )}
-
-                  {/* Verified message */}
-                  {emailVerified && (
-                    <Typography color="success.main" variant="subtitle2" sx={{ ml: 1, fontWeight: 'bold' }}>
-                      Email Verified Successfully
-                    </Typography>
-                  )}
-                </Box>
-              </Grid>
-              {roles === "employee" && (
-                <>
-                  <Grid item xs={12}>
-                    <Typography variant="subtitle1">Employee ID</Typography>
-                    <TextField name="empId" value={user} fullWidth size="small" InputProps={{ readOnly: true }} />
-                  </Grid>
-
-                  <Grid item xs={12}>
-                    <Typography variant="subtitle1">Date of Joining</Typography>
+              {/* Email + OTP */}
+              <Grid item>
+                <Grid container spacing={2} alignItems="center">
+                  <Grid item xs={7}>
                     <TextField
-                      name="date_of_joining"
-                      type="date"
-                      value={formData.date_of_joining}
-                      onChange={handleChange}
                       fullWidth
+                      label="Email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
                       size="small"
-                      InputLabelProps={{ shrink: true }}
-                      sx={{
-                        '& .MuiInputBase-root': {
-                          height: 40,
-                        },
-                        '& .MuiOutlinedInput-input': {
-                          padding: '10px 35px',
-                        },
-                      }}
                     />
                   </Grid>
-                </>
-              )}
+                  <Grid item xs={5}>
+                    {!emailVerified && !emailSent && (
+                      <Button fullWidth variant="outlined" size="small" onClick={handleSendEmailOtp}>
+                        Send OTP
+                      </Button>
+                    )}
+                    {emailSent && !emailVerified && (
+                      <Grid container spacing={1}>
+                        <Grid item xs={7}>
+                          <TextField
+                            fullWidth
+                            label="Enter OTP"
+                            value={emailOtp}
+                            onChange={(e) => setEmailOtp(e.target.value)}
+                            size="small"
+                          />
+                        </Grid>
+                        <Grid item xs={5}>
+                          <Button
+                            fullWidth
+                            variant="outlined"
+                            size="small"
+                            onClick={() => handleVerifyEmailOtp(emailOtp)}
+                          >
+                            Verify
+                          </Button>
+                        </Grid>
+                      </Grid>
+                    )}
+                    {emailVerified && (
+                      <Typography color="success.main" sx={{ fontWeight: "bold", mt: 1 }}>
+                        Email Verified Successfully
+                      </Typography>
+                    )}
+                  </Grid>
+                </Grid>
+              </Grid>
+
+              {/* Phone + OTP */}
+              <Grid item>
+                <Grid container spacing={2} alignItems="center">
+                  <Grid item xs={7}>
+                    <TextField
+                      fullWidth
+                      label="Phone Number"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      size="small"
+                    />
+                  </Grid>
+                  <Grid item xs={5}>
+                    {!otpSent && !phoneVerified && (
+                      <Button fullWidth variant="outlined" size="small" onClick={handleSendOtp}>
+                        Send OTP
+                      </Button>
+                    )}
+                    {otpSent && !phoneVerified && (
+                      <Grid container spacing={1}>
+                        <Grid item xs={7}>
+                          <TextField
+                            fullWidth
+                            label="Enter OTP"
+                            value={otp}
+                            onChange={(e) => setOtp(e.target.value)}
+                            size="small"
+                          />
+                        </Grid>
+                        <Grid item xs={5}>
+                          <Button fullWidth variant="outlined" size="small" onClick={handleVerifyOtp}>
+                            Verify
+                          </Button>
+                        </Grid>
+                      </Grid>
+                    )}
+                    {phoneVerified && (
+                      <Typography color="success.main" sx={{ fontWeight: "bold", mt: 1 }}>
+                        Phone Verified Successfully
+                      </Typography>
+                    )}
+                  </Grid>
+                </Grid>
+              </Grid>
 
               {/* Gender */}
-              <Grid item xs={12}>
+              <Grid item>
                 <FormLabel>Gender</FormLabel>
                 <RadioGroup row name="gender" value={formData.gender} onChange={handleChange}>
                   <FormControlLabel value="Male" control={<Radio />} label="Male" />
@@ -372,62 +331,46 @@ const Profile = () => {
                 </RadioGroup>
               </Grid>
 
-              {/* DOB */}
-              <Grid item xs={12}>
-                <Typography variant="subtitle1">Date of Birth</Typography>
+              {/* Date of Birth */}
+              <Grid item>
                 <TextField
+                  label="Date of Birth"
                   name="dob"
                   type="date"
                   value={formData.dob}
                   onChange={handleChange}
-                  fullWidth
                   size="small"
                   InputLabelProps={{ shrink: true }}
-                  sx={{
-                    '& .MuiInputBase-root': {
-                      height: 40,
-                    },
-                    '& .MuiOutlinedInput-input': {
-                      padding: '10px 35px',
-                    },
-                  }}
+                  sx={{ width: "45%" }}
                 />
               </Grid>
 
-              {/* Emergency Contact */}
-              <Grid item xs={12}>
-                <Typography variant="subtitle1">Emergency Contact</Typography>
-                <TextField
-                  name="emergency_contact"
-                  type="tel"
-                  value={formData.emergency_contact}
-                  onChange={handleChange}
-                  fullWidth
-                  size="small"
-                />
-              </Grid>
+              {/* Date of Joining */}
+              {roles === "employee" && (
+                <Grid item>
+                  <TextField
+                    label="Date of Joining"
+                    name="date_of_joining"
+                    type="date"
+                    value={formData.date_of_joining}
+                    onChange={handleChange}
+                    size="small"
+                    InputLabelProps={{ shrink: true }}
+                    sx={{ width: "45%" }}
+                  />
+                </Grid>
+              )}
 
               {/* Department */}
-              <Grid item xs={12}>
-                <Typography variant="subtitle1">Department</Typography>
+              <Grid item>
                 <TextField
                   select
+                  label="Department"
                   name="department"
                   value={formData.department}
                   onChange={handleChange}
-                  fullWidth
                   size="small"
-                  sx={{
-                    minWidth: 200,
-                    maxWidth: 400,
-                    '& .MuiInputBase-root': {
-                      height: 40,
-                    },
-                    '& .MuiOutlinedInput-input': {
-                      padding: '10px 14px',
-                    },
-                  }}
-
+                  sx={{ width: "45%" }}
                 >
                   <MenuItem value="HR">HR</MenuItem>
                   <MenuItem value="IT">IT</MenuItem>
@@ -436,12 +379,49 @@ const Profile = () => {
                 </TextField>
               </Grid>
 
+              {/* Addresses */}
+              <Grid item>
+                <TextField
+                  label="Current Address"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  multiline
+                  rows={2}
+                  size="small"
+                  sx={{ width: "60%" }}
+                />
+              </Grid>
+              <Grid item>
+                <TextField
+                  label="Permanent Address"
+                  name="permanent_address"
+                  value={formData.permanent_address}
+                  onChange={handleChange}
+                  multiline
+                  rows={2}
+                  size="small"
+                  sx={{ width: "60%" }}
+                />
+              </Grid>
+
+              {/* Emergency Contact */}
+              <Grid item>
+                <TextField
+                  label="Emergency Contact"
+                  name="emergency_contact"
+                  value={formData.emergency_contact}
+                  onChange={handleChange}
+                  size="small"
+                  sx={{ width: "45%" }}
+                />
+              </Grid>
+
               {/* Profile Photo */}
-              <Grid item xs={12}>
-                <Typography variant="subtitle1">Profile Photo</Typography>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Grid item>
+                <Typography>Profile Photo</Typography>
+                <Box display="flex" alignItems="center" gap={2}>
                   <TextField
-                    variant="outlined"
                     size="small"
                     value={
                       formData.profilePhoto instanceof File
@@ -450,23 +430,18 @@ const Profile = () => {
                           ? "Existing Profile Photo"
                           : ""
                     }
-                    placeholder="No file chosen"
                     InputProps={{
                       readOnly: true,
                       endAdornment: (
                         <label htmlFor="profile-photo-upload">
-                          <Button
-                            component="span"
-                            size="small"
-                            sx={{ ml: 0 }}
-                          >
+                          <Button component="span" size="small">
                             Upload
                           </Button>
                         </label>
                       ),
                     }}
+                    sx={{ width: "60%" }}
                   />
-                  {/* Hidden file input */}
                   <input
                     accept="image/png, image/jpeg"
                     style={{ display: "none" }}
@@ -475,7 +450,6 @@ const Profile = () => {
                     name="profilePhoto"
                     onChange={handleChange}
                   />
-                  {/* Preview Avatar */}
                   <Avatar
                     src={
                       formData.profilePhoto instanceof File
@@ -489,14 +463,12 @@ const Profile = () => {
 
               {/* Resume */}
               {roles === "employee" && (
-                <Grid item xs={12}>
-                  <Typography variant="subtitle1">Resume</Typography>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 1 }}>
-
-                    {/* TextField with Upload button */}
+                <Grid item>
+                  <Typography>Resume</Typography>
+                  <Box display="flex" alignItems="center" gap={2} sx={{ width: "60%" }}>
                     <TextField
-                      variant="outlined"
                       size="small"
+                      fullWidth
                       value={
                         formData.resume instanceof File
                           ? formData.resume.name
@@ -509,19 +481,13 @@ const Profile = () => {
                         readOnly: true,
                         endAdornment: (
                           <label htmlFor="resume-upload">
-                            <Button
-                              component="span"
-                              size="small"
-                              sx={{ ml: 0 }}
-                            >
+                            <Button component="span" size="small">
                               Upload
                             </Button>
                           </label>
                         ),
                       }}
                     />
-
-                    {/* Hidden file input */}
                     <input
                       type="file"
                       name="resume"
@@ -530,102 +496,20 @@ const Profile = () => {
                       id="resume-upload"
                       onChange={handleChange}
                     />
-
-                    {/* Preview / Download section */}
-                    {formData.resume instanceof File ? (
-                      <>
-                        {formData.resume.type === "application/pdf" ? (
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            component="a"
-                            href={URL.createObjectURL(formData.resume)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            Preview
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            component="a"
-                            href={URL.createObjectURL(formData.resume)}
-                            download={formData.resume.name}
-                          >
-                            Download
-                          </Button>
-                        )}
-                      </>
-                    ) : profile?.resume ? (
-                      <>
-                        {profile.resume.endsWith(".pdf") ? (
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            component="a"
-                            href={profile.resume}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            View
-                          </Button>
-                        ) : (
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            component="a"
-                            href={profile.resume}
-                            download
-                          >
-                            Download
-                          </Button>
-                        )}
-                      </>
-                    ) : null}
                   </Box>
                 </Grid>
               )}
 
-              {/* Phone */}
-              <Grid item xs={12}>
-                <Typography variant="subtitle1">Phone Number</Typography>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2, mt: 1 }}>
-                  <TextField name="phone" type="tel" value={formData.phone} onChange={handleChange} size="small" />
-                  {!otpSent && !phoneVerified && (
-                    <Button size="small" variant="outlined" sx={{ mt: 1 }} onClick={handleSendOtp}>
-                      Send OTP
-                    </Button>
-                  )}
-                  {otpSent && !phoneVerified && (
-                    <Box mt={1}>
-                      <TextField label="Enter OTP" value={otp} onChange={(e) => setOtp(e.target.value)} size="small" />
-                      <Button size="small" sx={{ ml: 1, mt: 1 }} onClick={handleVerifyOtp}>
-                        Verify
-                      </Button>
-                    </Box>
-                  )}
-                  {phoneVerified && (
-                    <Typography color="success.main" variant="subtitle2" sx={{ ml: 1, fontWeight: 'bold' }} mt={1}>
-                      Phone Verified Successfully
-                    </Typography>
-                  )}
-                </Box>
-              </Grid>
-              {/* Address */}
-              <Grid item xs={12}>
-                <Typography variant="subtitle1">Current Address</Typography>
-                <TextField name="address" value={formData.address} onChange={handleChange} fullWidth multiline rows={2} size="small" sx={{ width: "100%" }} />
-              </Grid>
-              {/*permanent  Address */}
-              <Grid item xs={12}>
-                <Typography variant="subtitle1">Permanent Address</Typography>
-                <TextField name="permanent_address" value={formData.permanent_address} onChange={handleChange} fullWidth multiline rows={2} size="small" sx={{ width: "100%" }} />
-              </Grid>
-
-              {/* Submit */}
-              <Grid item xs={12} mt={1}>
-                <Button type="submit" variant="contained" fullWidth size="large" sx={{ mt: 5, borderRadius: "12px", background: "#00c853" }} disabled={loading} >
+              {/* Update Button */}
+              <Grid item>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  fullWidth
+                  size="large"
+                  sx={{ mt: 2, borderRadius: "12px", background: "#00c853" }}
+                  disabled={loading}
+                >
                   {loading ? "Updating..." : "Update"}
                 </Button>
               </Grid>

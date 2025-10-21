@@ -59,7 +59,7 @@ public class AttendanceEntity {
 	@Column(name = "weekly_status", nullable = false)
 	private String status;
 	
-	@Column(name = "monthly_status", nullable = false)
+	@Column(name = "monthly_status", nullable = true)
 	private String monthlyStatus;
 
 	
@@ -74,14 +74,15 @@ public class AttendanceEntity {
 	private String gender;
 
 
-	@Column(name = "sl", columnDefinition = "int default 10")
-	private Double sl;
+	@Column(nullable = false)
+	private Integer el = 25;
 
-	@Column(name = "el", columnDefinition = "int default 25")
-	private Double el;
+	@Column(nullable = false)
+	private Integer extraMilar = 2;
 
-	@Column(name = "extra_milar", columnDefinition = "int default 2")
-	private Double extraMilar;
+	@Column(nullable = false)
+	private Integer sl = 10;
+
 
 	public String getMonthlyStatus() {
 		return monthlyStatus;
@@ -91,29 +92,30 @@ public class AttendanceEntity {
 		this.monthlyStatus = monthlyStatus;
 	}
 
-	public Double getSl() {
-		return sl;
+	public Integer getEl() {
+	    return el;
 	}
 
-	public void setSl(Double sl) {
-		this.sl = sl;
+	public void setEl(Integer el) {
+	    this.el = el;
 	}
 
-	public Double getEl() {
-		return el;
+	public Integer getExtraMilar() {
+	    return extraMilar;
 	}
 
-	public void setEl(Double el) {
-		this.el = el;
+	public void setExtraMilar(Integer extraMilar) {
+	    this.extraMilar = extraMilar;
 	}
 
-	public Double getExtraMilar() {
-		return extraMilar;
+	public Integer getSl() {
+	    return sl;
 	}
 
-	public void setExtraMilar(Double extraMilar) {
-		this.extraMilar = extraMilar;
+	public void setSl(Integer sl) {
+	    this.sl = sl;
 	}
+
 
 	public String getGender() {
 		return gender;

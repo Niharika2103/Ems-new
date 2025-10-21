@@ -56,6 +56,7 @@ const TimesheetTable = () => {
         employee: item.employee?.name || item.employeeName || item.name || "N/A",
         date: item.date,
         hours: item.workedHours,
+        // projtectname : item.ProjectName,
         status: item.status === "draft" ? "Pending" : capitalize(item.status),
       }));
       setLocalTimesheets(mapped);
@@ -68,7 +69,10 @@ const TimesheetTable = () => {
     }
   }, [dispatch, employeeId, projectId]);
 
-  const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+const capitalize = (str) => str?.charAt(0)?.toUpperCase() + str?.slice(1) || '';
+
+
+
 
   const handleView = (employeeId, projectId) => {
     navigate("/attendance/timesheet", { state: { employeeId, projectId } });
@@ -164,7 +168,7 @@ const TimesheetTable = () => {
             <TableRow>
               <TableCell sx={{ color: "white", fontWeight: 600 }}>Employee</TableCell>
               <TableCell sx={{ color: "white", fontWeight: 600 }}>Date</TableCell>
-              <TableCell sx={{ color: "white", fontWeight: 600 }}>Hours</TableCell>
+              <TableCell sx={{ color: "white", fontWeight: 600 }}>ProjectName</TableCell>
               <TableCell sx={{ color: "white", fontWeight: 600 }}>Status</TableCell>
               <TableCell sx={{ color: "white", fontWeight: 600 }}>Actions</TableCell>
             </TableRow>
@@ -176,7 +180,7 @@ const TimesheetTable = () => {
                 <TableRow key={t.id} hover>
                   <TableCell>{t.employee}</TableCell>
                   <TableCell>{t.date}</TableCell>
-                  <TableCell>{t.hours}</TableCell>
+                  <TableCell>{t.ProjectName}</TableCell>
                   <TableCell>
                     <Chip label={t.status} color={getStatusColor(t.status)} />
                   </TableCell>

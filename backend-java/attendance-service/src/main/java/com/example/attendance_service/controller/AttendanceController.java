@@ -1,6 +1,8 @@
 package com.example.attendance_service.controller;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.time.LocalDate;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,6 +15,8 @@ import com.example.attendance_service.model.AttendanceEntity;
 import com.example.attendance_service.requestdto.AttendanceRequestDTO;
 import com.example.attendance_service.responsedto.AttendanceResponseDTO;
 import com.example.attendance_service.service.AttendanceService;
+import java.util.ArrayList;
+
 
 @RestController
 @RequestMapping("/api/attendance")
@@ -25,60 +29,55 @@ public class AttendanceController {
         this.attendanceService = attendanceService;
     }
     
-//    @PostMapping("/saveall")
-//public String saveAllWeek(
-//        @RequestParam UUID employeeId,
-//        @RequestParam UUID projectId,
-//        @RequestBody List<AttendanceRequestDTO> attendanceList) {
-//
-//    return attendanceService.savedWeeklyAttendance(employeeId, projectId, attendanceList);
-//}
-
-   //✅ POST weekly attendance release
-    @PostMapping("/release-week")
-    public String releaseWeek(
-            @RequestParam UUID employeeId,
-            @RequestParam UUID projectId,
-            @RequestBody List<AttendanceEntity> attendanceList) {
-    	System.out.println("@43:: Employee ID = " + employeeId);
-        System.out.println("@44:: Project ID = " + projectId);
-        System.out.println("@45:: Attendance list size = " + attendanceList.size());
-        return attendanceService.savedWeeklyAttendance(employeeId, projectId, attendanceList);
-    }
     
 
-    @PostMapping("/release-month")
-    public String releaseMonth(
+    @PostMapping("/saveall")
+    public List<AttendanceEntity> saveAllWeek(
             @RequestParam UUID employeeId,
             @RequestParam UUID projectId,
-            @RequestBody List<AttendanceEntity> attendanceList) {
-    	
-        return attendanceService.releaseMonthlyAttendance(employeeId, projectId, attendanceList);
+            @RequestBody(required = false) Optional<List<AttendanceRequestDTO>> attendanceListOpt) {
+
+        // Convert Optional to mutable list
+        List<AttendanceRequestDTO> attendanceList = attendanceListOpt.orElseGet(ArrayList::new);
+
+        // Pass to service (handles insert/update automatically)
+        return attendanceService.saveOrUpdateAttendance(employeeId, projectId, attendanceList);
     }
 
+    // ✅ Fetch custom week attendance
+    
+    @GetMapping("/week")
+    public List<AttendanceEntity> getAttendanceForWeek(
+            @RequestParam UUID employeeId,
+            @RequestParam UUID projectId,
+            @RequestParam String startDate) {  // format: yyyy-MM-dd
 
+        LocalDate weekStart = LocalDate.parse(startDate.trim()); 
+        return attendanceService.getAttendanceForWeek(employeeId, projectId, weekStart);
+    }
 
-    // // ✅ GET all attendance
-    // @GetMapping
-    // public List<AttendanceResponseDTO> getAllAttendance() {
-    //     return attendanceService.getAllAttendance();
-    // }
+ 
+     // ✅ GET all attendance
+     @GetMapping
+     public List<AttendanceResponseDTO> getAllAttendance() {
+         return attendanceService.getAllAttendance();
+     }
 
-    // // ✅ GET attendance by employee
-    // @GetMapping("/employee/{employeeId}")
-    // public List<AttendanceEntity> getAttendanceByEmployee(@PathVariable UUID employeeId) {
-    //     return attendanceService.getAttendanceByEmployee(employeeId);
-    // }
+     // ✅ GET attendance by employee
+     @GetMapping("/employee/{employeeId}")
+     public List<AttendanceEntity> getAttendanceByEmployee(@PathVariable UUID employeeId) {
+         return attendanceService.getAttendanceByEmployee(employeeId);
+     }
 
-    // // ✅ GET attendance by project
-    // @GetMapping("/project/{projectId}")
-    // public List<AttendanceEntity> getAttendanceByProject(@PathVariable UUID projectId) {
-    //     return attendanceService.getAttendanceByProject(projectId);
-    // }
+     // ✅ GET attendance by project
+     @GetMapping("/project/{projectId}")
+     public List<AttendanceEntity> getAttendanceByProject(@PathVariable UUID projectId) {
+         return attendanceService.getAttendanceByProject(projectId);
+     }
 
-    // // ✅ GET attendance by both employee + project
-    // @GetMapping("/employee/{employeeId}/project/{projectId}")
-    // public List<AttendanceEntity> getAttendanceByEmployeeAndProject(@PathVariable UUID employeeId, @PathVariable UUID projectId) {
-    //     return attendanceService.getAttendanceByEmployeeAndProject(employeeId, projectId);
-    // }
+     // ✅ GET attendance by both employee + project
+     @GetMapping("/employee/{employeeId}/project/{projectId}")
+     public List<AttendanceEntity> getAttendanceByEmployeeAndProject(@PathVariable UUID employeeId, @PathVariable UUID projectId) {
+         return attendanceService.getAttendanceByEmployeeAndProject(employeeId, projectId);
+     }
 }

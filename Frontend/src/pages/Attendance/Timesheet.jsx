@@ -113,10 +113,21 @@ export default function Timesheet() {
     setWeekStart(newWeek);
   };
 
+  // --- Fixed Monthly Navigation ---
   const changeMonth = (delta) => {
-    const newMonth = new Date(monthStart);
-    newMonth.setMonth(monthStart.getMonth() + delta);
+    const newMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() + delta, 1);
     setMonthStart(newMonth);
+
+    // Re-initialize leave rows and monthly worked hours for the new month
+    const daysInMonth = new Date(newMonth.getFullYear(), newMonth.getMonth() + 1, 0).getDate();
+
+    const newLeaveRows = {};
+    usedLeaveTypes.forEach((lt) => {
+      newLeaveRows[lt] = Array(daysInMonth).fill(0);
+    });
+    setLeaveRows(newLeaveRows);
+
+    setMonthlyWorkedHours(Array(daysInMonth).fill(0));
   };
 
   const addActivity = () => {
@@ -172,7 +183,6 @@ export default function Timesheet() {
     return { dayIndex: date.getDay(), label: `${dayName} / ${date.getDate().toString().padStart(2, "0")}` };
   });
 
-  // --- Totals ---
   const currentWorkedHours = viewMode === "weekly" ? workedHours : monthlyWorkedHours;
   const workedTotal = currentWorkedHours.reduce((a, b) => a + Number(b || 0), 0);
   const rowTotals = {};
@@ -221,34 +231,7 @@ export default function Timesheet() {
           variant="contained"
           onClick={() => {
             if (viewMode === "weekly") {
-              // Sync weekly to monthly before switching
-              const daysInMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0).getDate();
-              const newLeaveRows = { ...leaveRows };
-
-              usedLeaveTypes.forEach((lt) => {
-                if (!newLeaveRows[lt] || newLeaveRows[lt].length !== daysInMonth) {
-                  newLeaveRows[lt] = Array(daysInMonth).fill(0);
-                }
-                // Map weekly data into monthly
-                const weekMonth = weekStart.getMonth();
-                const weekYear = weekStart.getFullYear();
-                if (monthStart.getMonth() === weekMonth && monthStart.getFullYear() === weekYear) {
-                  leaveRows[lt]?.forEach((val, i) => {
-                    const dayIndex = weekStart.getDate() + i - 1;
-                    if (dayIndex < daysInMonth) newLeaveRows[lt][dayIndex] = Number(val);
-                  });
-                }
-              });
-
-              // Sync worked hours
-              const newMonthlyWorked = Array(daysInMonth).fill(0);
-              workedHours.forEach((h, i) => {
-                const dayIndex = weekStart.getDate() + i - 1;
-                if (dayIndex < daysInMonth) newMonthlyWorked[dayIndex] = Number(h);
-              });
-
-              setLeaveRows(newLeaveRows);
-              setMonthlyWorkedHours(newMonthlyWorked);
+              // Switch to monthly view
               setViewMode("monthly");
             } else {
               setViewMode("weekly");

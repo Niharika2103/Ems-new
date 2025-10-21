@@ -23,12 +23,21 @@ public interface AttendanceRepository extends JpaRepository<AttendanceEntity, UU
 	List<AttendanceEntity> findByProject_IdOrderByDateAsc(UUID projectId);
 	Optional<AttendanceEntity> findTopByEmployee_IdOrderByDateDesc(UUID employeeId);
 
+	
 
 	List<AttendanceEntity> findByEmployee_IdAndProject_IdOrderByDateAsc(UUID employeeId, UUID projectId);
 
 
-	
+	 Optional<AttendanceEntity> findByEmployee_IdAndProject_IdAndDate(UUID employeeId, UUID projectId, LocalDate date);
 
-
+  
 	List<AttendanceEntity> findAllByOrderByDateAsc();
+	
+	List<AttendanceEntity> findByEmployee_IdAndProject_IdAndDateBetween(
+		    UUID employeeId,
+		    UUID projectId,
+		    LocalDate startDate,
+		    LocalDate endDate
+		);
+
 }

@@ -213,6 +213,12 @@ export const AttendanceFetchAllApi =()=>{
     `${AUTH_API.ATTENDANCE}/attendance`
   );
 };
+//fetch Existing  week data 
+// export const AttendanceFetchCurrentWeekApi =()=>{
+//   return AttendanceClient.get(
+//     `${AUTH_API.ATTENDANCE}/attendance/`
+//   );
+// };
 
 // Fetch attendance by employee and project
 export const AttendanceFetchByEmployeeProjectApi = (employeeId, projectId) => {

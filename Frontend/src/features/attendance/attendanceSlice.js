@@ -25,6 +25,7 @@ export const AttendanceFetchByEmployeeProject = createAsyncThunk(
   async ({ employeeId, projectId }, thunkAPI) => {
     try {
       const res = await AttendanceFetchByEmployeeProjectApi(employeeId, projectId);
+      console.log("✅ Response received:", res.data);
       return res.data;
     } catch (err) {
       return thunkAPI.rejectWithValue(err.response?.data || err.message);
@@ -53,6 +54,7 @@ const attendanceSlice = createSlice({
   name: "attendance",
   initialState: {
     attendance:[],
+     attendanceData: [], // 
       loading: false,
     error: null,
   },
@@ -60,6 +62,9 @@ const attendanceSlice = createSlice({
     logout: (state) => {
       state.attendance = [];
       localStorage.removeItem("token");
+    },
+     setAttendanceData: (state, action) => {
+      state.attendanceData = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -69,6 +74,7 @@ const attendanceSlice = createSlice({
       })
       .addCase(AttendanceSaveall.fulfilled, (state) => {
         state.loading = false;
+        state.attendanceData = action.payload; 
       })
       .addCase(AttendanceSaveall.rejected, (state, action) => {
         state.loading = false;
@@ -113,5 +119,5 @@ const attendanceSlice = createSlice({
   },
 });
 
-export const { logout } = attendanceSlice.actions;
+export const { logout, setAttendanceData} = attendanceSlice.actions;
 export default attendanceSlice.reducer;

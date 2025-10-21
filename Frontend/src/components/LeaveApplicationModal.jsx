@@ -1,17 +1,10 @@
 import React, { useState } from "react";
-import {
-  Modal,
-  Box,
-  Typography,
-  TextField,
-  Button,
-  Grid,
-} from "@mui/material";
+import { Modal, Box, Typography, TextField, Button, Grid } from "@mui/material";
+import { toast } from "react-toastify";
 
 const LeaveApplicationModal = ({ open, onClose, leaveType, onSubmit }) => {
   const [formData, setFormData] = useState({
     startDate: "",
-    endDate: "",
     reason: "",
     document: null,
   });
@@ -25,8 +18,9 @@ const LeaveApplicationModal = ({ open, onClose, leaveType, onSubmit }) => {
   };
 
   const handleSubmit = () => {
-    onSubmit(formData);
-    onClose();
+    onSubmit(formData);                   // Submit data to parent
+    toast.success("Leave applied successfully!"); // Show success toast
+    onClose();                             // Close modal
   };
 
   return (
@@ -49,6 +43,7 @@ const LeaveApplicationModal = ({ open, onClose, leaveType, onSubmit }) => {
         </Typography>
 
         <Grid container spacing={2}>
+          {/* Start Date */}
           <Grid item xs={12}>
             <TextField
               label="Start Date"
@@ -61,18 +56,7 @@ const LeaveApplicationModal = ({ open, onClose, leaveType, onSubmit }) => {
             />
           </Grid>
 
-          <Grid item xs={12}>
-            <TextField
-              label="End Date"
-              name="endDate"
-              type="date"
-              fullWidth
-              value={formData.endDate}
-              onChange={handleChange}
-              InputLabelProps={{ shrink: true }}
-            />
-          </Grid>
-
+          {/* Reason */}
           <Grid item xs={12}>
             <TextField
               label="Reason"
@@ -85,6 +69,7 @@ const LeaveApplicationModal = ({ open, onClose, leaveType, onSubmit }) => {
             />
           </Grid>
 
+          {/* Upload Supporting Document */}
           <Grid item xs={12}>
             <Button variant="outlined" component="label">
               Upload Supporting Document
@@ -103,6 +88,7 @@ const LeaveApplicationModal = ({ open, onClose, leaveType, onSubmit }) => {
             )}
           </Grid>
 
+          {/* Action Buttons */}
           <Grid item xs={12} sx={{ textAlign: "right", mt: 2 }}>
             <Button onClick={onClose} sx={{ mr: 2 }}>
               Cancel
@@ -116,4 +102,5 @@ const LeaveApplicationModal = ({ open, onClose, leaveType, onSubmit }) => {
     </Modal>
   );
 };
+
 export default LeaveApplicationModal;
