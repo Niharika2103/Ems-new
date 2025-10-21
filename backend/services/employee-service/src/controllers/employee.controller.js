@@ -992,60 +992,99 @@ export const verifyEmail = async (req, res) => {
 };
 
 
-export const updateEmployeeProfile = async (req, res) => {
+export const viewOwnProfile = async (req, res) => {
   try {
-    const { id } = req.params;
+    const decoded = getUserFromToken(req); // Extract user info from JWT
+    const email = decoded.email;
 
-    // ✅ Fetch existing employee row
-    const { data: existingData, error: fetchError } = await supabase
-      .from(USERS_TABLE)
-      .select("*")
-      .eq("id", id)
-      .single();
-
-    if (fetchError) throw fetchError;
-    if (!existingData) {
-      return res.status(404).json({ error: "Employee not found" });
-    }
-
-    // ✅ Merge old data with new updates
-    let updates = { ...existingData, ...req.body };
-
-    // 🚫 Prevent restricted fields from being changed
-    delete updates.employee_id;
-    delete updates.role;
-    delete updates.date_of_joining;
-
-    // 🔐 Hash password if it’s being updated
-    if (req.body.password) {
-      updates.password = await bcrypt.hash(req.body.password, 10);
-    }
-
-    // 📂 Handle file uploads
-    if (req.files?.profilePhoto?.[0]) {
-      updates.profile_photo = req.files.profilePhoto[0].filename;
-    }
-    if (req.files?.resume?.[0]) {
-      updates.resume = req.files.resume[0].filename;
-    }
-
-    // ✅ Save merged data back into DB
     const { data, error } = await supabase
-      .from(USERS_TABLE)
-      .update(updates)
-      .eq("id", id)
-      .select("*");
+      .from("user_employees_master")
+      .select(
+        "employee_id, name, email, phone, address, department, date_of_joining, permanent_address, emergency_contact, gender"
+      )
+      .eq("email", email)
+      .eq("role", "employee")
+      .maybeSingle();
 
     if (error) throw error;
+    if (!data) {
+      return res.status(404).json({ error: "Employee profile not found" });
+    }
 
-    return res.json({
-      message: "Employee updated successfully",
-      employee: data[0],
+    res.status(200).json({
+      message: "Profile fetched successfully",
+      profile: data,
     });
-
   } catch (err) {
-    console.error("Update Employee Error:", err);
-    res.status(500).json({ message: err.message });
+    console.error("View Own Profile Error:", err.message);
+    res.status(500).json({ error: "Failed to fetch profile" });
   }
 };
 
+
+ 
+export const applyParentalLeave = async (req, res) => {
+  try {
+    const { employee_id, leave_type, start_date } = req.body;
+
+    if (!employee_id || !leave_type || !start_date) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // Default leave days
+    let maternity_leave = 0;
+    let paternity_leave = 0;
+
+    if (leave_type === "maternity") {
+      maternity_leave = 180;
+    } else if (leave_type === "paternity") {
+      paternity_leave = 5;
+    } else {
+      return res.status(400).json({ error: "Invalid leave type" });
+    }
+
+    const currentYear = new Date(start_date).getFullYear();
+
+    const leaveRecord = {
+      employee_id,
+      year: currentYear,
+      maternity_leave,
+      paternity_leave,
+      weekly_status: "pending_approval",
+      monthly_status: "pending_approval",
+      total_hours: 0,
+      worked_hours: 0,
+      working_days: 0,
+      work_from_home: 0,
+      holidays: 0,
+      optional_holidays: 0,
+      el: 0,
+      sl: 0,
+      extra_milar: 0,
+      leave_type,
+      date: start_date,
+    };
+
+    console.log("Leave record to insert:", leaveRecord);
+
+    const { data, error } = await supabase
+      .from("attendance")
+      .insert([leaveRecord])
+      .select();
+
+    if (error) {
+      console.error("Supabase insert error:", error);
+      return res.status(500).json({ error: "Error inserting leave record", details: error });
+    }
+
+    res.status(201).json({
+      message: `${leave_type} leave applied successfully and pending admin approval`,
+      leave_record: data[0],
+    });
+
+  } catch (err) {
+    console.error("Apply Parental Leave Error:", err);
+    res.status(500).json({ error: "Error applying parental leave", details: err.message });
+  }
+};
+  

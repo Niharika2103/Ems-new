@@ -22,6 +22,7 @@ import {
   adminUpdateWorkedHours,
   rejectWeeklyApproval,
   rejectMonthlyApproval,
+   approveParentalLeave,
 
 } from "../controllers/admin.controller.js";
 const router = Router();
@@ -64,5 +65,7 @@ router.put("/attendance/monthly/approve", updateMonthlyApprovalStatus);
 router.put("/attendance/update-worked-hours", adminUpdateWorkedHours);
 router.post("/attendance/weekly/reject", rejectWeeklyApproval);
 router.post("/attendance/monthly/reject", rejectMonthlyApproval);
+
+router.put("/attendance/approve-parental", approveParentalLeave);
 
 export default router;
