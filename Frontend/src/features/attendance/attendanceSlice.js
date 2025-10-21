@@ -1,9 +1,18 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { AttendanceSaveallApi,AttendanceFetchAllApi ,AttendanceFetchByEmployeeProjectApi,AttendanceReleaseWeekApi} from "../../api/authApi";
+import { AttendanceSaveallApi,AttendanceFetchAllApi ,AttendanceFetchCurrentWeekApi,AttendanceFetchByEmployeeProjectApi,AttendanceReleaseWeekApi} from "../../api/authApi";
 
 export const AttendanceSaveall = createAsyncThunk("attendance/saveall", async ({ employeeId, projectId, formData }, thunkAPI) => {
   try {
     const res = await AttendanceSaveallApi( employeeId, projectId, formData );
+    return res.data;
+  } catch (err) {
+    return thunkAPI.rejectWithValue(err.response?.data || err.message);
+  }
+})
+
+export const AttendancCurrentWeek= createAsyncThunk("attendance/currentweek", async ({ employeeId, projectId }, thunkAPI) => {
+  try {
+    const res = await AttendanceFetchCurrentWeekApi( employeeId, projectId );
     return res.data;
   } catch (err) {
     return thunkAPI.rejectWithValue(err.response?.data || err.message);
@@ -77,6 +86,17 @@ const attendanceSlice = createSlice({
         state.attendanceData = action.payload; 
       })
       .addCase(AttendanceSaveall.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(AttendancCurrentWeek.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(AttendancCurrentWeek.fulfilled, (state) => {
+        state.loading = false;
+        state.attendanceData = action.payload; 
+      })
+      .addCase(AttendancCurrentWeek.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })

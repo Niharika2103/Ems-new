@@ -21,6 +21,7 @@ import {
   AttendanceReleaseWeek,
   AttendanceFetchByEmployeeProject,
   setAttendanceData,
+  AttendancCurrentWeek,
 } from "../../features/attendance/attendanceSlice";
 import LeaveApplicationModal from "../../components/LeaveApplicationModal";
 import { useNavigate } from "react-router-dom";
@@ -57,6 +58,8 @@ export default function EmpTimesheet() {
   useEffect(() => {
   if (employeeId && ProjectID) {
     dispatch(AttendanceFetchByEmployeeProject({ employeeId, projectId: ProjectID }));
+    dispatch(AttendancCurrentWeek({ employeeId, projectId: ProjectID }));
+
   }
 }, [dispatch, employeeId, ProjectID]);
 

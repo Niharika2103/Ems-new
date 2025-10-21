@@ -37,12 +37,18 @@ public class AttendanceController {
             @RequestParam UUID projectId,
             @RequestBody(required = false) Optional<List<AttendanceRequestDTO>> attendanceListOpt) {
 
-        // Convert Optional to mutable list
         List<AttendanceRequestDTO> attendanceList = attendanceListOpt.orElseGet(ArrayList::new);
-
-        // Pass to service (handles insert/update automatically)
         return attendanceService.saveOrUpdateAttendance(employeeId, projectId, attendanceList);
     }
+
+    @GetMapping("/currentweek")
+    public List<AttendanceEntity> getOrCreateWeekData(
+            @RequestParam UUID employeeId,
+            @RequestParam UUID projectId) {
+
+        return attendanceService.getOrCreateCurrentWeek(employeeId, projectId);
+    }
+
 
     // ✅ Fetch custom week attendance
     

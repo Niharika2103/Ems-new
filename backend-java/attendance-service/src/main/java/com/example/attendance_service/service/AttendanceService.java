@@ -144,6 +144,25 @@ public List<AttendanceEntity> saveOrUpdateAttendance(
             .collect(Collectors.toList());
 }
 
+	public List<AttendanceEntity> getOrCreateCurrentWeek(UUID employeeId, UUID projectId) {
+	    LocalDate today = LocalDate.now();
+	    LocalDate startOfWeek = today.with(DayOfWeek.MONDAY);
+	    LocalDate endOfWeek = startOfWeek.plusDays(6);
+
+	    List<AttendanceEntity> currentWeek = attendanceRepository
+	            .findByEmployee_IdAndProject_IdAndDateBetween(employeeId, projectId, startOfWeek, endOfWeek);
+
+	    if (currentWeek.isEmpty()) {
+	        // auto-create new week if no data found
+	        return saveOrUpdateAttendance(employeeId, projectId, Collections.emptyList());
+	    }
+
+	    return currentWeek.stream()
+	            .sorted(Comparator.comparing(AttendanceEntity::getDate))
+	            .collect(Collectors.toList());
+	}
+
+
 
 // ✅ Always fetch current week attendance (after saving)
 public List<AttendanceEntity> getAttendanceForCurrentWeek(UUID employeeId, UUID projectId) {

@@ -206,6 +206,15 @@ export const AttendanceSaveallApi = (employeeId, projectId, formData) => {
     }
   );
 };
+//fetch current week 
+export const AttendanceFetchCurrentWeekApi =(employeeId, projectId)=>{
+  return AttendanceClient.get(
+    `${AUTH_API.ATTENDANCE}/attendance/currentweek`,
+    {
+      params: { employeeId, projectId } // this adds ?employeeId=...&projectId=...
+    }
+  );
+};
 
 //fetch all data from attendance
 export const AttendanceFetchAllApi =()=>{
