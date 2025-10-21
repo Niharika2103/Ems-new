@@ -16,6 +16,7 @@ import {
   
   verifyEmail,
   viewOwnProfile,
+  applyParentalLeave,
 } from "../controllers/employee.controller.js";
 
 const router = Router();
@@ -54,7 +55,7 @@ router.post("/send-email-verification", sendEmailVerification);
 router.post("/verify-email", verifyEmail);
 
 router.get("/profile", viewOwnProfile);
-
+router.post("/attendance/apply-parental", applyParentalLeave);
 
 export default router;
 

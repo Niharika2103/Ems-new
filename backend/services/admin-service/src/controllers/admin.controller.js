@@ -1366,3 +1366,70 @@ export const rejectMonthlyApproval = async (req, res) => {
     res.status(500).json({ error: "Failed to reject monthly attendance" });
   }
 };
+
+export const approveParentalLeave = async (req, res) => {
+  try {
+    const { attendance_id, action } = req.body; // "approve" or "reject"
+
+    if (!attendance_id || !action) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // Fetch existing record
+    const { data: record, error: fetchError } = await supabase
+      .from("attendance")
+      .select("leave_type, date")
+      .eq("id", attendance_id)
+      .single();
+
+    if (fetchError || !record) {
+      return res.status(404).json({ error: "Leave record not found" });
+    }
+
+    const { leave_type, date: start_date } = record;
+
+    const leaveDays =
+      action === "approve"
+        ? leave_type === "maternity"
+          ? 180
+          : 5
+        : 0;
+
+    // Calculate end date (for reference only, not stored)
+    const startDateObj = new Date(start_date);
+    const endDate = new Date(startDateObj);
+    endDate.setDate(startDateObj.getDate() + leaveDays - 1);
+
+    const updateData =
+      action === "approve"
+        ? {
+            weekly_status: "approved",
+            monthly_status: "approved",
+            maternity_leave: leave_type === "maternity" ? leaveDays : 0,
+            paternity_leave: leave_type === "paternity" ? leaveDays : 0,
+          }
+        : {
+            weekly_status: "rejected",
+            monthly_status: "rejected",
+          };
+
+    const { data, error } = await supabase
+      .from("attendance")
+      .update(updateData)
+      .eq("id", attendance_id)
+      .select();
+
+    if (error) throw error;
+
+    return res.status(200).json({
+      message:
+        action === "approve"
+          ? `${leave_type} leave approved (${leaveDays} days from ${start_date} to ${endDate.toISOString().split("T")[0]})`
+          : `${leave_type} leave rejected`,
+      record: data[0],
+    });
+  } catch (error) {
+    console.error("Error approving parental leave:", error.message);
+    return res.status(500).json({ error: "Error approving parental leave" });
+  }
+};
