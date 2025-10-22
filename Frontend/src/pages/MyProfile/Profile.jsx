@@ -154,7 +154,7 @@ const Profile = () => {
   const updateProfileByRole = (role, formData, id) => {
     if (role === "admin") return updateAdminProfile({ data: formData, id });
     if (role === "superadmin") return updateSuperAdminProfile({ data: formData, id });
-    if (role === "employee") return updateEmployeeProfile({ data: formData, id });
+    // if (role === "employee") return updateEmployeeProfile({ data: formData, id });
   };
 
   const handleSubmit = (e) => {

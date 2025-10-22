@@ -12,6 +12,7 @@ import SuperAdminRegister from "../pages/Auth/SuperAdminRegister";
 import EmployeeRegisterForm from "../pages/Auth/EmpRegister";
 import Dashboard from "../pages/dashbaord/Dashboard";
 import Profile from "../pages/MyProfile/Profile";
+import EmployeeProfile from "../pages/MyProfile/EmployeeProfile";
 import AdminTable from "../pages/MyProfile/adminTable";
 import SuperAadminTable from "../pages/MyProfile/superadminTable";
 import LeaveCalendar from "../pages/Calender";
@@ -82,6 +83,16 @@ function AppRoutes() {
         {/* Dashboard & profile (accessible to all logged-in users) */}
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<Profile />} />
+
+         <Route
+          path="/dashboard/employeeinfo/employeeprofile"
+          element={
+            <ProtectedRoute allowedRoles={["employee"]}>
+              <EmployeeProfile/>
+            </ProtectedRoute>
+          }
+        />
+       
 
 
         {/* Superadmin routes */}

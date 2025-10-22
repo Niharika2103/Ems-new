@@ -55,7 +55,11 @@ const Header = ({ isOpen, setIsOpen }) => {
     setAnchorEl(null);
   };
   const handleProfile = () => {
-    navigate("/profile");
+     if (roleCheck === "employee") {
+    navigate("/dashboard/employeeinfo/employeeprofile");
+     }else{
+      navigate("/profile");
+     }
     handleClose();
   };
   const handlePassword = () => {

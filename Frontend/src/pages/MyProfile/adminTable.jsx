@@ -8,9 +8,16 @@ import ReusableModal from "../../components/MyProfile/ReusableModal";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {
+ Typography,
+  TextField,
   Box,
   Grid,
-  TextField,
+  Paper,
+  Radio,
+  RadioGroup,
+  FormControlLabel,
+  FormLabel,
+  Avatar,
   MenuItem,
 } from "@mui/material";
 import { validateEmployeeEdit } from "../../utils/validation"; // adjust path as needed
@@ -26,6 +33,8 @@ export default function AdminTable() {
     phone: "",
     address: "",
     department: "",
+    gender: "",
+    emergencycontact: "",
   });
   const [loading, setLoading] = useState(false);
 
@@ -309,6 +318,19 @@ const handleSubmit = async (e) => {
                   size="small"
                 />
               </Grid>
+               <Grid item xs={12}>
+    <FormLabel component="legend">Gender</FormLabel>
+    <RadioGroup
+      row
+      name="gender"
+      value={formData.gender}
+      onChange={handleChange}
+    >
+      <FormControlLabel value="Male" control={<Radio />} label="Male" />
+      <FormControlLabel value="Female" control={<Radio />} label="Female" />
+    </RadioGroup>
+  </Grid>
+              
               <Grid item xs={12} sm={6}>
                 <TextField
                   type="date"
@@ -331,6 +353,16 @@ const handleSubmit = async (e) => {
                   size="small"
                 />
               </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Emergency contact"
+                  name="Emergency contact"
+                  value={formData.Emergencycontact}
+                  onChange={handleChange}
+                  fullWidth
+                  size="small"
+                />
+              </Grid>
               <Grid item xs={12}>
                 <TextField
                   label="Address"
@@ -341,7 +373,7 @@ const handleSubmit = async (e) => {
                   size="small"
                 />
               </Grid>
-              <Grid item xs={12}>
+              <Grid item xs={12} sm={6}>
                 <TextField
                   select
                   label="Department"
@@ -350,6 +382,13 @@ const handleSubmit = async (e) => {
                   onChange={handleChange}
                   fullWidth
                   size="small"
+                   sx={{
+      minWidth: 200, // 👈 makes input box longer
+      "& .MuiSelect-select": {
+        paddingY: 1.2,
+      },
+    }}
+                  
                 >
                   <MenuItem value="HR">HR</MenuItem>
                   <MenuItem value="Finance">Finance</MenuItem>
