@@ -40,7 +40,7 @@ public class AttendanceController {
         List<AttendanceRequestDTO> attendanceList = attendanceListOpt.orElseGet(ArrayList::new);
         return attendanceService.saveOrUpdateAttendance(employeeId, projectId, attendanceList);
     }
-
+//fetch only current week
     @GetMapping("/currentweek")
     public List<AttendanceEntity> getOrCreateWeekData(
             @RequestParam UUID employeeId,

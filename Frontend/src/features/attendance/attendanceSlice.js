@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { AttendanceSaveallApi,AttendanceFetchAllApi ,AttendanceFetchCurrentWeekApi,AttendanceFetchByEmployeeProjectApi,AttendanceReleaseWeekApi} from "../../api/authApi";
+import { AttendanceSaveallApi,AttendanceFetchAllApi ,AttendanceFetchExistingWeekApi,AttendanceFetchCurrentWeekApi,AttendanceFetchByEmployeeProjectApi,AttendanceReleaseWeekApi} from "../../api/authApi";
 
 export const AttendanceSaveall = createAsyncThunk("attendance/saveall", async ({ employeeId, projectId, formData }, thunkAPI) => {
   try {
@@ -18,6 +18,20 @@ export const AttendancCurrentWeek= createAsyncThunk("attendance/currentweek", as
     return thunkAPI.rejectWithValue(err.response?.data || err.message);
   }
 })
+
+// slice/attendanceSlice.js
+export const AttendanceFetchExistingWeek = createAsyncThunk(
+  "attendance/fetchExistingWeek",
+  async ({ employeeId, projectId, startDate }, thunkAPI) => {
+    try {
+      const res = await AttendanceFetchExistingWeekApi({ employeeId, projectId, startDate });
+      return res.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+
 
 export const AttendanceFetchAll = createAsyncThunk("attendance/fetchall", async (_, thunkAPI) => {
   try {
@@ -41,6 +55,7 @@ export const AttendanceFetchByEmployeeProject = createAsyncThunk(
     }
   }
 );
+
 
 export const AttendanceReleaseWeek= createAsyncThunk("attendance/release-week", async ({ employeeId, projectId }, thunkAPI) => {
   try {
@@ -92,7 +107,7 @@ const attendanceSlice = createSlice({
       .addCase(AttendancCurrentWeek.pending, (state) => {
         state.loading = true;
       })
-      .addCase(AttendancCurrentWeek.fulfilled, (state) => {
+      .addCase(AttendancCurrentWeek.fulfilled, (state,action) => {
         state.loading = false;
         state.attendanceData = action.payload; 
       })
@@ -100,6 +115,17 @@ const attendanceSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+       .addCase(AttendanceFetchExistingWeek.pending, (state) => {
+      state.loading = true;
+    })
+    .addCase(AttendanceFetchExistingWeek.fulfilled, (state, action) => {
+      state.loading = false;
+      state.attendanceData = action.payload; 
+    })
+    .addCase(AttendanceFetchExistingWeek.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.payload;
+    })
        .addCase(AttendanceFetchAll.pending, (state) => {
         state.loading = true;
       })

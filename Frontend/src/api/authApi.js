@@ -216,18 +216,21 @@ export const AttendanceFetchCurrentWeekApi =(employeeId, projectId)=>{
   );
 };
 
+// fetch Existing  week data 
+export const AttendanceFetchExistingWeekApi =({ employeeId, projectId, startDate })=>{
+  return AttendanceClient.get(
+    `${AUTH_API.ATTENDANCE}/attendance/week`, {
+    params: { employeeId, projectId, startDate },
+  });
+};
+
 //fetch all data from attendance
 export const AttendanceFetchAllApi =()=>{
   return AttendanceClient.get(
     `${AUTH_API.ATTENDANCE}/attendance`
   );
 };
-//fetch Existing  week data 
-// export const AttendanceFetchCurrentWeekApi =()=>{
-//   return AttendanceClient.get(
-//     `${AUTH_API.ATTENDANCE}/attendance/`
-//   );
-// };
+
 
 // Fetch attendance by employee and project
 export const AttendanceFetchByEmployeeProjectApi = (employeeId, projectId) => {

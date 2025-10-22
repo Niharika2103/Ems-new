@@ -22,6 +22,7 @@ import {
   AttendanceFetchByEmployeeProject,
   setAttendanceData,
   AttendancCurrentWeek,
+  AttendanceFetchExistingWeek,
 } from "../../features/attendance/attendanceSlice";
 import LeaveApplicationModal from "../../components/LeaveApplicationModal";
 import { useNavigate } from "react-router-dom";
@@ -31,7 +32,7 @@ export default function EmpTimesheet() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
    const { attendanceData, loading } = useSelector((state) => state.attendance); // 👈 fetched data
-
+console.log(attendanceData,"attendanceData")
   const projectName = projects[0]?.project?.name;
   const ProjectID = projects[0]?.project?.id;
   const employeeId = projects[0]?.employeeId;
@@ -57,37 +58,60 @@ export default function EmpTimesheet() {
 
   useEffect(() => {
   if (employeeId && ProjectID) {
-    dispatch(AttendanceFetchByEmployeeProject({ employeeId, projectId: ProjectID }));
-    dispatch(AttendancCurrentWeek({ employeeId, projectId: ProjectID }));
+    // dispatch(AttendanceFetchByEmployeeProject({ employeeId, projectId: ProjectID }));
+    dispatch(AttendancCurrentWeek({ employeeId, projectId: ProjectID }))
+  .then((res) => {
+    console.log("✅ Success:", res);
+  })
+  .catch((err) => {
+    console.error("❌ Error:", err);
+  });
+
 
   }
 }, [dispatch, employeeId, ProjectID]);
 
 // Populate hours + leaveRows when attendanceData arrives
 useEffect(() => {
-  if (attendanceData && attendanceData.length > 0) {
-    const monday = getMonday(weekStart);
+  if (attendanceData?.length > 0) {
     const newHours = Array(7).fill(0);
-    const newLeaves = {};
+    const newLeaveRows = {}; // dynamic object to store leave rows
+    const monday = getMonday(weekStart);
+
+    const dayDiff = (d1, d2) => {
+      const date1 = new Date(d1.toDateString());
+      const date2 = new Date(d2.toDateString());
+      return Math.floor((date1 - date2) / (1000 * 60 * 60 * 24));
+    };
 
     attendanceData.forEach((entry) => {
       const entryDate = new Date(entry.date);
-      const dayIndex = Math.floor((entryDate - monday) / (1000 * 60 * 60 * 24));
+      const dayIndex = dayDiff(entryDate, monday);
+
       if (dayIndex >= 0 && dayIndex < 7) {
+        // Worked hours
         newHours[dayIndex] = entry.workedHours || 0;
-        if (entry.leaveType) {
-          if (!newLeaves[entry.leaveType]) newLeaves[entry.leaveType] = Array(7).fill("");
-          newLeaves[entry.leaveType][dayIndex] = entry.leaveType;
+
+        // Leave hours
+        if (entry.leaveType && entry.leaveType !== "") {
+          if (!newLeaveRows[entry.leaveType]) {
+            newLeaveRows[entry.leaveType] = Array(7).fill(0);
+          }
+          // Set the leave value for that day
+          newLeaveRows[entry.leaveType][dayIndex] = entry.totalWorkedHours || 9;
         }
       }
     });
 
     setHours(newHours);
-    const allTypes = ["CL", ...Object.keys(newLeaves)];
-    setUsedLeaveTypes([...new Set(allTypes)]);
-    setLeaveRows({ CL: Array(7).fill(0), ...newLeaves });
+    setLeaveRows(newLeaveRows);
+    setUsedLeaveTypes(Object.keys(newLeaveRows));
+    console.log("✅ Week hours and leaveRows dynamically updated:", newHours, newLeaveRows);
   }
 }, [attendanceData, weekStart]);
+
+
+
 
   useEffect(() => {
     const filled = [0, 1, 2, 3, 4].every(
@@ -102,7 +126,7 @@ useEffect(() => {
   function getMonday(date) {
     const d = new Date(date);
     const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+    const diff = d.getDate() - day + (day === 1 ? -6: 1);
     return new Date(d.setDate(diff));
   }
 
@@ -116,6 +140,22 @@ useEffect(() => {
         .padStart(2, "0")}/${d.getFullYear()}`;
     return `${fmt(monday)} - ${fmt(endDate)}`;
   }
+//while chnaging date get all datas 
+useEffect(() => {
+  if (employeeId && ProjectID && weekStart) {
+    const mondayDate = weekStart.toISOString().split("T")[0]; // yyyy-MM-dd
+
+    dispatch(
+      AttendanceFetchExistingWeek({ 
+        employeeId, 
+        projectId: ProjectID, 
+        startDate: mondayDate 
+      })
+    )
+      .then((res) => console.log("Existing week data:", res.payload))
+      .catch((err) => console.error(err));
+  }
+}, [employeeId, ProjectID, weekStart, dispatch]); // 🔹 depends on weekStart
 
   const handleMenuOpen = (e, row) => {
     setMenuAnchor(e.currentTarget);
@@ -188,50 +228,52 @@ useEffect(() => {
 
        
   const handleSaveAll = async () => {
-    const employeeId = projects[0]?.employeeId;
-    const projectId = projects[0]?.project?.id;
-    const monday = getMonday(weekStart);
+  const employeeId = projects[0]?.employeeId;
+  const projectId = projects[0]?.project?.id;
+  const monday = getMonday(weekStart);
 
-    const dataToSend = days.map((_, i) => {
-      const currentDate = new Date(monday);
-      currentDate.setDate(monday.getDate() + i);
+  const dataToSend = days.map((_, i) => {
+    const currentDate = new Date(monday);
+    currentDate.setDate(monday.getDate() + i);
 
-      let appliedLeaveType = "";
-      for (const lt of usedLeaveTypes) {
-        const period = leavePeriods.find(p => p.type === lt);
-        if (period && currentDate >= period.startDate && currentDate <= period.endDate) {
-          appliedLeaveType = lt;
-          break;
-        } else if (leaveRows[lt][i] && leaveRows[lt][i] !== 0 && leaveRows[lt][i] !== "") {
-          appliedLeaveType = lt;
-          break;
-        }
+    let appliedLeaveType = "";
+    for (const lt of usedLeaveTypes) {
+      const period = leavePeriods.find(p => p.type === lt);
+      if (period && currentDate >= period.startDate && currentDate <= period.endDate) {
+        appliedLeaveType = lt;
+        break;
+      } else if (leaveRows[lt][i] && leaveRows[lt][i] !== 0 && leaveRows[lt][i] !== "") {
+        appliedLeaveType = lt;
+        break;
       }
-
-      return {
-        date: currentDate.toISOString().split("T")[0],
-        workedHours: Number(hours[i]) || 0,
-        leaveType: appliedLeaveType || "",
-      };
-    });
-
-        try {
-      const resultAction = await dispatch(
-        AttendanceSaveall({ employeeId, projectId: ProjectID, formData: dataToSend })
-      );
-
-      if (AttendanceSaveall.fulfilled.match(resultAction)) {
-        toast.success("Saved successfully");
-
-        // 🔹 Immediately update Redux store with current week data
-        dispatch(setAttendanceData(dataToSend));
-      } else {
-        throw new Error("Save failed");
-      }
-    } catch (err) {
-      toast.error("Error saving attendance!");
     }
-  };
+
+    return {
+      date: currentDate.toISOString().split("T")[0],
+      workedHours: Number(hours[i]) || 0,
+      leaveType: appliedLeaveType || "",
+    };
+  });
+
+  try {
+    const resultAction = await dispatch(
+      AttendanceSaveall({ employeeId, projectId, formData: dataToSend }) // ✅ use projectId
+    );
+
+    // Check for error in payload
+    if (resultAction.error) {
+      console.error("Save error:", resultAction.error);
+      toast.error("Error saving attendance!");
+    } else {
+      toast.success("Saved successfully");
+      dispatch(setAttendanceData(dataToSend));
+    }
+  } catch (err) {
+    console.error("Unexpected error:", err);
+    toast.error("Error saving attendance!");
+  }
+};
+
 
   const handleSaveWeek = async () => {
     const employeeId = projects[0]?.employeeId;
@@ -281,7 +323,15 @@ useEffect(() => {
             anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
           >
             <div className="p-2">
-              <Calendar onChange={handleCalendarChange} value={weekStart} className="custom-calendar" />
+              <Calendar onChange={handleCalendarChange} value={weekStart} className="custom-calendar"  tileDisabled={({ date, view }) => {
+    if (view === 'month') {
+      const selectedWeekMonday = getMonday(date);
+      const currentWeekMonday = getMonday(new Date());
+      // Disable if the week is in future
+      return selectedWeekMonday > currentWeekMonday;
+    }
+    return false;
+  }}/>
             </div>
           </Popover>
         </div>
