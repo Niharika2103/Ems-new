@@ -283,30 +283,35 @@ useEffect(() => {
 
 
   const handleSaveWeek = async () => {
-    const employeeId = projects[0]?.employeeId;
-const weekStartDate = getMonday(weekStart);
+  const employeeId = projects[0]?.employeeId;
+  const weekStartDate = getMonday(weekStart);
   const weekEnd = new Date(weekStartDate);
-weekEnd.setDate(weekStartDate.getDate() + 6); // Get the Sunday of the week
+  weekEnd.setDate(weekStartDate.getDate() + 6); // Sunday
 
-
-  // Format in local time
+  // Format in local time yyyy-MM-dd
   const formattedWeekEnd = `${weekEnd.getFullYear()}-${(weekEnd.getMonth()+1)
     .toString().padStart(2,'0')}-${weekEnd.getDate().toString().padStart(2,'0')}`;
- const formattedstartEnd = `${weekStartDate.getFullYear()}-${(weekStartDate.getMonth()+1)
+  const formattedStartEnd = `${weekStartDate.getFullYear()}-${(weekStartDate.getMonth()+1)
     .toString().padStart(2,'0')}-${weekStartDate.getDate().toString().padStart(2,'0')}`;
 
-    try {
-      const resultAction = await dispatch(AttendanceReleaseWeek({ employeeId, weekStart: formatDate(formattedstartEnd),
-        weekEnd: formatDate(formattedWeekEnd) }));
-      if (AttendanceReleaseWeek.fulfilled.match(resultAction)) {
-        toast.success("Week released successfully!");
-      } else {
-        throw new Error("Failed to release week");
-      }
-    } catch (err) {
-      toast.error("Error releasing week!");
+  try {
+    const resultAction = await dispatch(AttendanceReleaseWeek({
+      employeeId,
+      weekStart: formattedStartEnd,
+      weekEnd: formattedWeekEnd
+    }));
+
+    if (AttendanceReleaseWeek.fulfilled.match(resultAction)) {
+      toast.success("Week released successfully!");
+    } else {
+      throw new Error("Failed to release week");
     }
-  };
+  } catch (err) {
+    console.log(err); // log the actual error
+    toast.error("Error releasing week!");
+  }
+};
+
 
   const handleCalendarChange = (date) => {
     setSelectDate(date);

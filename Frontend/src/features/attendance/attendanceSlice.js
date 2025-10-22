@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { AttendanceSaveallApi,AttendanceFetchAllApi ,AttendanceFetchExistingWeekApi,
-  // AttendanceFetchCurrentWeekApi,
+  AttendanceReleaseMonthApi,
   AttendanceFetchByEmployeeProjectApi,AttendanceReleaseWeekApi} from "../../api/authApi";
 
 export const AttendanceSaveall = createAsyncThunk("attendance/saveall", async ({ employeeId, projectId, formData }, thunkAPI) => {
@@ -68,9 +68,9 @@ export const AttendanceReleaseWeek= createAsyncThunk("attendance/release-week", 
   }
 })
 
-export const AttendanceReleaseMonth= createAsyncThunk("attendance/release-Month", async ({ employeeId, projectId }, thunkAPI) => {
+export const AttendanceReleaseMonth= createAsyncThunk("attendance/release-Month", async ({ employeeId,  monthStart,monthEnd }, thunkAPI) => {
   try {
-    const res = await AttendanceReleaseMonthApi( employeeId, projectId );
+    const res = await AttendanceReleaseMonthApi( employeeId,  monthStart,monthEnd );
     return res.data;
   } catch (err) {
     return thunkAPI.rejectWithValue(err.response?.data || err.message);

@@ -249,12 +249,12 @@ export const AttendanceFetchByEmployeeProjectApi = (employeeId, projectId) => {
 };
 
 //fetch release-month
-    export const AttendanceReleaseMonthApi = (employeeId, projectId) => {
+    export const AttendanceReleaseMonthApi = (employeeId, monthStart,monthEnd) => {
   return AttendanceClient.post(
-    `${AUTH_API.ATTENDANCE}/attendance/release-month`,
+    `${AUTH_API.ATTENDANCE}/attendance/release-monthly`,
     null,
     {
-      params: { employeeId, projectId }
+      params: { employeeId, monthStart,monthEnd }
     }
   );
 };

@@ -47,21 +47,48 @@ const TimesheetTable = () => {
     dispatch(AttendanceFetchAll());
   }, [dispatch]);
 
+  // useEffect(() => {
+  //   if (attendance && Array.isArray(attendance)) {
+  //     const mapped = attendance.map((item) => ({
+  //       id: item.id,
+  //       employeeId: item.employeeId,
+  //       projectId: item.projectId,
+  //       employee: item.employee?.name || item.employeeName || item.name || "N/A",
+  //       date: item.date,
+  //       hours: item.workedHours,
+  //       // projtectname : item.ProjectName,
+  //       status: item.status === "draft" ? "Pending" : capitalize(item.status),
+  //     }));
+  //     setLocalTimesheets(mapped);
+  //   }
+  // }, [attendance]);
+
   useEffect(() => {
-    if (attendance && Array.isArray(attendance)) {
-      const mapped = attendance.map((item) => ({
+  if (attendance && Array.isArray(attendance)) {
+    const mapped = attendance.map((item) => {
+      const normalizedStatus = item.status ? item.status.toLowerCase() : "pending";
+
+      const displayStatus =
+        normalizedStatus === "draft" || normalizedStatus === "pending"
+          ? "Pending"
+          : capitalize(normalizedStatus);
+
+      return {
         id: item.id,
         employeeId: item.employeeId,
         projectId: item.projectId,
         employee: item.employee?.name || item.employeeName || item.name || "N/A",
+        ProjectName: item.projectName || item.ProjectName || item.project?.name, // ✅ get project name from backend
         date: item.date,
         hours: item.workedHours,
-        // projtectname : item.ProjectName,
-        status: item.status === "draft" ? "Pending" : capitalize(item.status),
-      }));
-      setLocalTimesheets(mapped);
-    }
-  }, [attendance]);
+        status: displayStatus,
+      };
+    });
+
+    setLocalTimesheets(mapped);
+  }
+}, [attendance]);
+
 
   useEffect(() => {
     if (employeeId && projectId) {
@@ -196,7 +223,7 @@ const capitalize = (str) => str?.charAt(0)?.toUpperCase() + str?.slice(1) || '';
                     </Button>
                     {t.status === "Pending" && (
                       <>
-                        <Button
+                        {/* <Button
                           variant="contained"
                           color="success"
                           size="small"
@@ -212,7 +239,7 @@ const capitalize = (str) => str?.charAt(0)?.toUpperCase() + str?.slice(1) || '';
                           onClick={() => handleReject(t.id)}
                         >
                           Reject
-                        </Button>
+                        </Button> */}
                       </>
                     )}
                   </TableCell>

@@ -209,6 +209,22 @@ public void releaseWeeklyAttendance(UUID employeeId, LocalDate weekStart, LocalD
     // Save updates without touching monthlyStatus
     attendanceRepository.saveAll(attendanceList);
 }
+@Transactional
+public void releaseMonthlyAttendance(UUID employeeId, LocalDate monthStart, LocalDate monthEnd) {
+    // Fetch all attendance records for this week
+    List<AttendanceEntity> attendanceList =
+            attendanceRepository.findByEmployee_IdAndDateBetween(employeeId, monthStart, monthEnd);
+    System.out.println("@115:"+attendanceList);
+
+    // Update only MonthlyStatus
+    for (AttendanceEntity attendance : attendanceList) {
+        attendance.setMonthlyStatus("Pending_approval");
+    }
+
+    // Save updates without touching monthlyStatus
+    attendanceRepository.saveAll(attendanceList);
+}
+
 
 	// ✅ Get by employee
 	public List<AttendanceEntity> getAttendanceByEmployee(UUID employeeId) {
