@@ -32,6 +32,8 @@ public interface AttendanceRepository extends JpaRepository<AttendanceEntity, UU
 
   
 	List<AttendanceEntity> findAllByOrderByDateAsc();
+	List<AttendanceEntity> findByEmployee_IdAndDateBetween(UUID employeeId, LocalDate startDate, LocalDate endDate);
+
 	
 	List<AttendanceEntity> findByEmployee_IdAndProject_IdAndDateBetween(
 		    UUID employeeId,

@@ -21,7 +21,7 @@ import {
   AttendanceReleaseWeek,
   AttendanceFetchByEmployeeProject,
   setAttendanceData,
-  AttendancCurrentWeek,
+  // AttendancCurrentWeek,
   AttendanceFetchExistingWeek,
 } from "../../features/attendance/attendanceSlice";
 import LeaveApplicationModal from "../../components/LeaveApplicationModal";
@@ -31,8 +31,8 @@ export default function EmpTimesheet() {
   const { projects } = useSelector((state) => state.project);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-   const { attendanceData, loading } = useSelector((state) => state.attendance); // 👈 fetched data
-console.log(attendanceData,"attendanceData")
+   const { attendanceData, loading } = useSelector((state) => state.attendance);
+   console.log(attendanceData,"attendanceData") // 👈 fetched data
   const projectName = projects[0]?.project?.name;
   const ProjectID = projects[0]?.project?.id;
   const employeeId = projects[0]?.employeeId;
@@ -47,7 +47,7 @@ console.log(attendanceData,"attendanceData")
   const [weekStart, setWeekStart] = useState(getMonday(new Date()));
   const [calendarAnchor, setCalendarAnchor] = useState(null);
   const [isWeekComplete, setIsWeekComplete] = useState(false);
-
+ const[selectDate,setSelectDate]=useState(new Date());
   const [leaveModalOpen, setLeaveModalOpen] = useState(false);
   const [modalLeaveType, setModalLeaveType] = useState("");
 
@@ -56,27 +56,81 @@ console.log(attendanceData,"attendanceData")
   const leaveTypes = ["CL", "SL", "PL", "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave"];
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-  useEffect(() => {
-  if (employeeId && ProjectID) {
-    // dispatch(AttendanceFetchByEmployeeProject({ employeeId, projectId: ProjectID }));
-    dispatch(AttendancCurrentWeek({ employeeId, projectId: ProjectID }))
-  .then((res) => {
-    console.log("✅ Success:", res);
-  })
-  .catch((err) => {
-    console.error("❌ Error:", err);
-  });
+  // useEffect(() => {
+  // if (employeeId && ProjectID) {
+  //   // dispatch(AttendanceFetchByEmployeeProject({ employeeId, projectId: ProjectID }));
+  //   dispatch(AttendancCurrentWeek({ employeeId, projectId: ProjectID }))
+  // .then((res) => {
+  //   console.log("✅ Success:", res);
+  // })
+  // .catch((err) => {
+  //   console.error("❌ Error:", err);
+  // });
 
 
-  }
-}, [dispatch, employeeId, ProjectID]);
+//   }
+// }, [dispatch, employeeId, ProjectID]);
 
 // Populate hours + leaveRows when attendanceData arrives
+
+
+
+
+  useEffect(() => {
+    const filled = [0, 1, 2, 3, 4].every(
+      (i) => Number(hours[i]) > 0 || usedLeaveTypes.some((lt) => {
+        const val = leaveRows[lt][i];
+        return val !== 0 && val !== ""; // text leave codes count as filled
+      })
+    );
+    setIsWeekComplete(filled);
+  }, [hours, leaveRows, usedLeaveTypes]);
+
+  function getMonday(d) {
+  d = new Date(d);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday
+  return new Date(d.setDate(diff));
+}
+
+function formatDateRange() {
+  const monday = getMonday(weekStart);
+  const endDate = new Date(monday);
+  endDate.setDate(monday.getDate() + 6); // add 6 days to monday
+
+  const fmt = (d) =>
+    `${d.getDate().toString().padStart(2, "0")}/${
+      (d.getMonth() + 1).toString().padStart(2, "0")
+    }/${d.getFullYear()}`;
+
+  return `${fmt(monday)} - ${fmt(endDate)}`;
+}
+
+ 
+
+//while chnaging date get all datas 
+useEffect(() => {
+  if (employeeId && ProjectID && weekStart) {
+    const mondayDate = selectDate.getFullYear() + '-' +
+                   String(selectDate.getMonth() + 1).padStart(2, '0') + '-' +
+                   String(selectDate.getDate()).padStart(2, '0');
+    dispatch(
+      AttendanceFetchExistingWeek({ 
+        employeeId, 
+        projectId: ProjectID, 
+        startDate: mondayDate 
+      })
+    )
+      .then((res) => console.log("Existing week data:", res.payload))
+      .catch((err) => console.error(err));
+  }
+}, [employeeId, ProjectID, weekStart, dispatch]); // 🔹 depends on weekStart
+
 useEffect(() => {
   if (attendanceData?.length > 0) {
     const newHours = Array(7).fill(0);
     const newLeaveRows = {}; // dynamic object to store leave rows
-    const monday = getMonday(weekStart);
+    // const monday = getMonday(weekStart);
 
     const dayDiff = (d1, d2) => {
       const date1 = new Date(d1.toDateString());
@@ -86,7 +140,7 @@ useEffect(() => {
 
     attendanceData.forEach((entry) => {
       const entryDate = new Date(entry.date);
-      const dayIndex = dayDiff(entryDate, monday);
+      const dayIndex = dayDiff(entryDate, weekStart);
 
       if (dayIndex >= 0 && dayIndex < 7) {
         // Worked hours
@@ -109,53 +163,6 @@ useEffect(() => {
     console.log("✅ Week hours and leaveRows dynamically updated:", newHours, newLeaveRows);
   }
 }, [attendanceData, weekStart]);
-
-
-
-
-  useEffect(() => {
-    const filled = [0, 1, 2, 3, 4].every(
-      (i) => Number(hours[i]) > 0 || usedLeaveTypes.some((lt) => {
-        const val = leaveRows[lt][i];
-        return val !== 0 && val !== ""; // text leave codes count as filled
-      })
-    );
-    setIsWeekComplete(filled);
-  }, [hours, leaveRows, usedLeaveTypes]);
-
-  function getMonday(date) {
-    const d = new Date(date);
-    const day = d.getDay();
-    const diff = d.getDate() - day + (day === 1 ? -6: 1);
-    return new Date(d.setDate(diff));
-  }
-
-  function formatDateRange() {
-    const monday = getMonday(weekStart);
-    const endDate = new Date(monday);
-    endDate.setDate(monday.getDate() + 6);
-    const fmt = (d) =>
-      `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1)
-        .toString()
-        .padStart(2, "0")}/${d.getFullYear()}`;
-    return `${fmt(monday)} - ${fmt(endDate)}`;
-  }
-//while chnaging date get all datas 
-useEffect(() => {
-  if (employeeId && ProjectID && weekStart) {
-    const mondayDate = weekStart.toISOString().split("T")[0]; // yyyy-MM-dd
-
-    dispatch(
-      AttendanceFetchExistingWeek({ 
-        employeeId, 
-        projectId: ProjectID, 
-        startDate: mondayDate 
-      })
-    )
-      .then((res) => console.log("Existing week data:", res.payload))
-      .catch((err) => console.error(err));
-  }
-}, [employeeId, ProjectID, weekStart, dispatch]); // 🔹 depends on weekStart
 
   const handleMenuOpen = (e, row) => {
     setMenuAnchor(e.currentTarget);
@@ -277,10 +284,20 @@ useEffect(() => {
 
   const handleSaveWeek = async () => {
     const employeeId = projects[0]?.employeeId;
-    const projectId = projects[0]?.project?.id;
+const weekStartDate = getMonday(weekStart);
+  const weekEnd = new Date(weekStartDate);
+weekEnd.setDate(weekStartDate.getDate() + 6); // Get the Sunday of the week
+
+
+  // Format in local time
+  const formattedWeekEnd = `${weekEnd.getFullYear()}-${(weekEnd.getMonth()+1)
+    .toString().padStart(2,'0')}-${weekEnd.getDate().toString().padStart(2,'0')}`;
+ const formattedstartEnd = `${weekStartDate.getFullYear()}-${(weekStartDate.getMonth()+1)
+    .toString().padStart(2,'0')}-${weekStartDate.getDate().toString().padStart(2,'0')}`;
 
     try {
-      const resultAction = await dispatch(AttendanceReleaseWeek({ employeeId, projectId }));
+      const resultAction = await dispatch(AttendanceReleaseWeek({ employeeId, weekStart: formatDate(formattedstartEnd),
+        weekEnd: formatDate(formattedWeekEnd) }));
       if (AttendanceReleaseWeek.fulfilled.match(resultAction)) {
         toast.success("Week released successfully!");
       } else {
@@ -292,6 +309,7 @@ useEffect(() => {
   };
 
   const handleCalendarChange = (date) => {
+    setSelectDate(date);
     setWeekStart(getMonday(date));
     setCalendarAnchor(null);
   };
@@ -358,7 +376,7 @@ useEffect(() => {
         <div className="flex gap-2 justify-end flex-1">
           {days.map((day, i) => {
             const currentDate = new Date(getMonday(weekStart));
-            currentDate.setDate(currentDate.getDate() + i);
+            currentDate.setDate(weekStart.getDate() + i);
             const formattedDate = `${currentDate.getDate().toString().padStart(2, "0")}/${(
               currentDate.getMonth() + 1
             ).toString().padStart(2, "0")}`;

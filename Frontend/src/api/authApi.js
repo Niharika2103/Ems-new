@@ -207,14 +207,14 @@ export const AttendanceSaveallApi = (employeeId, projectId, formData) => {
   );
 };
 //fetch current week 
-export const AttendanceFetchCurrentWeekApi =(employeeId, projectId)=>{
-  return AttendanceClient.get(
-    `${AUTH_API.ATTENDANCE}/attendance/currentweek`,
-    {
-      params: { employeeId, projectId } // this adds ?employeeId=...&projectId=...
-    }
-  );
-};
+// export const AttendanceFetchCurrentWeekApi =(employeeId, projectId)=>{
+//   return AttendanceClient.get(
+//     `${AUTH_API.ATTENDANCE}/attendance/currentweek`,
+//     {
+//       params: { employeeId, projectId } // this adds ?employeeId=...&projectId=...
+//     }
+//   );
+// };
 
 // fetch Existing  week data 
 export const AttendanceFetchExistingWeekApi =({ employeeId, projectId, startDate })=>{
@@ -238,12 +238,12 @@ export const AttendanceFetchByEmployeeProjectApi = (employeeId, projectId) => {
 };
 
 //fetch release-week
-    export const AttendanceReleaseWeekApi = (employeeId, projectId) => {
+    export const AttendanceReleaseWeekApi = (employeeId,weekStart,weekEnd ) => {
   return AttendanceClient.post(
-    `${AUTH_API.ATTENDANCE}/attendance/release-week`,
+    `${AUTH_API.ATTENDANCE}/attendance/release-weekly`,
     null,
     {
-      params: { employeeId, projectId }
+      params: { employeeId,weekStart,weekEnd }
     }
   );
 };

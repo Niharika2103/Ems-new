@@ -3,6 +3,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.time.LocalDate;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,7 +32,7 @@ public class AttendanceController {
     }
     
     
-
+//save and update current week
     @PostMapping("/saveall")
     public List<AttendanceEntity> saveAllWeek(
             @RequestParam UUID employeeId,
@@ -41,13 +43,13 @@ public class AttendanceController {
         return attendanceService.saveOrUpdateAttendance(employeeId, projectId, attendanceList);
     }
 //fetch only current week
-    @GetMapping("/currentweek")
-    public List<AttendanceEntity> getOrCreateWeekData(
-            @RequestParam UUID employeeId,
-            @RequestParam UUID projectId) {
-
-        return attendanceService.getOrCreateCurrentWeek(employeeId, projectId);
-    }
+//    @GetMapping("/currentweek")
+//    public List<AttendanceEntity> getOrCreateWeekData(
+//            @RequestParam UUID employeeId,
+//            @RequestParam UUID projectId) {
+//
+//        return attendanceService.getOrCreateCurrentWeek(employeeId, projectId);
+//    }
 
 
     // ✅ Fetch custom week attendance
@@ -61,7 +63,16 @@ public class AttendanceController {
         LocalDate weekStart = LocalDate.parse(startDate.trim()); 
         return attendanceService.getAttendanceForWeek(employeeId, projectId, weekStart);
     }
-
+      
+    @PostMapping("/release-weekly")
+    public ResponseEntity<String> releaseWeekly(
+            @RequestParam UUID employeeId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate weekStart,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate weekEnd
+    ) {
+        attendanceService.releaseWeeklyAttendance(employeeId, weekStart, weekEnd);
+        return ResponseEntity.ok("Weekly attendance released successfully.");
+    }
  
      // ✅ GET all attendance
      @GetMapping
