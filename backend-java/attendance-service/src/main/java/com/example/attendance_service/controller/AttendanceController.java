@@ -73,6 +73,16 @@ public class AttendanceController {
         attendanceService.releaseWeeklyAttendance(employeeId, weekStart, weekEnd);
         return ResponseEntity.ok("Weekly attendance released successfully.");
     }
+    
+    @PostMapping("/release-monthly")
+    public ResponseEntity<String> releaseMonth(
+    		@RequestParam UUID employeeId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate monthStart,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate monthEnd
+    ) {
+        attendanceService.releaseMonthlyAttendance(employeeId, monthStart, monthEnd);
+        return ResponseEntity.ok("Monthly attendance released successfully.");
+    }
  
      // ✅ GET all attendance
      @GetMapping
