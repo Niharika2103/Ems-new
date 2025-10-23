@@ -32,9 +32,11 @@ export default function AdminTable() {
     date_of_joining: "",
     phone: "",
     address: "",
+    permanent_address: "",
+    dob: "",
     department: "",
     gender: "",
-    emergencycontact: "",
+    emergency_contact: "",
   });
   const [loading, setLoading] = useState(false);
 
@@ -88,7 +90,11 @@ export default function AdminTable() {
       date_of_joining: record.date_of_joining || "",
       phone: record.phone || "",
       address: record.address || "",
+      permanent_address: record.permanent_address || "",
       department: record.department || "",
+      gender: record.gender || "",
+      emergency_contact: record.emergency_contact || "",
+      dob: record.dob || "",
     });
     setIsModalOpen(true);
   };
@@ -354,10 +360,34 @@ const handleSubmit = async (e) => {
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
+  <TextField
+    type="date"
+    label="Date of Birth"
+    name="dob"
+    value={formData.dob}
+    onChange={handleChange}
+    fullWidth
+    size="small"
+    InputLabelProps={{ shrink: true }}
+  />
+</Grid>
+
+<Grid item xs={12}>
+  <TextField
+    label="Permanent Address"
+    name="permanent_address"
+    value={formData.permanent_address}
+    onChange={handleChange}
+    fullWidth
+    size="small"
+  />
+</Grid>
+
+              <Grid item xs={12} sm={6}>
                 <TextField
                   label="Emergency contact"
-                  name="Emergency contact"
-                  value={formData.Emergencycontact}
+                  name="emergency_contact"
+                  value={formData.emergency_contact}
                   onChange={handleChange}
                   fullWidth
                   size="small"
