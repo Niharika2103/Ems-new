@@ -195,22 +195,14 @@ export const ProjectFetchAllDetailsApi = () => {
     `${AUTH_API.PROJECT}/projects/assignments`
   );
 };
-
+// Employee Attendance
 //save all for attendance
 export const AttendanceSaveallApi = (employeeId, projectId, formData) => {
   return AttendanceClient.post(
     `${AUTH_API.ATTENDANCE}/attendance/saveall?employeeId=${employeeId}&projectId=${projectId}`,
   formData);
 };
-//fetch current week 
-// export const AttendanceFetchCurrentWeekApi =(employeeId, projectId)=>{
-//   return AttendanceClient.get(
-//     `${AUTH_API.ATTENDANCE}/attendance/currentweek`,
-//     {
-//       params: { employeeId, projectId } // this adds ?employeeId=...&projectId=...
-//     }
-//   );
-// };
+
 
 // fetch Existing  week data 
 export const AttendanceFetchExistingWeekApi =({ employeeId, projectId, startDate })=>{
@@ -260,6 +252,39 @@ export const AttendanceFetchByEmployeeProjectApi = (employeeId, projectId) => {
     null,
     {
       params: { employeeId, monthStart,monthEnd }
+    }
+  );
+};
+//Admin Attendance
+//In AttendanceAdmin fetch weekly data by using employeeId
+
+export const AdminAttendancFetchWeeklyDataByIdApi = (employeeId, from,to) => {
+  return AttendanceClient.get(
+    `${API_BASES.ADMIN}/attendance/pending-weekly?employeeId=${employeeId}&from=${from}&to=${to}`)
+};
+
+//Admin Approved a Weekly Employee Attendance
+export const Admin_Approve_Weekly_Attendance_Api = (employeeId, from,to) => {
+  return AttendanceClient.put(
+    `${API_BASES.ADMIN}/attendance/weekly/approve`,
+    {
+      params: { employeeId, from ,to }
+    }
+  );
+};
+
+//Admin monthly attendance Fetch
+export const AdminAttendancFetchMonthlyDataByIdApi = (employeeId, from,to) => {
+  return AttendanceClient.get(
+    `${API_BASES.ADMIN}/attendance/pending-monthly?employeeId=${employeeId}&from=${from}&to=${to}`)
+};
+
+//Admin Approved a Weekly Employee Attendance
+export const Admin_Approve_monthly_Attendance_Api = (employeeId, from,to) => {
+  return AttendanceClient.put(
+    `${API_BASES.ADMIN}/attendance/monthly/approve`,
+    {
+      params: { employeeId, from ,to }
     }
   );
 };

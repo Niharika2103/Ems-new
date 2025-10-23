@@ -1,8 +1,13 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { AttendanceSaveallApi,AttendanceFetchAllApi ,AttendanceFetchExistingWeekApi,
   AttendanceReleaseMonthApi,AttendanceFetchExistingMonthApi,
-  AttendanceFetchByEmployeeProjectApi,AttendanceReleaseWeekApi} from "../../api/authApi";
+  AttendanceFetchByEmployeeProjectApi,AttendanceReleaseWeekApi,
+AdminAttendancFetchWeeklyDataByIdApi,Admin_Approve_Weekly_Attendance_Api,
+AdminAttendancFetchMonthlyDataByIdApi,
+Admin_Approve_monthly_Attendance_Api} from "../../api/authApi";
 
+
+//Employee
 export const AttendanceSaveall = createAsyncThunk("attendance/saveall", async ({ employeeId, projectId, formData }, thunkAPI) => {
   try {
     const res = await AttendanceSaveallApi( employeeId, projectId, formData );
@@ -80,6 +85,48 @@ export const AttendanceReleaseMonth= createAsyncThunk("attendance/release-Month"
     return thunkAPI.rejectWithValue(err.response?.data || err.message);
   }
 })
+//Admin
+export const AdminAttendancFetchWeeklyDataById = createAsyncThunk("admin/fetchweekly", async ({ employeeId, from, to }, thunkAPI) => {
+  try {
+    const res = await AdminAttendancFetchWeeklyDataByIdApi( employeeId, from, to );
+    return res.data;
+  } catch (err) {
+    return thunkAPI.rejectWithValue(err.response?.data || err.message);
+  }
+})
+export const AdminAttendancFetchMonthlyDataById= createAsyncThunk("admin/fetchMonthly", async ({ employeeId,from , to }, thunkAPI) => {
+  try {
+    const res = await AdminAttendancFetchMonthlyDataByIdApi( employeeId, from, to );
+    return res.data;
+  } catch (err) {
+    return thunkAPI.rejectWithValue(err.response?.data || err.message);
+  }
+})
+export const Admin_Approve_Weekly_Attendance = createAsyncThunk(
+  "admin/approveweekly",
+  async ({ employeeId, from, to }, thunkAPI) => {
+    try {
+      const res = await Admin_Approve_Weekly_Attendance_Api(employeeId, from, to );
+      return res.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+export const Admin_Approve_monthly_Attendance = createAsyncThunk(
+  "admin/approvemonthly",
+  async ({ employeeId, from, to }, thunkAPI) => {
+    try {
+      const res = await Admin_Approve_monthly_Attendance_Api(employeeId, from, to);
+      return res.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+
+
+
 const attendanceSlice = createSlice({
   name: "attendance",
   initialState: {
@@ -167,6 +214,22 @@ const attendanceSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+       // --- Admin Thunks ---
+    .addCase(AdminAttendancFetchWeeklyDataById.pending, (state) => { state.loading = true; })
+    .addCase(AdminAttendancFetchWeeklyDataById.fulfilled, (state, action) => { state.loading = false; state.attendanceData = action.payload; })
+    .addCase(AdminAttendancFetchWeeklyDataById.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
+
+    .addCase(AdminAttendancFetchMonthlyDataById.pending, (state) => { state.loading = true; })
+    .addCase(AdminAttendancFetchMonthlyDataById.fulfilled, (state, action) => { state.loading = false; state.attendanceData = action.payload; })
+    .addCase(AdminAttendancFetchMonthlyDataById.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
+
+    .addCase(Admin_Approve_Weekly_Attendance.pending, (state) => { state.loading = true; })
+    .addCase(Admin_Approve_Weekly_Attendance.fulfilled, (state) => { state.loading = false; })
+    .addCase(Admin_Approve_Weekly_Attendance.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
+
+    .addCase(Admin_Approve_monthly_Attendance.pending, (state) => { state.loading = true; })
+    .addCase(Admin_Approve_monthly_Attendance.fulfilled, (state) => { state.loading = false; })
+    .addCase(Admin_Approve_monthly_Attendance.rejected, (state, action) => { state.loading = false; state.error = action.payload; });
 
   },
 });
