@@ -207,14 +207,14 @@ export const AttendanceSaveallApi = (employeeId, projectId, formData) => {
   );
 };
 //fetch current week 
-export const AttendanceFetchCurrentWeekApi =(employeeId, projectId)=>{
-  return AttendanceClient.get(
-    `${AUTH_API.ATTENDANCE}/attendance/currentweek`,
-    {
-      params: { employeeId, projectId } // this adds ?employeeId=...&projectId=...
-    }
-  );
-};
+// export const AttendanceFetchCurrentWeekApi =(employeeId, projectId)=>{
+//   return AttendanceClient.get(
+//     `${AUTH_API.ATTENDANCE}/attendance/currentweek`,
+//     {
+//       params: { employeeId, projectId } // this adds ?employeeId=...&projectId=...
+//     }
+//   );
+// };
 
 // fetch Existing  week data 
 export const AttendanceFetchExistingWeekApi =({ employeeId, projectId, startDate })=>{
@@ -238,23 +238,23 @@ export const AttendanceFetchByEmployeeProjectApi = (employeeId, projectId) => {
 };
 
 //fetch release-week
-    export const AttendanceReleaseWeekApi = (employeeId, projectId) => {
+    export const AttendanceReleaseWeekApi = (employeeId,weekStart,weekEnd ) => {
   return AttendanceClient.post(
-    `${AUTH_API.ATTENDANCE}/attendance/release-week`,
+    `${AUTH_API.ATTENDANCE}/attendance/release-weekly`,
     null,
     {
-      params: { employeeId, projectId }
+      params: { employeeId,weekStart,weekEnd }
     }
   );
 };
 
 //fetch release-month
-    export const AttendanceReleaseMonthApi = (employeeId, projectId) => {
+    export const AttendanceReleaseMonthApi = (employeeId, monthStart,monthEnd) => {
   return AttendanceClient.post(
-    `${AUTH_API.ATTENDANCE}/attendance/release-month`,
+    `${AUTH_API.ATTENDANCE}/attendance/release-monthly`,
     null,
     {
-      params: { employeeId, projectId }
+      params: { employeeId, monthStart,monthEnd }
     }
   );
 };

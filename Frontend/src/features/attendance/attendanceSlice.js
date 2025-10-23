@@ -1,5 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { AttendanceSaveallApi,AttendanceFetchAllApi ,AttendanceFetchExistingWeekApi,AttendanceFetchCurrentWeekApi,AttendanceFetchByEmployeeProjectApi,AttendanceReleaseWeekApi} from "../../api/authApi";
+import { AttendanceSaveallApi,AttendanceFetchAllApi ,AttendanceFetchExistingWeekApi,
+  AttendanceReleaseMonthApi,
+  AttendanceFetchByEmployeeProjectApi,AttendanceReleaseWeekApi} from "../../api/authApi";
 
 export const AttendanceSaveall = createAsyncThunk("attendance/saveall", async ({ employeeId, projectId, formData }, thunkAPI) => {
   try {
@@ -10,14 +12,14 @@ export const AttendanceSaveall = createAsyncThunk("attendance/saveall", async ({
   }
 })
 
-export const AttendancCurrentWeek= createAsyncThunk("attendance/currentweek", async ({ employeeId, projectId }, thunkAPI) => {
-  try {
-    const res = await AttendanceFetchCurrentWeekApi( employeeId, projectId );
-    return res.data;
-  } catch (err) {
-    return thunkAPI.rejectWithValue(err.response?.data || err.message);
-  }
-})
+// export const AttendancCurrentWeek= createAsyncThunk("attendance/currentweek", async ({ employeeId, projectId }, thunkAPI) => {
+//   try {
+//     const res = await AttendanceFetchCurrentWeekApi( employeeId, projectId );
+//     return res.data;
+//   } catch (err) {
+//     return thunkAPI.rejectWithValue(err.response?.data || err.message);
+//   }
+// })
 
 // slice/attendanceSlice.js
 export const AttendanceFetchExistingWeek = createAsyncThunk(
@@ -57,18 +59,18 @@ export const AttendanceFetchByEmployeeProject = createAsyncThunk(
 );
 
 
-export const AttendanceReleaseWeek= createAsyncThunk("attendance/release-week", async ({ employeeId, projectId }, thunkAPI) => {
+export const AttendanceReleaseWeek= createAsyncThunk("attendance/release-week", async ({ employeeId, weekStart,weekEnd }, thunkAPI) => {
   try {
-    const res = await AttendanceReleaseWeekApi( employeeId, projectId );
+    const res = await AttendanceReleaseWeekApi( employeeId, weekStart,weekEnd );
     return res.data;
   } catch (err) {
     return thunkAPI.rejectWithValue(err.response?.data || err.message);
   }
 })
 
-export const AttendanceReleaseMonth= createAsyncThunk("attendance/release-Month", async ({ employeeId, projectId }, thunkAPI) => {
+export const AttendanceReleaseMonth= createAsyncThunk("attendance/release-Month", async ({ employeeId,  monthStart,monthEnd }, thunkAPI) => {
   try {
-    const res = await AttendanceReleaseMonthApi( employeeId, projectId );
+    const res = await AttendanceReleaseMonthApi( employeeId,  monthStart,monthEnd );
     return res.data;
   } catch (err) {
     return thunkAPI.rejectWithValue(err.response?.data || err.message);
@@ -104,17 +106,17 @@ const attendanceSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      .addCase(AttendancCurrentWeek.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(AttendancCurrentWeek.fulfilled, (state,action) => {
-        state.loading = false;
-        state.attendanceData = action.payload; 
-      })
-      .addCase(AttendancCurrentWeek.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
+      // .addCase(AttendancCurrentWeek.pending, (state) => {
+      //   state.loading = true;
+      // })
+      // .addCase(AttendancCurrentWeek.fulfilled, (state,action) => {
+      //   state.loading = false;
+      //   state.attendanceData = action.payload; 
+      // })
+      // .addCase(AttendancCurrentWeek.rejected, (state, action) => {
+      //   state.loading = false;
+      //   state.error = action.payload;
+      // })
        .addCase(AttendanceFetchExistingWeek.pending, (state) => {
       state.loading = true;
     })

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.Collections;
 import java.util.stream.Collectors;
+import java.time.temporal.TemporalAdjusters;
 
 import org.springframework.stereotype.Service;
 
@@ -144,54 +145,86 @@ public List<AttendanceEntity> saveOrUpdateAttendance(
             .collect(Collectors.toList());
 }
 
-	public List<AttendanceEntity> getOrCreateCurrentWeek(UUID employeeId, UUID projectId) {
-	    LocalDate today = LocalDate.now();
-	    LocalDate startOfWeek = today.with(DayOfWeek.MONDAY);
-	    LocalDate endOfWeek = startOfWeek.plusDays(6);
-
-	    List<AttendanceEntity> currentWeek = attendanceRepository
-	            .findByEmployee_IdAndProject_IdAndDateBetween(employeeId, projectId, startOfWeek, endOfWeek);
-
-	    if (currentWeek.isEmpty()) {
-	        // auto-create new week if no data found
-	        return saveOrUpdateAttendance(employeeId, projectId, Collections.emptyList());
-	    }
-
-	    return currentWeek.stream()
-	            .sorted(Comparator.comparing(AttendanceEntity::getDate))
-	            .collect(Collectors.toList());
-	}
+//	public List<AttendanceEntity> getOrCreateCurrentWeek(UUID employeeId, UUID projectId) {
+//	    LocalDate today = LocalDate.now();
+//	    LocalDate startOfWeek = today.with(DayOfWeek.MONDAY);
+//	    LocalDate endOfWeek = startOfWeek.plusDays(6);
+//
+//	    List<AttendanceEntity> currentWeek = attendanceRepository
+//	            .findByEmployee_IdAndProject_IdAndDateBetween(employeeId, projectId, startOfWeek, endOfWeek);
+//
+//	    if (currentWeek.isEmpty()) {
+//	        // auto-create new week if no data found
+//	        return saveOrUpdateAttendance(employeeId, projectId, Collections.emptyList());
+//	    }
+//
+//	    return currentWeek.stream()
+//	            .sorted(Comparator.comparing(AttendanceEntity::getDate))
+//	            .collect(Collectors.toList());
+//	}
 
 
 
 // ✅ Always fetch current week attendance (after saving)
-public List<AttendanceEntity> getAttendanceForCurrentWeek(UUID employeeId, UUID projectId) {
-    if (employeeId == null || projectId == null) {
+//public List<AttendanceEntity> getAttendanceForCurrentWeek(UUID employeeId, UUID projectId) {
+//    if (employeeId == null || projectId == null) {
+//        return Collections.emptyList();
+//    }
+//
+//    LocalDate today = LocalDate.now();
+//    LocalDate startOfWeek = today.with(DayOfWeek.MONDAY);
+//    LocalDate endOfWeek = startOfWeek.plusDays(6);
+//
+//    return attendanceRepository.findByEmployee_IdAndProject_IdAndDateBetween(
+//            employeeId, projectId, startOfWeek, endOfWeek);
+//}
+
+	// ✅ Optional: fetch for any week
+public List<AttendanceEntity> getAttendanceForWeek(UUID employeeId, UUID projectId, LocalDate weekStart) {
+    if (employeeId == null || projectId == null || weekStart == null) {
         return Collections.emptyList();
     }
 
-    LocalDate today = LocalDate.now();
-    LocalDate startOfWeek = today.with(DayOfWeek.MONDAY);
-    LocalDate endOfWeek = startOfWeek.plusDays(6);
+    // ✅ Ensure Monday–Sunday week
+    LocalDate startOfWeek = weekStart.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+    LocalDate endOfWeek = weekStart.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
 
     return attendanceRepository.findByEmployee_IdAndProject_IdAndDateBetween(
             employeeId, projectId, startOfWeek, endOfWeek);
 }
 
-	// ✅ Optional: fetch for any week
-	public List<AttendanceEntity> getAttendanceForWeek(UUID employeeId, UUID projectId, LocalDate weekStart) {
-		if (employeeId == null || projectId == null || weekStart == null) {
-			return Collections.emptyList();
-		}
 
-		LocalDate startOfWeek = weekStart.with(DayOfWeek.MONDAY);
-		LocalDate endOfWeek = startOfWeek.plusDays(6);
+@Transactional
+public void releaseWeeklyAttendance(UUID employeeId, LocalDate weekStart, LocalDate weekEnd) {
+    // Fetch all attendance records for this week
+    List<AttendanceEntity> attendanceList =
+            attendanceRepository.findByEmployee_IdAndDateBetween(employeeId, weekStart, weekEnd);
+    System.out.println("@115:"+attendanceList);
 
-		return attendanceRepository.findByEmployee_IdAndProject_IdAndDateBetween(
-				employeeId, projectId, startOfWeek, endOfWeek);
-	}
+    // Update only weeklyStatus
+    for (AttendanceEntity attendance : attendanceList) {
+        attendance.setStatus("Pending_approval");
+    }
 
-	
+    // Save updates without touching monthlyStatus
+    attendanceRepository.saveAll(attendanceList);
+}
+@Transactional
+public void releaseMonthlyAttendance(UUID employeeId, LocalDate monthStart, LocalDate monthEnd) {
+    // Fetch all attendance records for this week
+    List<AttendanceEntity> attendanceList =
+            attendanceRepository.findByEmployee_IdAndDateBetween(employeeId, monthStart, monthEnd);
+    System.out.println("@115:"+attendanceList);
+
+    // Update only MonthlyStatus
+    for (AttendanceEntity attendance : attendanceList) {
+        attendance.setMonthlyStatus("Pending_approval");
+    }
+
+    // Save updates without touching monthlyStatus
+    attendanceRepository.saveAll(attendanceList);
+}
+
 
 	// ✅ Get by employee
 	public List<AttendanceEntity> getAttendanceByEmployee(UUID employeeId) {
@@ -207,4 +240,9 @@ public List<AttendanceEntity> getAttendanceForCurrentWeek(UUID employeeId, UUID 
 	public List<AttendanceEntity> getAttendanceByEmployeeAndProject(UUID employeeId, UUID projectId) {
 		return attendanceRepository.findByEmployee_IdAndProject_IdOrderByDateAsc(employeeId, projectId);
 	}
+
+//	public void releaseWeeklyAttendance(UUID employeeId, LocalDate weekStart, LocalDate weekEnd) {
+//		// TODO Auto-generated method stub
+//		
+//	}
 }
