@@ -27,7 +27,7 @@ const EmployeeDashboard = () => {
       icon: AccessTimeIcon,
       iconBg: "bg-sky-100",
       iconColor: "text-sky-600",
-      onClick: () => navigate("/dashboard/assign_project"),
+      onClick: () => navigate("/dashboard/emp_attendance"),
     },
 
     {

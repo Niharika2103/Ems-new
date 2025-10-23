@@ -193,6 +193,14 @@ public List<AttendanceEntity> getAttendanceForWeek(UUID employeeId, UUID project
             employeeId, projectId, startOfWeek, endOfWeek);
 }
 
+    
+public List<AttendanceEntity> getAttendanceForMonthRange(UUID employeeId, LocalDate start, LocalDate end) {
+    if (employeeId == null || start == null || end == null) {
+        return Collections.emptyList();
+    }
+
+    return attendanceRepository.findByEmployee_IdAndDateBetween(employeeId, start, end);
+}
 
 @Transactional
 public void releaseWeeklyAttendance(UUID employeeId, LocalDate weekStart, LocalDate weekEnd) {

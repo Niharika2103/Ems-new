@@ -1,32 +1,41 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  fetchEmployeeProfile,
-  updateEmployeeProfile,
   fetchAdminProfile,
-  fetchSuperAdminProfile,
   updateAdminProfile,
-  updateSuperAdminProfile
+  fetchSuperAdminProfile,
+  updateSuperAdminProfile,
 } from "../../features/employeesDetails/employeesSlice";
 import { sendEmailOtp, verifyEmailOtp } from "../../features/verify/emailVerify";
 import { decodeToken } from "../../api/decodeToekn";
 import { ToastContainer, toast } from "react-toastify";
-import { Link, useLocation } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
 import {
-  Typography,
-  TextField,
-  Button,
   Box,
   Grid,
   Paper,
-  Radio,
-  RadioGroup,
-  FormControlLabel,
-  FormLabel,
   Avatar,
+  Typography,
+  Divider,
+  TextField,
+  Button,
+  RadioGroup,
+  FormLabel,
+  FormControlLabel,
+  Radio,
   MenuItem,
+  IconButton,
 } from "@mui/material";
+import {
+  Email as EmailIcon,
+  Phone as PhoneIcon,
+  Wc as GenderIcon,
+  CalendarMonth as DobIcon,
+  Apartment as DepartmentIcon,
+  LocationOn as AddressIcon,
+  ContactEmergency as EmergencyIcon,
+  UploadFile as UploadIcon,
+} from "@mui/icons-material";
 import { validateProfileForm } from "../../utils/validation";
 
 const Profile = () => {
@@ -36,55 +45,38 @@ const Profile = () => {
   const [formData, setFormData] = useState({
     name: "",
     dob: "",
-    date_of_joining: "",
     gender: "",
     email: "",
     phone: "",
-    address: "",
-    emergency_contact: "",
     department: "",
+    address: "",
     permanent_address: "",
+    emergency_contact: "",
     profilePhoto: null,
-    resume: null,
   });
 
-  const [errors, setErrors] = useState({});
-  const [touched, setTouched] = useState({});
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
-  const [emailOtp, setEmailOtp] = useState("");
-  const [generatedOtp, setGeneratedOtp] = useState("");
-  const [phoneVerified, setPhoneVerified] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [emailOtp, setEmailOtp] = useState("");
   const [emailVerified, setEmailVerified] = useState(false);
-  const [user, setUser] = useState(null);
+  const [phoneVerified, setPhoneVerified] = useState(false);
   const [data, setData] = useState(null);
 
   const roles =
     useSelector((state) => state.adminSlice) ||
     useSelector((state) => state.authSlice?.role) ||
-    useSelector((state) => state.employeeSlice?.role) ||
     localStorage.getItem("role");
-
-  const location = useLocation();
-  const pathnames = location.pathname.split("/").filter((x) => x);
 
   useEffect(() => {
     const getDecoded = async () => {
       try {
         const decoded = await decodeToken();
         setData(decoded);
-        setUser(decoded.employeeId);
-
-        if (decoded?.email) {
-          if (roles === "admin") {
-            dispatch(fetchAdminProfile(decoded.id));
-          } else if (roles === "superadmin") {
-            dispatch(fetchSuperAdminProfile(decoded.id));
-          } 
-          // else if (roles === "employee") {
-          //   dispatch(fetchEmployeeProfile(decoded.email));
-          // }
+        if (roles === "admin") {
+          dispatch(fetchAdminProfile(decoded.id));
+        } else if (roles === "superadmin") {
+          dispatch(fetchSuperAdminProfile(decoded.id));
         }
       } catch (error) {
         console.error("Error decoding token:", error);
@@ -94,426 +86,324 @@ const Profile = () => {
   }, [dispatch, roles]);
 
   useEffect(() => {
-    if (profile) {
-      setFormData({ ...formData, ...profile });
-    }
+    if (profile) setFormData({ ...formData, ...profile });
   }, [profile]);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-    const newValue = files ? files[0] : value;
-    setFormData({ ...formData, [name]: newValue });
-
-    if (touched[name]) {
-      const newErrors = validateProfileForm({ ...formData, [name]: newValue });
-      setErrors(newErrors);
-    }
-  };
-
-  const handleBlur = (e) => {
-    const { name } = e.target;
-    setTouched({ ...touched, [name]: true });
-    setErrors(validateProfileForm(formData));
+    setFormData({
+      ...formData,
+      [name]: files ? files[0] : value,
+    });
   };
 
   const handleSendOtp = () => {
-    if (!formData.phone.match(/^[0-9]{10}$/)) {
-      alert("Enter a valid phone number first");
-      return;
-    }
-    const mockOtp = Math.floor(100000 + Math.random() * 900000).toString();
-    setGeneratedOtp(mockOtp);
     setOtpSent(true);
-    alert(`Mock OTP sent: ${mockOtp}`);
-  };
-
-  const handleVerifyOtp = () => {
-    if (otp === generatedOtp) {
-      setPhoneVerified(true);
-      alert("Phone verified successfully");
-    } else {
-      alert("Invalid OTP");
-    }
+    alert("Mock OTP sent to phone");
   };
 
   const handleSendEmailOtp = () => {
-    dispatch(sendEmailOtp());
     setEmailSent(true);
-  };
-
-  const handleVerifyEmailOtp = (otp) => {
-    dispatch(verifyEmailOtp(otp))
-      .unwrap()
-      .then(() => setEmailVerified(true))
-      .catch(() => {
-        alert("Invalid email OTP");
-        setEmailVerified(false);
-      });
-  };
-
-  const updateProfileByRole = (role, formData, id) => {
-    if (role === "admin") return updateAdminProfile({ data: formData, id });
-    if (role === "superadmin") return updateSuperAdminProfile({ data: formData, id });
-    // if (role === "employee") return updateEmployeeProfile({ data: formData, id });
+    alert("Mock OTP sent to email");
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const id = data?.id;
-
-    if (id && roles) {
-      dispatch(updateProfileByRole(roles, formData, id))
+    if (!id) return;
+    if (roles === "admin") {
+      dispatch(updateAdminProfile({ data: formData, id }))
         .unwrap()
-        .then((response) => {
-          toast.success(response.message);
-          if (roles === "admin") {
-            dispatch(fetchAdminProfile(id));
-          } else if (roles === "superadmin") {
-            dispatch(fetchSuperAdminProfile(id));
-          } else if (roles === "employee") {
-            dispatch(fetchEmployeeProfile(data?.email));
-          }
-        })
-        .catch((err) => {
-          console.error("Profile update failed:", err);
-        });
+        .then(() => toast.success("Profile updated successfully!"))
+        .catch(() => toast.error("Update failed"));
+    } else if (roles === "superadmin") {
+      dispatch(updateSuperAdminProfile({ data: formData, id }));
     }
   };
 
   return (
     <>
       <ToastContainer position="top-right" autoClose={2000} />
-      <Box className="flex justify-center items-center bg-gray-100 p-4">
+      <Box sx={{ backgroundColor: "#f4f6f8", minHeight: "100vh", p: 4 }}>
         <Paper
-          elevation={4}
+          elevation={6}
           sx={{
+            maxWidth: 950,
+            mx: "auto",
             p: 4,
-            width: "100%",
-            maxWidth: 700,
-            borderRadius: 3,
-            bgcolor: "white",
+            borderRadius: 4,
+            backgroundColor: "white",
           }}
         >
-          <Typography
-            variant="h5"
-            align="center"
-            gutterBottom
-            sx={{ fontWeight: "bold", mb: 3 }}
+          {/* Header Card */}
+          <Box
+            display="flex"
+            alignItems="center"
+            gap={3}
+            sx={{
+              background: "linear-gradient(45deg, #2196f3, #21cbf3)",
+              borderRadius: 3,
+              p: 3,
+              color: "white",
+            }}
           >
-            {roles === "admin"
-              ? "Admin Information"
-              : roles === "superadmin"
-                ? "SuperAdmin Information"
-                : roles === "employee"
-                  ? "Employee Information"
-                  : "Profile Information"}
-          </Typography>
+            <Avatar
+              sx={{
+                width: 90,
+                height: 90,
+                fontSize: 32,
+                bgcolor: "white",
+                color: "#2196f3",
+                fontWeight: 600,
+              }}
+              src={
+                formData.profilePhoto instanceof File
+                  ? URL.createObjectURL(formData.profilePhoto)
+                  : profile?.profile_photo || undefined
+              }
+            >
+              {formData.name?.[0]?.toUpperCase() || "A"}
+            </Avatar>
+            <Box>
+              <Typography variant="h5" fontWeight="bold">
+                {formData.name || "Admin User"}
+              </Typography>
+              <Typography variant="subtitle2" color="rgba(255,255,255,0.8)">
+                {roles === "admin" ? "Admin Information" : "Super Admin"}
+              </Typography>
+            </Box>
+          </Box>
 
-          <Box component="form" onSubmit={handleSubmit}>
-            <Grid container direction="column" spacing={1.5}>
-              {/* Full Name */}
-              <Grid item>
-                <TextField
-                  fullWidth
-                  label="Full Name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  onBlur={handleBlur}
-                  size="small"
-                  sx={{ maxWidth: "60%" }}
-                />
-              </Grid>
-
-              {/* Email + OTP */}
-              <Grid item>
-                <Grid container spacing={2} alignItems="center">
-                  <Grid item xs={7}>
-                    <TextField
-                      fullWidth
-                      label="Email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      size="small"
-                    />
-                  </Grid>
-                  <Grid item xs={5}>
-                    {!emailVerified && !emailSent && (
-                      <Button fullWidth variant="outlined" size="small" onClick={handleSendEmailOtp}>
-                        Send OTP
-                      </Button>
-                    )}
-                    {emailSent && !emailVerified && (
-                      <Grid container spacing={1}>
-                        <Grid item xs={7}>
-                          <TextField
-                            fullWidth
-                            label="Enter OTP"
-                            value={emailOtp}
-                            onChange={(e) => setEmailOtp(e.target.value)}
-                            size="small"
-                          />
-                        </Grid>
-                        <Grid item xs={5}>
-                          <Button
-                            fullWidth
-                            variant="outlined"
-                            size="small"
-                            onClick={() => handleVerifyEmailOtp(emailOtp)}
-                          >
-                            Verify
-                          </Button>
-                        </Grid>
-                      </Grid>
-                    )}
-                    {emailVerified && (
-                      <Typography color="success.main" sx={{ fontWeight: "bold", mt: 1 }}>
-                        Email Verified Successfully
-                      </Typography>
-                    )}
-                  </Grid>
-                </Grid>
-              </Grid>
-
-              {/* Phone + OTP */}
-              <Grid item>
-                <Grid container spacing={2} alignItems="center">
-                  <Grid item xs={7}>
-                    <TextField
-                      fullWidth
-                      label="Phone Number"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      size="small"
-                    />
-                  </Grid>
-                  <Grid item xs={5}>
-                    {!otpSent && !phoneVerified && (
-                      <Button fullWidth variant="outlined" size="small" onClick={handleSendOtp}>
-                        Send OTP
-                      </Button>
-                    )}
-                    {otpSent && !phoneVerified && (
-                      <Grid container spacing={1}>
-                        <Grid item xs={7}>
-                          <TextField
-                            fullWidth
-                            label="Enter OTP"
-                            value={otp}
-                            onChange={(e) => setOtp(e.target.value)}
-                            size="small"
-                          />
-                        </Grid>
-                        <Grid item xs={5}>
-                          <Button fullWidth variant="outlined" size="small" onClick={handleVerifyOtp}>
-                            Verify
-                          </Button>
-                        </Grid>
-                      </Grid>
-                    )}
-                    {phoneVerified && (
-                      <Typography color="success.main" sx={{ fontWeight: "bold", mt: 1 }}>
-                        Phone Verified Successfully
-                      </Typography>
-                    )}
-                  </Grid>
-                </Grid>
-              </Grid>
-
-              {/* Gender */}
-              <Grid item>
-                <FormLabel>Gender</FormLabel>
-                <RadioGroup row name="gender" value={formData.gender} onChange={handleChange}>
-                  <FormControlLabel value="Male" control={<Radio />} label="Male" />
-                  <FormControlLabel value="Female" control={<Radio />} label="Female" />
-                </RadioGroup>
-              </Grid>
-
-              {/* Date of Birth */}
-              <Grid item>
-                <TextField
-                  label="Date of Birth"
-                  name="dob"
-                  type="date"
-                  value={formData.dob}
-                  onChange={handleChange}
-                  size="small"
-                  InputLabelProps={{ shrink: true }}
-                  sx={{ width: "45%" }}
-                />
-              </Grid>
-
-              {/* Date of Joining */}
-              {roles === "employee" && (
-                <Grid item>
+          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 4 }}>
+            {/* PERSONAL INFORMATION */}
+            <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
+              👤 Personal Information
+            </Typography>
+            <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
                   <TextField
-                    label="Date of Joining"
-                    name="date_of_joining"
-                    type="date"
-                    value={formData.date_of_joining}
+                    fullWidth
+                    label="Full Name"
+                    name="name"
+                    value={formData.name}
                     onChange={handleChange}
-                    size="small"
-                    InputLabelProps={{ shrink: true }}
-                    sx={{ width: "45%" }}
+                    // InputProps={{
+                    //   startAdornment: <Avatar sx={{ bgcolor: "#2196f3", width: 28, height: 28 }}></Avatar>,
+                    // }}
                   />
                 </Grid>
-              )}
 
-              {/* Department */}
-              <Grid item>
-                <TextField
-                  select
-                  label="Department"
-                  name="department"
-                  value={formData.department}
-                  onChange={handleChange}
-                  size="small"
-                  sx={{ width: "45%" }}
-                >
-                  <MenuItem value="HR">HR</MenuItem>
-                  <MenuItem value="IT">IT</MenuItem>
-                  <MenuItem value="Finance">Finance</MenuItem>
-                  <MenuItem value="Sales">Sales</MenuItem>
-                </TextField>
-              </Grid>
-
-              {/* Addresses */}
-              <Grid item>
-                <TextField
-                  label="Current Address"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  multiline
-                  rows={2}
-                  size="small"
-                  sx={{ width: "60%" }}
-                />
-              </Grid>
-              <Grid item>
-                <TextField
-                  label="Permanent Address"
-                  name="permanent_address"
-                  value={formData.permanent_address}
-                  onChange={handleChange}
-                  multiline
-                  rows={2}
-                  size="small"
-                  sx={{ width: "60%" }}
-                />
-              </Grid>
-
-              {/* Emergency Contact */}
-              <Grid item>
-                <TextField
-                  label="Emergency Contact"
-                  name="emergency_contact"
-                  value={formData.emergency_contact}
-                  onChange={handleChange}
-                  size="small"
-                  sx={{ width: "45%" }}
-                />
-              </Grid>
-
-              {/* Profile Photo */}
-              <Grid item>
-                <Typography>Profile Photo</Typography>
-                <Box display="flex" alignItems="center" gap={2}>
+                <Grid item xs={12} sm={6}>
                   <TextField
-                    size="small"
-                    value={
-                      formData.profilePhoto instanceof File
-                        ? formData.profilePhoto.name
-                        : profile?.profile_photo
-                          ? "Existing Profile Photo"
-                          : ""
-                    }
+                    fullWidth
+                    type="date"
+                    label="Date of Birth"
+                    name="dob"
+                    value={formData.dob}
+                    onChange={handleChange}
+                    InputLabelProps={{ shrink: true }}
                     InputProps={{
-                      readOnly: true,
-                      endAdornment: (
-                        <label htmlFor="profile-photo-upload">
-                          <Button component="span" size="small">
-                            Upload
-                          </Button>
-                        </label>
-                      ),
+                      startAdornment: <DobIcon sx={{ color: "#2196f3", mr: 1 }} />,
                     }}
-                    sx={{ width: "60%" }}
                   />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <FormLabel><GenderIcon sx={{ mr: 1 }} />Gender</FormLabel>
+                  <RadioGroup row name="gender" value={formData.gender} onChange={handleChange}>
+                    <FormControlLabel value="Male" control={<Radio />} label="Male" />
+                    <FormControlLabel value="Female" control={<Radio />} label="Female" />
+                  </RadioGroup>
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    select
+                    label="Department"
+                    name="department"
+                    value={formData.department}
+                    onChange={handleChange}
+                    fullWidth
+                    InputProps={{
+                      startAdornment: <DepartmentIcon sx={{ color: "#2196f3", mr: 1 }} />,
+                    }}
+                  >
+                    <MenuItem value="HR">HR</MenuItem>
+                    <MenuItem value="IT">IT</MenuItem>
+                    <MenuItem value="Finance">Finance</MenuItem>
+                    <MenuItem value="Sales">Sales</MenuItem>
+                  </TextField>
+                </Grid>
+              </Grid>
+            </Paper>
+
+            {/* CONTACT INFORMATION */}
+            <Typography variant="h6" fontWeight={600} sx={{ mt: 4, mb: 2 }}>
+              📞 Contact Information
+            </Typography>
+            <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    label="Email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    fullWidth
+                    InputProps={{
+                      startAdornment: <EmailIcon sx={{ color: "#2196f3", mr: 1 }} />,
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  {!emailVerified ? (
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={handleSendEmailOtp}
+                      sx={{ mt: 1 }}
+                    >
+                      {emailSent ? "Resend OTP" : "Send Email OTP"}
+                    </Button>
+                  ) : (
+                    <Typography color="success.main" sx={{ mt: 2 }}>
+                      ✔ Email Verified
+                    </Typography>
+                  )}
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    label="Phone Number"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    fullWidth
+                    InputProps={{
+                      startAdornment: <PhoneIcon sx={{ color: "#2196f3", mr: 1 }} />,
+                    }}
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  {!phoneVerified ? (
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={handleSendOtp}
+                      sx={{ mt: 1 }}
+                    >
+                      {otpSent ? "Resend OTP" : "Send Phone OTP"}
+                    </Button>
+                  ) : (
+                    <Typography color="success.main" sx={{ mt: 2 }}>
+                      ✔ Phone Verified
+                    </Typography>
+                  )}
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    label="Emergency Contact"
+                    name="emergency_contact"
+                    value={formData.emergency_contact}
+                    onChange={handleChange}
+                    fullWidth
+                    InputProps={{
+                      startAdornment: <EmergencyIcon sx={{ color: "#2196f3", mr: 1 }} />,
+                    }}
+                  />
+                </Grid>
+              </Grid>
+            </Paper>
+
+            {/* ADDRESS SECTION */}
+            <Typography variant="h6" fontWeight={600} sx={{ mt: 4, mb: 2 }}>
+              🏠 Address Information
+            </Typography>
+            <Paper variant="outlined" sx={{ p: 2, borderRadius: 3 }}>
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Current Address"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                    multiline
+                    rows={1.5}
+                    fullWidth
+                    InputProps={{
+                      startAdornment: <AddressIcon sx={{ color: "#2196f3", mr: 1 }} />,
+                    }}
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Permanent Address"
+                    name="permanent_address"
+                    value={formData.permanent_address}
+                    onChange={handleChange}
+                    multiline
+                    rows={1.5}
+                    fullWidth
+                    InputProps={{
+                      startAdornment: <AddressIcon sx={{ color: "#2196f3", mr: 1 }} />,
+                    }}
+                  />
+                </Grid>
+              </Grid>
+            </Paper>
+
+            {/* PROFILE PHOTO */}
+            <Typography variant="h6" fontWeight={600} sx={{ mt: 4, mb: 2 }}>
+              📸 Profile Photo
+            </Typography>
+            <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>
+              <Box display="flex" alignItems="center" gap={3}>
+                <Avatar
+                  src={
+                    formData.profilePhoto instanceof File
+                      ? URL.createObjectURL(formData.profilePhoto)
+                      : profile?.profile_photo || undefined
+                  }
+                  sx={{ width: 70, height: 70 }}
+                />
+                <label htmlFor="photo-upload">
                   <input
-                    accept="image/png, image/jpeg"
-                    style={{ display: "none" }}
-                    id="profile-photo-upload"
+                    id="photo-upload"
                     type="file"
                     name="profilePhoto"
+                    accept="image/*"
+                    style={{ display: "none" }}
                     onChange={handleChange}
                   />
-                  <Avatar
-                    src={
-                      formData.profilePhoto instanceof File
-                        ? URL.createObjectURL(formData.profilePhoto)
-                        : profile?.profile_photo || undefined
-                    }
-                    sx={{ width: 56, height: 56 }}
-                  />
-                </Box>
-              </Grid>
+                  <IconButton
+                    component="span"
+                    color="primary"
+                    sx={{ bgcolor: "#e3f2fd", p:1.2, borderRadius: 2 }}
+                  >
+                    <UploadIcon />
+                  </IconButton>
+                </label>
+              </Box>
+            </Paper>
 
-              {/* Resume */}
-              {roles === "employee" && (
-                <Grid item>
-                  <Typography>Resume</Typography>
-                  <Box display="flex" alignItems="center" gap={2} sx={{ width: "60%" }}>
-                    <TextField
-                      size="small"
-                      fullWidth
-                      value={
-                        formData.resume instanceof File
-                          ? formData.resume.name
-                          : profile?.resume
-                            ? profile.resume.split("/").pop()
-                            : ""
-                      }
-                      placeholder="No file chosen"
-                      InputProps={{
-                        readOnly: true,
-                        endAdornment: (
-                          <label htmlFor="resume-upload">
-                            <Button component="span" size="small">
-                              Upload
-                            </Button>
-                          </label>
-                        ),
-                      }}
-                    />
-                    <input
-                      type="file"
-                      name="resume"
-                      accept=".pdf,.doc,.docx"
-                      style={{ display: "none" }}
-                      id="resume-upload"
-                      onChange={handleChange}
-                    />
-                  </Box>
-                </Grid>
-              )}
-
-              {/* Update Button */}
-              <Grid item>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  fullWidth
-                  size="large"
-                  sx={{ mt: 2, borderRadius: "12px", background: "#00c853" }}
-                  disabled={loading}
-                >
-                  {loading ? "Updating..." : "Update"}
-                </Button>
-              </Grid>
-            </Grid>
+            <Box textAlign="center" mt={4}>
+              <Button
+                type="submit"
+                variant="contained"
+                size="large"
+                sx={{
+                  px: 6,
+                  py: 1.5,
+                  borderRadius: 3,
+                  background: "linear-gradient(45deg, #2196f3, #21cbf3)",
+                }}
+              >
+                {loading ? "Updating..." : "Update Profile"}
+              </Button>
+            </Box>
           </Box>
         </Paper>
       </Box>

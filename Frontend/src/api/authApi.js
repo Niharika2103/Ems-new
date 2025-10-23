@@ -199,12 +199,8 @@ export const ProjectFetchAllDetailsApi = () => {
 //save all for attendance
 export const AttendanceSaveallApi = (employeeId, projectId, formData) => {
   return AttendanceClient.post(
-    `${AUTH_API.ATTENDANCE}/attendance/saveall`,
-    formData,
-    {
-      params: { employeeId, projectId } // this adds ?employeeId=...&projectId=...
-    }
-  );
+    `${AUTH_API.ATTENDANCE}/attendance/saveall?employeeId=${employeeId}&projectId=${projectId}`,
+  formData);
 };
 //fetch current week 
 // export const AttendanceFetchCurrentWeekApi =(employeeId, projectId)=>{
@@ -223,6 +219,15 @@ export const AttendanceFetchExistingWeekApi =({ employeeId, projectId, startDate
     params: { employeeId, projectId, startDate },
   });
 };
+// fetch Existing  month data 
+export const AttendanceFetchExistingMonthApi = ({ employeeId, startDate ,endDate }) => {
+  return AttendanceClient.get(
+    `${AUTH_API.ATTENDANCE}/attendance/month/range`, {
+      params: { employeeId, startDate, endDate },
+    }
+  );
+};
+
 
 //fetch all data from attendance
 export const AttendanceFetchAllApi =()=>{

@@ -17,7 +17,7 @@ import "./timesheet.css";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useDispatch, useSelector } from "react-redux";
-import { AttendanceSaveall, AttendanceReleaseWeek, AttendanceReleaseMonth } from "../../features/attendance/attendanceSlice";
+import { AttendanceFetchExistingMonth, AttendanceReleaseWeek, AttendanceReleaseMonth } from "../../features/attendance/attendanceSlice";
 import LeaveApplicationModal from "../../components/LeaveApplicationModal";
 
 export default function MonthlyTimesheet({ onBack }) {
@@ -39,6 +39,8 @@ export default function MonthlyTimesheet({ onBack }) {
   const [monthDays, setMonthDays] = useState([]);
 
   const leaveTypes = ["CL", "SL", "PL", "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave"];
+  const formatDate = (date) =>
+    `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
 
   const getMonthDays = (date) => {
     const year = date.getFullYear();
@@ -49,6 +51,7 @@ export default function MonthlyTimesheet({ onBack }) {
       const d = new Date(year, month, i);
       const dayName = d.toLocaleDateString("en-US", { weekday: "short" });
       days.push({
+        date: d, // store the actual date
         day: i,
         label: `${i}/${month + 1}/${dayName}`,
         isWeekend: dayName === "Sat" || dayName === "Sun",
@@ -56,6 +59,7 @@ export default function MonthlyTimesheet({ onBack }) {
     }
     return days;
   };
+
 
   const formatMonthRange = () => {
     const monthName = monthStart.toLocaleString("default", { month: "long" });
@@ -66,7 +70,6 @@ export default function MonthlyTimesheet({ onBack }) {
   useEffect(() => {
     const days = getMonthDays(monthStart);
     setMonthDays(days);
-
     setHours(Array(days.length).fill(0));
 
     setLeaveRows((prev) => {
@@ -86,35 +89,89 @@ export default function MonthlyTimesheet({ onBack }) {
     setMenuAnchor(null);
     setMenuRow(null);
   };
- const handleSaveMonth = async () => {
+  const { attendanceData, loading } = useSelector((state) => state.attendance);
+  const projectName_1 = projects[0]?.project?.name;
+  const ProjectID = projects[0]?.project?.id;
   const employeeId = projects[0]?.employeeId;
-  const weekStartDate = getMonday(weekStart);
-  const weekEnd = new Date(weekStartDate);
-  weekEnd.setDate(weekStartDate.getDate() + 6); // Sunday
+  useEffect(() => {
+    if (employeeId) {
+      const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
 
-  // Format in local time yyyy-MM-dd
-  const formattedWeekEnd = `${weekEnd.getFullYear()}-${(weekEnd.getMonth()+1)
-    .toString().padStart(2,'0')}-${weekEnd.getDate().toString().padStart(2,'0')}`;
-  const formattedStartEnd = `${weekStartDate.getFullYear()}-${(weekStartDate.getMonth()+1)
-    .toString().padStart(2,'0')}-${weekStartDate.getDate().toString().padStart(2,'0')}`;
-
-  try {
-    const resultAction = await dispatch(AttendanceReleaseMonth({
-      employeeId,
-      weekStart: formattedStartEnd,
-      weekEnd: formattedWeekEnd
-    }));
-
-    if (AttendanceReleaseWeek.fulfilled.match(resultAction)) {
-      toast.success("Week released successfully!");
-    } else {
-      throw new Error("Failed to release week");
+      dispatch(
+        AttendanceFetchExistingMonth({
+          employeeId,
+          startDate: formatDate(monthStart),
+          endDate: formatDate(monthEnd),
+        })
+      )
+        .then((res) => console.log("Existing Month data:", res.payload))
+        .catch((err) => console.error(err));
     }
-  } catch (err) {
-    console.log(err); // log the actual error
-    toast.error("Error releasing week!");
+  }, [employeeId, monthStart, dispatch]);
+
+  // include monthStart here
+ useEffect(() => {
+  if (attendanceData && monthDays.length > 0) {
+    // Worked hours row
+    const newHours = monthDays.map((day) => {
+      const record = attendanceData.find((a) => a.date === formatDate(day.date));
+      return record?.workedHours || 0;
+    });
+    setHours(newHours);
+
+    // Leave rows
+    const newLeaveRows = {};
+    const newUsedLeaveTypes = [];
+
+    leaveTypes.forEach((lt) => {
+      const row = monthDays.map((day) => {
+        // Find a record for this date and leaveType
+        const record = attendanceData.find(
+          (a) => a.date === formatDate(day.date) && a.leaveType === lt
+        );
+        return record ? record.hours || 9 : 0; // if leave exists, show hours, else 0
+      });
+
+      // Include leaveType if it exists in any record
+      if (row.some((v) => v > 0)) {
+        newLeaveRows[lt] = row;
+        newUsedLeaveTypes.push(lt);
+      }
+    });
+
+    setLeaveRows(newLeaveRows);
+    setUsedLeaveTypes(newUsedLeaveTypes);
   }
-};
+}, [attendanceData, monthDays]);
+
+
+
+
+  const handleSaveMonth = async () => {
+    const employeeId = projects[0]?.employeeId;
+    const today = new Date();
+    const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0); // last day of selected month
+
+    const formatDate = (date) =>
+      `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+
+    try {
+      const resultAction = await dispatch(AttendanceReleaseMonth({
+        employeeId,
+        monthStart: formatDate(monthStart),
+        monthEnd: formatDate(monthEnd)
+      }));
+
+      if (AttendanceReleaseWeek.fulfilled.match(resultAction)) {
+        toast.success("Week released successfully!");
+      } else {
+        throw new Error("Failed to release week");
+      }
+    } catch (err) {
+      console.log(err); // log the actual error
+      toast.error("Error releasing week!");
+    }
+  };
   const handleAddActivity = () => {
     if (leaveType === "Maternity Leave" || leaveType === "Paternity Leave") {
       setModalLeaveType(leaveType);
@@ -226,9 +283,8 @@ export default function MonthlyTimesheet({ onBack }) {
               min="0"
               max="9"
               disabled={monthDays[i].isWeekend}
-              className={`min-w-[70px] h-8 text-center border rounded-md mx-1 ${
-                monthDays[i].isWeekend ? "bg-gray-200 cursor-not-allowed" : "bg-white"
-              }`}
+              className={`min-w-[70px] h-8 text-center border rounded-md mx-1 ${monthDays[i].isWeekend ? "bg-gray-200 cursor-not-allowed" : "bg-white"
+                }`}
               onChange={(e) => {
                 const newHours = [...hours];
                 newHours[i] = e.target.value;
@@ -253,9 +309,8 @@ export default function MonthlyTimesheet({ onBack }) {
                 min="0"
                 max="9"
                 disabled={lockedRows[lt] || monthDays[i].isWeekend}
-                className={`min-w-[70px] h-8 text-center border rounded-md mx-1 ${
-                  monthDays[i].isWeekend ? "bg-gray-200 cursor-not-allowed" : "bg-white"
-                }`}
+                className={`min-w-[70px] h-8 text-center border rounded-md mx-1 ${monthDays[i].isWeekend ? "bg-gray-200 cursor-not-allowed" : "bg-white"
+                  }`}
                 onChange={(e) => {
                   const updated = [...leaveRows[lt]];
                   updated[i] = e.target.value;

@@ -29,6 +29,7 @@ import ProjectDashboard from "../pages/dashbaord/ProjectDashboard";
 import Letters from "../pages/documents/Letters";
 import MonthlyTimesheet from "../pages/Attendance/MonthlyTimesheet";
 import MaternityPaternityLeaveTable from "../pages/Attendance/MaternityPaternityLeaveTable";
+import EmpAttendanceDashboard from "../pages/dashbaord/EmpAttendanceDashboard";
 
 function AppRoutes() {
   return (
@@ -41,6 +42,7 @@ function AppRoutes() {
       <Route path="/superadmin/login" element={<SuperAdminLogin />} />
       <Route path="/superadmin/register" element={<SuperAdminRegister />} />
       <Route path="/login/reset-password" element={<ResetPassword />} />
+
 
       <Route path="/attendance/emptimesheet" element={<EmpTimesheet />} />
       <Route path="/attendance/timesheet" element={<Timesheet />} />
@@ -90,8 +92,16 @@ function AppRoutes() {
             <ProtectedRoute allowedRoles={["employee"]}>
               <EmployeeProfile/>
             </ProtectedRoute>
-          }
-        />
+          }/>
+
+          <Route
+  path="/dashboard/emp_attendance"
+  element={
+    <ProtectedRoute allowedRoles={["employee","admin"]}>
+      <EmpAttendanceDashboard />
+    </ProtectedRoute>
+  }
+/>
        
 
 

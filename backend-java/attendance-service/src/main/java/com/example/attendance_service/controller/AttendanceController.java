@@ -64,6 +64,18 @@ public class AttendanceController {
         return attendanceService.getAttendanceForWeek(employeeId, projectId, weekStart);
     }
       
+    @GetMapping("/month/range")
+    public List<AttendanceEntity> getAttendanceForMonthRange(
+            @RequestParam UUID employeeId,          // required: specific employee
+            @RequestParam String startDate,        // format: yyyy-MM-dd
+            @RequestParam String endDate) {        // format: yyyy-MM-dd
+
+        LocalDate start = LocalDate.parse(startDate.trim());
+        LocalDate end = LocalDate.parse(endDate.trim());
+
+        return attendanceService.getAttendanceForMonthRange(employeeId, start, end);
+    }
+
     @PostMapping("/release-weekly")
     public ResponseEntity<String> releaseWeekly(
             @RequestParam UUID employeeId,

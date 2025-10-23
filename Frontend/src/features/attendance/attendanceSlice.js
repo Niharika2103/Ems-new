@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { AttendanceSaveallApi,AttendanceFetchAllApi ,AttendanceFetchExistingWeekApi,
-  AttendanceReleaseMonthApi,
+  AttendanceReleaseMonthApi,AttendanceFetchExistingMonthApi,
   AttendanceFetchByEmployeeProjectApi,AttendanceReleaseWeekApi} from "../../api/authApi";
 
 export const AttendanceSaveall = createAsyncThunk("attendance/saveall", async ({ employeeId, projectId, formData }, thunkAPI) => {
@@ -12,14 +12,18 @@ export const AttendanceSaveall = createAsyncThunk("attendance/saveall", async ({
   }
 })
 
-// export const AttendancCurrentWeek= createAsyncThunk("attendance/currentweek", async ({ employeeId, projectId }, thunkAPI) => {
-//   try {
-//     const res = await AttendanceFetchCurrentWeekApi( employeeId, projectId );
-//     return res.data;
-//   } catch (err) {
-//     return thunkAPI.rejectWithValue(err.response?.data || err.message);
-//   }
-// })
+export const AttendanceFetchExistingMonth = createAsyncThunk(
+  "attendance/currentmonth",
+  async ({ employeeId, startDate, endDate }, thunkAPI) => {
+    try {
+      const res = await AttendanceFetchExistingMonthApi({ employeeId, startDate, endDate });
+      return res.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+
 
 // slice/attendanceSlice.js
 export const AttendanceFetchExistingWeek = createAsyncThunk(
@@ -80,7 +84,7 @@ const attendanceSlice = createSlice({
   name: "attendance",
   initialState: {
     attendance:[],
-     attendanceData: [], // 
+     attendanceData: [], 
       loading: false,
     error: null,
   },
@@ -98,7 +102,7 @@ const attendanceSlice = createSlice({
       .addCase(AttendanceSaveall.pending, (state) => {
         state.loading = true;
       })
-      .addCase(AttendanceSaveall.fulfilled, (state) => {
+      .addCase(AttendanceSaveall.fulfilled, (state,action ) => {
         state.loading = false;
         state.attendanceData = action.payload; 
       })
@@ -106,17 +110,17 @@ const attendanceSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      // .addCase(AttendancCurrentWeek.pending, (state) => {
-      //   state.loading = true;
-      // })
-      // .addCase(AttendancCurrentWeek.fulfilled, (state,action) => {
-      //   state.loading = false;
-      //   state.attendanceData = action.payload; 
-      // })
-      // .addCase(AttendancCurrentWeek.rejected, (state, action) => {
-      //   state.loading = false;
-      //   state.error = action.payload;
-      // })
+      .addCase(AttendanceFetchExistingMonth.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(AttendanceFetchExistingMonth.fulfilled, (state,action) => {
+        state.loading = false;
+        state.attendanceData = action.payload; 
+      })
+      .addCase(AttendanceFetchExistingMonth.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
        .addCase(AttendanceFetchExistingWeek.pending, (state) => {
       state.loading = true;
     })

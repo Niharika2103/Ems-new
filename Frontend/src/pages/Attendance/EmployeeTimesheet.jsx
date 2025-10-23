@@ -32,7 +32,6 @@ export default function EmpTimesheet() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
    const { attendanceData, loading } = useSelector((state) => state.attendance);
-   console.log(attendanceData,"attendanceData") // 👈 fetched data
   const projectName = projects[0]?.project?.name;
   const ProjectID = projects[0]?.project?.id;
   const employeeId = projects[0]?.employeeId;
@@ -238,7 +237,7 @@ useEffect(() => {
   const employeeId = projects[0]?.employeeId;
   const projectId = projects[0]?.project?.id;
   const monday = getMonday(weekStart);
-
+console.log(monday,"monday")
   const dataToSend = days.map((_, i) => {
     const currentDate = new Date(monday);
     currentDate.setDate(monday.getDate() + i);
@@ -256,7 +255,9 @@ useEffect(() => {
     }
 
     return {
-      date: currentDate.toISOString().split("T")[0],
+    date: new Date(currentDate.getTime() - currentDate.getTimezoneOffset() * 60000)
+  .toISOString()
+  .split("T")[0],
       workedHours: Number(hours[i]) || 0,
       leaveType: appliedLeaveType || "",
     };
