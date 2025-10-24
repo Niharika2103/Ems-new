@@ -41,5 +41,5 @@ public interface AttendanceRepository extends JpaRepository<AttendanceEntity, UU
 		    LocalDate startDate,
 		    LocalDate endDate
 		);
-
+	
 }

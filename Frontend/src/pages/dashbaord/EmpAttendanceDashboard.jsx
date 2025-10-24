@@ -31,7 +31,7 @@ const EmpAttendanceDashboard = () => {
       icon: DescriptionIcon,
       iconBg: "bg-purple-100",
       iconColor: "text-purple-600",
-      onClick: () => navigate("/dashboard/"),
+      onClick: () => navigate("/dashboard/employee/leave"),
     },
     ];
 

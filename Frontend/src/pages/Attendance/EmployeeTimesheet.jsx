@@ -26,15 +26,18 @@ import {
 } from "../../features/attendance/attendanceSlice";
 import LeaveApplicationModal from "../../components/LeaveApplicationModal";
 import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 export default function EmpTimesheet() {
   const { projects } = useSelector((state) => state.project);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-   const { attendanceData, loading } = useSelector((state) => state.attendance);
-  const projectName = projects[0]?.project?.name;
-  const ProjectID = projects[0]?.project?.id;
-  const employeeId = projects[0]?.employeeId;
+  const { attendanceData, loading } = useSelector((state) => state.attendance);
+  const [projectDetails, setProjectDetails] = useState(null);
+
+  const projectName = projectDetails?.projectName;
+  const ProjectID = projectDetails?.ProjectID;
+  const employeeId = projectDetails?.employeeId;
 
   const [leaveType, setLeaveType] = useState("CL");
   const [hours, setHours] = useState(Array(7).fill(0));
@@ -46,7 +49,7 @@ export default function EmpTimesheet() {
   const [weekStart, setWeekStart] = useState(getMonday(new Date()));
   const [calendarAnchor, setCalendarAnchor] = useState(null);
   const [isWeekComplete, setIsWeekComplete] = useState(false);
- const[selectDate,setSelectDate]=useState(new Date());
+  const [selectDate, setSelectDate] = useState(new Date());
   const [leaveModalOpen, setLeaveModalOpen] = useState(false);
   const [modalLeaveType, setModalLeaveType] = useState("");
 
@@ -55,24 +58,16 @@ export default function EmpTimesheet() {
   const leaveTypes = ["CL", "SL", "PL", "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave"];
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-  // useEffect(() => {
-  // if (employeeId && ProjectID) {
-  //   // dispatch(AttendanceFetchByEmployeeProject({ employeeId, projectId: ProjectID }));
-  //   dispatch(AttendancCurrentWeek({ employeeId, projectId: ProjectID }))
-  // .then((res) => {
-  //   console.log("✅ Success:", res);
-  // })
-  // .catch((err) => {
-  //   console.error("❌ Error:", err);
-  // });
-
-
-//   }
-// }, [dispatch, employeeId, ProjectID]);
-
-// Populate hours + leaveRows when attendanceData arrives
-
-
+  // Fetch from localStorage when page loads
+  useEffect(() => {
+    const storedData = localStorage.getItem("ProjectDetails");
+    if (storedData) {
+      const parsed = JSON.parse(storedData);
+      setProjectDetails(parsed);
+    } else {
+      console.log("No ProjectDetails found");
+    }
+  }, []);
 
 
   useEffect(() => {
@@ -86,82 +81,79 @@ export default function EmpTimesheet() {
   }, [hours, leaveRows, usedLeaveTypes]);
 
   function getMonday(d) {
-  d = new Date(d);
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday
-  return new Date(d.setDate(diff));
-}
-
-function formatDateRange() {
-  const monday = getMonday(weekStart);
-  const endDate = new Date(monday);
-  endDate.setDate(monday.getDate() + 6); // add 6 days to monday
-
-  const fmt = (d) =>
-    `${d.getDate().toString().padStart(2, "0")}/${
-      (d.getMonth() + 1).toString().padStart(2, "0")
-    }/${d.getFullYear()}`;
-
-  return `${fmt(monday)} - ${fmt(endDate)}`;
-}
-
- 
-
-//while chnaging date get all datas 
-useEffect(() => {
-  if (employeeId && ProjectID && weekStart) {
-    const mondayDate = selectDate.getFullYear() + '-' +
-                   String(selectDate.getMonth() + 1).padStart(2, '0') + '-' +
-                   String(selectDate.getDate()).padStart(2, '0');
-    dispatch(
-      AttendanceFetchExistingWeek({ 
-        employeeId, 
-        projectId: ProjectID, 
-        startDate: mondayDate 
-      })
-    )
-      .then((res) => console.log("Existing week data:", res.payload))
-      .catch((err) => console.error(err));
+    d = new Date(d);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Monday
+    return new Date(d.setDate(diff));
   }
-}, [employeeId, ProjectID, weekStart, dispatch]); // 🔹 depends on weekStart
 
-useEffect(() => {
-  if (attendanceData?.length > 0) {
-    const newHours = Array(7).fill(0);
-    const newLeaveRows = {}; // dynamic object to store leave rows
-    // const monday = getMonday(weekStart);
+  function formatDateRange() {
+    const monday = getMonday(weekStart);
+    const endDate = new Date(monday);
+    endDate.setDate(monday.getDate() + 6); // add 6 days to monday
 
-    const dayDiff = (d1, d2) => {
-      const date1 = new Date(d1.toDateString());
-      const date2 = new Date(d2.toDateString());
-      return Math.floor((date1 - date2) / (1000 * 60 * 60 * 24));
-    };
+    const fmt = (d) =>
+      `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")
+      }/${d.getFullYear()}`;
 
-    attendanceData.forEach((entry) => {
-      const entryDate = new Date(entry.date);
-      const dayIndex = dayDiff(entryDate, weekStart);
+    return `${fmt(monday)} - ${fmt(endDate)}`;
+  }
 
-      if (dayIndex >= 0 && dayIndex < 7) {
-        // Worked hours
-        newHours[dayIndex] = entry.workedHours || 0;
+  //while chnaging date get all datas 
+  useEffect(() => {
+    if (employeeId && ProjectID && weekStart) {
+      const mondayDate = selectDate.getFullYear() + '-' +
+        String(selectDate.getMonth() + 1).padStart(2, '0') + '-' +
+        String(selectDate.getDate()).padStart(2, '0');
+      dispatch(
+        AttendanceFetchExistingWeek({
+          employeeId,
+          projectId: ProjectID,
+          startDate: mondayDate
+        })
+      )
+        .then((res) => console.log("Existing week data:", res.payload))
+        .catch((err) => console.error(err));
+    }
+  }, [employeeId, ProjectID, weekStart, dispatch]); // 🔹 depends on weekStart
 
-        // Leave hours
-        if (entry.leaveType && entry.leaveType !== "") {
-          if (!newLeaveRows[entry.leaveType]) {
-            newLeaveRows[entry.leaveType] = Array(7).fill(0);
+  useEffect(() => {
+    if (attendanceData?.length > 0) {
+      const newHours = Array(7).fill(0);
+      const newLeaveRows = {}; // dynamic object to store leave rows
+      // const monday = getMonday(weekStart);
+
+      const dayDiff = (d1, d2) => {
+        const date1 = new Date(d1.toDateString());
+        const date2 = new Date(d2.toDateString());
+        return Math.floor((date1 - date2) / (1000 * 60 * 60 * 24));
+      };
+
+      attendanceData.forEach((entry) => {
+        const entryDate = new Date(entry.date);
+        const dayIndex = dayDiff(entryDate, weekStart);
+
+        if (dayIndex >= 0 && dayIndex < 7) {
+          // Worked hours
+          newHours[dayIndex] = entry.workedHours || 0;
+
+          // Leave hours
+          if (entry.leaveType && entry.leaveType !== "") {
+            if (!newLeaveRows[entry.leaveType]) {
+              newLeaveRows[entry.leaveType] = Array(7).fill(0);
+            }
+            // Set the leave value for that day
+            newLeaveRows[entry.leaveType][dayIndex] = entry.totalWorkedHours || 9;
           }
-          // Set the leave value for that day
-          newLeaveRows[entry.leaveType][dayIndex] = entry.totalWorkedHours || 9;
         }
-      }
-    });
+      });
 
-    setHours(newHours);
-    setLeaveRows(newLeaveRows);
-    setUsedLeaveTypes(Object.keys(newLeaveRows));
-    console.log("✅ Week hours and leaveRows dynamically updated:", newHours, newLeaveRows);
-  }
-}, [attendanceData, weekStart]);
+      setHours(newHours);
+      setLeaveRows(newLeaveRows);
+      setUsedLeaveTypes(Object.keys(newLeaveRows));
+      console.log("✅ Week hours and leaveRows dynamically updated:", newHours, newLeaveRows);
+    }
+  }, [attendanceData, weekStart]);
 
   const handleMenuOpen = (e, row) => {
     setMenuAnchor(e.currentTarget);
@@ -232,86 +224,86 @@ useEffect(() => {
     handleMenuClose();
   };
 
-       
+
   const handleSaveAll = async () => {
-  const employeeId = projects[0]?.employeeId;
-  const projectId = projects[0]?.project?.id;
-  const monday = getMonday(weekStart);
-console.log(monday,"monday")
-  const dataToSend = days.map((_, i) => {
-    const currentDate = new Date(monday);
-    currentDate.setDate(monday.getDate() + i);
+    const employeeId = projectDetails?.employeeId;
+    const projectId = projectDetails?.projectId;
+    const monday = getMonday(weekStart);
+    console.log(monday, "monday")
+    const dataToSend = days.map((_, i) => {
+      const currentDate = new Date(monday);
+      currentDate.setDate(monday.getDate() + i);
 
-    let appliedLeaveType = "";
-    for (const lt of usedLeaveTypes) {
-      const period = leavePeriods.find(p => p.type === lt);
-      if (period && currentDate >= period.startDate && currentDate <= period.endDate) {
-        appliedLeaveType = lt;
-        break;
-      } else if (leaveRows[lt][i] && leaveRows[lt][i] !== 0 && leaveRows[lt][i] !== "") {
-        appliedLeaveType = lt;
-        break;
+      let appliedLeaveType = "";
+      for (const lt of usedLeaveTypes) {
+        const period = leavePeriods.find(p => p.type === lt);
+        if (period && currentDate >= period.startDate && currentDate <= period.endDate) {
+          appliedLeaveType = lt;
+          break;
+        } else if (leaveRows[lt][i] && leaveRows[lt][i] !== 0 && leaveRows[lt][i] !== "") {
+          appliedLeaveType = lt;
+          break;
+        }
       }
-    }
 
-    return {
-    date: new Date(currentDate.getTime() - currentDate.getTimezoneOffset() * 60000)
-  .toISOString()
-  .split("T")[0],
-      workedHours: Number(hours[i]) || 0,
-      leaveType: appliedLeaveType || "",
-    };
-  });
+      return {
+        date: new Date(currentDate.getTime() - currentDate.getTimezoneOffset() * 60000)
+          .toISOString()
+          .split("T")[0],
+        workedHours: Number(hours[i]) || 0,
+        leaveType: appliedLeaveType || "",
+      };
+    });
 
-  try {
-    const resultAction = await dispatch(
-      AttendanceSaveall({ employeeId, projectId, formData: dataToSend }) // ✅ use projectId
-    );
+    try {
+      const resultAction = await dispatch(
+        AttendanceSaveall({ employeeId, projectId, formData: dataToSend }) // ✅ use projectId
+      );
 
-    // Check for error in payload
-    if (resultAction.error) {
-      console.error("Save error:", resultAction.error);
+      // Check for error in payload
+      if (resultAction.error) {
+        console.error("Save error:", resultAction.error);
+        toast.error("Error saving attendance!");
+      } else {
+        toast.success("Saved successfully");
+        dispatch(setAttendanceData(dataToSend));
+      }
+    } catch (err) {
+      console.error("Unexpected error:", err);
       toast.error("Error saving attendance!");
-    } else {
-      toast.success("Saved successfully");
-      dispatch(setAttendanceData(dataToSend));
     }
-  } catch (err) {
-    console.error("Unexpected error:", err);
-    toast.error("Error saving attendance!");
-  }
-};
+  };
 
 
   const handleSaveWeek = async () => {
-  const employeeId = projects[0]?.employeeId;
-  const weekStartDate = getMonday(weekStart);
-  const weekEnd = new Date(weekStartDate);
-  weekEnd.setDate(weekStartDate.getDate() + 6); // Sunday
+    const employeeId = projects[0]?.employeeId;
+    const weekStartDate = getMonday(weekStart);
+    const weekEnd = new Date(weekStartDate);
+    weekEnd.setDate(weekStartDate.getDate() + 6); // Sunday
 
-  // Format in local time yyyy-MM-dd
-  const formattedWeekEnd = `${weekEnd.getFullYear()}-${(weekEnd.getMonth()+1)
-    .toString().padStart(2,'0')}-${weekEnd.getDate().toString().padStart(2,'0')}`;
-  const formattedStartEnd = `${weekStartDate.getFullYear()}-${(weekStartDate.getMonth()+1)
-    .toString().padStart(2,'0')}-${weekStartDate.getDate().toString().padStart(2,'0')}`;
+    // Format in local time yyyy-MM-dd
+    const formattedWeekEnd = `${weekEnd.getFullYear()}-${(weekEnd.getMonth() + 1)
+      .toString().padStart(2, '0')}-${weekEnd.getDate().toString().padStart(2, '0')}`;
+    const formattedStartEnd = `${weekStartDate.getFullYear()}-${(weekStartDate.getMonth() + 1)
+      .toString().padStart(2, '0')}-${weekStartDate.getDate().toString().padStart(2, '0')}`;
 
-  try {
-    const resultAction = await dispatch(AttendanceReleaseWeek({
-      employeeId,
-      weekStart: formattedStartEnd,
-      weekEnd: formattedWeekEnd
-    }));
+    try {
+      const resultAction = await dispatch(AttendanceReleaseWeek({
+        employeeId,
+        weekStart: formattedStartEnd,
+        weekEnd: formattedWeekEnd
+      }));
 
-    if (AttendanceReleaseWeek.fulfilled.match(resultAction)) {
-      toast.success("Week released successfully!");
-    } else {
-      throw new Error("Failed to release week");
+      if (AttendanceReleaseWeek.fulfilled.match(resultAction)) {
+        toast.success("Week released successfully!");
+      } else {
+        throw new Error("Failed to release week");
+      }
+    } catch (err) {
+      console.log(err); // log the actual error
+      toast.error("Error releasing week!");
     }
-  } catch (err) {
-    console.log(err); // log the actual error
-    toast.error("Error releasing week!");
-  }
-};
+  };
 
 
   const handleCalendarChange = (date) => {
@@ -347,15 +339,15 @@ console.log(monday,"monday")
             anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
           >
             <div className="p-2">
-              <Calendar onChange={handleCalendarChange} value={weekStart} className="custom-calendar"  tileDisabled={({ date, view }) => {
-    if (view === 'month') {
-      const selectedWeekMonday = getMonday(date);
-      const currentWeekMonday = getMonday(new Date());
-      // Disable if the week is in future
-      return selectedWeekMonday > currentWeekMonday;
-    }
-    return false;
-  }}/>
+              <Calendar onChange={handleCalendarChange} value={weekStart} className="custom-calendar" tileDisabled={({ date, view }) => {
+                if (view === 'month') {
+                  const selectedWeekMonday = getMonday(date);
+                  const currentWeekMonday = getMonday(new Date());
+                  // Disable if the week is in future
+                  return selectedWeekMonday > currentWeekMonday;
+                }
+                return false;
+              }} />
             </div>
           </Popover>
         </div>
@@ -366,9 +358,9 @@ console.log(monday,"monday")
 
         <div className="w-32">
           <div className="flex items-center gap-2 bg-white shadow-sm rounded-2xl px-2 py-1">
-            <span className="font-small text-[#51b4f2]">Employee</span>
+            <span className="font-small text-[#51b4f2]">{projectDetails?.username}</span>
             <img
-              src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/..."
+              src="data:image/jpeg;base64,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"
               alt="User"
               className="rounded-full w-8 h-8 border border-white"
             />
@@ -411,9 +403,8 @@ console.log(monday,"monday")
                 min="0"
                 max="9"
                 disabled={isWeekend}
-                className={`w-17 h-8 text-center border rounded-md ${
-                  isWeekend ? "bg-gray-200 cursor-not-allowed" : "bg-white"
-                }`}
+                className={`w-17 h-8 text-center border rounded-md ${isWeekend ? "bg-gray-200 cursor-not-allowed" : "bg-white"
+                  }`}
                 onChange={(e) => {
                   const newHours = [...hours];
                   newHours[i] = e.target.value;
@@ -448,9 +439,8 @@ console.log(monday,"monday")
                   type="text"
                   value={displayValue}
                   disabled={lockedRows[lt] || isWeekend || isSpecialLeave}
-                  className={`w-17 h-8 text-center border rounded-md ${
-                    isWeekend || isSpecialLeave ? "bg-gray-200 cursor-not-allowed" : "bg-white"
-                  }`}
+                  className={`w-17 h-8 text-center border rounded-md ${isWeekend || isSpecialLeave ? "bg-gray-200 cursor-not-allowed" : "bg-white"
+                    }`}
                   onChange={(e) => {
                     if (!isSpecialLeave) {
                       const updated = [...leaveRows[lt]];

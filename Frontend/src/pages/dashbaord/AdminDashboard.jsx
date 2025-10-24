@@ -7,6 +7,8 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 import SettingsIcon from "@mui/icons-material/Settings";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import PersonIcon from "@mui/icons-material/Person";
+import AssignmentIcon from "@mui/icons-material/Assignment";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -22,33 +24,29 @@ const AdminDashboard = () => {
       onClick: () => navigate("/dashboard/emp_requestTable"),
     },
     {
-      title: "Employee Info",
-      // value: "18",
-      message: "Check your daily attendance",
-      icon: AccessTimeIcon,
-      iconBg: "bg-sky-100",
-      iconColor: "text-sky-600",
-      onClick: () => navigate("/dashboard/emp_info"),
-    },
-    {
-      title: "Attendance",
-      // value: "18",
-      message: "Check your daily attendance",
-      icon: AccessTimeIcon,
-      iconBg: "bg-sky-100",
-      iconColor: "text-sky-600",
-      onClick:()=>navigate("/dashboard/attendance"),
-    },
-    {
-      title: "Projects",
-
-      // value: "18",
-      message: "Check All Projects",
-      icon: AccessTimeIcon,
-      iconBg: "bg-sky-100",
-      iconColor: "text-sky-600",
-      onClick: () => navigate("/dashboard/fetch_project"),
-    },
+    title: "Employee Info",
+    message: "View and manage employee details",
+    icon: PersonIcon,
+    iconBg: "bg-sky-100",
+    iconColor: "text-sky-600",
+    onClick: () => navigate("/dashboard/emp_info"),
+  },
+  {
+    title: "Attendance",
+    message: "Check your daily attendance records",
+    icon: AccessTimeIcon,
+    iconBg: "bg-orange-100",
+    iconColor: "text-orange-600",
+    onClick: () => navigate("/dashboard/attendance"),
+  },
+  {
+    title: "Projects",
+    message: "View all assigned and active projects",
+    icon: AssignmentIcon,
+    iconBg: "bg-green-100",
+    iconColor: "text-green-600",
+    onClick: () => navigate("/dashboard/fetch_project"),
+  },
     {
       title: "Reports",
       message: "View performance reports",
