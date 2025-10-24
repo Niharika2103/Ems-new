@@ -3,7 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth.routes.js"; 
 import path from "path";
-
+import pool from "./config/db.js"; 
 dotenv.config();
 const app = express();
 
@@ -16,6 +16,17 @@ app.use('/uploads', express.static(path.join(path.resolve(), 'uploads')));
 app.use(express.json());
 
 app.use("/auth", authRoutes);
+
+// Test PostgreSQL connection on startup
+(async () => {
+  try {
+    await pool.query("SELECT NOW()");
+    console.log("✅ Connected to PostgreSQL successfully");
+    console.log("✅ PostgreSQL connection verified successfully");
+  } catch (err) {
+    console.error("❌ Database connection failed:", err.message);
+  }
+})();
 
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => console.log(`Auth service running on port ${PORT}`));
