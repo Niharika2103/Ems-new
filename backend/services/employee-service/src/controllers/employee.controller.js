@@ -1106,7 +1106,7 @@ export const applyParentalLeave = async (req, res) => {
       worked_hours: 0,
       working_days: 0,
       work_from_home: 0,
-      holidays: 0,
+      holidays: 10,
       optional_holidays: 0,
       el: 0,
       sl: 0,
