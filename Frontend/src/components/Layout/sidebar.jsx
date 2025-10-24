@@ -15,14 +15,14 @@ const Sidebar = ({ isOpen }) => {
   const roleMenus = {
     employee: [
       { name: "Dashboard", icon: <Home size={20} />, path: "/dashboard" },
-      { name: "Attendance", icon: <Calendar size={20} />, path: "/attendance" },
+      { name: "Attendance", icon: <Calendar size={20} />, path: "/dashboard/emp_attendance" },
       { name: "HR", icon: <CheckSquare size={20} />, path: "/hr" },
       { name: "Payslip", icon: <Users size={20} />, path: "/slip" },
     ],
     admin: [
       { name: "Dashboard", icon: <Home size={20} />, path: "/dashboard" },
-      { name: "Manage Employees", icon: <Users size={20} />, path: "/manage-employees" },
-      { name: "Attendance", icon: <Calendar size={20} />, path: "/attendance" },
+      { name: "Manage Employees", icon: <Users size={20} />, path: "/dashboard/emp_requestTable" },
+      { name: "Attendance", icon: <Calendar size={20} />, path: "/dashboard/attendance" },
       { name: "Reports", icon: <CheckSquare size={20} />, path: "/reports" },
       { name: "Accounts", icon: <Calendar size={20} />, path: "/accounts" },
       { name: "Settings", icon: <Settings size={20} />, path: "/settings" },

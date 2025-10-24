@@ -23,8 +23,6 @@ import LeaveApplicationModal from "../../components/LeaveApplicationModal";
 export default function MonthlyTimesheet({ onBack }) {
   const { projects } = useSelector((state) => state.project);
   const dispatch = useDispatch();
-  const projectName = projects[0]?.project?.name;
-
   const [leaveType, setLeaveType] = useState("CL");
   const [hours, setHours] = useState([]);
   const [usedLeaveTypes, setUsedLeaveTypes] = useState(["CL"]);
@@ -90,9 +88,23 @@ export default function MonthlyTimesheet({ onBack }) {
     setMenuRow(null);
   };
   const { attendanceData, loading } = useSelector((state) => state.attendance);
-  const projectName_1 = projects[0]?.project?.name;
-  const ProjectID = projects[0]?.project?.id;
-  const employeeId = projects[0]?.employeeId;
+  const [projectDetails, setProjectDetails] = useState(null);
+  
+    const projectName = projectDetails?.projectName;
+    const ProjectID = projectDetails?.ProjectID;
+    const employeeId = projectDetails?.employeeId;
+  
+  
+    // Fetch from localStorage when page loads
+    useEffect(() => {
+      const storedData = localStorage.getItem("ProjectDetails");
+      if (storedData) {
+        const parsed = JSON.parse(storedData);
+        setProjectDetails(parsed);
+      } else {
+        console.log("No ProjectDetails found");
+      }
+    }, []);
   useEffect(() => {
     if (employeeId) {
       const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);

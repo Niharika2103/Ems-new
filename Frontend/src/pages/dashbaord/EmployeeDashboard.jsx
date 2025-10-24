@@ -4,16 +4,17 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import PeopleIcon from "@mui/icons-material/People";
 import ReceiptIcon from "@mui/icons-material/Receipt";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import PersonIcon from "@mui/icons-material/Person";
 
 const EmployeeDashboard = () => {
   const navigate = useNavigate();
 
   const stats = [
     {
-      title: "Employee Info ",
+    title: "Employee Info ",
       // value: "18",
-      message: "Check your daily attendance",
-      icon: AccessTimeIcon,
+    message: "View your details",
+    icon: PersonIcon,
       iconBg: "bg-sky-100",
       iconColor: "text-sky-600",
       onClick: () => navigate("/dashboard/emp_info"),
@@ -21,7 +22,6 @@ const EmployeeDashboard = () => {
 
     {
       title: "Attendance",
-
       // value: "18",
       message: "Check your daily attendance",
       icon: AccessTimeIcon,

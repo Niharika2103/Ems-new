@@ -1,4 +1,3 @@
-// src/pages/ProjectForm.jsx
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -8,14 +7,18 @@ import {
   Typography,
   CircularProgress,
   Alert,
+  MenuItem,
+  Paper,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { ProjectSave } from "../../features/Project/projectsSlice";
+import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
 
 const ProjectForm = () => {
   const dispatch = useDispatch();
   const { loading, error } = useSelector((state) => state.project);
-const navigate = useNavigate();
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -34,7 +37,7 @@ const navigate = useNavigate();
     try {
       const resultAction = await dispatch(ProjectSave(formData));
       if (ProjectSave.fulfilled.match(resultAction)) {
-        alert("Project saved successfully!");
+        alert("✅ Project saved successfully!");
         setFormData({
           name: "",
           description: "",
@@ -52,88 +55,122 @@ const navigate = useNavigate();
   return (
     <Box
       sx={{
-        maxWidth: 500,
-        margin: "50px auto",
-        padding: 3,
-        border: "1px solid #ddd",
-        borderRadius: 2,
+        minHeight: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        p: 2,
+        overflowY: "auto",
       }}
     >
-      <Typography variant="h5" gutterBottom>
-        Add New Project
-      </Typography>
-
-      {error && <Alert severity="error">{error}</Alert>}
-
-      <form onSubmit={handleSubmit}>
-        <TextField
-          label="Project Name"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          fullWidth
-          margin="normal"
-          required
-        />
-
-        <TextField
-          label="Description"
-          name="description"
-          value={formData.description}
-          onChange={handleChange}
-          fullWidth
-          margin="normal"
-          multiline
-          rows={3}
-          required
-        />
-
-        <TextField
-          label="Start Date"
-          name="startDate"
-          type="datetime-local"
-          value={formData.startDate}
-          onChange={handleChange}
-          fullWidth
-          margin="normal"
-          InputLabelProps={{ shrink: true }}
-          required
-        />
-
-        <TextField
-          label="End Date"
-          name="endDate"
-          type="datetime-local"
-          value={formData.endDate}
-          onChange={handleChange}
-          fullWidth
-          margin="normal"
-          InputLabelProps={{ shrink: true }}
-          required
-        />
-
-        <TextField
-          label="Status"
-          name="status"
-          value={formData.status}
-          onChange={handleChange}
-          fullWidth
-          margin="normal"
-          required
-        />
-
-        <Box sx={{ mt: 2, display: "flex", justifyContent: "flex-end" }}>
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            disabled={loading}
-            startIcon={loading && <CircularProgress size={20} />}
-          >
-            {loading ? "Saving..." : "Save Project"}
-          </Button>
+      <Paper
+        elevation={4}
+        sx={{
+          width: "100%",
+          maxWidth: 500,
+          p: { xs: 3, sm: 4 },
+          borderRadius: 3,
+        }}
+      >
+        {/* Header */}
+        <Box textAlign="center" mb={3}>
+          <WorkOutlineIcon sx={{ fontSize: 40, color: "primary.main", mb: 1 }} />
+          <Typography variant="h5" fontWeight={600}>
+            Add New Project
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Fill in the details to create a new project
+          </Typography>
         </Box>
-      </form>
+
+        {/* Error Message */}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+
+        {/* Form */}
+        <form onSubmit={handleSubmit}>
+          <Box display="flex" flexDirection="column" gap={2}>
+            <TextField
+              label="Project Name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              fullWidth
+              required
+            />
+
+            <TextField
+              label="Description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              fullWidth
+              multiline
+              rows={3}
+              required
+            />
+
+            <TextField
+              label="Start Date"
+              name="startDate"
+              type="datetime-local"
+              value={formData.startDate}
+              onChange={handleChange}
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+              required
+            />
+
+            <TextField
+              label="End Date"
+              name="endDate"
+              type="datetime-local"
+              value={formData.endDate}
+              onChange={handleChange}
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+              required
+            />
+
+            <TextField
+              select
+              label="Status"
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+              fullWidth
+              required
+            >
+              <MenuItem value="IN_PROGRESS">In Progress</MenuItem>
+              <MenuItem value="COMPLETED">Completed</MenuItem>
+              <MenuItem value="ON_HOLD">On Hold</MenuItem>
+            </TextField>
+
+            <Box textAlign="right" mt={2}>
+              <Button
+                type="submit"
+                variant="contained"
+                color="primary"
+                size="large"
+                disabled={loading}
+                startIcon={loading && <CircularProgress size={20} color="inherit" />}
+                sx={{
+                  textTransform: "none",
+                  borderRadius: 2,
+                  px: 3,
+                  py: 1,
+                  fontWeight: 600,
+                }}
+              >
+                {loading ? "Saving..." : "Save Project"}
+              </Button>
+            </Box>
+          </Box>
+        </form>
+      </Paper>
     </Box>
   );
 };

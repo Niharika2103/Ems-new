@@ -28,6 +28,7 @@ import TimesheetTable from "../pages/Attendance/Timesheettable";
 import ProjectDashboard from "../pages/dashbaord/ProjectDashboard";
 import Letters from "../pages/documents/Letters";
 import MonthlyTimesheet from "../pages/Attendance/MonthlyTimesheet";
+import EmployeeLeave from "../pages/Attendance/EmployeeLeave";
 import MaternityPaternityLeaveTable from "../pages/Attendance/MaternityPaternityLeaveTable";
 import EmpAttendanceDashboard from "../pages/dashbaord/EmpAttendanceDashboard";
 
@@ -65,6 +66,11 @@ function AppRoutes() {
           }
         />
 
+        <Route path="dashboard/employee/leave" element={
+            <ProtectedRoute allowedRoles={["employee"]}>
+              <EmployeeLeave />
+            </ProtectedRoute>
+          }/>
         <Route
           path="/cal"
           element={
