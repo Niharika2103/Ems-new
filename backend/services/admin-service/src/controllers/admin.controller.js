@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import supabase from "../supabaseClient.js";
+import pool from "../config/db.js";
 import speakeasy from "speakeasy";
 import qrcode from "qrcode";
 import { sendEmail } from "../services/emailserviceadmin.js";
@@ -8,9 +8,9 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 // ✅ Updated table names
-const USER_MASTER_TABLE = "user_employees_master";
-const REGISTRATIONS_TABLE = "registrations";
-const SUPERADMINS_TABLE = "super_admins";
+const USER_MASTER_TABLE = "ems.user_employees_master";
+const REGISTRATIONS_TABLE = "ems.registrations";
+const SUPERADMINS_TABLE = "ems.super_admins";
 
 // ================== Multer Config ==================
 const uploadDir = path.join(process.cwd(), "src/uploads");
@@ -232,74 +232,45 @@ function getUserFromToken(req) {
 
 
 export const adminRegister = async (req, res) => {
+  const client = await pool.connect();
   try {
     const { fullName, email, password } = req.body;
-    const role = "admin";
-
     if (!fullName || !email || !password) {
-      return res.status(400).json({
-        error: "Name, email, and password are required",
-      });
+      return res.status(400).json({ error: "Name, email, and password are required" });
     }
 
     // Check if user exists
-    const { data: existingUser, error: fetchError } = await supabase
-      .from(USER_MASTER_TABLE)
-      .select("*")
-      .eq("email", email)
-      .maybeSingle();
+    const existingUserResult = await client.query(
+      `SELECT * FROM ${USER_MASTER_TABLE} WHERE email = $1`,
+      [email]
+    );
+    const existingUser = existingUserResult.rows[0];
 
-    if (fetchError) throw fetchError;
-
-    // Block superadmin emails
     if (existingUser && existingUser.role === "superadmin") {
-      return res.status(400).json({
-        error: "Email belongs to a SuperAdmin.",
-      });
+      return res.status(400).json({ error: "Email belongs to a SuperAdmin." });
     }
 
-    //  CASE 1: New admin (not promoted)
+    // CASE 1: New admin
     if (!existingUser) {
       const hashedPassword = await bcrypt.hash(password, 10);
-      const secret = speakeasy.generateSecret({
-        name: `EMS-${email}`,
-        issuer: "EMS Admin",
-      });
+      const secret = speakeasy.generateSecret({ name: `EMS-${email}`, issuer: "EMS Admin" });
 
-      const { data: newUser, error: insertError } = await supabase
-        .from(USER_MASTER_TABLE)
-        .insert([
-          {
-            name: fullName,
-            email,
-            password: hashedPassword,
-            role: "admin",
-            role_1: null,
-            role_2: "employee",
-            mfa_secret: secret.base32,
-            mfa_enabled: false,
-            is_email_verified: false,
-            access_flag: "y",
-            is_promoted: false,
-          },
-        ])
-        .select()
-        .single();
+      const insertUser = await client.query(
+        `INSERT INTO ${USER_MASTER_TABLE} 
+         (name, email, password, role, role_1, role_2, mfa_secret, mfa_enabled, is_email_verified, access_flag, is_promoted)
+         VALUES ($1,$2,$3,'admin',NULL,'employee',$4,false,false,'y',false)
+         RETURNING id`,
+        [fullName, email, hashedPassword, secret.base32]
+      );
 
-      if (insertError) throw insertError;
+      const newUserId = insertUser.rows[0].id;
 
-      const { error: regError } = await supabase
-        .from(REGISTRATIONS_TABLE)
-        .insert([
-          {
-            user_id: newUser.id,
-            is_approved: false,
-            is_temp_admin: false,
-            temp_admin_expiry: null,
-          },
-        ]);
-
-      if (regError) throw regError;
+      await client.query(
+        `INSERT INTO ${REGISTRATIONS_TABLE} 
+         (user_id, is_approved, is_temp_admin, temp_admin_expiry)
+         VALUES ($1,false,false,NULL)`,
+        [newUserId]
+      );
 
       const qrCodeUrl = await qrcode.toDataURL(secret.otpauth_url);
 
@@ -310,58 +281,37 @@ export const adminRegister = async (req, res) => {
       });
     }
 
-    //  CASE 2: Existing user — check if promoted employee
+    // CASE 2: Existing user (promoted)
     if (
-      existingUser.is_promoted === true &&
-      existingUser.mfa_enabled === false &&
+      existingUser.is_promoted &&
+      !existingUser.mfa_enabled &&
       (existingUser.role === "employee" || existingUser.role === "admin")
     ) {
-      // Allow setup: hash password, generate MFA secret
       const hashedPassword = await bcrypt.hash(password, 10);
-      const secret = speakeasy.generateSecret({
-        name: `EMS-${email}`,
-        issuer: "EMS Admin",
-      });
+      const secret = speakeasy.generateSecret({ name: `EMS-${email}`, issuer: "EMS Admin" });
 
-      const { error: updateError } = await supabase
-        .from(USER_MASTER_TABLE)
-        .update({
-          name: fullName,
-          password: hashedPassword,
-          role: "admin",
-          role_1: null,
-          role_2: "employee",
-          mfa_secret: secret.base32,
-          // mfa_enabled remains false until OTP verified
-        })
-        .eq("id", existingUser.id);
+      await client.query(
+        `UPDATE ${USER_MASTER_TABLE}
+         SET name=$1, password=$2, role='admin', role_1=NULL, role_2='employee', mfa_secret=$3
+         WHERE id=$4`,
+        [fullName, hashedPassword, secret.base32, existingUser.id]
+      );
 
-      if (updateError) throw updateError;
+      const regCheck = await client.query(
+        `SELECT * FROM ${REGISTRATIONS_TABLE} WHERE user_id=$1`,
+        [existingUser.id]
+      );
 
-      // Ensure registration exists
-      const { data: reg, error: regErr } = await supabase
-        .from(REGISTRATIONS_TABLE)
-        .select("*")
-        .eq("user_id", existingUser.id)
-        .maybeSingle();
-
-      if (regErr) throw regErr;
-      if (!reg) {
-        const { error: insErr } = await supabase
-          .from(REGISTRATIONS_TABLE)
-          .insert([
-            {
-              user_id: existingUser.id,
-              is_approved: false,
-              is_temp_admin: false,
-              temp_admin_expiry: null,
-            },
-          ]);
-        if (insErr) throw insErr;
+      if (regCheck.rowCount === 0) {
+        await client.query(
+          `INSERT INTO ${REGISTRATIONS_TABLE} 
+           (user_id, is_approved, is_temp_admin, temp_admin_expiry)
+           VALUES ($1,false,false,NULL)`,
+          [existingUser.id]
+        );
       }
 
       const qrCodeUrl = await qrcode.toDataURL(secret.otpauth_url);
-
       return res.status(200).json({
         message: "Promoted employee. Complete MFA setup.",
         qrCodeUrl,
@@ -369,14 +319,14 @@ export const adminRegister = async (req, res) => {
       });
     }
 
-    // All other cases: already registered admin
     return res.status(400).json({
       error: "User already registered as admin or not eligible for promotion.",
     });
-
   } catch (err) {
     console.error("Admin Register Error:", err.message);
     res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
   }
 };
 
@@ -387,43 +337,29 @@ export const adminRegister = async (req, res) => {
  */
 
 export const adminLogin = async (req, res) => {
+  const client = await pool.connect();
   try {
     const { email, password, otp } = req.body;
 
-    // ✅ Fetch user by email
-    const { data: user, error } = await supabase
-      .from(USER_MASTER_TABLE)
-      .select("*")
-      .eq("email", email)
-      .maybeSingle();
- //  Check if user exists → Invalid Email
-    if (!user) {
-      return res.status(401).json({ error:"invalid email or password" });
-    }
+    const userResult = await client.query(
+      `SELECT * FROM ${USER_MASTER_TABLE} WHERE email=$1`,
+      [email]
+    );
+    const user = userResult.rows[0];
 
-    //  Check password → Invalid Password
+    if (!user) return res.status(401).json({ error: "Invalid email or password" });
+
     const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(401).json({ error: "Invalid password" });
 
-    if (!isMatch) {
-      return res.status(401).json({ error: "Invalid password" });
-    }
-
-    // ✅ Check if user is Admin by role OR role_1
     if (!(user.role === "admin" || user.role_1 === "admin")) {
       return res.status(403).json({ error: "Not authorized as Admin" });
     }
 
-    // ✅ Prevent login until MFA is verified
-    if (!user.mfa_enabled) {
-      return res.status(403).json({
-        error: "MFA setup not completed. Please verify OTP first.",
-      });
-    }
+    if (!user.mfa_enabled)
+      return res.status(403).json({ error: "MFA setup not completed. Please verify OTP first." });
 
-    // ✅ Require OTP
-    if (!otp) {
-      return res.status(400).json({ error: "OTP required for login" });
-    }
+    if (!otp) return res.status(400).json({ error: "OTP required for login" });
 
     const verified = speakeasy.totp.verify({
       secret: user.mfa_secret,
@@ -432,33 +368,23 @@ export const adminLogin = async (req, res) => {
       window: 1,
     });
 
-    if (!verified) {
-      return res.status(401).json({ error: "Invalid OTP" });
-    }
+    if (!verified) return res.status(401).json({ error: "Invalid OTP" });
 
-    // ✅ Check registration approval
-    const { data: regData, error: regError } = await supabase
-      .from(REGISTRATIONS_TABLE)
-      .select("is_temp_admin, temp_admin_expiry, is_approved")
-      .eq("user_id", user.id)
-      .maybeSingle();
+    const regDataResult = await client.query(
+      `SELECT is_temp_admin, temp_admin_expiry, is_approved FROM ${REGISTRATIONS_TABLE} WHERE user_id=$1`,
+      [user.id]
+    );
+    const regData = regDataResult.rows[0];
 
-    if (regError) throw regError;
+    if (!regData?.is_approved)
+      return res.status(403).json({ error: "Access denied. Permission not granted by SuperAdmin." });
 
-    if (!regData?.is_approved) {
-      return res.status(403).json({
-        error: "Access denied. Permission not granted by SuperAdmin.",
-      });
-    }
-
-    // ✅ Check temp admin
     const isTempAdmin =
-      regData?.is_temp_admin && new Date(regData.temp_admin_expiry) > new Date();
+      regData.is_temp_admin && new Date(regData.temp_admin_expiry) > new Date();
 
-    // ✅ Issue JWT
     const token = issueJwt({
       email: user.email,
-      role: user.role === "admin" ? "admin" : user.role_1, // normalize role
+      role: user.role === "admin" ? "admin" : user.role_1,
       id: user.id,
       is_temp_admin: isTempAdmin,
       name: user.name,
@@ -479,6 +405,8 @@ export const adminLogin = async (req, res) => {
   } catch (err) {
     console.error("Admin Login Error:", err.message);
     res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
   }
 };
 
@@ -488,23 +416,18 @@ export const adminLogin = async (req, res) => {
  * Body: { email, otp }
  */
 export const verifyAdminMfaSetup = async (req, res) => {
+  const client = await pool.connect();
   try {
     const { email, otp } = req.body;
 
-    const { data: user, error } = await supabase
-      .from(USER_MASTER_TABLE)
-      .select("*")
-      .eq("email", email)
-      .eq("role", "admin")
-      .maybeSingle();
+    const userResult = await client.query(
+      `SELECT * FROM ${USER_MASTER_TABLE} WHERE email=$1 AND role='admin'`,
+      [email]
+    );
+    const user = userResult.rows[0];
+    if (!user) return res.status(404).json({ error: "User not found" });
 
-    if (error || !user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    if (user.mfa_enabled) {
-      return res.json({ message: "MFA already enabled" });
-    }
+    if (user.mfa_enabled) return res.json({ message: "MFA already enabled" });
 
     const verified = speakeasy.totp.verify({
       secret: user.mfa_secret,
@@ -513,43 +436,57 @@ export const verifyAdminMfaSetup = async (req, res) => {
       window: 1,
     });
 
-    if (!verified) {
-      return res.status(400).json({ error: "Invalid OTP, setup failed" });
-    }
+    if (!verified) return res.status(400).json({ error: "Invalid OTP, setup failed" });
 
-    // Enable MFA
-    await supabase
-      .from(USER_MASTER_TABLE)
-      .update({ mfa_enabled: true })
-      .eq("id", user.id);
+    await client.query(`UPDATE ${USER_MASTER_TABLE} SET mfa_enabled=true WHERE id=$1`, [user.id]);
 
     res.json({ message: "MFA setup verified and enabled" });
   } catch (err) {
     console.error("MFA Setup Error:", err.message);
     res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
   }
 };
 
+// export const getAllAdmins = async (req, res) => {
+//   try {
+//  const { data, error } = await supabase
+//   .from(USER_MASTER_TABLE)
+//   .select(`
+//     *,
+//     registrations (*)
+//   `)
+//   .in("role", ["admin", "superadmin"]);
+//     if (error) throw error;
 
+//     return res.json(data);
+//   } catch (err) {
+//     console.error("Get admin Error:", err.message);
+//     res.status(500).json({ message: err.message });
+//   }
+// };
 
 export const getAllAdmins = async (req, res) => {
   try {
- const { data, error } = await supabase
-  .from(USER_MASTER_TABLE)
-  .select(`
-    *,
-    registrations (*)
-  `)
-  .in("role", ["admin", "superadmin"]);
-    if (error) throw error;
+    // SQL query: fetch all users with role 'admin' or 'superadmin'
+    // and join with registrations table
+    const query = `
+      SELECT u.*, r.*
+      FROM user_employees_master u
+      LEFT JOIN registrations r ON u.id = r.user_id
+      WHERE u.role = ANY($1::text[])
+    `;
 
-    return res.json(data);
+    const roles = ["admin", "superadmin"];
+    const { rows } = await pool.query(query, [roles]);
+
+    return res.json(rows);
   } catch (err) {
     console.error("Get admin Error:", err.message);
     res.status(500).json({ message: err.message });
   }
 };
-
 
 // using Id delete Admin
 export const deleteAdmin = async (req, res) => {

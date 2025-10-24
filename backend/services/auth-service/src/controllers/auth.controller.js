@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import supabase from "../supabaseClient.js";
+import pool from "../config/db.js";
 import speakeasy from "speakeasy";
 import qrcode from "qrcode";
 import { UserModel } from "../models/user.model.js";
@@ -8,8 +8,8 @@ import { validateInput } from "../utils/validateInput.js";
 import { sendEmail } from "../services/emailservicesuperadmin.js";
 
 import dotenv from "dotenv";
-const USERS_TABLE = "user_employees_master";
-const SUPERADMINS_TABLE = "super_admins";
+const USERS_TABLE = "ems.user_employees_master";
+const SUPERADMINS_TABLE = "ems.super_admins";
 
 // Helper: issue JWT
 function issueJwt({ email, role, id,name }) {
@@ -22,19 +22,16 @@ export const checkEmail = async (req, res) => {
     const { email } = req.body;
     if (!email) return res.status(400).json({ error: "Email is required" });
 
-    const { data: user, error } = await supabase
-      .from(USERS_TABLE)
-      .select("*")
-      .ilike("email", email)
-      .eq("role", "superadmin")
-      .eq("access_flag", "y")
-      .maybeSingle();
+    const { rows } = await pool.query(
+      `SELECT * FROM ${USERS_TABLE} WHERE email ILIKE $1 AND role = $2 AND access_flag = 'y'`,
+      [email, "superadmin"]
+    );
 
-    if (error) throw error;
+    if (!rows[0]) return res.status(200).json({ authorized: false });
 
-    if (!user) return res.status(200).json({ authorized: false });
-
-    return res.status(200).json({ authorized: true, message: "Email authorized" });
+    return res
+      .status(200)
+      .json({ authorized: true, message: "Email authorized" });
   } catch (err) {
     console.error("CheckEmail Error:", err.message);
     return res.status(500).json({ error: err.message });
@@ -42,30 +39,28 @@ export const checkEmail = async (req, res) => {
 };
 
 
+
 // ----------- Registration endpoint -----------
 export const superAdminRegister = async (req, res) => {
   try {
     const { fullName, email, password } = req.body;
-
     if (!email) return res.status(400).json({ error: "Email is required" });
 
-    // Check if user exists in parent table
-    const { data: existingUser, error: fetchError } = await supabase
-      .from(USERS_TABLE)
-      .select("*")
-      .ilike("email", email)
-      .eq("role", "superadmin")
-      .eq("access_flag", "y")
-      .maybeSingle();
+    // Check if user exists
+    const { rows: existingRows } = await pool.query(
+      `SELECT * FROM ${USERS_TABLE} WHERE email ILIKE $1 AND role = $2 AND access_flag = 'y'`,
+      [email, "superadmin"]
+    );
 
-    if (fetchError) throw fetchError;
+    const existingUser = existingRows[0];
+
     if (!existingUser) {
       return res.status(400).json({
         error: "This email is not authorized as a SuperAdmin or access disabled.",
       });
     }
 
-    // Check if already registered (password exists)
+    // Check if already registered
     if (existingUser.password && existingUser.password.trim() !== "") {
       return res.status(400).json({
         error: "SuperAdmin already registered with this email.",
@@ -76,62 +71,43 @@ export const superAdminRegister = async (req, res) => {
     const errors = validateInput(UserModel, { name: fullName, email, password });
     if (Object.keys(errors).length > 0) return res.status(400).json({ errors });
 
-    //  Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Generate MFA secret
     const secret = speakeasy.generateSecret({
       name: `EMS-${email}`,
       issuer: "EMS SuperAdmin",
     });
 
-    // Update parent table (user_employees_master)
-    const { data: updatedUser, error: updateError } = await supabase
-      .from(USERS_TABLE)
-      .update({
-        name: fullName,
-        password: hashedPassword,
-        mfa_secret: secret.base32,
-        mfa_enabled: false,
-        is_email_verified: false,
-      })
-      .eq("id", existingUser.id)
-      .select()
-      .single();
+    // Update parent table
+    const { rows: updatedRows } = await pool.query(
+      `UPDATE ${USERS_TABLE} 
+       SET name=$1, password=$2, mfa_secret=$3, mfa_enabled=false, is_email_verified=false 
+       WHERE id=$4 RETURNING *`,
+      [fullName, hashedPassword, secret.base32, existingUser.id]
+    );
 
-    if (updateError) throw updateError;
+    const updatedUser = updatedRows[0];
 
     // Insert into super_admins table
-    const { error: insertError } = await supabase
-      .from(SUPERADMINS_TABLE)
-      .insert({
-        user_id: updatedUser.id,
-        name: updatedUser.name,
-        email: updatedUser.email,
-        password: hashedPassword, // must fill for NOT NULL
-        role: "superadmin",
-      });
+    await pool.query(
+      `INSERT INTO ${SUPERADMINS_TABLE} (user_id, name, email, password, role)
+       VALUES ($1,$2,$3,$4,$5)`,
+      [updatedUser.id, updatedUser.name, updatedUser.email, hashedPassword, "superadmin"]
+    );
 
-    if (insertError) throw insertError;
-
-    //  Generate MFA QR code
+    // Generate MFA QR code
     const qrCodeUrl = await qrcode.toDataURL(secret.otpauth_url);
 
     return res.status(201).json({
       message: "SuperAdmin registered successfully. Complete MFA setup.",
       qrCodeUrl,
       secret: secret.base32,
-      user: {
-        id: updatedUser.id,
-        email: updatedUser.email,
-        role: updatedUser.role,
-      },
+      user: { id: updatedUser.id, email: updatedUser.email, role: updatedUser.role },
     });
   } catch (err) {
     console.error("SuperAdmin Register Error:", err.message);
     return res.status(500).json({ error: err.message });
   }
-}
+};
 
 /**
  * SuperAdmin Login (requires MFA if enabled)
@@ -140,55 +116,35 @@ export const superAdminRegister = async (req, res) => {
 export const superAdminLogin = async (req, res) => {
   try {
     const { email, password, otp } = req.body;
-    const role = "superadmin";
 
-    // Fetch user by email and role
-    const { data: user, error } = await supabase
-      .from(USERS_TABLE)
-      .select("*")
-      .ilike("email", email)
-      .eq("role", role)
-      .maybeSingle();
+    const { rows } = await pool.query(
+      `SELECT * FROM ${USERS_TABLE} WHERE email ILIKE $1 AND role=$2`,
+      [email, "superadmin"]
+    );
 
-    if (error) throw error;
+    const user = rows[0];
+    if (!user) return res.status(401).json({ error: "Invalid email or password" });
 
-    //  Check if user exists → Invalid Email
-    if (!user) {
-      return res.status(401).json({ error: "Invalid email" });
-    }
-
-    //  Check password → Invalid Password
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({ error: "Invalid password" });
-    }
+    if (!isMatch) return res.status(401).json({ error: "Invalid email or password" });
 
-    //  Prevent login until MFA setup is done
-    if (!user.mfa_enabled) {
-      return res.status(403).json({
-        error: "MFA setup not completed. Please verify OTP first.",
-      });
-    }
+    if (!user.mfa_enabled)
+      return res
+        .status(403)
+        .json({ error: "MFA setup not completed. Please verify OTP first." });
 
-    //  OTP required for login
-    if (!otp) {
-      return res.status(400).json({ error: "OTP required for login" });
-    }
+    if (!otp) return res.status(400).json({ error: "OTP required for login" });
 
-    // Verify OTP using speakeasy
     const verified = speakeasy.totp.verify({
       secret: user.mfa_secret,
       encoding: "base32",
       token: otp,
-      window: 1, // allow 1 step before/after
+      window: 1,
     });
 
-    if (!verified) {
-      return res.status(401).json({ error: "Invalid OTP" });
-    }
+    if (!verified) return res.status(401).json({ error: "Invalid OTP" });
 
-    // Issue JWT on successful login
-    const token = issueJwt({ email: user.email, role: user.role, id: user.id ,name:user.name});
+    const token = issueJwt({ email: user.email, role: user.role, id: user.id, name: user.name });
 
     return res.status(200).json({
       message: "SuperAdmin login Successful with MFA",
@@ -206,6 +162,7 @@ export const superAdminLogin = async (req, res) => {
     return res.status(500).json({ error: err.message });
   }
 };
+
 /**
  * Verify MFA Setup (after registration)
  * Body: { email, otp }
@@ -214,19 +171,15 @@ export const verifyMfaSetup = async (req, res) => {
   try {
     const { email, otp } = req.body;
 
-    const { data: user, error } = await supabase
-      .from(USERS_TABLE)
-      .select("*")
-      .eq("email", email)
-      .maybeSingle();
+    const { rows } = await pool.query(
+      `SELECT * FROM ${USERS_TABLE} WHERE email ILIKE $1`,
+      [email]
+    );
 
-    if (error || !user) {
-      return res.status(404).json({ error: "User not found" });
-    }
+    const user = rows[0];
+    if (!user) return res.status(404).json({ error: "User not found" });
 
-    if (user.mfa_enabled) {
-      return res.json({ message: "MFA already enabled" });
-    }
+    if (user.mfa_enabled) return res.json({ message: "MFA already enabled" });
 
     const verified = speakeasy.totp.verify({
       secret: user.mfa_secret,
@@ -235,20 +188,14 @@ export const verifyMfaSetup = async (req, res) => {
       window: 1,
     });
 
-    if (!verified) {
-      return res.status(400).json({ error: "Invalid OTP, setup failed" });
-    }
+    if (!verified) return res.status(400).json({ error: "Invalid OTP, setup failed" });
 
-    // Enable MFA after successful verification
-    await supabase
-      .from(USERS_TABLE)
-      .update({ mfa_enabled: true })
-      .eq("id", user.id);
+    await pool.query(`UPDATE ${USERS_TABLE} SET mfa_enabled=true WHERE id=$1`, [user.id]);
 
-    res.json({ message: "MFA setup verified and enabled", role: user.role });
+    return res.json({ message: "MFA setup verified and enabled", role: user.role });
   } catch (err) {
     console.error("MFA Setup Error:", err.message);
-    res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: err.message });
   }
 };
 //SuperAdmin Get by id
