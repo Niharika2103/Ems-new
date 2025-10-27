@@ -1022,29 +1022,29 @@ export const updateEmployeeProfile = async (req, res) => {
 //     const decoded = getUserFromToken(req); // Extract user info from JWT
 //     const email = decoded.email;
 
-//     const { data, error } = await supabase
-//       .from("user_employees_master")
-//       .select(
-//         "employee_id, name, email, phone, address, department, date_of_joining, permanent_address, emergency_contact, gender"
-//       )
-//       .eq("email", email)
-//       .eq("role", "employee")
-//       .maybeSingle();
+    const { data, error } = await supabase
+      .from("user_employees_master")
+      .select(
+        "employee_id, name, email, phone, address, department, date_of_joining, permanent_address, emergency_contact, gender"
+      )
+      .eq("email", email)
+      .eq("role", "employee")
+      .maybeSingle();
 
-//     if (error) throw error;
-//     if (!data) {
-//       return res.status(404).json({ error: "Employee profile not found" });
-//     }
+    if (error) throw error;
+    if (!data) {
+      return res.status(404).json({ error: "Employee profile not found" });
+    }
 
-//     res.status(200).json({
-//       message: "Profile fetched successfully",
-//       profile: data,
-//     });
-//   } catch (err) {
-//     console.error("View Own Profile Error:", err.message);
-//     res.status(500).json({ error: "Failed to fetch profile" });
-//   }
-// };
+    res.status(200).json({
+      message: "Profile fetched successfully",
+      profile: data,
+    });
+  } catch (err) {
+    console.error("View Own Profile Error:", err.message);
+    res.status(500).json({ error: "Failed to fetch profile" });
+  }
+};
 
 
  

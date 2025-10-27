@@ -13,7 +13,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "projects")
+@Table(name = "projects",schema = "ems")
 //@Data
 
 
