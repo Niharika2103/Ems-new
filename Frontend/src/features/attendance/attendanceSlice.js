@@ -4,7 +4,7 @@ import { AttendanceSaveallApi,AttendanceFetchAllApi ,AttendanceFetchExistingWeek
   AttendanceFetchByEmployeeProjectApi,AttendanceReleaseWeekApi,
 AdminAttendancFetchWeeklyDataByIdApi,Admin_Approve_Weekly_Attendance_Api,
 AdminAttendancFetchMonthlyDataByIdApi,
-Admin_Approve_monthly_Attendance_Api} from "../../api/authApi";
+Admin_Approve_monthly_Attendance_Api,applyParentalLeaveApi, approveParentalLeaveApi,fetchPendingParentalLeavesApi} from "../../api/authApi";
 
 
 //Employee
@@ -125,13 +125,49 @@ export const Admin_Approve_monthly_Attendance = createAsyncThunk(
   }
 );
 
+export const applyParentalLeave = createAsyncThunk(
+  "attendance/applyParentalLeave",
+  async (payload, thunkAPI) => {
+    try {
+      const res = await applyParentalLeaveApi(payload);
+      return res.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
 
+// Thunk: Approve/reject leave (admin)
+export const approveParentalLeave = createAsyncThunk(
+  "attendance/approveParentalLeave",
+  async (payload, thunkAPI) => {
+    try {
+      const res = await approveParentalLeaveApi(payload);
+      return res.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+
+export const fetchPendingParentalLeaves = createAsyncThunk(
+  "attendance/fetchPendingParentalLeaves",
+  async (_, thunkAPI) => {
+    try {
+      const res = await fetchPendingParentalLeavesApi();
+      return res.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
 
 const attendanceSlice = createSlice({
   name: "attendance",
   initialState: {
     attendance:[],
      attendanceData: [], 
+      pendingLeaves: [],
       loading: false,
     error: null,
   },
@@ -146,6 +182,9 @@ const attendanceSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+    .addCase(fetchPendingParentalLeaves.fulfilled, (state, action) => {
+  state.pendingLeaves = action.payload;
+})
       .addCase(AttendanceSaveall.pending, (state) => {
         state.loading = true;
       })
@@ -230,7 +269,7 @@ const attendanceSlice = createSlice({
     .addCase(Admin_Approve_monthly_Attendance.pending, (state) => { state.loading = true; })
     .addCase(Admin_Approve_monthly_Attendance.fulfilled, (state) => { state.loading = false; })
     .addCase(Admin_Approve_monthly_Attendance.rejected, (state, action) => { state.loading = false; state.error = action.payload; });
-
+      
   },
 });
 

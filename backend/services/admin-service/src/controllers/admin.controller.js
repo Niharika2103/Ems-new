@@ -1370,3 +1370,47 @@ export const approveParentalLeave = async (req, res) => {
     return res.status(500).json({ error: "Error approving parental leave" });
   }
 };
+
+
+/**
+ * Fetch all pending parental leave requests (for Admin dashboard)
+ * GET /attendance/pending-parental
+ */
+export const getPendingParentalLeaves = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("attendance")
+      .select(`
+        id,
+        employee_id,
+        leave_type,
+        date,
+        weekly_status,
+        user_employees_master!inner (name, email, role)
+      `)
+      .in("leave_type", ["maternity", "paternity"])
+      .eq("weekly_status", "pending_approval");
+
+    if (error) {
+      console.error("Supabase error:", error);
+      throw error;
+    }
+
+    // Format response for frontend
+    const formatted = data.map((record) => ({
+      id: record.id,
+      employeeId: record.employee_id,
+      name: record.user_employees_master.name,
+      email: record.user_employees_master.email,
+      role: record.user_employees_master.role,
+      leaveType: record.leave_type.charAt(0).toUpperCase() + record.leave_type.slice(1), // "maternity" → "Maternity"
+      status: "Pending",
+      startDate: record.date,
+    }));
+
+    res.status(200).json(formatted);
+  } catch (err) {
+    console.error("Error fetching pending parental leaves:", err.message);
+    res.status(500).json({ error: "Failed to fetch pending parental leave requests" });
+  }
+};

@@ -288,3 +288,14 @@ export const Admin_Approve_monthly_Attendance_Api = (employeeId, from,to) => {
     }
   );
 };
+  // Apply parental leave (employee)
+export const applyParentalLeaveApi = (data) =>
+  AttendanceClient.post(`${AUTH_API.EMPLOYEE}/attendance/apply-parental`, data);
+
+// Approve/reject parental leave (admin)
+export const approveParentalLeaveApi = (data) =>
+  AttendanceClient.put(`${AUTH_API.ADMIN}/attendance/approve-parental`, data);
+
+// Fetch pending parental leaves (admin only)
+export const fetchPendingParentalLeavesApi = () =>
+  AttendanceClient.get(`${AUTH_API.ADMIN}/attendance/pending-parental`);

@@ -19,7 +19,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { useDispatch, useSelector } from "react-redux";
 import { AttendanceFetchExistingMonth, AttendanceReleaseWeek, AttendanceReleaseMonth } from "../../features/attendance/attendanceSlice";
 import LeaveApplicationModal from "../../components/LeaveApplicationModal";
-
+import { applyParentalLeave } from "../../features/attendance/attendanceSlice";
 export default function MonthlyTimesheet({ onBack }) {
   const { projects } = useSelector((state) => state.project);
   const dispatch = useDispatch();
@@ -197,14 +197,39 @@ export default function MonthlyTimesheet({ onBack }) {
     }
   };
 
-  const handleModalSubmit = () => {
-    if (!usedLeaveTypes.includes(modalLeaveType)) {
-      setUsedLeaveTypes([...usedLeaveTypes, modalLeaveType]);
-      setLeaveRows((prev) => ({ ...prev, [modalLeaveType]: Array(monthDays.length).fill(0) }));
-      setLockedRows((prev) => ({ ...prev, [modalLeaveType]: true }));
+  // const handleModalSubmit = () => {
+  //   if (!usedLeaveTypes.includes(modalLeaveType)) {
+  //     setUsedLeaveTypes([...usedLeaveTypes, modalLeaveType]);
+  //     setLeaveRows((prev) => ({ ...prev, [modalLeaveType]: Array(monthDays.length).fill(0) }));
+  //     setLockedRows((prev) => ({ ...prev, [modalLeaveType]: true }));
+  //   }
+  //   setLeaveModalOpen(false);
+  // };
+
+   const handleModalSubmit = async ({ startDate }) => {
+  const employeeId = projects[0]?.employeeId;
+  if (!employeeId) {
+    toast.error("Employee ID missing!");
+    return;
+  }
+
+  const leave_type = modalLeaveType === "Maternity Leave" ? "maternity" : "paternity";
+
+  try {
+    const resultAction = await dispatch(
+      applyParentalLeave({ employee_id: employeeId, leave_type, start_date: startDate })
+    );
+
+    if (applyParentalLeave.fulfilled.match(resultAction)) {
+      toast.success(`${modalLeaveType} applied successfully!`);
+    } else {
+      toast.error("Failed to apply leave");
     }
-    setLeaveModalOpen(false);
-  };
+  } catch (err) {
+    toast.error("Error applying leave");
+  }
+  setLeaveModalOpen(false);
+};
 
   const handleDeleteRow = (row) => {
     setUsedLeaveTypes(usedLeaveTypes.filter((lt) => lt !== row));

@@ -27,7 +27,7 @@ import {
 import LeaveApplicationModal from "../../components/LeaveApplicationModal";
 import { useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
-
+import { applyParentalLeave } from "../../features/attendance/attendanceSlice"; 
 export default function EmpTimesheet() {
   const { projects } = useSelector((state) => state.project);
   const dispatch = useDispatch();
@@ -179,32 +179,67 @@ export default function EmpTimesheet() {
   };
 
   // Handle modal submit for ML/PL
-  const handleModalSubmit = ({ startDate }) => {
-    const start = new Date(startDate);
-    let duration = 0;
-    let leaveCode = "";
+  // const handleModalSubmit = ({ startDate }) => {
+  //   const start = new Date(startDate);
+  //   let duration = 0;
+  //   let leaveCode = "";
 
-    if (modalLeaveType === "Maternity Leave") {
-      duration = 180;
-      leaveCode = "ML";
-    } else if (modalLeaveType === "Paternity Leave") {
-      duration = 7;
-      leaveCode = "PL";
+  //   if (modalLeaveType === "Maternity Leave") {
+  //     duration = 180;
+  //     leaveCode = "ML";
+  //   } else if (modalLeaveType === "Paternity Leave") {
+  //     duration = 7;
+  //     leaveCode = "PL";
+  //   }
+
+  //   const end = new Date(start);
+  //   end.setDate(start.getDate() + duration - 1);
+
+  //   setLeavePeriods((prev) => [...prev, { type: modalLeaveType, startDate: start, endDate: end }]);
+
+  //   if (!usedLeaveTypes.includes(modalLeaveType)) {
+  //     setUsedLeaveTypes([...usedLeaveTypes, modalLeaveType]);
+  //     setLockedRows((prev) => ({ ...prev, [modalLeaveType]: true }));
+  //     setLeaveRows((prev) => ({ ...prev, [modalLeaveType]: Array(7).fill("") }));
+  //   }
+
+  //   setLeaveModalOpen(false);
+  // };
+
+  const handleModalSubmit = async ({ startDate }) => {
+  if (!employeeId) {
+    toast.error("Employee ID missing!");
+    return;
+  }
+
+  const leave_type = modalLeaveType === "Maternity Leave" ? "maternity" : "paternity";
+
+  try {
+    const resultAction = await dispatch(
+      applyParentalLeave({ employee_id: employeeId, leave_type, start_date: startDate })
+    );
+
+    if (applyParentalLeave.fulfilled.match(resultAction)) {
+      toast.success(`${modalLeaveType} applied successfully!`);
+      // Optional: add to leavePeriods for UI
+      const duration = leave_type === "maternity" ? 180 : 5;
+      const start = new Date(startDate);
+      const end = new Date(start);
+      end.setDate(start.getDate() + duration - 1);
+      setLeavePeriods(prev => [...prev, { type: modalLeaveType, startDate: start, endDate: end }]);
+      if (!usedLeaveTypes.includes(modalLeaveType)) {
+        setUsedLeaveTypes([...usedLeaveTypes, modalLeaveType]);
+        setLeaveRows(prev => ({ ...prev, [modalLeaveType]: Array(7).fill("") }));
+        setLockedRows(prev => ({ ...prev, [modalLeaveType]: true }));
+      }
+    } else {
+      toast.error(resultAction.payload?.error || "Failed to apply leave");
     }
-
-    const end = new Date(start);
-    end.setDate(start.getDate() + duration - 1);
-
-    setLeavePeriods((prev) => [...prev, { type: modalLeaveType, startDate: start, endDate: end }]);
-
-    if (!usedLeaveTypes.includes(modalLeaveType)) {
-      setUsedLeaveTypes([...usedLeaveTypes, modalLeaveType]);
-      setLockedRows((prev) => ({ ...prev, [modalLeaveType]: true }));
-      setLeaveRows((prev) => ({ ...prev, [modalLeaveType]: Array(7).fill("") }));
-    }
-
-    setLeaveModalOpen(false);
-  };
+  } catch (err) {
+    toast.error("Error applying leave");
+  }
+  setLeaveModalOpen(false);
+};
 
   const handleDeleteRow = (row) => {
     setUsedLeaveTypes(usedLeaveTypes.filter((lt) => lt !== row));

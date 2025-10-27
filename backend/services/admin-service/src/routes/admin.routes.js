@@ -23,7 +23,7 @@ import {
   rejectWeeklyApproval,
   rejectMonthlyApproval,
    approveParentalLeave,
-
+getPendingParentalLeaves
 } from "../controllers/admin.controller.js";
 const router = Router();
 // Admin Register and login
@@ -67,5 +67,5 @@ router.post("/attendance/weekly/reject", rejectWeeklyApproval);
 router.post("/attendance/monthly/reject", rejectMonthlyApproval);
 
 router.put("/attendance/approve-parental", approveParentalLeave);
-
+router.get("/attendance/pending-parental", getPendingParentalLeaves);
 export default router;
