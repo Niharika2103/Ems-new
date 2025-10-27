@@ -36,7 +36,7 @@ export default function EmpTimesheet() {
   const [projectDetails, setProjectDetails] = useState(null);
 
   const projectName = projectDetails?.projectName;
-  const ProjectID = projectDetails?.ProjectID;
+  const ProjectID = projectDetails?.projectID;
   const employeeId = projectDetails?.employeeId;
 
   const [leaveType, setLeaveType] = useState("CL");
@@ -262,7 +262,7 @@ export default function EmpTimesheet() {
 
   const handleSaveAll = async () => {
     const employeeId = projectDetails?.employeeId;
-    const projectId = projectDetails?.projectId;
+    const projectId = projectDetails?.projectID;
     const monday = getMonday(weekStart);
     console.log(monday, "monday")
     const dataToSend = days.map((_, i) => {
@@ -324,7 +324,7 @@ export default function EmpTimesheet() {
 
     try {
       const resultAction = await dispatch(AttendanceReleaseWeek({
-        employeeId,
+        employeeId:employeeId,
         weekStart: formattedStartEnd,
         weekEnd: formattedWeekEnd
       }));

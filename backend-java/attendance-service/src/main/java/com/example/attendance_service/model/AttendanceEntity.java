@@ -27,7 +27,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "attendance" ,schema = "ems")
+@Table(name = "attendance")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class AttendanceEntity {
 
