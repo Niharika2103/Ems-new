@@ -8,8 +8,8 @@ import { validateInput } from "../utils/validateInput.js";
 import { sendEmail } from "../services/emailservicesuperadmin.js";
 
 import dotenv from "dotenv";
-const USERS_TABLE = "ems.user_employees_master";
-const SUPERADMINS_TABLE = "ems.super_admins";
+const USERS_TABLE = "user_employees_master";
+const SUPERADMINS_TABLE = "super_admins";
 
 // Helper: issue JWT
 function issueJwt({ email, role, id,name }) {
@@ -207,50 +207,53 @@ export const getSuperadminById = async (req, res) => {
       return res.status(400).json({ error: "Invalid or missing admin ID" });
     }
 
-    const { data, error } = await supabase
-      .from(USERS_TABLE)
-      .select("*")
-      .eq("id", id)
-      .eq("role", "superadmin")
-      .maybeSingle();
+    const { rows } = await pool.query(
+      `SELECT * FROM ${USERS_TABLE} WHERE id = $1 AND role = $2`,
+      [id, "superadmin"]
+    );
 
-    if (error) throw error;
+    const data = rows[0];
     if (!data) return res.status(404).json({ error: "Superadmin not found" });
 
-    // Get BASE_URL from environment
-        const BASE_URL = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5001}`;
+    const BASE_URL =
+      process.env.BASE_URL || `http://localhost:${process.env.PORT || 5001}`;
 
-    // Construct response with full URLs
     const responseData = {
       ...data,
-      profile_photo: data.profile_photo ? `${BASE_URL}${data.profile_photo}` : null,
+      profile_photo: data.profile_photo
+        ? `${BASE_URL}${data.profile_photo}`
+        : null,
       resume: data.resume ? `${BASE_URL}${data.resume}` : null,
     };
 
     return res.json(responseData);
   } catch (err) {
     console.error("Get Superadmin By ID Error:", err.message || err);
-    res.status(500).json({ message: err.message || "Internal Server Error" });
+    res
+      .status(500)
+      .json({ message: err.message || "Internal Server Error" });
   }
 };
+
 
 //SuperAdmin Profile Update
 export const updateSuperAdminProfile = async (req, res) => {
   try {
     const { id } = req.params;
 
-    //  Fetch existing user from parent table
-    const { data: existingUser, error: userError } = await supabase
-      .from(USERS_TABLE)
-      .select("*")
-      .eq("id", id)
-      .eq("role", "superadmin")
-      .maybeSingle(); // use maybeSingle to avoid "cannot coerce" error
+    // Fetch existing user
+    const { rows: existingRows } = await pool.query(
+      `SELECT * FROM ${USERS_TABLE} WHERE id = $1 AND role = $2`,
+      [id, "superadmin"]
+    );
+    const existingUser = existingRows[0];
 
-    if (userError) throw userError;
-    if (!existingUser) return res.status(404).json({ error: "SuperAdmin not found in parent table" });
+    if (!existingUser)
+      return res
+        .status(404)
+        .json({ error: "SuperAdmin not found in parent table" });
 
-    //  Prepare updates for parent table
+    // Prepare updates
     let userUpdates = { ...req.body };
 
     if (req.files?.profilePhoto?.[0]) {
@@ -264,12 +267,10 @@ export const updateSuperAdminProfile = async (req, res) => {
     delete userUpdates.mfa_secret;
     delete userUpdates.mfa_enabled;
 
-    // Password update optional
     if (req.body.password) {
       userUpdates.password = await bcrypt.hash(req.body.password, 10);
     }
 
-    // Only update allowed fields in parent table
     const parentAllowedFields = [
       "name",
       "email",
@@ -282,49 +283,71 @@ export const updateSuperAdminProfile = async (req, res) => {
       "department",
       "profile_photo",
       "resume",
-      "permanent_address"
+      "permanent_address",
+      "password",
     ];
+
     const filteredUserUpdates = {};
-    parentAllowedFields.forEach((key) => {
-      if (userUpdates[key] !== undefined) filteredUserUpdates[key] = userUpdates[key];
+    const updateValues = [];
+    const updateSet = [];
+
+    parentAllowedFields.forEach((key, index) => {
+      if (userUpdates[key] !== undefined) {
+        filteredUserUpdates[key] = userUpdates[key];
+        updateSet.push(`${key} = $${updateSet.length + 1}`);
+        updateValues.push(userUpdates[key]);
+      }
     });
 
-    //  Update parent table
-    const { data: updatedUser, error: updateUserError } = await supabase
-      .from(USERS_TABLE)
-      .update(filteredUserUpdates)
-      .eq("id", id)
-      .select("*")
-      .maybeSingle();
+    if (updateSet.length === 0)
+      return res.status(400).json({ error: "No valid fields to update" });
 
-    if (updateUserError) throw updateUserError;
+    updateValues.push(id); // for WHERE id=$n
 
-    //  Update child table with only name & email
+    const { rows: updatedRows } = await pool.query(
+      `UPDATE ${USERS_TABLE} SET ${updateSet.join(", ")} WHERE id = $${
+        updateSet.length + 1
+      } RETURNING *`,
+      updateValues
+    );
+
+    const updatedUser = updatedRows[0];
+
+    // Update child table (super_admins)
     const childUpdates = {};
-    if (userUpdates.name) childUpdates.name = userUpdates.name;
-    if (userUpdates.email) childUpdates.email = userUpdates.email;
+    const childValues = [];
+    const childSet = [];
 
-    const { data: updatedChild, error: updateChildError } = await supabase
-      .from(SUPERADMINS_TABLE)
-      .update(childUpdates)
-      .eq("user_id", id)
-      .select("*")
-      .maybeSingle();
+    if (userUpdates.name) {
+      childSet.push(`name = $${childSet.length + 1}`);
+      childValues.push(userUpdates.name);
+    }
+    if (userUpdates.email) {
+      childSet.push(`email = $${childSet.length + 1}`);
+      childValues.push(userUpdates.email);
+    }
 
-    if (updateChildError) throw updateChildError;
+    if (childSet.length > 0) {
+      childValues.push(id);
+      await pool.query(
+        `UPDATE ${SUPERADMINS_TABLE} SET ${childSet.join(", ")} WHERE user_id = $${
+          childSet.length + 1
+        }`,
+        childValues
+      );
+    }
 
     return res.json({
       message: "SuperAdmin updated successfully",
       superAdmin: updatedUser,
-      superAdminChild: updatedChild
     });
-
   } catch (err) {
     console.error("Update SuperAdmin Error:", err.message || err);
-    return res.status(500).json({ message: err.message || "Internal Server Error" });
+    return res
+      .status(500)
+      .json({ message: err.message || "Internal Server Error" });
   }
 };
-
 
 function getUserFromToken(req) {
   const authHeader = req.headers["authorization"];
@@ -340,50 +363,43 @@ export const promoteAdminToSuperAdmin = async (req, res) => {
   try {
     const { adminId } = req.params;
 
-    // Ensure the request is from a logged-in superadmin
-    if (!req.user) return res.status(401).json({ error: "Unauthorized: no user info" });
+    if (!req.user)
+      return res.status(401).json({ error: "Unauthorized: no user info" });
 
     // 1️⃣ Fetch admin
-    const { data: admin, error: adminError } = await supabase
-      .from(USERS_TABLE)
-      .select("*")
-      .eq("id", adminId)
-      .eq("role", "admin")
-      .maybeSingle();
-
-    if (adminError) throw adminError;
+    const { rows: adminRows } = await pool.query(
+      `SELECT * FROM ${USERS_TABLE} WHERE id = $1 AND role = $2`,
+      [adminId, "admin"]
+    );
+    const admin = adminRows[0];
     if (!admin) return res.status(404).json({ error: "Admin not found" });
 
     // 2️⃣ Update role to superadmin
-    const { data: updatedAdmin, error: updateError } = await supabase
-      .from(USERS_TABLE)
-      .update({ role: "superadmin" })
-      .eq("id", adminId)
-      .select()
-      .maybeSingle();
+    const { rows: updatedRows } = await pool.query(
+      `UPDATE ${USERS_TABLE} SET role = $1 WHERE id = $2 RETURNING *`,
+      ["superadmin", adminId]
+    );
+    const updatedAdmin = updatedRows[0];
 
-    if (updateError) throw updateError;
-
-    // 3️⃣ Add to SUPERADMINS_TABLE if not exists
-    const { data: existingSuper, error: checkError } = await supabase
-      .from(SUPERADMINS_TABLE)
-      .select("*")
-      .eq("email", updatedAdmin.email)
-      .maybeSingle();
-
-    if (checkError) throw checkError;
+    // 3️⃣ Check if exists in SUPERADMINS_TABLE
+    const { rows: superRows } = await pool.query(
+      `SELECT * FROM ${SUPERADMINS_TABLE} WHERE email = $1`,
+      [updatedAdmin.email]
+    );
+    const existingSuper = superRows[0];
 
     if (!existingSuper) {
-      const { error: insertError } = await supabase
-        .from(SUPERADMINS_TABLE)
-        .insert({
-          user_id: updatedAdmin.id,
-          name: updatedAdmin.name,
-          email: updatedAdmin.email,
-          password: updatedAdmin.password,
-          role: "superadmin",
-        });
-      if (insertError) throw insertError;
+      await pool.query(
+        `INSERT INTO ${SUPERADMINS_TABLE} (user_id, name, email, password, role)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [
+          updatedAdmin.id,
+          updatedAdmin.name,
+          updatedAdmin.email,
+          updatedAdmin.password,
+          "superadmin",
+        ]
+      );
     }
 
     // 4️⃣ Send promotion email

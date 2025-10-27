@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import supabase from "../supabaseClient.js";
+import pool from "../config/db.js";
 import crypto from "crypto";
 import multer from "multer";
 import ExcelJS from "exceljs";
@@ -54,28 +54,19 @@ const storage = multer.diskStorage({
  // store file in memory
 export const upload = multer({ storage });
 
-async function generateEmployeeId() {
-  const { data, error } = await supabase
-    .from(USERS_TABLE)
-    .select("employee_id");
-
-  if (error) throw error;
-
-  // Only consider non-null employee_ids
-  const existingIds = data
+async function generateEmployeeId(client) {
+  const { rows } = await client.query(`SELECT employee_id FROM ${USERS_TABLE}`);
+  const existingIds = rows
     .map(e => e.employee_id)
-    .filter(id => id !== null)
+    .filter(id => id)
     .map(id => parseInt(id.replace("EMP", ""), 10))
     .filter(n => !isNaN(n))
     .sort((a, b) => a - b);
 
   let nextNum = 1;
   for (const num of existingIds) {
-    if (num === nextNum) {
-      nextNum++;
-    } else if (num > nextNum) {
-      break; // found a gap
-    }
+    if (num === nextNum) nextNum++;
+    else if (num > nextNum) break;
   }
 
   return `EMP${nextNum.toString().padStart(3, "0")}`;
@@ -180,109 +171,63 @@ function validateEmployeeData(data) {
 dotenv.config();
 
 export const registerEmployee = async (req, res) => {
+  const client = await pool.connect();
   try {
     const { fullName, email, phone, address, department, dateOfJoining } = req.body;
 
-    // ✅ Validation
     const validationError = validateEmployeeData({ fullName, email, phone, address });
     if (validationError) {
       return res.status(400).json({ error: validationError });
     }
 
-    const employeeId = await generateEmployeeId();
-    console.log("Generated Employee ID:", employeeId);
+    const employeeId = await generateEmployeeId(client);
 
-    // ✅ Check if employee already exists
-    const { data: existing, error: fetchError } = await supabase
-      .from(USERS_TABLE)
-      .select("*")
-      .eq("email", email)
-      .eq("role", "employee")
-      .maybeSingle();
+    // Check if employee exists
+    const existing = await client.query(
+      `SELECT * FROM ${USERS_TABLE} WHERE email = $1 AND role = 'employee'`,
+      [email]
+    );
+    if (existing.rows.length > 0)
+      return res.status(400).json({ error: "Employee already registered" });
 
-    if (fetchError) throw fetchError;
-    if (existing) return res.status(400).json({ error: "Employee already registered" });
-
-    // ✅ Generate password & hash
+    // Generate password
     const randomPassword = crypto.randomBytes(6).toString("base64").slice(0, 10);
     const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
-    // ✅ Reset token
+    // Reset token
     const resetToken = crypto.randomBytes(32).toString("hex");
-    const resetExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+    const resetExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-    // ✅ Insert into users table
-    const { data: newEmployee, error: insertError } = await supabase
-      .from(USERS_TABLE)
-      .insert([
-        {
-          employee_id: employeeId,
-          name: fullName,
-          email,
-          password: hashedPassword,
-          phone,
-          address,
-          department,
-          date_of_joining: dateOfJoining,
-          role: "employee",
-          access_flag: "y",
-        },
-      ])
-      .select("*")
-      .single();
+    // Insert employee
+    const insertUser = await client.query(
+      `INSERT INTO ${USERS_TABLE} 
+        (employee_id, name, email, password, phone, address, department, date_of_joining, role, access_flag)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'employee','y')
+       RETURNING id`,
+      [employeeId, fullName, email, hashedPassword, phone, address, department, dateOfJoining]
+    );
 
-    if (insertError) throw insertError;
+    const newUserId = insertUser.rows[0].id;
 
-    // ✅ Insert into registrations
-    const { error: regInsertError } = await supabase
-      .from(REGISTRATIONS_TABLE)
-      .insert([
-        {
-          user_id: newEmployee.id,
-          otp_code: null,
-          otp_expiry: null,
-          reset_token: resetToken,
-          reset_token_expiry: resetExpiry,
-          is_approved: false,
-          is_temp_admin: false,
-          temp_admin_expiry: null,
-        },
-      ]);
+    // Insert registration record
+    await client.query(
+      `INSERT INTO ${REGISTRATIONS_TABLE} 
+        (user_id, otp_code, otp_expiry, reset_token, reset_token_expiry, is_approved, is_temp_admin, temp_admin_expiry)
+       VALUES ($1, NULL, NULL, $2, $3, false, false, NULL)`,
+      [newUserId, resetToken, resetExpiry]
+    );
 
-    if (regInsertError) throw regInsertError;
-
-    // ✅ Insert default attendance record
+    // Insert default attendance record
     const currentYear = new Date().getFullYear();
+    await client.query(
+      `INSERT INTO attendance
+        (employee_id, year, working_days, work_from_home, holidays, optional_holidays, el, sl, extra_milar, maternity_leave, paternity_leave, project_id, date, weekly_status, monthly_status, total_hours, worked_hours)
+       VALUES ($1,$2,0,315,10,2,25,10,2,0,0,NULL,CURRENT_DATE,'draft','draft',0,0)`,
+      [newUserId, currentYear]
+    );
 
-    const { error: attendanceInsertError } = await supabase
-      .from("attendance")
-      .insert([
-        {
-          employee_id: newEmployee.id,
-          year: currentYear,
-          working_days: 0,
-          work_from_home: 315, // default
-          holidays: 10,
-          optional_holidays: 2,
-          el: 25,
-          sl: 10,
-          extra_milar: 2,
-          maternity_leave: 0,
-          paternity_leave: 0,
-          project_id: null,
-          date: new Date().toISOString().split("T")[0], // current date
-          weekly_status: "draft",
-          monthly_status: "draft",
-          total_hours: 0,
-          worked_hours: 0,
-        },
-      ]);
-
-    if (attendanceInsertError) throw attendanceInsertError;
-
-    // ✅ Send Email with login credentials
+    // Send email
     const loginUrl = `${process.env.FRONTEND_URL}/login`;
-
     await sendEmail(
       email,
       "Your EMS Employee Account Credentials",
@@ -296,14 +241,14 @@ export const registerEmployee = async (req, res) => {
       `
     );
 
-    // ✅ Response
     res.status(201).json({
-      message: "Employee registered successfully. Credentials sent via email, and attendance record created.",
+      message: "Employee registered successfully. Credentials sent via email.",
     });
-
   } catch (err) {
     console.error("Register Employee Error:", err.message);
     res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
   }
 };
 
@@ -400,229 +345,206 @@ export const registerEmployee = async (req, res) => {
 
 // ================== Employee Login ==================
 export const employeeLogin = async (req, res) => {
+  const client = await pool.connect();
   try {
     const { email, password, otp } = req.body;
 
-    const { data: user, error } = await supabase
-      .from(USERS_TABLE)
-      .select("*")
-      .eq("email", email)
-      .in("role", ["employee", "admin", "superadmin"])
-      .maybeSingle();
+    const userRes = await client.query(
+      `SELECT * FROM ${USERS_TABLE} WHERE email = $1 AND role IN ('employee','admin','superadmin')`,
+      [email]
+    );
+    const user = userRes.rows[0];
+    if (!user) return res.status(401).json({ error: "Invalid Email" });
 
-    if (error || !user) return res.status(401).json({ error: "Invalid Email" });
+    const validPassword = await bcrypt.compare(password, user.password);
+    if (!validPassword) return res.status(401).json({ error: "Invalid Password" });
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) return res.status(401).json({ error: "Invalid Password" });
-
+    // Admin/Superadmin MFA flow
     if (["admin", "superadmin"].includes(user.role)) {
-  // Step 1: Password verification
-   if (!otp) {
-    return res.json({
-      message: "Enter OTP from your authenticator app",
-      otpRequired: true,   // frontend will use this to show OTP input
-    });
-  }
+      if (!otp) {
+        return res.json({
+          message: "Enter OTP from your authenticator app",
+          otpRequired: true,
+        });
+      }
 
-  // Step 2: Verify OTP using speakeasy
-  const verified = speakeasy.totp.verify({
-    secret: user.mfa_secret,
-    encoding: "base32",
-    token: otp,
-    window: 1, // optional: allows for ±1 step
-  });
+      const verified = speakeasy.totp.verify({
+        secret: user.mfa_secret,
+        encoding: "base32",
+        token: otp,
+        window: 1,
+      });
+      if (!verified) return res.status(401).json({ error: "Invalid OTP" });
 
-  if (!verified) return res.status(401).json({ error: "Invalid OTP" });
-
-  // OTP verified → issue JWT
-  const token = issueJwt({
-    email: user.email,
-    role: user.role,
-    id: user.id,
-    name: user.name,
-  });
-
-  return res.json({
-    message: `${user.role} login successful with MFA`,
-    token,
-    user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      mfa_enabled: user.mfa_enabled,
-    },
-  });
-}
-    // employee flow
-    const { data: reg, error: regError } = await supabase
-      .from(REGISTRATIONS_TABLE)
-      .select("*")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    if (regError || !reg) {
-      return res.status(400).json({ error: "Registration record not found. Please contact admin." });
+      const token = issueJwt({
+        email: user.email,
+        role: user.role,
+        id: user.id,
+        name: user.name,
+      });
+      return res.json({
+        message: `${user.role} login successful with MFA`,
+        token,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          mfa_enabled: user.mfa_enabled,
+        },
+      });
     }
 
-    // Check reset token (first login)
+    // Employee flow
+    const regRes = await client.query(
+      `SELECT * FROM ${REGISTRATIONS_TABLE} WHERE user_id = $1`,
+      [user.id]
+    );
+    const reg = regRes.rows[0];
+    if (!reg) return res.status(400).json({ error: "Registration record not found." });
+
     const now = new Date();
-    if (reg?.reset_token && now <= new Date(reg.reset_token_expiry)) {
+    if (reg.reset_token && now <= new Date(reg.reset_token_expiry)) {
       return res.status(202).json({
-        message: "First login detected. Please reset your password to proceed.",
+        message: "First login detected. Please reset your password.",
         firstLogin: true,
         resetToken: reg.reset_token,
       });
     }
 
-    // Generate/send OTP if missing
     if (!otp) {
       const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-      const otpExpiry = new Date(Date.now() + 5 * 60 * 1000).toISOString();
-      const { error: updateError } = await supabase
-        .from(REGISTRATIONS_TABLE)
-        .update({ otp_code: otpCode, otp_expiry: otpExpiry })
-        .eq("user_id", user.id);
-
-      if (updateError) throw updateError;
+      const otpExpiry = new Date(Date.now() + 5 * 60 * 1000);
+      await client.query(
+        `UPDATE ${REGISTRATIONS_TABLE} SET otp_code=$1, otp_expiry=$2 WHERE user_id=$3`,
+        [otpCode, otpExpiry, user.id]
+      );
 
       await sendEmail(
         user.email,
         "Your EMS Login OTP",
-        `
-          <p>Hello ${user.name},</p>
-          <p>Your OTP is: <b>${otpCode}</b></p>
-          <p>Valid for 5 minutes.</p>
-        `
+        `<p>Hello ${user.name},</p><p>Your OTP is: <b>${otpCode}</b></p><p>Valid for 5 minutes.</p>`
       );
-      return res.json({ message: "OTP sent to your email", otpRequired: true  });
+
+      return res.json({ message: "OTP sent to your email", otpRequired: true });
     }
 
-    if (reg?.otp_code !== otp || new Date() > new Date(reg?.otp_expiry)) {
+    if (reg.otp_code !== otp || now > new Date(reg.otp_expiry)) {
       return res.status(400).json({ error: "Invalid or expired OTP" });
     }
 
-    await supabase.from(REGISTRATIONS_TABLE).update({ otp_code: null, otp_expiry: null }).eq("user_id", user.id);
+    await client.query(
+      `UPDATE ${REGISTRATIONS_TABLE} SET otp_code=NULL, otp_expiry=NULL WHERE user_id=$1`,
+      [user.id]
+    );
 
-    // Check temp admin
-    let is_temp_admin = false;
-    if (reg?.is_temp_admin && new Date() <= new Date(reg.temp_admin_expiry)) {
-      is_temp_admin = true;
-    } else if (reg?.is_temp_admin) {
-      await supabase.from(REGISTRATIONS_TABLE).update({ is_temp_admin: false, temp_admin_expiry: null }).eq("user_id", user.id);
-    }
+    const isTempAdmin =
+      reg.is_temp_admin && new Date(reg.temp_admin_expiry) > now;
 
     const token = issueJwt({
       email: user.email,
       role: user.role,
       employee_id: user.employee_id,
-      is_temp_admin,
+      is_temp_admin: isTempAdmin,
       id: user.id,
     });
 
-    return res.json({
+    res.json({
       message: "Employee login successful",
       token,
       employee: {
         employeeId: user.employee_id,
         fullName: user.name,
         email: user.email,
-        is_temp_admin,
-        temp_admin_expiry: reg?.temp_admin_expiry,
+        is_temp_admin: isTempAdmin,
+        temp_admin_expiry: reg.temp_admin_expiry,
       },
     });
   } catch (err) {
-    console.error(err);
+    console.error("Employee Login Error:", err.message);
     res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
   }
 };
 
 // ================== Request Password Reset ==================
 export const requestPasswordReset = async (req, res) => {
+  const client = await pool.connect();
   try {
     const { email } = req.body;
 
-    const { data: user, error } = await supabase
-      .from(USERS_TABLE)
-      .select("*")
-      .eq("email", email)
-      .eq("role", "employee")
-      .maybeSingle();
-
-    if (error || !user) return res.status(404).json({ error: "Employee not found" });
+    const userRes = await client.query(
+      `SELECT * FROM ${USERS_TABLE} WHERE email=$1 AND role='employee'`,
+      [email]
+    );
+    const user = userRes.rows[0];
+    if (!user) return res.status(404).json({ error: "Employee not found" });
 
     const resetToken = crypto.randomBytes(32).toString("hex");
     const resetExpiry = new Date(Date.now() + 15 * 60 * 1000);
 
-    const { error: regError } = await supabase
-      .from(REGISTRATIONS_TABLE)
-      .update({
-        reset_token: resetToken,
-        reset_token_expiry: resetExpiry,
-      })
-      .eq("user_id", user.id);
-
-    if (regError) throw regError;
+    await client.query(
+      `UPDATE ${REGISTRATIONS_TABLE} SET reset_token=$1, reset_token_expiry=$2 WHERE user_id=$3`,
+      [resetToken, resetExpiry, user.id]
+    );
 
     const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
-
     await sendEmail(
       user.email,
       "Reset your EMS Password",
-      `
-        <p>Hello ${user.name},</p>
-        <p>Click the link below to reset your password:</p>
-        <a href="${resetLink}">${resetLink}</a>
-      `
+      `<p>Hello ${user.name},</p><p>Click below to reset password:</p><a href="${resetLink}">${resetLink}</a>`
     );
 
     res.json({ message: "Password reset link sent to your email." });
   } catch (err) {
     console.error("Request Password Reset Error:", err.message);
     res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
   }
 };
 
 // ================== Reset Password ==================
 export const resetPassword = async (req, res) => {
+  const client = await pool.connect();
   try {
     const { token, newPassword } = req.body;
 
-    const { data: registration, error: regError } = await supabase
-      .from(REGISTRATIONS_TABLE)
-      .select("*")
-      .eq("reset_token", token)
-      .maybeSingle();
-
-    if (regError || !registration || new Date() > new Date(registration.reset_token_expiry)) {
+    const regRes = await client.query(
+      `SELECT * FROM ${REGISTRATIONS_TABLE} WHERE reset_token=$1`,
+      [token]
+    );
+    const registration = regRes.rows[0];
+    if (
+      !registration ||
+      new Date() > new Date(registration.reset_token_expiry)
+    ) {
       return res.status(400).json({ error: "Invalid or expired reset token" });
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    const { error: updateError } = await supabase
-      .from(USERS_TABLE)
-      .update({ password: hashedPassword })
-      .eq("id", registration.user_id);
+    await client.query(
+      `UPDATE ${USERS_TABLE} SET password=$1 WHERE id=$2`,
+      [hashedPassword, registration.user_id]
+    );
 
-    if (updateError) throw updateError;
+    await client.query(
+      `UPDATE ${REGISTRATIONS_TABLE} SET reset_token=NULL, reset_token_expiry=NULL WHERE id=$1`,
+      [registration.id]
+    );
 
-    // Clear reset token
-    await supabase
-      .from(REGISTRATIONS_TABLE)
-      .update({ reset_token: null, reset_token_expiry: null })
-      .eq("id", registration.id);
-      
     res.json({
-      message: "Password reset successful. Please login with your new password.",
-      firstLoginCompleted: !!token,
+      message: "Password reset successful. Please login with new password.",
     });
   } catch (err) {
     console.error("Reset Password Error:", err.message);
     res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
   }
 };
-
 // ================== Upload Excel (Preview) ==================
 export const uploadExcel = async (req, res) => {
   try {
@@ -663,19 +585,19 @@ export const uploadExcel = async (req, res) => {
 
 // ================== Bulk Insert Employees ==================
 export const bulkInsertEmployees = async (req, res) => {
+  const client = await pool.connect();
   try {
     const employees = req.body.employees;
+    if (!employees || !Array.isArray(employees) || employees.length === 0) {
+      return res.status(400).json({ message: "No employee data provided" });
+    }
 
     // 1️⃣ Fetch existing employee IDs
-    const { data: existingEmployees, error: fetchError } = await supabase
-      .from(USERS_TABLE)
-      .select("employee_id")
-      .eq("role", "employee");
+    const existingEmployees = await client.query(
+      `SELECT employee_id FROM ${USERS_TABLE} WHERE role = 'employee'`
+    );
 
-    if (fetchError) throw fetchError;
-
-    // Extract numbers from EMPxxx IDs
-    const existingNumbers = existingEmployees
+    const existingNumbers = existingEmployees.rows
       .map(e => e.employee_id)
       .filter(Boolean)
       .map(id => parseInt(id.replace("EMP", ""), 10))
@@ -687,8 +609,8 @@ export const bulkInsertEmployees = async (req, res) => {
     const employeesPrepared = await Promise.all(
       employees.map(async (emp) => {
         const employeeId = `EMP${nextNumber.toString().padStart(3, "0")}`;
-        nextNumber++; // increment for next employee
-        
+        nextNumber++;
+
         const randomPassword =
           emp.password || crypto.randomBytes(6).toString("base64").slice(0, 10);
         const hashedPassword = await bcrypt.hash(randomPassword, 10);
@@ -698,6 +620,7 @@ export const bulkInsertEmployees = async (req, res) => {
 
         return {
           user: {
+            employee_id: employeeId,
             name: emp.fullName,
             email: emp.email,
             password: hashedPassword,
@@ -706,51 +629,54 @@ export const bulkInsertEmployees = async (req, res) => {
             address: emp.address,
             department: emp.department,
             date_of_joining: emp.dateOfJoining,
-            employee_id: employeeId,
             access_flag: "y",
           },
           registration: {
-            email_otp: null,
-            otp_code: null,
-            otp_expiry: null,
             reset_token: resetToken,
             reset_token_expiry: resetExpiry,
             is_approved: false,
             is_temp_admin: false,
             temp_admin_expiry: null,
-            plainPassword: randomPassword, //in memory
+            plainPassword: randomPassword,
           },
         };
       })
     );
 
-    // 3️⃣ Insert into user_employees_master
-    const { data: insertedUsers, error: insertError } = await supabase
-      .from(USERS_TABLE)
-      .insert(employeesPrepared.map((e) => e.user))
-      .select();
+    // 3️⃣ Insert employees into user_employees_master
+    const insertedUsers = [];
+    for (const emp of employeesPrepared) {
+      const result = await client.query(
+        `INSERT INTO ${USERS_TABLE} 
+          (employee_id, name, email, password, role, phone, address, department, date_of_joining, access_flag)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+         RETURNING id, email, name`,
+        [
+          emp.user.employee_id,
+          emp.user.name,
+          emp.user.email,
+          emp.user.password,
+          emp.user.role,
+          emp.user.phone,
+          emp.user.address,
+          emp.user.department,
+          emp.user.date_of_joining,
+          emp.user.access_flag,
+        ]
+      );
+      insertedUsers.push(result.rows[0]);
 
-    if (insertError) throw insertError;
+      // Insert registration
+      await client.query(
+        `INSERT INTO ${REGISTRATIONS_TABLE}
+          (user_id, reset_token, reset_token_expiry, is_approved, is_temp_admin, temp_admin_expiry)
+         VALUES ($1,$2,$3,false,false,NULL)`,
+        [result.rows[0].id, emp.registration.reset_token, emp.registration.reset_token_expiry]
+      );
+    }
 
-    // 4️⃣ Insert into registrations (exclude plainPassword)
-    const registrationsToInsert = employeesPrepared.map((e, idx) => {
-      const { plainPassword, ...rest } = e.registration; // remove plainPassword
-      return {
-        ...rest,
-        user_id: insertedUsers[idx].id,
-      };
-    });
-
-    const { error: regError } = await supabase
-      .from(REGISTRATIONS_TABLE)
-      .insert(registrationsToInsert);
-
-    if (regError) throw regError;
-
-
+    // 4️⃣ Send credentials email
     const loginUrl = `${process.env.FRONTEND_URL}/login`;
-
-    // 4️⃣ Send emails in background
     await Promise.all(
       employeesPrepared.map(async (emp) => {
         await sendEmail(
@@ -768,95 +694,146 @@ export const bulkInsertEmployees = async (req, res) => {
       })
     );
 
-    return res.json({
+    res.status(201).json({
       message: "Employees added successfully and credentials sent via email.",
       employees: insertedUsers,
     });
   } catch (err) {
     console.error("Bulk Insert Employees Error:", err.message);
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ message: "Failed to add employees", error: err.message });
+  } finally {
+    client.release();
   }
 };
 
-
 // ================== Get All Employees ==================
 export const getEmployees = async (req, res) => {
+  const client = await pool.connect();
   try {
-    const { data, error } = await supabase.from(USERS_TABLE).select("*").in("role",  ["admin", "superadmin","employee"]);
-    if (error) throw error;
+    // Fetch all users with role in ['admin', 'superadmin', 'employee']
+    const query = `
+      SELECT *
+      FROM ${USERS_TABLE}
+      WHERE role IN ('admin', 'superadmin', 'employee');
+    `;
 
-    return res.json(data);
+    const { rows } = await client.query(query);
+
+    return res.status(200).json(rows);
   } catch (err) {
     console.error("Get Employees Error:", err.message);
-    res.status(500).json({ message: err.message });
+    return res.status(500).json({ message: err.message });
+  } finally {
+    client.release();
   }
 };
 
 // ================== Get Employee by ID ==================
 export const getEmployeeById = async (req, res) => {
+  const client = await pool.connect();
   try {
     const { email } = req.params;
 
-    const { data, error } = await supabase
-      .from(USERS_TABLE)
-      .select("*")
-      .eq("email", email) // match database primary key
-      .eq("role", "employee")
-      .maybeSingle();
+    if (!email) {
+      return res.status(400).json({ error: "Email is required" });
+    }
 
-    if (error) throw error;
+    const query = `
+      SELECT *
+      FROM ${USERS_TABLE}
+      WHERE email = $1
+      AND role = 'employee'
+      LIMIT 1;
+    `;
 
-    return res.json(data);
+    const { rows } = await client.query(query, [email]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+
+    return res.status(200).json(rows[0]);
   } catch (err) {
     console.error("Get Employee By ID Error:", err.message);
-    res.status(500).json({ message: err.message });
+    return res.status(500).json({ message: err.message });
+  } finally {
+    client.release();
   }
 };
 
 
-
 // ================== Update Employee ==================
 export const updateEmployee = async (req, res) => {
+  const client = await pool.connect();
   try {
     const { id } = req.params;
     let updates = req.body;
-   
+
+    if (!id || id === "undefined") {
+      return res.status(400).json({ error: "Invalid or missing employee ID" });
+    }
+
     if (updates.password) {
       updates.password = await bcrypt.hash(updates.password, 10);
     }
 
-    const { data, error } = await supabase.from(USERS_TABLE).update(updates).eq("id", id).select();
-    if (error) throw error;
+    const setClauses = Object.keys(updates)
+      .map((key, i) => `${key}=$${i + 1}`)
+      .join(", ");
+    const values = Object.values(updates);
 
-    return res.json({ message: "Employee updated successfully", employee: data[0] });
+    const query = `
+      UPDATE ${USERS_TABLE}
+      SET ${setClauses}
+      WHERE id=$${values.length + 1}
+      RETURNING *;
+    `;
+
+    const { rows } = await client.query(query, [...values, id]);
+    res.json({ message: "Employee updated successfully", employee: rows[0] });
   } catch (err) {
     console.error("Update Employee Error:", err.message);
     res.status(500).json({ message: err.message });
+  } finally {
+    client.release();
   }
 };
 
 // ================== Delete Employee ==================
 export const deleteEmployee = async (req, res) => {
+  const client = await pool.connect();
   try {
     const { id } = req.params;
-  const { status } = req.body; 
-    const { error } = await supabase.from(USERS_TABLE).update({ is_active: status }).eq("id", id);
-    if (error) throw error;
+    const { status } = req.body;
 
-    
- 
-    return res.json({ message: `Employee ${status ? "activated" : "deactivated"} successfully` });
+    if (!id || id === "undefined") {
+      return res.status(400).json({ error: "Invalid or missing employee ID" });
+    }
+
+    await client.query(
+      `UPDATE ${USERS_TABLE} SET is_active=$1 WHERE id=$2`,
+      [status, id]
+    );
+
+    res.json({
+      message: `Employee ${status ? "activated" : "deactivated"} successfully`,
+    });
   } catch (err) {
     console.error("Delete Employee Error:", err.message);
     res.status(500).json({ message: err.message });
+  } finally {
+    client.release();
   }
 };
 
+
 // ================== Export Employees ==================
 export const exportEmployees = async (req, res) => {
+  const client = await pool.connect();
   try {
-    const { data: employees, error } = await supabase.from(USERS_TABLE).select("*").eq("role", "employee");
-    if (error) throw error;
+    const { rows: employees } = await client.query(
+      `SELECT * FROM ${USERS_TABLE} WHERE role='employee'`
+    );
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Employees");
@@ -868,7 +845,7 @@ export const exportEmployees = async (req, res) => {
       { header: "Phone", key: "phone", width: 20 },
       { header: "Address", key: "address", width: 30 },
       { header: "Department", key: "department", width: 20 },
-      { header: "Date of Joining", key: "date_of_joining", width: 20 }, // ✅ included in export
+      { header: "Date of Joining", key: "date_of_joining", width: 20 },
     ];
 
     employees.forEach((emp) => worksheet.addRow(emp));
@@ -884,6 +861,8 @@ export const exportEmployees = async (req, res) => {
   } catch (err) {
     console.error("Export Employees Error:", err.message);
     res.status(500).json({ message: err.message });
+  } finally {
+    client.release();
   }
 };
 
@@ -891,41 +870,33 @@ export const exportEmployees = async (req, res) => {
 // ================== Email Verification ==================
 
 export const sendEmailVerification = async (req, res) => {
+  const client = await pool.connect();
   try {
     const decoded = getUserFromToken(req);
     const email = decoded.email;
 
-    // 1️⃣ Get user id
-    const { data: user, error: userError } = await supabase
-      .from(USERS_TABLE)
-      .select("id, name")
-      .eq("email", email)
-      .single();
+    const { rows: userRes } = await client.query(
+      `SELECT id, name FROM ${USERS_TABLE} WHERE email=$1`,
+      [email]
+    );
 
-    if (userError || !user) {
-      return res.status(404).json({ error: "User not found" });
-    }
+    const user = userRes[0];
+    if (!user) return res.status(404).json({ error: "User not found" });
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiry = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+    const expiry = new Date(Date.now() + 10 * 60 * 1000);
 
-    // 2️⃣ Save OTP in registrations
-    // 2️⃣ Save OTP in registrations (update only)
-    const { error: regError } = await supabase
-    .from(REGISTRATIONS_TABLE)
-    .update({ email_otp: otp, otp_expiry: expiry })
-    .eq("user_id", user.id);
+    await client.query(
+      `UPDATE ${REGISTRATIONS_TABLE} 
+       SET email_otp=$1, otp_expiry=$2
+       WHERE user_id=$3`,
+      [otp, expiry, user.id]
+    );
 
-    if (regError) {
-         return res.status(500).json({ error: "Failed to update OTP" });
-   }
-
-
-    // 3️⃣ Send email
     await sendEmail(
       email,
       "Verify your Email",
-      `<p>Hello ${user?.name || "User"},</p>
+      `<p>Hello ${user.name},</p>
        <p>Your email verification code is <b>${otp}</b></p>
        <p>Valid for 10 minutes.</p>`
     );
@@ -934,36 +905,35 @@ export const sendEmailVerification = async (req, res) => {
   } catch (err) {
     console.error("Send Email Verification Error:", err.message);
     res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
   }
 };
 
 
 export const verifyEmail = async (req, res) => {
+  const client = await pool.connect();
   try {
     const decoded = getUserFromToken(req);
     const email = decoded.email;
     const { otp } = req.body;
 
-    // 1️⃣ Find user
-    const { data: user, error: userError } = await supabase
-      .from(USERS_TABLE)
-      .select("id")
-      .eq("email", email)
-      .single();
+    const { rows: userRes } = await client.query(
+      `SELECT id FROM ${USERS_TABLE} WHERE email=$1`,
+      [email]
+    );
+    const user = userRes[0];
+    if (!user) return res.status(404).json({ error: "User not found" });
 
-    if (userError || !user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    // 2️⃣ Get OTP from registrations
-    const { data: reg, error: regError } = await supabase
-      .from(REGISTRATIONS_TABLE)
-      .select("email_otp, otp_expiry")
-      .eq("user_id", user.id)
-      .single();
-
-    if (regError || !reg) {
-      return res.status(400).json({ error: "No OTP found. Please request again." });
+    const { rows: regRes } = await client.query(
+      `SELECT email_otp, otp_expiry FROM ${REGISTRATIONS_TABLE} WHERE user_id=$1`,
+      [user.id]
+    );
+    const reg = regRes[0];
+    if (!reg) {
+      return res
+        .status(400)
+        .json({ error: "No OTP found. Please request again." });
     }
 
     const isValidOtp = String(reg.email_otp) === String(otp);
@@ -973,36 +943,36 @@ export const verifyEmail = async (req, res) => {
       return res.status(400).json({ error: "Invalid or expired OTP" });
     }
 
-    // 3️⃣ Mark email verified in master
-    await supabase
-      .from(USERS_TABLE)
-      .update({ is_email_verified: true })
-      .eq("id", user.id);
+    await client.query(
+      `UPDATE ${USERS_TABLE} SET is_email_verified=true WHERE id=$1`,
+      [user.id]
+    );
 
-    // 4️⃣ Clear OTP in registrations
-    await supabase
-      .from(REGISTRATIONS_TABLE)
-      .update({ email_otp: null, otp_expiry: null })
-      .eq("user_id", user.id);
+    await client.query(
+      `UPDATE ${REGISTRATIONS_TABLE} SET email_otp=NULL, otp_expiry=NULL WHERE user_id=$1`,
+      [user.id]
+    );
 
     res.json({ message: "Email verified successfully." });
   } catch (err) {
     console.error("Verify Email Error:", err.message);
     res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
   }
 };
 
 export const updateEmployeeProfile = async (req, res) => {
+  const client = await pool.connect();
   try {
     const { id } = req.params;
 
-    const { data: existingData, error: fetchError } = await supabase
-      .from(USERS_TABLE)
-      .select("*")
-      .eq("id", id)
-      .single();
+    const { rows: existingRows } = await client.query(
+      `SELECT * FROM ${USERS_TABLE} WHERE id=$1`,
+      [id]
+    );
+    const existingData = existingRows[0];
 
-    if (fetchError) throw fetchError;
     if (!existingData) {
       return res.status(404).json({ error: "Employee not found" });
     }
@@ -1017,30 +987,35 @@ export const updateEmployeeProfile = async (req, res) => {
     }
 
     if (Object.keys(updates).length === 0) {
-      return res.status(400).json({
-        message: "You can only update profile photo or resume.",
-      });
+      return res
+        .status(400)
+        .json({ message: "You can only update profile photo or resume." });
     }
 
-    const { data, error } = await supabase
-      .from(USERS_TABLE)
-      .update(updates)
-      .eq("id", id)
-      .select("*");
+    const setClauses = Object.keys(updates)
+      .map((key, i) => `${key}=$${i + 1}`)
+      .join(", ");
+    const values = Object.values(updates);
 
-    if (error) throw error;
+    const query = `
+      UPDATE ${USERS_TABLE}
+      SET ${setClauses}
+      WHERE id=$${values.length + 1}
+      RETURNING *;
+    `;
 
-    return res.json({
+    const { rows } = await client.query(query, [...values, id]);
+    res.json({
       message: "Profile updated successfully.",
-      employee: data[0],
+      employee: rows[0],
     });
-
   } catch (err) {
-    console.error("Update Employee Error:", err);
+    console.error("Update Employee Profile Error:", err.message);
     res.status(500).json({ message: err.message });
+  } finally {
+    client.release();
   }
 };
-
 
 // export const viewOwnProfile = async (req, res) => {
 //   try {
@@ -1074,14 +1049,16 @@ export const updateEmployeeProfile = async (req, res) => {
 
  
 export const applyParentalLeave = async (req, res) => {
+  const client = await pool.connect();
   try {
     const { employee_id, leave_type, start_date } = req.body;
 
+    // ✅ 1. Validation
     if (!employee_id || !leave_type || !start_date) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // Default leave days
+    // ✅ 2. Default leave days
     let maternity_leave = 0;
     let paternity_leave = 0;
 
@@ -1095,6 +1072,7 @@ export const applyParentalLeave = async (req, res) => {
 
     const currentYear = new Date(start_date).getFullYear();
 
+    // ✅ 3. Build leave record
     const leaveRecord = {
       employee_id,
       year: currentYear,
@@ -1117,24 +1095,52 @@ export const applyParentalLeave = async (req, res) => {
 
     console.log("Leave record to insert:", leaveRecord);
 
-    const { data, error } = await supabase
-      .from("attendance")
-      .insert([leaveRecord])
-      .select();
+    // ✅ 4. Insert into PostgreSQL (attendance table)
+    const insertQuery = `
+      INSERT INTO attendance (
+        employee_id, year, maternity_leave, paternity_leave, weekly_status, monthly_status,
+        total_hours, worked_hours, working_days, work_from_home, holidays, optional_holidays,
+        el, sl, extra_milar, leave_type, date
+      )
+      VALUES (
+        $1, $2, $3, $4, $5, $6,
+        $7, $8, $9, $10, $11, $12,
+        $13, $14, $15, $16, $17
+      )
+      RETURNING *;
+    `;
 
-    if (error) {
-      console.error("Supabase insert error:", error);
-      return res.status(500).json({ error: "Error inserting leave record", details: error });
-    }
+    const values = [
+      leaveRecord.employee_id,
+      leaveRecord.year,
+      leaveRecord.maternity_leave,
+      leaveRecord.paternity_leave,
+      leaveRecord.weekly_status,
+      leaveRecord.monthly_status,
+      leaveRecord.total_hours,
+      leaveRecord.worked_hours,
+      leaveRecord.working_days,
+      leaveRecord.work_from_home,
+      leaveRecord.holidays,
+      leaveRecord.optional_holidays,
+      leaveRecord.el,
+      leaveRecord.sl,
+      leaveRecord.extra_milar,
+      leaveRecord.leave_type,
+      leaveRecord.date,
+    ];
 
+    const { rows } = await client.query(insertQuery, values);
+
+    // ✅ 5. Send response
     res.status(201).json({
       message: `${leave_type} leave applied successfully and pending admin approval`,
-      leave_record: data[0],
+      leave_record: rows[0],
     });
-
   } catch (err) {
-    console.error("Apply Parental Leave Error:", err);
+    console.error("Apply Parental Leave Error:", err.message);
     res.status(500).json({ error: "Error applying parental leave", details: err.message });
+  } finally {
+    client.release();
   }
 };
-  
