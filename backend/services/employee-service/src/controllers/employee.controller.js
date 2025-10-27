@@ -992,90 +992,10 @@ export const verifyEmail = async (req, res) => {
   }
 };
 
-// export const updateEmployeeProfile = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-
-//     const { data: existingData, error: fetchError } = await supabase
-//       .from(USERS_TABLE)
-//       .select("*")
-//       .eq("id", id)
-//       .single();
-
-//     if (fetchError) throw fetchError;
-//     if (!existingData) {
-//       return res.status(404).json({ error: "Employee not found" });
-//     }
-
-//     const updates = {};
-
-//     if (req.files?.profilePhoto?.[0]) {
-//       updates.profile_photo = req.files.profilePhoto[0].filename;
-//     }
-//     if (req.files?.resume?.[0]) {
-//       updates.resume = req.files.resume[0].filename;
-//     }
-
-//     if (Object.keys(updates).length === 0) {
-//       return res.status(400).json({
-//         message: "You can only update profile photo or resume.",
-//       });
-//     }
-
-//     const { data, error } = await supabase
-//       .from(USERS_TABLE)
-//       .update(updates)
-//       .eq("id", id)
-//       .select("*");
-
-//     if (error) throw error;
-
-//     return res.json({
-//       message: "Profile updated successfully.",
-//       employee: data[0],
-//     });
-
-//   } catch (err) {
-//     console.error("Update Employee Error:", err);
-//     res.status(500).json({ message: err.message });
-//   }
-// };
-
-
-// export const viewOwnProfile = async (req, res) => {
-//   try {
-//     const decoded = getUserFromToken(req); // Extract user info from JWT
-//     const email = decoded.email;
-
-//     const { data, error } = await supabase
-//       .from("user_employees_master")
-//       .select(
-//         "employee_id, name, email, phone, address, department, date_of_joining, permanent_address, emergency_contact, gender"
-//       )
-//       .eq("email", email)
-//       .eq("role", "employee")
-//       .maybeSingle();
-
-//     if (error) throw error;
-//     if (!data) {
-//       return res.status(404).json({ error: "Employee profile not found" });
-//     }
-
-//     res.status(200).json({
-//       message: "Profile fetched successfully",
-//       profile: data,
-//     });
-//   } catch (err) {
-//     console.error("View Own Profile Error:", err.message);
-//     res.status(500).json({ error: "Failed to fetch profile" });
-//   }
-// };
-
 export const updateEmployeeProfile = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Step 1: Check if employee exists
     const { data: existingData, error: fetchError } = await supabase
       .from(USERS_TABLE)
       .select("*")
@@ -1087,8 +1007,8 @@ export const updateEmployeeProfile = async (req, res) => {
       return res.status(404).json({ error: "Employee not found" });
     }
 
-    // Step 2: Prepare updates
     const updates = {};
+
     if (req.files?.profilePhoto?.[0]) {
       updates.profile_photo = req.files.profilePhoto[0].filename;
     }
@@ -1102,34 +1022,17 @@ export const updateEmployeeProfile = async (req, res) => {
       });
     }
 
-    // Step 3: Update user profile
-    const { data: updatedData, error: updateError } = await supabase
+    const { data, error } = await supabase
       .from(USERS_TABLE)
       .update(updates)
       .eq("id", id)
       .select("*");
 
-    if (updateError) throw updateError;
+    if (error) throw error;
 
-    // Step 4: Fetch Project Name from assignment table
-    const { data: projectData, error: projectError } = await supabase
-      .from("project_assignment") // your table name
-      .select("project_name") // or "projects(name)" if using relationship
-      .eq("employee_id", id)
-      .single();
-
-    if (projectError && projectError.code !== "PGRST116") {
-      // PGRST116 = no rows found
-      throw projectError;
-    }
-
-    const projectName = projectData ? projectData.project_name : null;
-
-    // Step 5: Return updated employee + project name
     return res.json({
       message: "Profile updated successfully.",
-      employee: updatedData[0],
-      projectName: projectName || "No project assigned",
+      employee: data[0],
     });
 
   } catch (err) {
@@ -1137,6 +1040,37 @@ export const updateEmployeeProfile = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+
+export const viewOwnProfile = async (req, res) => {
+  try {
+    const decoded = getUserFromToken(req); // Extract user info from JWT
+    const email = decoded.email;
+
+    const { data, error } = await supabase
+      .from("user_employees_master")
+      .select(
+        "employee_id, name, email, phone, address, department, date_of_joining, permanent_address, emergency_contact, gender"
+      )
+      .eq("email", email)
+      .eq("role", "employee")
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) {
+      return res.status(404).json({ error: "Employee profile not found" });
+    }
+
+    res.status(200).json({
+      message: "Profile fetched successfully",
+      profile: data,
+    });
+  } catch (err) {
+    console.error("View Own Profile Error:", err.message);
+    res.status(500).json({ error: "Failed to fetch profile" });
+  }
+};
+
 
  
 export const applyParentalLeave = async (req, res) => {
