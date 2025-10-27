@@ -992,54 +992,54 @@ export const verifyEmail = async (req, res) => {
   }
 };
 
-export const updateEmployeeProfile = async (req, res) => {
-  try {
-    const { id } = req.params;
+// export const updateEmployeeProfile = async (req, res) => {
+//   try {
+//     const { id } = req.params;
 
-    const { data: existingData, error: fetchError } = await supabase
-      .from(USERS_TABLE)
-      .select("*")
-      .eq("id", id)
-      .single();
+//     const { data: existingData, error: fetchError } = await supabase
+//       .from(USERS_TABLE)
+//       .select("*")
+//       .eq("id", id)
+//       .single();
 
-    if (fetchError) throw fetchError;
-    if (!existingData) {
-      return res.status(404).json({ error: "Employee not found" });
-    }
+//     if (fetchError) throw fetchError;
+//     if (!existingData) {
+//       return res.status(404).json({ error: "Employee not found" });
+//     }
 
-    const updates = {};
+//     const updates = {};
 
-    if (req.files?.profilePhoto?.[0]) {
-      updates.profile_photo = req.files.profilePhoto[0].filename;
-    }
-    if (req.files?.resume?.[0]) {
-      updates.resume = req.files.resume[0].filename;
-    }
+//     if (req.files?.profilePhoto?.[0]) {
+//       updates.profile_photo = req.files.profilePhoto[0].filename;
+//     }
+//     if (req.files?.resume?.[0]) {
+//       updates.resume = req.files.resume[0].filename;
+//     }
 
-    if (Object.keys(updates).length === 0) {
-      return res.status(400).json({
-        message: "You can only update profile photo or resume.",
-      });
-    }
+//     if (Object.keys(updates).length === 0) {
+//       return res.status(400).json({
+//         message: "You can only update profile photo or resume.",
+//       });
+//     }
 
-    const { data, error } = await supabase
-      .from(USERS_TABLE)
-      .update(updates)
-      .eq("id", id)
-      .select("*");
+//     const { data, error } = await supabase
+//       .from(USERS_TABLE)
+//       .update(updates)
+//       .eq("id", id)
+//       .select("*");
 
-    if (error) throw error;
+//     if (error) throw error;
 
-    return res.json({
-      message: "Profile updated successfully.",
-      employee: data[0],
-    });
+//     return res.json({
+//       message: "Profile updated successfully.",
+//       employee: data[0],
+//     });
 
-  } catch (err) {
-    console.error("Update Employee Error:", err);
-    res.status(500).json({ message: err.message });
-  }
-};
+//   } catch (err) {
+//     console.error("Update Employee Error:", err);
+//     res.status(500).json({ message: err.message });
+//   }
+// };
 
 
 // export const viewOwnProfile = async (req, res) => {
@@ -1071,6 +1071,72 @@ export const updateEmployeeProfile = async (req, res) => {
 //   }
 // };
 
+export const updateEmployeeProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Step 1: Check if employee exists
+    const { data: existingData, error: fetchError } = await supabase
+      .from(USERS_TABLE)
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (fetchError) throw fetchError;
+    if (!existingData) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+
+    // Step 2: Prepare updates
+    const updates = {};
+    if (req.files?.profilePhoto?.[0]) {
+      updates.profile_photo = req.files.profilePhoto[0].filename;
+    }
+    if (req.files?.resume?.[0]) {
+      updates.resume = req.files.resume[0].filename;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({
+        message: "You can only update profile photo or resume.",
+      });
+    }
+
+    // Step 3: Update user profile
+    const { data: updatedData, error: updateError } = await supabase
+      .from(USERS_TABLE)
+      .update(updates)
+      .eq("id", id)
+      .select("*");
+
+    if (updateError) throw updateError;
+
+    // Step 4: Fetch Project Name from assignment table
+    const { data: projectData, error: projectError } = await supabase
+      .from("project_assignment") // your table name
+      .select("project_name") // or "projects(name)" if using relationship
+      .eq("employee_id", id)
+      .single();
+
+    if (projectError && projectError.code !== "PGRST116") {
+      // PGRST116 = no rows found
+      throw projectError;
+    }
+
+    const projectName = projectData ? projectData.project_name : null;
+
+    // Step 5: Return updated employee + project name
+    return res.json({
+      message: "Profile updated successfully.",
+      employee: updatedData[0],
+      projectName: projectName || "No project assigned",
+    });
+
+  } catch (err) {
+    console.error("Update Employee Error:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
 
  
 export const applyParentalLeave = async (req, res) => {

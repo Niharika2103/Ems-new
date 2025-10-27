@@ -138,6 +138,8 @@ const InfoRow = ({ label, value }) => (
               <InfoRow label="Current Address" value={formData.address} />
               <InfoRow label="Permanent Address" value={formData.permanent_address} />
               <InfoRow label="Emergency Contact" value={formData.emergency_contact} />
+              <InfoRow label="Project Name" value={""} />
+               <InfoRow label="Reporting Manager" value={""} />
             </Box>
 
             {/* Profile Photo Section */}
