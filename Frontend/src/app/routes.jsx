@@ -115,7 +115,7 @@ function AppRoutes() {
         <Route
           path="/dashboard/superadmin_requestTable"
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["superadmin"]}>
               <SuperAadminTable />
             </ProtectedRoute>
           }

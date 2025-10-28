@@ -20,7 +20,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "projects",schema = "ems")
+@Table(name = "projects")
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class ProjectEntity {
 	
