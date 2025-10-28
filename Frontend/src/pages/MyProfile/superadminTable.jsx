@@ -96,7 +96,8 @@ const handlePromoteToSuperadmin = async (admin) => {
         return (isApproved ? "Approved" : "Pending") === value;
       },
       render: (_registrations, record) => {
-        const isApproved = record.registrations?.[0]?.is_approved;
+        const isApproved = record.is_approved ?? record.registrations?.[0]?.is_approved;
+
 
         return (
           <Space>

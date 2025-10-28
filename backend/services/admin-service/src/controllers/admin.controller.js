@@ -522,33 +522,38 @@ export const approveAdmin = async (req, res) => {
     const { id } = req.params;
     const { is_approved } = req.body;
 
-    // Validate input
+    // 🧩 Validate input
+    if (!id || id === "undefined") {
+      return res.status(400).json({ error: "Invalid or missing admin ID" });
+    }
+
     if (typeof is_approved !== "boolean") {
       return res.status(400).json({ error: "is_approved must be boolean" });
     }
 
-    // Update the registrations table inside `ems` schema
+    // 🛠️ Update admin approval status
     const updateQuery = `
       UPDATE ${REGISTRATIONS_TABLE}
       SET is_approved = $1
-      WHERE user_id = $2
+      WHERE id = $2
       RETURNING *;
     `;
 
     const { rows } = await client.query(updateQuery, [is_approved, id]);
 
-    // If no admin record found
+    // ⚠️ If no admin found
     if (rows.length === 0) {
       return res.status(404).json({ error: "Admin not found" });
     }
 
-    // Response message
+    // ✅ Response
     res.json({
       message: is_approved
         ? "SuperAdmin approved successfully"
         : "SuperAdmin access revoked",
       admin: rows[0],
     });
+
   } catch (err) {
     console.error("Approve SuperAdmin Error:", err.message);
     res.status(500).json({ error: err.message });
@@ -556,8 +561,6 @@ export const approveAdmin = async (req, res) => {
     client.release();
   }
 };
-
-
 // export const getAdminById = async (req, res) => {
 //   try {
 //     const { id } = req.params;
