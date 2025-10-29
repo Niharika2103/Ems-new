@@ -35,11 +35,14 @@ public interface AttendanceRepository extends JpaRepository<AttendanceEntity, UU
 	List<AttendanceEntity> findByEmployee_IdAndDateBetween(UUID employeeId, LocalDate startDate, LocalDate endDate);
 
 	
+	
 	List<AttendanceEntity> findByEmployee_IdAndProject_IdAndDateBetween(
 		    UUID employeeId,
 		    UUID projectId,
 		    LocalDate startDate,
 		    LocalDate endDate
 		);
+
+
 	
 }

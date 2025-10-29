@@ -4,7 +4,8 @@ import { AttendanceSaveallApi,AttendanceFetchAllApi ,AttendanceFetchExistingWeek
   AttendanceFetchByEmployeeProjectApi,AttendanceReleaseWeekApi,
 AdminAttendancFetchWeeklyDataByIdApi,Admin_Approve_Weekly_Attendance_Api,
 AdminAttendancFetchMonthlyDataByIdApi,
-Admin_Approve_monthly_Attendance_Api,applyParentalLeaveApi, approveParentalLeaveApi,fetchPendingParentalLeavesApi} from "../../api/authApi";
+Admin_Approve_monthly_Attendance_Api,applyParentalLeaveApi, approveParentalLeaveApi,AttendanceFetchAllbasedonMonthApi,
+fetchPendingParentalLeavesApi} from "../../api/authApi";
 
 
 //Employee
@@ -77,23 +78,27 @@ export const AttendanceReleaseWeek= createAsyncThunk("attendance/release-week", 
   }
 })
 
-export const AttendanceReleaseMonth= createAsyncThunk("attendance/release-Month", async ({ employeeId,  monthStart,monthEnd }, thunkAPI) => {
+export const AttendanceReleaseMonth= createAsyncThunk("attendance/release-Month", async ({ employeeId,projectId,  monthStart,monthEnd }, thunkAPI) => {
   try {
-    const res = await AttendanceReleaseMonthApi( employeeId,  monthStart,monthEnd );
+    const res = await AttendanceReleaseMonthApi( employeeId, projectId, monthStart,monthEnd );
     return res.data;
   } catch (err) {
     return thunkAPI.rejectWithValue(err.response?.data || err.message);
   }
 })
 //Admin
-export const AdminAttendancFetchWeeklyDataById = createAsyncThunk("admin/fetchweekly", async ({ employeeId, from, to }, thunkAPI) => {
-  try {
-    const res = await AdminAttendancFetchWeeklyDataByIdApi( employeeId, from, to );
-    return res.data;
-  } catch (err) {
-    return thunkAPI.rejectWithValue(err.response?.data || err.message);
+export const AdminAttendancFetchWeeklyDataById = createAsyncThunk(
+  "admin/fetchweekly",
+  async ({ employeeId, from, to }, thunkAPI) => {
+    try {
+      const res = await AdminAttendancFetchWeeklyDataByIdApi(employeeId, from, to);
+      return res.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data || err.message);
+    }
   }
-})
+);
+
 export const AdminAttendancFetchMonthlyDataById= createAsyncThunk("admin/fetchMonthly", async ({ employeeId,from , to }, thunkAPI) => {
   try {
     const res = await AdminAttendancFetchMonthlyDataByIdApi( employeeId, from, to );
@@ -162,6 +167,19 @@ export const fetchPendingParentalLeaves = createAsyncThunk(
   }
 );
 
+
+export const AttendanceFetchAllbasedonMonth = createAsyncThunk(
+  "attendance/fetchMonthlyApprovals",
+  async ({ from, to }, { rejectWithValue }) => {
+    try {
+      const res = await AttendanceFetchAllbasedonMonthApi(from, to);
+      return res.data; // List<AttendanceResponseDTO>
+    } catch (err) {
+      return rejectWithValue(err.response?.data || "Failed to fetch monthly data");
+    }
+  }
+);
+
 const attendanceSlice = createSlice({
   name: "attendance",
   initialState: {
@@ -218,14 +236,26 @@ const attendanceSlice = createSlice({
       state.loading = false;
       state.error = action.payload;
     })
-       .addCase(AttendanceFetchAll.pending, (state) => {
+      //  .addCase(AttendanceFetchAll.pending, (state) => {
+      //   state.loading = true;
+      // })
+      // .addCase(AttendanceFetchAll.fulfilled, (state,action) => {
+      //   state.loading = false;
+      //    state.attendance = action.payload;
+      // })
+      // .addCase(AttendanceFetchAll.rejected, (state, action) => {
+      //   state.loading = false;
+      //   state.error = action.payload;
+      // })
+      .addCase(AttendanceFetchAllbasedonMonth.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
-      .addCase(AttendanceFetchAll.fulfilled, (state,action) => {
+      .addCase(AttendanceFetchAllbasedonMonth.fulfilled, (state, action) => {
         state.loading = false;
-         state.attendance = action.payload;
+        state.attendance = action.payload;
       })
-      .addCase(AttendanceFetchAll.rejected, (state, action) => {
+      .addCase(AttendanceFetchAllbasedonMonth.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })

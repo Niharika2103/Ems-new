@@ -30,7 +30,15 @@ export default function MonthlyTimesheet({ onBack }) {
   const [lockedRows, setLockedRows] = useState({ CL: false });
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [menuRow, setMenuRow] = useState(null);
-  const [monthStart, setMonthStart] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+  // const [monthStart, setMonthStart] = useState(new Date(new Date().getFullYear(), 
+  // new Date().getMonth(), 1));
+  const [monthStart, setMonthStart] = useState(() => {
+    const today = new Date();
+    return today.getDate() >= 10
+      ? new Date(today.getFullYear(), today.getMonth(), 10)
+      : new Date(today.getFullYear(), today.getMonth() - 1, 10);
+  });
+
   const [calendarAnchor, setCalendarAnchor] = useState(null);
   const [leaveModalOpen, setLeaveModalOpen] = useState(false);
   const [modalLeaveType, setModalLeaveType] = useState("");
@@ -40,32 +48,71 @@ export default function MonthlyTimesheet({ onBack }) {
   const formatDate = (date) =>
     `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
 
+  // const getMonthDays = (date) => {
+  //   const year = date.getFullYear();
+  //   const month = date.getMonth();
+  //   const numDays = new Date(year, month + 1, 0).getDate();
+  //   const days = [];
+  //   for (let i = 1; i <= numDays; i++) {
+  //     const d = new Date(year, month, i);
+  //     const dayName = d.toLocaleDateString("en-US", { weekday: "short" });
+  //     days.push({
+  //       date: d, // store the actual date
+  //       day: i,
+  //       label: `${i}/${month + 1}/${dayName}`,
+  //       isWeekend: dayName === "Sat" || dayName === "Sun",
+  //     });
+  //   }
+  //   return days;
+  // };
+
   const getMonthDays = (date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const numDays = new Date(year, month + 1, 0).getDate();
-    const days = [];
-    for (let i = 1; i <= numDays; i++) {
-      const d = new Date(year, month, i);
-      const dayName = d.toLocaleDateString("en-US", { weekday: "short" });
-      days.push({
-        date: d, // store the actual date
-        day: i,
-        label: `${i}/${month + 1}/${dayName}`,
-        isWeekend: dayName === "Sat" || dayName === "Sun",
-      });
-    }
-    return days;
-  };
+  const start = new Date(date.getFullYear(), date.getMonth(), 10);
+  const end = new Date(date.getFullYear(), date.getMonth() + 1, 9);
+  const days = [];
+  let current = new Date(start);
 
+  while (current <= end) {
+    const dayName = current.toLocaleDateString("en-US", { weekday: "short" });
+    days.push({
+      date: new Date(current),
+      label: `${current.getDate()}/${current.getMonth() + 1}/${dayName}`,
+      isWeekend: dayName === "Sat" || dayName === "Sun",
+    });
+    current.setDate(current.getDate() + 1);
+  }
 
-  const formatMonthRange = () => {
-    const monthName = monthStart.toLocaleString("default", { month: "long" });
-    return `${monthName} ${monthStart.getFullYear()}`;
-  };
+  return days;
+};
+
+const formatMonthRange = () => {
+  const start = new Date(monthStart.getFullYear(), monthStart.getMonth(), 10);
+  const end = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 9);
+
+  const startMonth = start.toLocaleString("default", { month: "short" });
+  const endMonth = end.toLocaleString("default", { month: "short" });
+  const year =
+    end.getMonth() === 0 && start.getMonth() === 11
+      ? `${start.getFullYear()}–${end.getFullYear()}`
+      : start.getFullYear();
+
+  return `${startMonth} ${start.getDate()} – ${endMonth} ${end.getDate()}, ${year}`;
+};
+// const getCycleInfo = (year) => {
+//   for (let m = 0; m < 12; m++) {
+//     const start = new Date(year, m, 10);
+//     const end = new Date(year, m + 1, 9);
+//     const diff =
+//       Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1; // number of days
+//     console.log(
+//       `${start.toLocaleString("default", { month: "long" })}:\t${start.toDateString()} → ${end.toDateString()} = ${diff} days`
+//     );
+//   }
+// };
 
   // Sync monthDays, hours, leaveRows whenever monthStart changes
   useEffect(() => {
+    // getCycleInfo(2026); 
     const days = getMonthDays(monthStart);
     setMonthDays(days);
     setHours(Array(days.length).fill(0));
@@ -89,26 +136,26 @@ export default function MonthlyTimesheet({ onBack }) {
   };
   const { attendanceData, loading } = useSelector((state) => state.attendance);
   const [projectDetails, setProjectDetails] = useState(null);
-  
-    const projectName = projectDetails?.projectName;
-    const ProjectID = projectDetails?.ProjectID;
-    const employeeId = projectDetails?.employeeId;
-  
-  
-    // Fetch from localStorage when page loads
-    useEffect(() => {
-      const storedData = localStorage.getItem("ProjectDetails");
-      if (storedData) {
-        const parsed = JSON.parse(storedData);
-        setProjectDetails(parsed);
-      } else {
-        console.log("No ProjectDetails found");
-      }
-    }, []);
+
+  const projectName = projectDetails?.projectName;
+  const ProjectID = projectDetails?.projectID;
+  const employeeId = projectDetails?.employeeId;
+
+
+  // Fetch from localStorage when page loads
+  useEffect(() => {
+    const storedData = localStorage.getItem("ProjectDetails");
+    if (storedData) {
+      const parsed = JSON.parse(storedData);
+      setProjectDetails(parsed);
+    } else {
+      console.log("No ProjectDetails found");
+    }
+  }, []);
   useEffect(() => {
     if (employeeId) {
-      const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
-
+      // const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
+      const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 9)
       dispatch(
         AttendanceFetchExistingMonth({
           employeeId,
@@ -122,68 +169,71 @@ export default function MonthlyTimesheet({ onBack }) {
   }, [employeeId, monthStart, dispatch]);
 
   // include monthStart here
- useEffect(() => {
-  if (attendanceData && monthDays.length > 0) {
-    // Worked hours row
-    const newHours = monthDays.map((day) => {
-      const record = attendanceData.find((a) => a.date === formatDate(day.date));
-      return record?.workedHours || 0;
-    });
-    setHours(newHours);
+  useEffect(() => {
+    if (attendanceData && monthDays.length > 0) {
+      // Worked hours row
+      const newHours = monthDays.map((day) => {
+        const record = attendanceData.find((a) => a.date === formatDate(day.date));
+        return record?.workedHours || 0;
+      });
+      setHours(newHours);
 
-    // Leave rows
-    const newLeaveRows = {};
-    const newUsedLeaveTypes = [];
+      // Leave rows
+      const newLeaveRows = {};
+      const newUsedLeaveTypes = [];
 
-    leaveTypes.forEach((lt) => {
-      const row = monthDays.map((day) => {
-        // Find a record for this date and leaveType
-        const record = attendanceData.find(
-          (a) => a.date === formatDate(day.date) && a.leaveType === lt
-        );
-        return record ? record.hours || 9 : 0; // if leave exists, show hours, else 0
+      leaveTypes.forEach((lt) => {
+        const row = monthDays.map((day) => {
+          // Find a record for this date and leaveType
+          const record = attendanceData.find(
+            (a) => a.date === formatDate(day.date) && a.leaveType === lt
+          );
+          return record ? record.hours || 9 : 0; // if leave exists, show hours, else 0
+        });
+
+        // Include leaveType if it exists in any record
+        if (row.some((v) => v > 0)) {
+          newLeaveRows[lt] = row;
+          newUsedLeaveTypes.push(lt);
+        }
       });
 
-      // Include leaveType if it exists in any record
-      if (row.some((v) => v > 0)) {
-        newLeaveRows[lt] = row;
-        newUsedLeaveTypes.push(lt);
-      }
-    });
-
-    setLeaveRows(newLeaveRows);
-    setUsedLeaveTypes(newUsedLeaveTypes);
-  }
-}, [attendanceData, monthDays]);
+      setLeaveRows(newLeaveRows);
+      setUsedLeaveTypes(newUsedLeaveTypes);
+    }
+  }, [attendanceData, monthDays]);
 
 
 
 
   const handleSaveMonth = async () => {
-    const employeeId = projects[0]?.employeeId;
+    const ProjectID = projectDetails?.projectID;
+    const employeeId = projectDetails?.employeeId;
     const today = new Date();
-    const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0); // last day of selected month
-
+    const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 9);
     const formatDate = (date) =>
       `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
 
     try {
       const resultAction = await dispatch(AttendanceReleaseMonth({
-        employeeId,
+        employeeId: employeeId,
+        projectId: ProjectID,
         monthStart: formatDate(monthStart),
         monthEnd: formatDate(monthEnd)
       }));
 
       if (AttendanceReleaseWeek.fulfilled.match(resultAction)) {
-        toast.success("Week released successfully!");
+        toast.success("Month released successfully!");
       } else {
-        throw new Error("Failed to release week");
+        throw new Error("Failed to release month");
       }
     } catch (err) {
       console.log(err); // log the actual error
-      toast.error("Error releasing week!");
+      toast.error("Error releasing month!");
     }
   };
+
+  
   const handleAddActivity = () => {
     if (leaveType === "Maternity Leave" || leaveType === "Paternity Leave") {
       setModalLeaveType(leaveType);
@@ -206,30 +256,30 @@ export default function MonthlyTimesheet({ onBack }) {
   //   setLeaveModalOpen(false);
   // };
 
-   const handleModalSubmit = async ({ startDate }) => {
-  const employeeId = projects[0]?.employeeId;
-  if (!employeeId) {
-    toast.error("Employee ID missing!");
-    return;
-  }
-
-  const leave_type = modalLeaveType === "Maternity Leave" ? "maternity" : "paternity";
-
-  try {
-    const resultAction = await dispatch(
-      applyParentalLeave({ employee_id: employeeId, leave_type, start_date: startDate })
-    );
-
-    if (applyParentalLeave.fulfilled.match(resultAction)) {
-      toast.success(`${modalLeaveType} applied successfully!`);
-    } else {
-      toast.error("Failed to apply leave");
+  const handleModalSubmit = async ({ startDate }) => {
+    const employeeId = projects[0]?.employeeId;
+    if (!employeeId) {
+      toast.error("Employee ID missing!");
+      return;
     }
-  } catch (err) {
-    toast.error("Error applying leave");
-  }
-  setLeaveModalOpen(false);
-};
+
+    const leave_type = modalLeaveType === "Maternity Leave" ? "maternity" : "paternity";
+
+    try {
+      const resultAction = await dispatch(
+        applyParentalLeave({ employee_id: employeeId, leave_type, start_date: startDate })
+      );
+
+      if (applyParentalLeave.fulfilled.match(resultAction)) {
+        toast.success(`${modalLeaveType} applied successfully!`);
+      } else {
+        toast.error("Failed to apply leave");
+      }
+    } catch (err) {
+      toast.error("Error applying leave");
+    }
+    setLeaveModalOpen(false);
+  };
 
   const handleDeleteRow = (row) => {
     setUsedLeaveTypes(usedLeaveTypes.filter((lt) => lt !== row));
@@ -250,9 +300,11 @@ export default function MonthlyTimesheet({ onBack }) {
   };
 
   const changeMonth = (offset) => {
-    const newDate = new Date(monthStart.getFullYear(), monthStart.getMonth() + offset, 1);
+    const newDate = new Date(monthStart);
+    newDate.setMonth(newDate.getMonth() + offset);
     setMonthStart(newDate);
   };
+
 
   const handleCalendarChange = (date) => {
     setMonthStart(new Date(date.getFullYear(), date.getMonth(), 1));

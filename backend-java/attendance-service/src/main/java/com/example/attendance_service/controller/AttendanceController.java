@@ -88,13 +88,25 @@ public class AttendanceController {
     
     @PostMapping("/release-monthly")
     public ResponseEntity<String> releaseMonth(
-    		@RequestParam UUID employeeId,
+            @RequestParam UUID employeeId,
+            @RequestParam UUID projectId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate monthStart,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate monthEnd
-    ) {
-        attendanceService.releaseMonthlyAttendance(employeeId, monthStart, monthEnd);
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate monthEnd) {
+
+        System.out.println("✅ release-monthly called with:");
+        System.out.println("Employee ID: " + employeeId);
+        System.out.println("Project ID: " + projectId);
+        System.out.println("Month Start: " + monthStart);
+        System.out.println("Month End: " + monthEnd);
+
+        attendanceService.releaseMonthlyAttendance(employeeId, projectId, monthStart, monthEnd);
+
         return ResponseEntity.ok("Monthly attendance released successfully.");
     }
+
+
+
+
  
      // ✅ GET all attendance
      @GetMapping
@@ -119,4 +131,14 @@ public class AttendanceController {
      public List<AttendanceEntity> getAttendanceByEmployeeAndProject(@PathVariable UUID employeeId, @PathVariable UUID projectId) {
          return attendanceService.getAttendanceByEmployeeAndProject(employeeId, projectId);
      }
+  // Get by one monthly data
+     @GetMapping("/monthly-approvals")
+     public ResponseEntity<List<AttendanceResponseDTO>> getMonthlyApprovals(
+             @RequestParam LocalDate startDate,
+             @RequestParam LocalDate endDate) {
+
+         List<AttendanceResponseDTO> result = attendanceService.getMonthlyApprovalSummary(startDate, endDate);
+         return ResponseEntity.ok(result);
+     }
+
 }

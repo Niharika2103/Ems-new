@@ -5,6 +5,8 @@ import java.time.DayOfWeek;
 import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
+import java.util.ArrayList;
+import java.util.Map;
 import java.util.Collections;
 import java.util.stream.Collectors;
 import java.time.temporal.TemporalAdjusters;
@@ -19,6 +21,7 @@ import com.example.attendance_service.repository.ProjectRepository;
 import com.example.attendance_service.repository.UserEmployeeMasterRepository;
 import com.example.attendance_service.requestdto.AttendanceRequestDTO;
 import com.example.attendance_service.responsedto.AttendanceResponseDTO;
+
 
 import jakarta.transaction.Transactional;
 
@@ -62,6 +65,7 @@ public class AttendanceService {
 				.collect(Collectors.toList());
 	}
 
+	
 	@Transactional
 public List<AttendanceEntity> saveOrUpdateAttendance(
         UUID employeeId, UUID projectId, List<AttendanceRequestDTO> attendanceList) {
@@ -70,114 +74,67 @@ public List<AttendanceEntity> saveOrUpdateAttendance(
         return Collections.emptyList();
     }
 
-    LocalDate today = LocalDate.now();
-    LocalDate startOfWeek = today.with(DayOfWeek.MONDAY);
-    LocalDate endOfWeek = startOfWeek.plusDays(6);
-
     UserEmployeeMasterEntity employee = userRepository.findById(employeeId)
             .orElseThrow(() -> new RuntimeException("Employee not found"));
     ProjectEntity project = projectRepository.findById(projectId)
             .orElseThrow(() -> new RuntimeException("Project not found"));
 
     double cumulativeTotal = 0.0;
+    List<AttendanceEntity> allRecords = new ArrayList<>();
 
-    // 1️⃣ Fetch existing week data
-    List<AttendanceEntity> currentWeek = attendanceRepository.findByEmployee_IdAndProject_IdAndDateBetween(
-            employeeId, projectId, startOfWeek, endOfWeek);
-
-    // 2️⃣ Create default records for missing days
-    for (int i = 0; i < 7; i++) {
-        LocalDate date = startOfWeek.plusDays(i);
-
-        AttendanceEntity existing = currentWeek.stream()
-                .filter(a -> a.getDate().equals(date))
-                .findFirst()
-                .orElse(null);
-
-        if (existing == null) {
-            AttendanceEntity newRecord = new AttendanceEntity();
-            newRecord.setEmployee(employee);
-            newRecord.setProject(project);
-            newRecord.setGender(employee.getGender());
-            newRecord.setDate(date);
-            newRecord.setYear(date.getYear());
-            newRecord.setWorkedHours(0.0);
-            newRecord.setTotalWorkedHours(cumulativeTotal);
-            newRecord.setStatus("draft");
-            newRecord.setMonthlyStatus("draft");
-
-            attendanceRepository.save(newRecord);
-            currentWeek.add(newRecord);
-        }
-    }
-
-    // 3️⃣ Update with user-provided attendanceList
-    if (attendanceList != null) {
-        // Sort so cumulative works correctly
+    if (attendanceList != null && !attendanceList.isEmpty()) {
+        // Sort by date so cumulative calculation works properly
         attendanceList.sort(Comparator.comparing(AttendanceRequestDTO::getDate));
 
         for (AttendanceRequestDTO dto : attendanceList) {
             LocalDate date = dto.getDate();
             if (date == null) continue;
 
-            AttendanceEntity entity = currentWeek.stream()
-                    .filter(a -> a.getDate().equals(date))
-                    .findFirst()
+            // ✅ Find if record exists for that exact date
+            AttendanceEntity existing = attendanceRepository
+                    .findByEmployee_IdAndProject_IdAndDate(employeeId, projectId, date)
                     .orElse(null);
 
-            if (entity != null) {
-                double workedHours = dto.getWorkedHours() != null ? dto.getWorkedHours() : 0.0;
-                entity.setWorkedHours(dto.getLeaveType() != null && !dto.getLeaveType().isEmpty() ? 0.0 : workedHours);
-                entity.setLeaveType(dto.getLeaveType());
-                entity.setStatus("draft");
-
-                cumulativeTotal += entity.getWorkedHours();
-                entity.setTotalWorkedHours(cumulativeTotal);
-
-                attendanceRepository.save(entity);
+            if (existing == null) {
+                // ✅ Create new record
+                existing = new AttendanceEntity();
+                existing.setEmployee(employee);
+                existing.setProject(project);
+                existing.setGender(employee.getGender());
+                existing.setDate(date);
+                existing.setYear(date.getYear());
             }
+
+            // ✅ Update leave type and worked hours properly
+            existing.setLeaveType(dto.getLeaveType());
+
+            // If leaveType is empty or null → use workedHours from DTO
+            // Else (e.g., CL, SL, etc.) → set workedHours = 0
+            if (dto.getLeaveType() == null || dto.getLeaveType().isEmpty()) {
+                existing.setWorkedHours(dto.getWorkedHours() != null ? dto.getWorkedHours() : 0.0);
+            } else {
+                existing.setWorkedHours(0.0);
+            }
+
+            existing.setStatus("draft");
+            existing.setMonthlyStatus("draft");
+
+            // ✅ Cumulative total worked hours
+            cumulativeTotal += existing.getWorkedHours();
+            existing.setTotalWorkedHours(cumulativeTotal);
+
+            attendanceRepository.save(existing);
+            allRecords.add(existing);
         }
     }
 
-    // 4️⃣ Return sorted current week
-    return currentWeek.stream()
+    // ✅ Return all saved or updated records sorted by date
+    return allRecords.stream()
             .sorted(Comparator.comparing(AttendanceEntity::getDate))
             .collect(Collectors.toList());
 }
 
-//	public List<AttendanceEntity> getOrCreateCurrentWeek(UUID employeeId, UUID projectId) {
-//	    LocalDate today = LocalDate.now();
-//	    LocalDate startOfWeek = today.with(DayOfWeek.MONDAY);
-//	    LocalDate endOfWeek = startOfWeek.plusDays(6);
-//
-//	    List<AttendanceEntity> currentWeek = attendanceRepository
-//	            .findByEmployee_IdAndProject_IdAndDateBetween(employeeId, projectId, startOfWeek, endOfWeek);
-//
-//	    if (currentWeek.isEmpty()) {
-//	        // auto-create new week if no data found
-//	        return saveOrUpdateAttendance(employeeId, projectId, Collections.emptyList());
-//	    }
-//
-//	    return currentWeek.stream()
-//	            .sorted(Comparator.comparing(AttendanceEntity::getDate))
-//	            .collect(Collectors.toList());
-//	}
 
-
-
-// ✅ Always fetch current week attendance (after saving)
-//public List<AttendanceEntity> getAttendanceForCurrentWeek(UUID employeeId, UUID projectId) {
-//    if (employeeId == null || projectId == null) {
-//        return Collections.emptyList();
-//    }
-//
-//    LocalDate today = LocalDate.now();
-//    LocalDate startOfWeek = today.with(DayOfWeek.MONDAY);
-//    LocalDate endOfWeek = startOfWeek.plusDays(6);
-//
-//    return attendanceRepository.findByEmployee_IdAndProject_IdAndDateBetween(
-//            employeeId, projectId, startOfWeek, endOfWeek);
-//}
 
 	// ✅ Optional: fetch for any week
 public List<AttendanceEntity> getAttendanceForWeek(UUID employeeId, UUID projectId, LocalDate weekStart) {
@@ -204,34 +161,41 @@ public List<AttendanceEntity> getAttendanceForMonthRange(UUID employeeId, LocalD
 
 @Transactional
 public void releaseWeeklyAttendance(UUID employeeId, LocalDate weekStart, LocalDate weekEnd) {
-    // Fetch all attendance records for this week
     List<AttendanceEntity> attendanceList =
             attendanceRepository.findByEmployee_IdAndDateBetween(employeeId, weekStart, weekEnd);
-    System.out.println("@115:"+attendanceList);
+   // Fetch all attendance records for this week
+	List<AttendanceEntity> validRecords = attendanceList.stream()
+            .filter(a -> a.getProject() != null)
+            .collect(Collectors.toList());
 
-    // Update only weeklyStatus
-    for (AttendanceEntity attendance : attendanceList) {
+    for (AttendanceEntity attendance : validRecords) {
         attendance.setStatus("Pending_approval");
     }
-
+ 
+    
     // Save updates without touching monthlyStatus
-    attendanceRepository.saveAll(attendanceList);
+    attendanceRepository.saveAll(validRecords);
 }
-@Transactional
-public void releaseMonthlyAttendance(UUID employeeId, LocalDate monthStart, LocalDate monthEnd) {
-    // Fetch all attendance records for this week
-    List<AttendanceEntity> attendanceList =
-            attendanceRepository.findByEmployee_IdAndDateBetween(employeeId, monthStart, monthEnd);
-    System.out.println("@115:"+attendanceList);
 
-    // Update only MonthlyStatus
+@Transactional
+public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate monthStart, LocalDate monthEnd) {
+    // ✅ Fetch all attendance records for this employee + project + month
+    List<AttendanceEntity> attendanceList =
+            attendanceRepository.findByEmployee_IdAndProject_IdAndDateBetween(
+                    employeeId, projectId, monthStart, monthEnd
+            );
+
+    System.out.println("@115: " + attendanceList);
+
+    // ✅ Update monthly status safely
     for (AttendanceEntity attendance : attendanceList) {
         attendance.setMonthlyStatus("Pending_approval");
     }
 
-    // Save updates without touching monthlyStatus
+    // ✅ Save back
     attendanceRepository.saveAll(attendanceList);
 }
+
 
 
 	// ✅ Get by employee
@@ -249,8 +213,58 @@ public void releaseMonthlyAttendance(UUID employeeId, LocalDate monthStart, Loca
 		return attendanceRepository.findByEmployee_IdAndProject_IdOrderByDateAsc(employeeId, projectId);
 	}
 
-//	public void releaseWeeklyAttendance(UUID employeeId, LocalDate weekStart, LocalDate weekEnd) {
-//		// TODO Auto-generated method stub
-//		
-//	}
+	public List<AttendanceResponseDTO> getMonthlyApprovalSummary(LocalDate startDate, LocalDate endDate) {
+    // ✅ Fetch all attendance entries safely
+    List<AttendanceEntity> allRecords = attendanceRepository.findAllByOrderByDateAsc();
+    if (allRecords == null) allRecords = Collections.emptyList();
+
+    // ✅ Filter by date range
+    List<AttendanceEntity> recordsInRange = allRecords.stream()
+        .filter(a -> a.getDate() != null && !a.getDate().isBefore(startDate) && !a.getDate().isAfter(endDate))
+        .collect(Collectors.toList());
+
+    // ✅ Group by employee safely
+    Map<UUID, List<AttendanceEntity>> groupedByEmployee = recordsInRange.stream()
+        .filter(a -> a.getEmployee() != null && a.getEmployee().getId() != null)
+        .collect(Collectors.groupingBy(a -> a.getEmployee().getId()));
+
+    // ✅ Map to response DTOs
+    return groupedByEmployee.entrySet().stream()
+        .map(entry -> {
+            UUID employeeId = entry.getKey();
+            List<AttendanceEntity> empRecords = entry.getValue();
+
+            AttendanceEntity first = empRecords.stream().findFirst().orElse(null);
+
+            String employeeName = null;
+            String projectName = null;
+            String gender = null;
+            Integer year = null;
+            UUID projectId = null;
+
+            if (first != null) {
+                if (first.getEmployee() != null) {
+                    employeeName = first.getEmployee().getEmployeeName();
+                    gender = first.getEmployee().getGender();
+                }
+                if (first.getProject() != null) {
+                    projectName = first.getProject().getProjectName();
+                    projectId = first.getProject().getId();
+                }
+                year = first.getYear();
+            }
+
+            return new AttendanceResponseDTO(
+                null, null, null, null, null, null, 
+                year, gender, employeeId, employeeName, 
+                null, projectId, projectName
+            );
+        })
+        .sorted(Comparator.comparing(
+            AttendanceResponseDTO::getEmployeeName,
+            Comparator.nullsLast(String::compareToIgnoreCase)
+        ))
+        .collect(Collectors.toList());
+}
+
 }

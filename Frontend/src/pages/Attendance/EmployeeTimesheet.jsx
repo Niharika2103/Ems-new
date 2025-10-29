@@ -21,13 +21,12 @@ import {
   AttendanceReleaseWeek,
   AttendanceFetchByEmployeeProject,
   setAttendanceData,
-  // AttendancCurrentWeek,
   AttendanceFetchExistingWeek,
 } from "../../features/attendance/attendanceSlice";
 import LeaveApplicationModal from "../../components/LeaveApplicationModal";
 import { useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";
-import { applyParentalLeave } from "../../features/attendance/attendanceSlice"; 
+import { applyParentalLeave } from "../../features/attendance/attendanceSlice";
 export default function EmpTimesheet() {
   const { projects } = useSelector((state) => state.project);
   const dispatch = useDispatch();
@@ -43,15 +42,17 @@ export default function EmpTimesheet() {
   const [hours, setHours] = useState(Array(7).fill(0));
   const [usedLeaveTypes, setUsedLeaveTypes] = useState(["CL"]);
   const [leaveRows, setLeaveRows] = useState({ CL: Array(7).fill(0) });
-  const [lockedRows, setLockedRows] = useState({ CL: false });
+  const [lockedRows, setLockedRows] = useState({ CL: false }  );
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [menuRow, setMenuRow] = useState(null);
   const [weekStart, setWeekStart] = useState(getMonday(new Date()));
   const [calendarAnchor, setCalendarAnchor] = useState(null);
   const [isWeekComplete, setIsWeekComplete] = useState(false);
   const [selectDate, setSelectDate] = useState(new Date());
+  const [isSaveAllEnabled, setIsSaveAllEnabled] = useState(true);
   const [leaveModalOpen, setLeaveModalOpen] = useState(false);
   const [modalLeaveType, setModalLeaveType] = useState("");
+
 
   // NEW: store leave periods for multi-week leaves
   const [leavePeriods, setLeavePeriods] = useState([]);
@@ -143,7 +144,7 @@ export default function EmpTimesheet() {
               newLeaveRows[entry.leaveType] = Array(7).fill(0);
             }
             // Set the leave value for that day
-            newLeaveRows[entry.leaveType][dayIndex] = entry.totalWorkedHours || 9;
+            newLeaveRows[entry.leaveType][dayIndex] = entry.workedHours || 9;
           }
         }
       });
@@ -178,68 +179,41 @@ export default function EmpTimesheet() {
     }
   };
 
-  // Handle modal submit for ML/PL
-  // const handleModalSubmit = ({ startDate }) => {
-  //   const start = new Date(startDate);
-  //   let duration = 0;
-  //   let leaveCode = "";
-
-  //   if (modalLeaveType === "Maternity Leave") {
-  //     duration = 180;
-  //     leaveCode = "ML";
-  //   } else if (modalLeaveType === "Paternity Leave") {
-  //     duration = 7;
-  //     leaveCode = "PL";
-  //   }
-
-  //   const end = new Date(start);
-  //   end.setDate(start.getDate() + duration - 1);
-
-  //   setLeavePeriods((prev) => [...prev, { type: modalLeaveType, startDate: start, endDate: end }]);
-
-  //   if (!usedLeaveTypes.includes(modalLeaveType)) {
-  //     setUsedLeaveTypes([...usedLeaveTypes, modalLeaveType]);
-  //     setLockedRows((prev) => ({ ...prev, [modalLeaveType]: true }));
-  //     setLeaveRows((prev) => ({ ...prev, [modalLeaveType]: Array(7).fill("") }));
-  //   }
-
-  //   setLeaveModalOpen(false);
-  // };
 
   const handleModalSubmit = async ({ startDate }) => {
-  if (!employeeId) {
-    toast.error("Employee ID missing!");
-    return;
-  }
-
-  const leave_type = modalLeaveType === "Maternity Leave" ? "maternity" : "paternity";
-
-  try {
-    const resultAction = await dispatch(
-      applyParentalLeave({ employee_id: employeeId, leave_type, start_date: startDate })
-    );
-
-    if (applyParentalLeave.fulfilled.match(resultAction)) {
-      toast.success(`${modalLeaveType} applied successfully!`);
-      // Optional: add to leavePeriods for UI
-      const duration = leave_type === "maternity" ? 180 : 5;
-      const start = new Date(startDate);
-      const end = new Date(start);
-      end.setDate(start.getDate() + duration - 1);
-      setLeavePeriods(prev => [...prev, { type: modalLeaveType, startDate: start, endDate: end }]);
-      if (!usedLeaveTypes.includes(modalLeaveType)) {
-        setUsedLeaveTypes([...usedLeaveTypes, modalLeaveType]);
-        setLeaveRows(prev => ({ ...prev, [modalLeaveType]: Array(7).fill("") }));
-        setLockedRows(prev => ({ ...prev, [modalLeaveType]: true }));
-      }
-    } else {
-      toast.error(resultAction.payload?.error || "Failed to apply leave");
+    if (!employeeId) {
+      toast.error("Employee ID missing!");
+      return;
     }
-  } catch (err) {
-    toast.error("Error applying leave");
-  }
-  setLeaveModalOpen(false);
-};
+
+    const leave_type = modalLeaveType === "Maternity Leave" ? "maternity" : "paternity";
+
+    try {
+      const resultAction = await dispatch(
+        applyParentalLeave({ employee_id: employeeId, leave_type, start_date: startDate })
+      );
+
+      if (applyParentalLeave.fulfilled.match(resultAction)) {
+        toast.success(`${modalLeaveType} applied successfully!`);
+        // Optional: add to leavePeriods for UI
+        const duration = leave_type === "maternity" ? 180 : 5;
+        const start = new Date(startDate);
+        const end = new Date(start);
+        end.setDate(start.getDate() + duration - 1);
+        setLeavePeriods(prev => [...prev, { type: modalLeaveType, startDate: start, endDate: end }]);
+        if (!usedLeaveTypes.includes(modalLeaveType)) {
+          setUsedLeaveTypes([...usedLeaveTypes, modalLeaveType]);
+          setLeaveRows(prev => ({ ...prev, [modalLeaveType]: Array(7).fill("") }));
+          setLockedRows(prev => ({ ...prev, [modalLeaveType]: true }));
+        }
+      } else {
+        toast.error(resultAction.payload?.error || "Failed to apply leave");
+      }
+    } catch (err) {
+      toast.error("Error applying leave");
+    }
+    setLeaveModalOpen(false);
+  };
 
   const handleDeleteRow = (row) => {
     setUsedLeaveTypes(usedLeaveTypes.filter((lt) => lt !== row));
@@ -324,7 +298,7 @@ export default function EmpTimesheet() {
 
     try {
       const resultAction = await dispatch(AttendanceReleaseWeek({
-        employeeId:employeeId,
+        employeeId: employeeId,
         weekStart: formattedStartEnd,
         weekEnd: formattedWeekEnd
       }));
@@ -345,6 +319,15 @@ export default function EmpTimesheet() {
     setSelectDate(date);
     setWeekStart(getMonday(date));
     setCalendarAnchor(null);
+     const currentWeekStart = getMonday(new Date());
+
+    if (
+      getMonday(date).toDateString() === currentWeekStart.toDateString()
+    ) {
+      setIsSaveAllEnabled(true); // enable only for current week
+    } else {
+      setIsSaveAllEnabled(false); // disable for other weeks
+    }
   };
 
   const workedTotal = hours.reduce((s, v) => s + (Number(v) || 0), 0);
@@ -374,15 +357,17 @@ export default function EmpTimesheet() {
             anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
           >
             <div className="p-2">
-              <Calendar onChange={handleCalendarChange} value={weekStart} className="custom-calendar" tileDisabled={({ date, view }) => {
-                if (view === 'month') {
-                  const selectedWeekMonday = getMonday(date);
-                  const currentWeekMonday = getMonday(new Date());
-                  // Disable if the week is in future
-                  return selectedWeekMonday > currentWeekMonday;
-                }
-                return false;
-              }} />
+              <Calendar onChange={handleCalendarChange} value={weekStart} className="custom-calendar" 
+              // tileDisabled={({ date, view }) => {
+              //   if (view === 'month') {
+              //     const selectedWeekMonday = getMonday(date);
+              //     const currentWeekMonday = getMonday(new Date());
+              //     // Disable if the week is in future
+              //     return selectedWeekMonday > currentWeekMonday;
+              //   }
+              //   return false;
+              // }}
+               />
             </div>
           </Popover>
         </div>
@@ -535,7 +520,7 @@ export default function EmpTimesheet() {
         </div>
 
         <div className="flex gap-2 justify-between">
-          <Button variant="contained" color="success" onClick={handleSaveAll}>
+          <Button variant="contained" color="success" onClick={handleSaveAll} disabled={!isSaveAllEnabled && !isWeekComplete}>
             Save All
           </Button>
 
