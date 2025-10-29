@@ -262,8 +262,6 @@ useEffect(() => {
 }, [attendanceData, monthStart, viewMode]);
 
 
-
-
   // --- Calculate leave summary ---
   useEffect(() => {
     let used = 0;
