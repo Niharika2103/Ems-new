@@ -14,15 +14,12 @@ import {
   Chip,
   TablePagination,
 } from "@mui/material";
-import { ChevronLeft, ChevronRight, CalendarToday } from "@mui/icons-material";
-import { DateRangePicker } from "@mui/x-date-pickers-pro/DateRangePicker";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import dayjs from "dayjs";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  AttendanceFetchAll,
+  AttendanceFetchAllbasedonMonth,
   AttendanceFetchByEmployeeProject,
 } from "../../features/attendance/attendanceSlice";
 
@@ -35,86 +32,76 @@ const TimesheetTable = () => {
 
   const [localTimesheets, setLocalTimesheets] = useState([]);
 
-  // Pagination
+  // pagination
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
-  // Date range: default 1 month ago → today
-  const [dateRange, setDateRange] = useState([dayjs().subtract(1, "month"), dayjs()]);
+  // 🧮 Helper function: get start(10) → end(9) of pay cycle
+  const getPayCycle = (date) => {
+    const start = dayjs(date).date() >= 10
+      ? dayjs(date).date(10)
+      : dayjs(date).subtract(1, "month").date(10);
 
-  // Fetch attendance data
+    const end = start.add(1, "month").date(9);
+
+    return { start, end };
+  };
+
+  // 🗓️ Default to current pay cycle (10 → 9)
+  const { start: defaultStart, end: defaultEnd } = getPayCycle(dayjs());
+  const [dateRange, setDateRange] = useState([defaultStart, defaultEnd]);
+
+  // 🧩 Fetch data when component mounts or date range changes
   useEffect(() => {
-    dispatch(AttendanceFetchAll());
-  }, [dispatch]);
+    const from = dateRange[0].format("YYYY-MM-DD");
+    const to = dateRange[1].format("YYYY-MM-DD");
+    dispatch(AttendanceFetchAllbasedonMonth({ from, to }));
+  }, [dispatch, dateRange]);
 
-  // useEffect(() => {
-  //   if (attendance && Array.isArray(attendance)) {
-  //     const mapped = attendance.map((item) => ({
-  //       id: item.id,
-  //       employeeId: item.employeeId,
-  //       projectId: item.projectId,
-  //       employee: item.employee?.name || item.employeeName || item.name || "N/A",
-  //       date: item.date,
-  //       hours: item.workedHours,
-  //       // projtectname : item.ProjectName,
-  //       status: item.status === "draft" ? "Pending" : capitalize(item.status),
-  //     }));
-  //     setLocalTimesheets(mapped);
-  //   }
-  // }, [attendance]);
-
-  useEffect(() => {
-  if (attendance && Array.isArray(attendance)) {
-    const mapped = attendance.map((item) => {
-      const normalizedStatus = item.status ? item.status.toLowerCase() : "pending";
-
-      const displayStatus =
-        normalizedStatus === "draft" || normalizedStatus === "pending"
-          ? "Pending"
-          : capitalize(normalizedStatus);
-
-      return {
-        id: item.id,
-        employeeId: item.employeeId,
-        projectId: item.projectId,
-        employee: item.employee?.name || item.employeeName || item.name || "N/A",
-        ProjectName: item.projectName || item.ProjectName || item.project?.name, // ✅ get project name from backend
-        date: item.date,
-        hours: item.workedHours,
-        status: displayStatus,
-      };
-    });
-
-    setLocalTimesheets(mapped);
-  }
-}, [attendance]);
-
-
+  // 🧩 If employee/project view
   useEffect(() => {
     if (employeeId && projectId) {
       dispatch(AttendanceFetchByEmployeeProject({ employeeId, projectId }));
     }
   }, [dispatch, employeeId, projectId]);
 
-const capitalize = (str) => str?.charAt(0)?.toUpperCase() + str?.slice(1) || '';
+  // 🔤 Normalize API data
+  useEffect(() => {
+    if (attendance && Array.isArray(attendance)) {
+      const mapped = attendance.map((item) => {
+        const normalizedStatus = item.status ? item.status.toLowerCase() : "pending";
+        const displayStatus =
+          normalizedStatus === "draft" || normalizedStatus === "pending"
+            ? "Pending"
+            : normalizedStatus.charAt(0).toUpperCase() + normalizedStatus.slice(1);
 
+        return {
+          id: item.id,
+          employeeId: item.employeeId,
+          projectId: item.projectId,
+          employee: item.employee?.name || item.employeeName || item.name || "N/A",
+          ProjectName: item.projectName || item.ProjectName || item.project?.name,
+          date: item.date,
+          hours: item.workedHours,
+          status: displayStatus,
+        };
+      });
+      setLocalTimesheets(mapped);
+    }
+  }, [attendance]);
 
-
-
-  const handleView = (employeeId, projectId) => {
-    navigate("/attendance/timesheet", { state: { employeeId, projectId } });
+  // ⏪ Shift to previous month’s pay cycle
+  const handlePrevMonth = () => {
+    const newStart = dateRange[0].subtract(1, "month");
+    const { start, end } = getPayCycle(newStart);
+    setDateRange([start, end]);
   };
 
-  const handleApprove = (id) => {
-    setLocalTimesheets((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, status: "Approved" } : t))
-    );
-  };
-
-  const handleReject = (id) => {
-    setLocalTimesheets((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, status: "Rejected" } : t))
-    );
+  // ⏩ Shift to next month’s pay cycle
+  const handleNextMonth = () => {
+    const newStart = dateRange[0].add(1, "month");
+    const { start, end } = getPayCycle(newStart);
+    setDateRange([start, end]);
   };
 
   const getStatusColor = (status) => {
@@ -128,23 +115,8 @@ const capitalize = (str) => str?.charAt(0)?.toUpperCase() + str?.slice(1) || '';
     }
   };
 
-  // Shift range forward/backward by 1 day
-  const shiftRange = (direction) => {
-    if (direction === "prev") {
-      setDateRange([dateRange[0].subtract(1, "day"), dateRange[1].subtract(1, "day")]);
-    } else {
-      setDateRange([dateRange[0].add(1, "day"), dateRange[1].add(1, "day")]);
-    }
-  };
-
-  // Filter timesheets by range
-  const filteredTimesheets = localTimesheets.filter((t) => {
-    const d = dayjs(t.date);
-    return d.isAfter(dateRange[0].startOf("day")) && d.isBefore(dateRange[1].endOf("day"));
-  });
-
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error: {JSON.stringify(error)}</p>;
+  // if (loading) return <p>Loading...</p>;
+  // if (error) return <p>Error: {JSON.stringify(error)}</p>;
 
   return (
     <Box sx={{ maxWidth: 1200, mx: "auto", mt: 5, p: 3 }}>
@@ -154,37 +126,19 @@ const capitalize = (str) => str?.charAt(0)?.toUpperCase() + str?.slice(1) || '';
           Timesheet Approval
         </Typography>
 
-        {/* Date range + navigation + calendar */}
+        {/* Pay cycle navigation */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <IconButton onClick={() => shiftRange("prev")}>
+          <IconButton onClick={handlePrevMonth}>
             <ChevronLeft />
           </IconButton>
 
-          <Typography variant="subtitle1" sx={{ minWidth: 220, textAlign: "center" }}>
+          <Typography variant="subtitle1" sx={{ minWidth: 260, textAlign: "center" }}>
             {`${dateRange[0].format("DD MMM YYYY")} → ${dateRange[1].format("DD MMM YYYY")}`}
           </Typography>
 
-          <IconButton onClick={() => shiftRange("next")}>
+          <IconButton onClick={handleNextMonth}>
             <ChevronRight />
           </IconButton>
-
-          {/* <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DateRangePicker
-              value={dateRange}
-              onChange={(newValue) => {
-                if (newValue && newValue[0] && newValue[1]) setDateRange(newValue);
-              }}
-              calendars={1} // only one calendar visible
-              openTo="day" // default open at today
-              slotProps={{
-                textField: {
-                  size: "small",
-                  sx: { width: 250 },
-                  InputProps: { endAdornment: <CalendarToday /> },
-                },
-              }}
-            />
-          </LocalizationProvider> */}
         </Box>
       </Box>
 
@@ -194,19 +148,17 @@ const capitalize = (str) => str?.charAt(0)?.toUpperCase() + str?.slice(1) || '';
           <TableHead sx={{ bgcolor: "primary.main" }}>
             <TableRow>
               <TableCell sx={{ color: "white", fontWeight: 600 }}>Employee</TableCell>
-              <TableCell sx={{ color: "white", fontWeight: 600 }}>Date</TableCell>
-              <TableCell sx={{ color: "white", fontWeight: 600 }}>ProjectName</TableCell>
+              <TableCell sx={{ color: "white", fontWeight: 600 }}>Project</TableCell>
               <TableCell sx={{ color: "white", fontWeight: 600 }}>Status</TableCell>
               <TableCell sx={{ color: "white", fontWeight: 600 }}>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredTimesheets
+            {localTimesheets
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((t) => (
                 <TableRow key={t.id} hover>
                   <TableCell>{t.employee}</TableCell>
-                  <TableCell>{t.date}</TableCell>
                   <TableCell>{t.ProjectName}</TableCell>
                   <TableCell>
                     <Chip label={t.status} color={getStatusColor(t.status)} />
@@ -217,41 +169,39 @@ const capitalize = (str) => str?.charAt(0)?.toUpperCase() + str?.slice(1) || '';
                       color="primary"
                       size="small"
                       sx={{ mr: 1 }}
-                      onClick={() => handleView(t.employeeId, t.projectId)}
+                      onClick={() => {
+                        // 🧠 Store gender in localStorage
+                        if (t.employeeGender) {
+                          localStorage.setItem("gender", t.employeeGender);
+                        }
+
+                        // 🗓️ Prepare date range
+                        const from = dateRange[0].format("YYYY-MM-DD");
+                        const to = dateRange[1].format("YYYY-MM-DD");
+
+                        // 🧭 Navigate with required data
+                        navigate("/attendance/timesheet", {
+                          state: {
+                            employeeId: t.employeeId,
+                            projectId: t.projectId,
+                            from: from,
+                            to: to,
+                          },
+                        });
+                      }}
                     >
                       View
                     </Button>
-                    {t.status === "Pending" && (
-                      <>
-                        {/* <Button
-                          variant="contained"
-                          color="success"
-                          size="small"
-                          sx={{ mr: 1 }}
-                          onClick={() => handleApprove(t.id)}
-                        >
-                          Approve
-                        </Button>
-                        <Button
-                          variant="contained"
-                          color="error"
-                          size="small"
-                          onClick={() => handleReject(t.id)}
-                        >
-                          Reject
-                        </Button> */}
-                      </>
-                    )}
+
                   </TableCell>
                 </TableRow>
               ))}
           </TableBody>
         </Table>
 
-        {/* Pagination */}
         <TablePagination
           component="div"
-          count={filteredTimesheets.length}
+          count={localTimesheets.length}
           page={page}
           onPageChange={(e, newPage) => setPage(newPage)}
           rowsPerPage={rowsPerPage}

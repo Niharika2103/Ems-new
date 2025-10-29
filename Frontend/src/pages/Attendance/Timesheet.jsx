@@ -21,16 +21,53 @@ import {
 import { ChevronLeft, ChevronRight, MoreVert, CalendarToday } from "@mui/icons-material";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
+import { useDispatch, useSelector } from "react-redux";
+import { AdminAttendancFetchWeeklyDataById ,Admin_Approve_Weekly_Attendance,
+  AdminAttendancFetchMonthlyDataById,
+  Admin_Approve_monthly_Attendance
+} from "../../features/attendance/attendanceSlice";
+import { useLocation } from "react-router-dom";
+
+
+// --- Utility: get Monday of a week ---
+function getMonday(date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  return new Date(d.setDate(diff));
+}
+
+// --- Utility: month cycle (10th → 9th next month) ---
+const getMonthDays = (date) => {
+  const start = new Date(date.getFullYear(), date.getMonth(), 10);
+  const end = new Date(date.getFullYear(), date.getMonth() + 1, 9);
+  const days = [];
+  let current = new Date(start);
+
+  while (current <= end) {
+    const dayName = current.toLocaleDateString("en-US", { weekday: "short" });
+    days.push({
+      date: new Date(current),
+      label: `${dayName} / ${current.getDate().toString().padStart(2, "0")}`,
+      dayIndex: current.getDay(),
+      isWeekend: dayName === "Sat" || dayName === "Sun",
+    });
+    current.setDate(current.getDate() + 1);
+  }
+
+  return days;
+};
 
 export default function Timesheet() {
   const [viewMode, setViewMode] = useState("weekly");
   const [leaveType, setLeaveType] = useState("CL");
   const [usedLeaveTypes, setUsedLeaveTypes] = useState(["CL"]);
-  const [leaveRows, setLeaveRows] = useState({ CL: [] });
-  const [workedHours, setWorkedHours] = useState([]);
+  const [leaveRows, setLeaveRows] = useState({ CL: Array(7).fill(0) });
+  const [workedHours, setWorkedHours] = useState(Array(7).fill(0));
   const [monthlyWorkedHours, setMonthlyWorkedHours] = useState([]);
   const [weekStart, setWeekStart] = useState(getMonday(new Date()));
-  const [monthStart, setMonthStart] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+  console.log(weekStart,"weekstart")
+  const [monthStart, setMonthStart] = useState(new Date());
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [menuRow, setMenuRow] = useState(null);
   const [calendarAnchor, setCalendarAnchor] = useState(null);
@@ -38,51 +75,201 @@ export default function Timesheet() {
   const [remainingLeaves, setRemainingLeaves] = useState(0);
   const [usedLeavesDetails, setUsedLeavesDetails] = useState({});
 
+  const dispatch = useDispatch();
+  const { attendanceData = [], loading } = useSelector((state) => state.attendance || {});
+  const location = useLocation();
+const { employeeId, from, to } = location.state || {};
+const gender = localStorage.getItem("gender");
+
+  console.log(attendanceData,"attendanceData")
   const leaveTypes = ["CL", "SL", "PL", "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave"];
 
-  // --- Initialize table rows ---
-  useEffect(() => {
-    initializeTable();
-  }, [viewMode, weekStart, monthStart]);
-
-  useEffect(() => {
-    calculateLeaves();
-  }, [leaveRows]);
-
-  function getMonday(date) {
-    const d = new Date(date);
-    const day = d.getDay();
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1);
-    return new Date(d.setDate(diff));
-  }
-
-  const initializeTable = () => {
-    let len;
-    if (viewMode === "weekly") {
-      len = 7;
-      setWorkedHours(Array(len).fill(0));
-    } else {
-      const lastDay = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0).getDate();
-      len = lastDay;
-      setMonthlyWorkedHours(Array(len).fill(0));
-    }
-
-    const newLeaveRows = {};
-    usedLeaveTypes.forEach((lt) => {
-      if (!leaveRows[lt] || leaveRows[lt].length !== len) {
-        newLeaveRows[lt] = Array(len).fill(0);
-      } else {
-        newLeaveRows[lt] = leaveRows[lt].slice(0, len);
-      }
-    });
-    setLeaveRows(newLeaveRows);
+  const parseHour = (v) => {
+    const n = Number(v);
+    if (Number.isNaN(n)) return 0;
+    if (n < 0) return 0;
+    if (n > 9) return 9;
+    return Math.round(n * 2) / 2;
   };
 
-  const calculateLeaves = () => {
+  // --- Initialize Table ---
+  const initializeTable = () => {
+    if (viewMode === "weekly") {
+      setWorkedHours(Array(7).fill(0));
+    } else {
+      const days = getMonthDays(monthStart);
+      setMonthlyWorkedHours(Array(days.length).fill(0));
+      const newLeaveRows = {};
+      usedLeaveTypes.forEach((lt) => {
+        newLeaveRows[lt] = Array(days.length).fill(0);
+      });
+      setLeaveRows(newLeaveRows);
+    }
+  };
+
+  useEffect(() => {
+    initializeTable();
+  }, [viewMode, monthStart]);
+
+  // --- Safe attendance data handling ---
+useEffect(() => {
+  if (!attendanceData) return;
+
+  // Get week start & end (Monday → Sunday)
+  const start = new Date(weekStart);
+  const weekDays = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    return d.toISOString().slice(0, 10); // YYYY-MM-DD
+  });
+
+  const list = Array.isArray(attendanceData.data)
+    ? attendanceData.data
+    : [];
+
+  // Build map for faster lookup (key = date)
+  const dataMap = {};
+  list.forEach((item) => {
+    const dateKey = item.date?.slice(0, 10);
+    dataMap[dateKey] = item;
+  });
+
+  // 🟩 Build 7-day structured data (even if API empty)
+  const weeklyData = weekDays.map((date) => {
+    const record = dataMap[date] || {}; // if no record, fallback {}
+    const worked_hours = record.worked_hours || 0;
+    const leaveType = record.leave_type || "";
+
+    const leaveValues = {
+      CL: 0,
+      SL: 0,
+      PL: 0,
+      WFH: 0,
+      "Extra Milar": 0,
+      "Paternity Leave": 0,
+      "Maternity Leave": 0,
+    };
+
+    if (leaveType && leaveValues.hasOwnProperty(leaveType)) {
+      leaveValues[leaveType] = 9;
+    }
+
+    return {
+      date,
+      worked_hours: leaveType ? 0 : worked_hours,
+      ...leaveValues,
+    };
+  });
+
+  console.log("🗓️ Final Weekly Data (mapped to 7 days):", weeklyData);
+
+  // 🟩 Map to UI arrays
+  const workedArray = weeklyData.map((d) => Number(d.worked_hours) || 0);
+  setWorkedHours(workedArray);
+
+  const newLeaveRows = {};
+  const allLeaveTypes = [
+    "CL",
+    "SL",
+    "PL",
+    "WFH",
+    "Extra Milar",
+    "Paternity Leave",
+    "Maternity Leave",
+  ];
+
+  allLeaveTypes.forEach((lt) => {
+    newLeaveRows[lt] = weeklyData.map((d) => Number(d[lt]) || 0);
+  });
+
+  setLeaveRows(newLeaveRows);
+  setUsedLeaveTypes(allLeaveTypes.filter((lt) => newLeaveRows[lt].some((v) => v > 0)));
+}, [attendanceData, weekStart]);
+
+
+// --- Monthly data mapping ---
+useEffect(() => {
+  if (!attendanceData || viewMode !== "monthly") return;
+
+  const list = Array.isArray(attendanceData)
+    ? attendanceData
+    : attendanceData.data || [];
+
+  console.log("✅ Monthly data from API:", list);
+
+  // 🔹 Build map by date (key = yyyy-mm-dd)
+  const dataMap = {};
+  list.forEach((item) => {
+    const dateKey = item.date?.slice(0, 10);
+    dataMap[dateKey] = item;
+  });
+
+  // 🔹 Build month days (10th → 9th next month)
+  const monthDays = getMonthDays(monthStart);
+
+  // 🔹 Create structured data for all days
+  const monthlyData = monthDays.map((d) => {
+    const dateKey = d.date.toISOString().slice(0, 10);
+    const record = dataMap[dateKey] || {};
+
+    const worked_hours = record.worked_hours || 0;
+    const leaveType = record.leave_type || "";
+
+    const leaveValues = {
+      CL: 0,
+      SL: 0,
+      PL: 0,
+      WFH: 0,
+      "Extra Milar": 0,
+      "Paternity Leave": 0,
+      "Maternity Leave": 0,
+    };
+
+    if (leaveType && leaveValues.hasOwnProperty(leaveType)) {
+      leaveValues[leaveType] = 9;
+    }
+
+    return {
+      date: dateKey,
+      worked_hours: leaveType ? 0 : worked_hours,
+      ...leaveValues,
+    };
+  });
+
+  console.log("🗓️ Final Monthly Data (mapped to 10th→9th):", monthlyData);
+
+  // 🔹 Set worked hours & leave arrays
+  const workedArray = monthlyData.map((d) => Number(d.worked_hours) || 0);
+  setMonthlyWorkedHours(workedArray);
+
+  const newLeaveRows = {};
+  const allLeaveTypes = [
+    "CL",
+    "SL",
+    "PL",
+    "WFH",
+    "Extra Milar",
+    "Paternity Leave",
+    "Maternity Leave",
+  ];
+
+  allLeaveTypes.forEach((lt) => {
+    newLeaveRows[lt] = monthlyData.map((d) => Number(d[lt]) || 0);
+  });
+
+  setLeaveRows(newLeaveRows);
+  setUsedLeaveTypes(allLeaveTypes.filter((lt) => newLeaveRows[lt].some((v) => v > 0)));
+}, [attendanceData, monthStart, viewMode]);
+
+
+
+
+  // --- Calculate leave summary ---
+  useEffect(() => {
     let used = 0;
     const details = {};
     Object.entries(leaveRows).forEach(([lt, row]) => {
-      const total = row.reduce((a, b) => a + Number(b || 0), 0);
+      const total = (row || []).reduce((a, b) => a + Number(b || 0), 0);
       used += total;
       if (total > 0) details[lt] = total;
     });
@@ -91,8 +278,9 @@ export default function Timesheet() {
     setUsedLeaves(used);
     setRemainingLeaves(remaining >= 0 ? remaining : 0);
     setUsedLeavesDetails(details);
-  };
+  }, [leaveRows]);
 
+  // --- Format header range ---
   const formatDateRange = () => {
     if (viewMode === "weekly") {
       const endDate = new Date(weekStart);
@@ -103,38 +291,39 @@ export default function Timesheet() {
           .padStart(2, "0")}/${d.getFullYear()}`;
       return `${fmt(weekStart)} - ${fmt(endDate)}`;
     } else {
-      return `${monthStart.toLocaleString("default", { month: "long" })} ${monthStart.getFullYear()}`;
+      const start = new Date(monthStart.getFullYear(), monthStart.getMonth(), 10);
+      const end = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 9);
+
+      const startMonth = start.toLocaleString("default", { month: "short" });
+      const endMonth = end.toLocaleString("default", { month: "short" });
+      const year =
+        end.getMonth() === 0 && start.getMonth() === 11
+          ? `${start.getFullYear()}–${end.getFullYear()}`
+          : start.getFullYear();
+
+      return `${startMonth} ${start.getDate()} – ${endMonth} ${end.getDate()}, ${year}`;
     }
   };
 
+  // --- Change week/month ---
   const changeWeek = (delta) => {
     const newWeek = new Date(weekStart);
     newWeek.setDate(weekStart.getDate() + delta * 7);
-    setWeekStart(newWeek);
+    setWeekStart(getMonday(newWeek));
   };
 
-  // --- Fixed Monthly Navigation ---
   const changeMonth = (delta) => {
-    const newMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() + delta, 1);
+    const newMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() + delta, 10);
     setMonthStart(newMonth);
-
-    // Re-initialize leave rows and monthly worked hours for the new month
-    const daysInMonth = new Date(newMonth.getFullYear(), newMonth.getMonth() + 1, 0).getDate();
-
-    const newLeaveRows = {};
-    usedLeaveTypes.forEach((lt) => {
-      newLeaveRows[lt] = Array(daysInMonth).fill(0);
-    });
-    setLeaveRows(newLeaveRows);
-
-    setMonthlyWorkedHours(Array(daysInMonth).fill(0));
   };
 
+  // --- Add activity ---
   const addActivity = () => {
     if (!usedLeaveTypes.includes(leaveType)) {
-      const len = viewMode === "weekly" ? 7 : new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0).getDate();
-      setUsedLeaveTypes([...usedLeaveTypes, leaveType]);
-      setLeaveRows({ ...leaveRows, [leaveType]: Array(len).fill(0) });
+      const len =
+        viewMode === "weekly" ? 7 : getMonthDays(monthStart).length;
+      setUsedLeaveTypes((prev) => [...prev, leaveType]);
+      setLeaveRows((prev) => ({ ...prev, [leaveType]: Array(len).fill(0) }));
     }
   };
 
@@ -142,54 +331,140 @@ export default function Timesheet() {
     setMenuAnchor(e.currentTarget);
     setMenuRow(row);
   };
-
   const handleMenuClose = () => {
     setMenuAnchor(null);
     setMenuRow(null);
   };
 
   const handleResetRow = (row) => {
-    const len = viewMode === "weekly" ? 7 : new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0).getDate();
+    const len = viewMode === "weekly" ? 7 : getMonthDays(monthStart).length;
     if (row === "Worked Hours") {
-      viewMode === "weekly"
-        ? setWorkedHours(Array(len).fill(0))
-        : setMonthlyWorkedHours(Array(len).fill(0));
+      viewMode === "weekly" ? setWorkedHours(Array(len).fill(0)) : setMonthlyWorkedHours(Array(len).fill(0));
     } else {
-      setLeaveRows({ ...leaveRows, [row]: Array(len).fill(0) });
+      setLeaveRows((prev) => ({ ...prev, [row]: Array(len).fill(0) }));
     }
     handleMenuClose();
   };
 
   const handleDeleteRow = (row) => {
-    const filtered = usedLeaveTypes.filter((lt) => lt !== row);
-    setUsedLeaveTypes(filtered);
-    const updated = { ...leaveRows };
-    delete updated[row];
-    setLeaveRows(updated);
+    setUsedLeaveTypes((prev) => prev.filter((lt) => lt !== row));
+    setLeaveRows((prev) => {
+      const updated = { ...prev };
+      delete updated[row];
+      return updated;
+    });
     handleMenuClose();
   };
 
-  const handleSaveAll = () => {
-    alert("Timesheet saved!");
-  };
 
-  const len = viewMode === "weekly" ? 7 : new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0).getDate();
-  const days = Array.from({ length: len }, (_, i) => {
-    const date =
-      viewMode === "weekly"
-        ? new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + i)
-        : new Date(monthStart.getFullYear(), monthStart.getMonth(), i + 1);
-    const dayName = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][date.getDay()];
-    return { dayIndex: date.getDay(), label: `${dayName} / ${date.getDate().toString().padStart(2, "0")}` };
-  });
+// ...
+
+const handleApproved = () => {
+  let fromDate = "";
+  let toDate = "";
+
+  if (viewMode === "weekly") {
+    // 🗓️ Compute from/to based on current weekStart
+    const from = new Date(weekStart);
+    const to = new Date(weekStart);
+    to.setDate(weekStart.getDate() + 6);
+    fromDate = from.toISOString().slice(0, 10);
+    toDate = to.toISOString().slice(0, 10);
+
+    console.log("📅 Weekly Range:", fromDate, "→", toDate);
+
+    dispatch(Admin_Approve_Weekly_Attendance({ employeeId, from: fromDate, to: toDate }))
+      .unwrap()
+      .then((res) => {
+        console.log("✅ Weekly Approved:", res);
+        alert(`✅ Weekly Timesheet Approved!\nRange: ${fromDate} → ${toDate}`);
+      })
+      .catch((err) => console.error("❌ Weekly Approve Error:", err));
+  } 
+  else if (viewMode === "monthly") {
+    // 📆 Monthly uses from & to from location.state
+    console.log("📅 Monthly Range (from navigation):", from, "→", to);
+
+    dispatch(Admin_Approve_monthly_Attendance({ employeeId, from, to }))
+      .unwrap()
+      .then((res) => {
+        console.log("✅ Monthly Approved:", res);
+        alert(`✅ Monthly Timesheet Approved!\nRange: ${from} → ${to}`);
+      })
+      .catch((err) => console.error("❌ Monthly Approve Error:", err));
+  }
+};
+
+
+
+  // --- Days list ---
+  const days =
+    viewMode === "weekly"
+      ? Array.from({ length: 7 }, (_, i) => {
+          const date = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + i);
+          const dayName = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][date.getDay()];
+          return { dayIndex: date.getDay(), label: `${dayName} / ${date.getDate().toString().padStart(2, "0")}`, date };
+        })
+      : getMonthDays(monthStart);
 
   const currentWorkedHours = viewMode === "weekly" ? workedHours : monthlyWorkedHours;
-  const workedTotal = currentWorkedHours.reduce((a, b) => a + Number(b || 0), 0);
+  const workedTotal = (currentWorkedHours || []).reduce((a, b) => a + Number(b || 0), 0);
+
   const rowTotals = {};
   usedLeaveTypes.forEach((lt) => {
-    rowTotals[lt] = leaveRows[lt].reduce((a, b) => a + Number(b || 0), 0);
+    rowTotals[lt] = (leaveRows[lt] || Array(days.length).fill(0)).reduce((a, b) => a + Number(b || 0), 0);
   });
+
   const grandTotal = workedTotal + Object.values(rowTotals).reduce((a, b) => a + b, 0);
+
+  // --- API Range (10 → 9)
+  // const employeeId = "cadeb784-9272-421c-8394-0af6e2923e8d";
+  const computeRange = () => {
+    if (viewMode === "weekly") {
+      const from = new Date(weekStart);
+      const to = new Date(weekStart);
+      to.setDate(weekStart.getDate() + 6);
+      return { from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) };
+    }
+
+    const from = new Date(monthStart.getFullYear(), monthStart.getMonth(), 10);
+    const to = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 9);
+    return { from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) };
+  };
+
+
+
+useEffect(() => {
+  if (!employeeId) return;
+
+  if (viewMode === "weekly") {
+    // 🔹 Compute weekly range (Monday → Sunday)
+    const fromDate = new Date(weekStart);
+    const toDate = new Date(weekStart);
+    toDate.setDate(weekStart.getDate() + 6);
+
+    const from = fromDate.toISOString().slice(0, 10);
+    const to = toDate.toISOString().slice(0, 10);
+
+    console.log("📅 Weekly Fetch Range:", from, "→", to);
+
+    dispatch(AdminAttendancFetchWeeklyDataById({ employeeId, from, to }))
+      .unwrap()
+      .then((res) => console.log("✅ Weekly Data:", res))
+      .catch((err) => console.error("❌ Weekly Error:", err));
+  } 
+  else if (viewMode === "monthly") {
+    // 🔹 Use from/to from location.state (passed from previous page)
+    console.log("📆 Monthly Fetch Range:", from, "→", to);
+
+    dispatch(AdminAttendancFetchMonthlyDataById({ employeeId, from, to }))
+      .unwrap()
+      .then((res) => console.log("✅ Monthly Data:", res))
+      .catch((err) => console.error("❌ Monthly Error:", err));
+  }
+}, [dispatch, weekStart, monthStart, viewMode, employeeId]);
+
+
 
   return (
     <Box p={2}>
@@ -214,30 +489,24 @@ export default function Timesheet() {
           >
             <Box p={2}>
               <Calendar
-                onChange={(date) => {
-                  if (viewMode === "weekly") setWeekStart(getMonday(date));
-                  else setMonthStart(new Date(date.getFullYear(), date.getMonth(), 1));
-                  setCalendarAnchor(null);
-                }}
-                value={viewMode === "weekly" ? weekStart : monthStart}
-              />
+  onChange={(date) => {
+    if (viewMode === "weekly") {
+      setWeekStart(getMonday(date));
+    } else {
+      setMonthStart(new Date(date.getFullYear(), date.getMonth(), 10));
+    }
+    setCalendarAnchor(null);
+  }}
+  value={viewMode === "weekly" ? weekStart : monthStart}
+/>
+
             </Box>
           </Popover>
         </Box>
         <Typography variant="h6" fontWeight="bold">
           {viewMode === "weekly" ? "Weekly Timesheet" : "Monthly Timesheet"}
         </Typography>
-        <Button
-          variant="contained"
-          onClick={() => {
-            if (viewMode === "weekly") {
-              // Switch to monthly view
-              setViewMode("monthly");
-            } else {
-              setViewMode("weekly");
-            }
-          }}
-        >
+        <Button variant="contained" onClick={() => setViewMode(viewMode === "weekly" ? "monthly" : "weekly")}>
           {viewMode === "weekly" ? "View Monthly" : "View Weekly"}
         </Button>
       </Box>
@@ -253,7 +522,7 @@ export default function Timesheet() {
                   key={i}
                   align="center"
                   sx={{
-                    backgroundColor: d.dayIndex === 0 || d.dayIndex === 6 ? "#f9f9f9" : "#fff",
+                    backgroundColor: d.isWeekend ? "#f9f9f9" : "#fff",
                     fontWeight: "bold",
                   }}
                 >
@@ -268,7 +537,7 @@ export default function Timesheet() {
             {/* Worked Hours */}
             <TableRow>
               <TableCell sx={{ fontWeight: "bold" }}>Worked Hours</TableCell>
-              {currentWorkedHours.map((h, i) => (
+              {(currentWorkedHours || Array(days.length).fill(0)).map((h, i) => (
                 <TableCell key={i} align="center">
                   <input
                     type="number"
@@ -279,15 +548,26 @@ export default function Timesheet() {
                     style={{
                       width: 50,
                       textAlign: "center",
-                      backgroundColor: days[i].dayIndex === 0 || days[i].dayIndex === 6 ? "#f0f0f0" : "#fff",
+                      backgroundColor: days[i].isWeekend ? "#f0f0f0" : "#fff",
                       border: "1px solid #ccc",
                       borderRadius: 4,
                     }}
-                    disabled={days[i].dayIndex === 0 || days[i].dayIndex === 6}
+                    disabled={days[i].isWeekend}
                     onChange={(e) => {
-                      const arr = viewMode === "weekly" ? [...workedHours] : [...monthlyWorkedHours];
-                      arr[i] = e.target.value;
-                      viewMode === "weekly" ? setWorkedHours(arr) : setMonthlyWorkedHours(arr);
+                      const val = parseHour(e.target.value);
+                      if (viewMode === "weekly") {
+                        setWorkedHours((prev) => {
+                          const arr = [...prev];
+                          arr[i] = val;
+                          return arr;
+                        });
+                      } else {
+                        setMonthlyWorkedHours((prev) => {
+                          const arr = [...prev];
+                          arr[i] = val;
+                          return arr;
+                        });
+                      }
                     }}
                   />
                 </TableCell>
@@ -304,7 +584,7 @@ export default function Timesheet() {
             {usedLeaveTypes.map((lt) => (
               <TableRow key={lt}>
                 <TableCell sx={{ fontWeight: "bold" }}>{lt}</TableCell>
-                {leaveRows[lt].map((v, i) => (
+                {(leaveRows[lt] || Array(days.length).fill(0)).map((v, i) => (
                   <TableCell key={i} align="center">
                     <input
                       type="number"
@@ -315,15 +595,18 @@ export default function Timesheet() {
                       style={{
                         width: 50,
                         textAlign: "center",
-                        backgroundColor: days[i].dayIndex === 0 || days[i].dayIndex === 6 ? "#f0f0f0" : "#fff",
+                        backgroundColor: days[i].isWeekend ? "#f0f0f0" : "#fff",
                         border: "1px solid #ccc",
                         borderRadius: 4,
                       }}
-                      disabled={days[i].dayIndex === 0 || days[i].dayIndex === 6}
+                      disabled={days[i].isWeekend}
                       onChange={(e) => {
-                        const arr = [...leaveRows[lt]];
-                        arr[i] = e.target.value;
-                        setLeaveRows({ ...leaveRows, [lt]: arr });
+                        const val = parseHour(e.target.value);
+                        setLeaveRows((prev) => {
+                          const arr = [...(prev[lt] || Array(days.length).fill(0))];
+                          arr[i] = val;
+                          return { ...prev, [lt]: arr };
+                        });
                       }}
                     />
                   </TableCell>
@@ -342,9 +625,13 @@ export default function Timesheet() {
               <TableCell sx={{ fontWeight: "bold" }}>Target</TableCell>
               {days.map((_, i) => {
                 const total =
-                  (Number(currentWorkedHours[i]) || 0) +
-                  usedLeaveTypes.reduce((sum, lt) => sum + (Number(leaveRows[lt][i]) || 0), 0);
-                return <TableCell key={i} align="center">{total}</TableCell>;
+                  (Number((currentWorkedHours || [])[i]) || 0) +
+                  usedLeaveTypes.reduce((sum, lt) => sum + (Number((leaveRows[lt] || [])[i]) || 0), 0);
+                return (
+                  <TableCell key={i} align="center">
+                    {total}
+                  </TableCell>
+                );
               })}
               <TableCell align="center">{`${grandTotal}/45`}</TableCell>
               <TableCell />
@@ -353,10 +640,10 @@ export default function Timesheet() {
         </Table>
       </TableContainer>
 
-      {/* Add Activity + Approve/Reject */}
+      {/* Add Activity & Buttons */}
       <Box display="flex" justifyContent="space-between" mt={2}>
         <Box display="flex" gap={1}>
-          <FormControl size="small" sx={{ minWidth: 120 }}>
+          <FormControl size="small" sx={{ minWidth: 180 }}>
             <InputLabel>Leave Type</InputLabel>
             <Select value={leaveType} onChange={(e) => setLeaveType(e.target.value)} label="Leave Type">
               {leaveTypes.map((lt) => (
@@ -371,47 +658,19 @@ export default function Timesheet() {
           </Button>
         </Box>
         <Box display="flex" gap={1}>
-          <Button variant="contained" color="success" onClick={handleSaveAll}>
-            Approve
+          <Button variant="contained" color="success" onClick={handleApproved}>
+           {viewMode === "weekly" ? "Approve Weekly" : "Approve Monthly"}
           </Button>
-          <Button variant="contained" color="error" onClick={handleSaveAll}>
-            Reject
-          </Button>
+      
         </Box>
       </Box>
 
-      {/* Leave Summary */}
-      <Box
-        mt={3}
-        p={2}
-        display="flex"
-        justifyContent="space-evenly"
-        alignItems="center"
-        sx={{
-          backgroundColor: "#f5f5f5",
-          borderRadius: 2,
-          boxShadow: 1,
-        }}
-      >
-        <Box>
-          <Typography variant="body1" fontWeight="bold" color="primary">
-            Used Leaves: {usedLeaves}
-          </Typography>
-          {Object.entries(usedLeavesDetails).map(([lt, val]) => (
-            <Typography key={lt} variant="body2">
-              {lt}: {val}
-            </Typography>
-          ))}
-        </Box>
-        <Typography variant="body1" fontWeight="bold" color="success.main">
-          Remaining Leaves: {remainingLeaves}
-        </Typography>
-      </Box>
-
-      {/* Row Menu */}
+      {/* Menu */}
       <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={handleMenuClose}>
         <MenuItem onClick={() => handleResetRow(menuRow)}>Reset</MenuItem>
-        {menuRow !== "Worked Hours" && <MenuItem onClick={() => handleDeleteRow(menuRow)}>Delete</MenuItem>}
+        {menuRow !== "Worked Hours" && (
+          <MenuItem onClick={() => handleDeleteRow(menuRow)}>Delete</MenuItem>
+        )}
       </Menu>
     </Box>
   );

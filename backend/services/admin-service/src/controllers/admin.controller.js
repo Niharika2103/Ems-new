@@ -1077,10 +1077,16 @@ export const getPendingWeeklyApprovals = async (req, res) => {
 
     const result = await client.query(query, [employeeId, from, to]);
 
+    // ✅ Format the date to remove time (YYYY-MM-DD)
+    const formattedData = result.rows.map((row) => ({
+      ...row,
+      date: row.date ? row.date.toISOString().split("T")[0] : null, // only date part
+    }));
+
     res.status(200).json({
       message: "Pending weekly approvals fetched successfully",
-      count: result.rows.length,
-      data: result.rows,
+      count: formattedData.length,
+      data: formattedData,
     });
   } catch (err) {
     console.error("Get Pending Weekly Approvals Error:", err.message);
@@ -1089,6 +1095,7 @@ export const getPendingWeeklyApprovals = async (req, res) => {
     client.release();
   }
 };
+
 
 
 /* -------------------------------------------------------------------------- */
