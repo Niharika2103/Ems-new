@@ -18,6 +18,8 @@ public interface AttendanceRepository extends JpaRepository<AttendanceEntity, UU
 
     // ✅ check if attendance already exists for a given employee + date
     boolean existsByEmployee_IdAndDate(UUID employeeId, LocalDate date);
+    
+    boolean existsByEmployee_IdAndProjectIsNull(UUID employeeId);
 	List<AttendanceEntity> findByEmployee_IdOrderByDateAsc(UUID employeeId);
 
 	List<AttendanceEntity> findByProject_IdOrderByDateAsc(UUID projectId);
