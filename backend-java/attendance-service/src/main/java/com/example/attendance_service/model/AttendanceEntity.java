@@ -42,7 +42,7 @@ public class AttendanceEntity {
 	private UserEmployeeMasterEntity employee;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "project_id", referencedColumnName = "id", nullable = false)
+	@JoinColumn(name = "project_id", referencedColumnName = "id", nullable = true)
 	@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 	private ProjectEntity project;
 
