@@ -218,13 +218,13 @@ export const registerEmployee = async (req, res) => {
     );
 
     // Insert default attendance record
-    const currentYear = new Date().getFullYear();
-    await client.query(
-      `INSERT INTO attendance
-        (employee_id, year, working_days, work_from_home, holidays, optional_holidays, el, sl, extra_milar, maternity_leave, paternity_leave, project_id, date, weekly_status, monthly_status, total_hours, worked_hours)
-       VALUES ($1,$2,0,315,10,2,25,10,2,0,0,NULL,CURRENT_DATE,'draft','draft',0,0)`,
-      [newUserId, currentYear]
-    );
+    // const currentYear = new Date().getFullYear();
+    // await client.query(
+    //   `INSERT INTO attendance
+    //     (employee_id, year, working_days, work_from_home, holidays, optional_holidays, el, sl, extra_milar, maternity_leave, paternity_leave, project_id, date, weekly_status, monthly_status, total_hours, worked_hours)
+    //    VALUES ($1,$2,0,315,10,2,25,10,2,0,0,NULL,CURRENT_DATE,'draft','draft',0,0)`,
+    //   [newUserId, currentYear]
+    // );
 
     // Send email
     const loginUrl = `${process.env.FRONTEND_URL}/login`;
