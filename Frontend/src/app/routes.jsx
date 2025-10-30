@@ -25,12 +25,14 @@ import ProjectForm from "../pages/Attendance/ProjectFrom";
 import EmployeeAssignedProjectPage from "../pages/Attendance/EmployeeAssignedProjectPage";
 import ProjectTable from "../pages/Attendance/ProjectTable";
 import TimesheetTable from "../pages/Attendance/Timesheettable";
+import AuditLogs from "../pages/Attendance/AuditLogs";
 import ProjectDashboard from "../pages/dashbaord/ProjectDashboard";
 import Letters from "../pages/documents/Letters";
 import MonthlyTimesheet from "../pages/Attendance/MonthlyTimesheet";
 import EmployeeLeave from "../pages/Attendance/EmployeeLeave";
 import MaternityPaternityLeaveTable from "../pages/Attendance/MaternityPaternityLeaveTable";
 import EmpAttendanceDashboard from "../pages/dashbaord/EmpAttendanceDashboard";
+import AuditLogsTable from "../pages/Attendance/AuditLogs";
 
 function AppRoutes() {
   return (
@@ -79,6 +81,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
         <Route
           path="/attendance/projects"
           element={
@@ -167,6 +170,15 @@ function AppRoutes() {
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <ProjectDashboard />
+            </ProtectedRoute>
+          }
+        />
+               
+        <Route
+          path="/dashboard/audit-logs"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              < AuditLogsTable/>
             </ProtectedRoute>
           }
         />

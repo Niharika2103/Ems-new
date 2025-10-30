@@ -256,7 +256,7 @@ const Profile = () => {
                     }}
                   />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                {/* <Grid item xs={12} sm={6}>
                   {!emailVerified ? (
                     <Button
                       variant="outlined"
@@ -271,7 +271,7 @@ const Profile = () => {
                       ✔ Email Verified
                     </Typography>
                   )}
-                </Grid>
+                </Grid> */}
 
                 <Grid item xs={12} sm={6}>
                   <TextField
@@ -286,7 +286,7 @@ const Profile = () => {
                   />
                 </Grid>
 
-                <Grid item xs={12} sm={6}>
+                {/* <Grid item xs={12} sm={6}>
                   {!phoneVerified ? (
                     <Button
                       variant="outlined"
@@ -301,7 +301,7 @@ const Profile = () => {
                       ✔ Phone Verified
                     </Typography>
                   )}
-                </Grid>
+                </Grid> */}
 
                 <Grid item xs={12} sm={6}>
                   <TextField

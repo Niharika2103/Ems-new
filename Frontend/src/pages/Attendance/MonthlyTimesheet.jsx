@@ -20,6 +20,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { AttendanceFetchExistingMonth, AttendanceReleaseWeek, AttendanceReleaseMonth } from "../../features/attendance/attendanceSlice";
 import LeaveApplicationModal from "../../components/LeaveApplicationModal";
 import { applyParentalLeave } from "../../features/attendance/attendanceSlice";
+
 export default function MonthlyTimesheet({ onBack }) {
   const { projects } = useSelector((state) => state.project);
   const dispatch = useDispatch();
@@ -30,8 +31,6 @@ export default function MonthlyTimesheet({ onBack }) {
   const [lockedRows, setLockedRows] = useState({ CL: false });
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [menuRow, setMenuRow] = useState(null);
-  // const [monthStart, setMonthStart] = useState(new Date(new Date().getFullYear(), 
-  // new Date().getMonth(), 1));
   const [monthStart, setMonthStart] = useState(() => {
     const today = new Date();
     return today.getDate() >= 10
@@ -43,76 +42,85 @@ export default function MonthlyTimesheet({ onBack }) {
   const [leaveModalOpen, setLeaveModalOpen] = useState(false);
   const [modalLeaveType, setModalLeaveType] = useState("");
   const [monthDays, setMonthDays] = useState([]);
+  
+  // NEW: Approval status state for monthly timesheet
+  const [approvalStatus, setApprovalStatus] = useState({});
 
   const leaveTypes = ["CL", "SL", "PL", "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave"];
   const formatDate = (date) =>
     `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
 
-  // const getMonthDays = (date) => {
-  //   const year = date.getFullYear();
-  //   const month = date.getMonth();
-  //   const numDays = new Date(year, month + 1, 0).getDate();
-  //   const days = [];
-  //   for (let i = 1; i <= numDays; i++) {
-  //     const d = new Date(year, month, i);
-  //     const dayName = d.toLocaleDateString("en-US", { weekday: "short" });
-  //     days.push({
-  //       date: d, // store the actual date
-  //       day: i,
-  //       label: `${i}/${month + 1}/${dayName}`,
-  //       isWeekend: dayName === "Sat" || dayName === "Sun",
-  //     });
-  //   }
-  //   return days;
-  // };
-
   const getMonthDays = (date) => {
-  const start = new Date(date.getFullYear(), date.getMonth(), 10);
-  const end = new Date(date.getFullYear(), date.getMonth() + 1, 9);
-  const days = [];
-  let current = new Date(start);
+    const start = new Date(date.getFullYear(), date.getMonth(), 10);
+    const end = new Date(date.getFullYear(), date.getMonth() + 1, 9);
+    const days = [];
+    let current = new Date(start);
 
-  while (current <= end) {
-    const dayName = current.toLocaleDateString("en-US", { weekday: "short" });
-    days.push({
-      date: new Date(current),
-      label: `${current.getDate()}/${current.getMonth() + 1}/${dayName}`,
-      isWeekend: dayName === "Sat" || dayName === "Sun",
-    });
-    current.setDate(current.getDate() + 1);
-  }
+    while (current <= end) {
+      const dayName = current.toLocaleDateString("en-US", { weekday: "short" });
+      days.push({
+        date: new Date(current),
+        label: `${current.getDate()}/${current.getMonth() + 1}/${dayName}`,
+        isWeekend: dayName === "Sat" || dayName === "Sun",
+      });
+      current.setDate(current.getDate() + 1);
+    }
 
-  return days;
-};
+    return days;
+  };
 
-const formatMonthRange = () => {
-  const start = new Date(monthStart.getFullYear(), monthStart.getMonth(), 10);
-  const end = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 9);
+  const formatMonthRange = () => {
+    const start = new Date(monthStart.getFullYear(), monthStart.getMonth(), 10);
+    const end = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 9);
 
-  const startMonth = start.toLocaleString("default", { month: "short" });
-  const endMonth = end.toLocaleString("default", { month: "short" });
-  const year =
-    end.getMonth() === 0 && start.getMonth() === 11
-      ? `${start.getFullYear()}–${end.getFullYear()}`
-      : start.getFullYear();
+    const startMonth = start.toLocaleString("default", { month: "short" });
+    const endMonth = end.toLocaleString("default", { month: "short" });
+    const year =
+      end.getMonth() === 0 && start.getMonth() === 11
+        ? `${start.getFullYear()}–${end.getFullYear()}`
+        : start.getFullYear();
 
-  return `${startMonth} ${start.getDate()} – ${endMonth} ${end.getDate()}, ${year}`;
-};
-// const getCycleInfo = (year) => {
-//   for (let m = 0; m < 12; m++) {
-//     const start = new Date(year, m, 10);
-//     const end = new Date(year, m + 1, 9);
-//     const diff =
-//       Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1; // number of days
-//     console.log(
-//       `${start.toLocaleString("default", { month: "long" })}:\t${start.toDateString()} → ${end.toDateString()} = ${diff} days`
-//     );
-//   }
-// };
+    return `${startMonth} ${start.getDate()} – ${endMonth} ${end.getDate()}, ${year}`;
+  };
+
+  // NEW: Get background color based on status
+  const getStatusColor = (dayIndex, leaveType = null) => {
+    if (monthDays[dayIndex]?.isWeekend) {
+      return '#ccd5e6ff'; // Dark grey for weekends (always)
+    }
+    
+    const statusKey = leaveType ? `${leaveType}_${dayIndex}` : `worked_${dayIndex}`;
+    const status = approvalStatus[statusKey];
+    
+    if (status === 'approved') {
+      return '#d4edda'; // Light green for approved
+    } else if (status === 'submitted') {
+      return '#fff3cd'; // Light yellow for submitted/awaiting approval
+    } else {
+      return '#ffffff'; // White for not submitted
+    }
+  };
+
+  // NEW: Check if field is read-only based on status
+  const isFieldReadOnly = (dayIndex, leaveType = null) => {
+    if (monthDays[dayIndex]?.isWeekend) {
+      return true; // Always read-only for weekends
+    }
+    const statusKey = leaveType ? `${leaveType}_${dayIndex}` : `worked_${dayIndex}`;
+    return approvalStatus[statusKey] === 'approved'; // Read-only only when approved
+  };
+
+  // NEW: Check if field is editable
+  const isFieldEditable = (dayIndex, leaveType = null) => {
+    if (monthDays[dayIndex]?.isWeekend) {
+      return false; // Never editable for weekends
+    }
+    const statusKey = leaveType ? `${leaveType}_${dayIndex}` : `worked_${dayIndex}`;
+    return approvalStatus[statusKey] !== 'approved'; // Editable if not approved
+  };
 
   // Sync monthDays, hours, leaveRows whenever monthStart changes
   useEffect(() => {
-    // getCycleInfo(2026); 
     const days = getMonthDays(monthStart);
     setMonthDays(days);
     setHours(Array(days.length).fill(0));
@@ -130,17 +138,18 @@ const formatMonthRange = () => {
     setMenuAnchor(e.currentTarget);
     setMenuRow(row);
   };
+  
   const handleMenuClose = () => {
     setMenuAnchor(null);
     setMenuRow(null);
   };
+  
   const { attendanceData, loading } = useSelector((state) => state.attendance);
   const [projectDetails, setProjectDetails] = useState(null);
 
   const projectName = projectDetails?.projectName;
   const ProjectID = projectDetails?.projectID;
   const employeeId = projectDetails?.employeeId;
-
 
   // Fetch from localStorage when page loads
   useEffect(() => {
@@ -152,9 +161,9 @@ const formatMonthRange = () => {
       console.log("No ProjectDetails found");
     }
   }, []);
+
   useEffect(() => {
     if (employeeId) {
-      // const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
       const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 9)
       dispatch(
         AttendanceFetchExistingMonth({
@@ -181,9 +190,19 @@ const formatMonthRange = () => {
       // Leave rows
       const newLeaveRows = {};
       const newUsedLeaveTypes = [];
+      const newApprovalStatus = {};
+
+      // Initialize approval status from attendance data
+      monthDays.forEach((day, dayIndex) => {
+        const record = attendanceData.find((a) => a.date === formatDate(day.date));
+        if (record) {
+          const statusKey = record.leaveType ? `${record.leaveType}_${dayIndex}` : `worked_${dayIndex}`;
+          newApprovalStatus[statusKey] = record.approvalStatus || 'not_submitted';
+        }
+      });
 
       leaveTypes.forEach((lt) => {
-        const row = monthDays.map((day) => {
+        const row = monthDays.map((day, dayIndex) => {
           // Find a record for this date and leaveType
           const record = attendanceData.find(
             (a) => a.date === formatDate(day.date) && a.leaveType === lt
@@ -200,11 +219,9 @@ const formatMonthRange = () => {
 
       setLeaveRows(newLeaveRows);
       setUsedLeaveTypes(newUsedLeaveTypes);
+      setApprovalStatus(newApprovalStatus);
     }
   }, [attendanceData, monthDays]);
-
-
-
 
   const handleSaveMonth = async () => {
     const ProjectID = projectDetails?.projectID;
@@ -222,8 +239,31 @@ const formatMonthRange = () => {
         monthEnd: formatDate(monthEnd)
       }));
 
-      if (AttendanceReleaseWeek.fulfilled.match(resultAction)) {
+      if (AttendanceReleaseMonth.fulfilled.match(resultAction)) {
         toast.success("Month released successfully!");
+        
+        // NEW: Update approval status to 'submitted' after releasing month
+        const newApprovalStatus = { ...approvalStatus };
+        monthDays.forEach((day, dayIndex) => {
+          if (!day.isWeekend) { // Only update status for weekdays
+            const statusKey = `worked_${dayIndex}`;
+            // Only update to 'submitted' if not already 'approved'
+            if (newApprovalStatus[statusKey] !== 'approved') {
+              newApprovalStatus[statusKey] = 'submitted';
+            }
+            
+            usedLeaveTypes.forEach(lt => {
+              const leaveStatusKey = `${lt}_${dayIndex}`;
+              if (leaveRows[lt] && leaveRows[lt][dayIndex] && leaveRows[lt][dayIndex] !== 0 && leaveRows[lt][dayIndex] !== "") {
+                // Only update to 'submitted' if not already 'approved'
+                if (newApprovalStatus[leaveStatusKey] !== 'approved') {
+                  newApprovalStatus[leaveStatusKey] = 'submitted';
+                }
+              }
+            });
+          }
+        });
+        setApprovalStatus(newApprovalStatus);
       } else {
         throw new Error("Failed to release month");
       }
@@ -233,7 +273,6 @@ const formatMonthRange = () => {
     }
   };
 
-  
   const handleAddActivity = () => {
     if (leaveType === "Maternity Leave" || leaveType === "Paternity Leave") {
       setModalLeaveType(leaveType);
@@ -246,15 +285,6 @@ const formatMonthRange = () => {
       setLockedRows((prev) => ({ ...prev, [leaveType]: false }));
     }
   };
-
-  // const handleModalSubmit = () => {
-  //   if (!usedLeaveTypes.includes(modalLeaveType)) {
-  //     setUsedLeaveTypes([...usedLeaveTypes, modalLeaveType]);
-  //     setLeaveRows((prev) => ({ ...prev, [modalLeaveType]: Array(monthDays.length).fill(0) }));
-  //     setLockedRows((prev) => ({ ...prev, [modalLeaveType]: true }));
-  //   }
-  //   setLeaveModalOpen(false);
-  // };
 
   const handleModalSubmit = async ({ startDate }) => {
     const employeeId = projects[0]?.employeeId;
@@ -305,7 +335,6 @@ const formatMonthRange = () => {
     setMonthStart(newDate);
   };
 
-
   const handleCalendarChange = (date) => {
     setMonthStart(new Date(date.getFullYear(), date.getMonth(), 1));
     setCalendarAnchor(null);
@@ -350,9 +379,9 @@ const formatMonthRange = () => {
         {/* DATES HEADER */}
         <div className="flex font-semibold border-b pb-2 text-sm">
           <div className="min-w-[150px]">{projectName}</div>
-          {monthDays.map((d) => (
+          {monthDays.map((d, index) => (
             <div
-              key={d.day}
+              key={index}
               className={`min-w-[70px] text-center mx-1 ${d.isWeekend ? "text-gray-400" : "text-black"}`}
             >
               {d.label}
@@ -364,23 +393,33 @@ const formatMonthRange = () => {
         {/* WORKED HOURS */}
         <div className="flex items-center py-1 text-sm">
           <div className="min-w-[150px] font-semibold">Worked Hours</div>
-          {hours.map((h, i) => (
-            <input
-              key={i}
-              type="number"
-              value={h}
-              min="0"
-              max="9"
-              disabled={monthDays[i].isWeekend}
-              className={`min-w-[70px] h-8 text-center border rounded-md mx-1 ${monthDays[i].isWeekend ? "bg-gray-200 cursor-not-allowed" : "bg-white"
-                }`}
-              onChange={(e) => {
-                const newHours = [...hours];
-                newHours[i] = e.target.value;
-                setHours(newHours);
-              }}
-            />
-          ))}
+          {hours.map((h, i) => {
+            const isWeekend = monthDays[i]?.isWeekend;
+            const backgroundColor = getStatusColor(i);
+            const isEditable = isFieldEditable(i);
+            
+            return (
+              <input
+                key={i}
+                type="number"
+                value={h}
+                min="0"
+                max="9"
+                disabled={!isEditable}
+                style={{ backgroundColor }}
+                className={`min-w-[70px] h-8 text-center border rounded-md mx-1 ${
+                  !isEditable ? "cursor-not-allowed" : "bg-white"
+                } ${isWeekend ? "text-gray-400" : ""}`}
+                onChange={(e) => {
+                  if (isEditable) {
+                    const newHours = [...hours];
+                    newHours[i] = e.target.value;
+                    setHours(newHours);
+                  }
+                }}
+              />
+            );
+          })}
           <IconButton onClick={(e) => handleMenuOpen(e, "Worked Hours")}>
             <MoreVert />
           </IconButton>
@@ -390,23 +429,33 @@ const formatMonthRange = () => {
         {usedLeaveTypes.map((lt) => (
           <div key={lt} className="flex items-center py-1 text-sm">
             <div className="min-w-[150px] font-semibold">{lt}</div>
-            {leaveRows[lt]?.map((v, i) => (
-              <input
-                key={i}
-                type="number"
-                value={v}
-                min="0"
-                max="9"
-                disabled={lockedRows[lt] || monthDays[i].isWeekend}
-                className={`min-w-[70px] h-8 text-center border rounded-md mx-1 ${monthDays[i].isWeekend ? "bg-gray-200 cursor-not-allowed" : "bg-white"
-                  }`}
-                onChange={(e) => {
-                  const updated = [...leaveRows[lt]];
-                  updated[i] = e.target.value;
-                  setLeaveRows((prev) => ({ ...prev, [lt]: updated }));
-                }}
-              />
-            ))}
+            {leaveRows[lt]?.map((v, i) => {
+              const isWeekend = monthDays[i]?.isWeekend;
+              const backgroundColor = getStatusColor(i, lt);
+              const isEditable = isFieldEditable(i, lt) && !lockedRows[lt];
+              
+              return (
+                <input
+                  key={i}
+                  type="number"
+                  value={v}
+                  min="0"
+                  max="9"
+                  disabled={!isEditable}
+                  style={{ backgroundColor }}
+                  className={`min-w-[70px] h-8 text-center border rounded-md mx-1 ${
+                    !isEditable ? "cursor-not-allowed" : "bg-white"
+                  } ${isWeekend ? "text-gray-400" : ""}`}
+                  onChange={(e) => {
+                    if (isEditable) {
+                      const updated = [...leaveRows[lt]];
+                      updated[i] = e.target.value;
+                      setLeaveRows((prev) => ({ ...prev, [lt]: updated }));
+                    }
+                  }}
+                />
+              );
+            })}
             <IconButton onClick={(e) => handleMenuOpen(e, lt)}>
               <MoreVert />
             </IconButton>

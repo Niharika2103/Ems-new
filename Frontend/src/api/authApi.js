@@ -182,7 +182,7 @@ export const ProjectAssignApi = (projectId, employeeId, role = "employee") => {
   return ProjectClient.post(
     `${AUTH_API.PROJECT}/projects/${projectId}/assign?employeeId=${employeeId}&role=${role}`
   );
-};
+}
 //assigned project 
 export const ProjectFetchAssignApi = (employeeId) => {
   return ProjectClient.get(
@@ -197,9 +197,9 @@ export const ProjectFetchAllDetailsApi = () => {
 };
 // Employee Attendance
 //save all for attendance
-export const AttendanceSaveallApi = (employeeId, projectId, formData) => {
+export const AttendanceSaveallApi = (employeename,employeeId, projectId, formData) => {
   return AttendanceClient.post(
-    `${AUTH_API.ATTENDANCE}/attendance/saveall?employeeId=${employeeId}&projectId=${projectId}`,
+    `${AUTH_API.ATTENDANCE}/attendance/saveall?employeename=${employeename}&employeeId=${employeeId}&projectId=${projectId}`,
   formData);
 };
 
@@ -229,18 +229,9 @@ export const AttendanceFetchAllApi =()=>{
 };
 
 
-export const AttendanceFetchAllbasedonMonthApi = (from, to) => {
-  return AttendanceClient.get(
-    `${AUTH_API.ATTENDANCE}/attendance/monthly-approvals`,
-    { params: { startDate: from, endDate: to } } // ✅ dynamic query params
-  );
-};
-
-
-
 // Fetch attendance by employee and project
 export const AttendanceFetchByEmployeeProjectApi = (employeeId, projectId) => {
-  return AttendanceClient.get(`${AUTH_API.ATTENDANCE}/attendance/employee/${employeeId}/project/${projectId}`);
+  return AttendanceClient.get(`/attendance/employee/${employeeId}/project/${projectId}`);
 };
 
 //fetch release-week
@@ -255,29 +246,27 @@ export const AttendanceFetchByEmployeeProjectApi = (employeeId, projectId) => {
 };
 
 //fetch release-month
-    export const AttendanceReleaseMonthApi = (employeeId, projectId,monthStart,monthEnd) => {
+    export const AttendanceReleaseMonthApi = (employeeId, monthStart,monthEnd) => {
   return AttendanceClient.post(
     `${AUTH_API.ATTENDANCE}/attendance/release-monthly`,
     null,
     {
-      params: { employeeId,projectId, monthStart,monthEnd }
+      params: { employeeId, monthStart,monthEnd }
     }
   );
 };
 //Admin Attendance
 //In AttendanceAdmin fetch weekly data by using employeeId
-export const AdminAttendancFetchWeeklyDataByIdApi = (employeeId, from, to) => {
+
+export const AdminAttendancFetchWeeklyDataByIdApi = (employeeId, from,to) => {
   return AttendanceClient.get(
-    `${AUTH_API.ADMIN}/attendance/pending-weekly?employeeId=${employeeId}&from=${from}&to=${to}`
-  );
+    `${API_BASES.ADMIN}/attendance/pending-weekly?employeeId=${employeeId}&from=${from}&to=${to}`)
 };
-
-
 
 //Admin Approved a Weekly Employee Attendance
 export const Admin_Approve_Weekly_Attendance_Api = (employeeId, from,to) => {
   return AttendanceClient.put(
-    `${AUTH_API.ADMIN}/attendance/weekly/approve`,
+    `${API_BASES.ADMIN}/attendance/weekly/approve`,
     {
       params: { employeeId, from ,to }
     }
@@ -287,13 +276,13 @@ export const Admin_Approve_Weekly_Attendance_Api = (employeeId, from,to) => {
 //Admin monthly attendance Fetch
 export const AdminAttendancFetchMonthlyDataByIdApi = (employeeId, from,to) => {
   return AttendanceClient.get(
-    `${AUTH_API.ADMIN}/attendance/pending-monthly?employeeId=${employeeId}&from=${from}&to=${to}`)
+    `${API_BASES.ADMIN}/attendance/pending-monthly?employeeId=${employeeId}&from=${from}&to=${to}`)
 };
 
-//Admin Approved a monthly Employee Attendance
+//Admin Approved a Weekly Employee Attendance
 export const Admin_Approve_monthly_Attendance_Api = (employeeId, from,to) => {
   return AttendanceClient.put(
-    `${AUTH_API.ADMIN}/attendance/monthly/approve`,
+    `${API_BASES.ADMIN}/attendance/monthly/approve`,
     {
       params: { employeeId, from ,to }
     }

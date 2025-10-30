@@ -8,13 +8,30 @@ import { decodeToken } from "../../api/decodeToekn";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {
-  Typography,
-  Button,
   Box,
   Grid,
   Paper,
   Avatar,
+  Typography,
+  TextField,
+  Button,
+  MenuItem,
+  IconButton,
 } from "@mui/material";
+import {
+  Email as EmailIcon,
+  Phone as PhoneIcon,
+  Wc as GenderIcon,
+  CalendarMonth as DobIcon,
+  Apartment as DepartmentIcon,
+  LocationOn as AddressIcon,
+  ContactEmergency as EmergencyIcon,
+  UploadFile as UploadIcon,
+  Person as PersonIcon,
+  Work as WorkIcon,
+  Cake as CakeIcon,
+  Event as EventIcon,
+} from "@mui/icons-material";
 
 const EmployeeProfile = () => {
   const dispatch = useDispatch();
@@ -43,8 +60,6 @@ const EmployeeProfile = () => {
       try {
         const decoded = await decodeToken();
         setUserId(decoded.id);
-
-        // Fetch employee profile
         dispatch(fetchEmployeeProfile(decoded.email));
       } catch (error) {
         console.error("Error decoding token:", error);
@@ -62,18 +77,26 @@ const EmployeeProfile = () => {
 
   // Handle file upload
   const handleChange = (e) => {
-    const { name, files } = e.target;
+    const { name, value, files } = e.target;
     if (files) {
       setFormData({ ...formData, [name]: files[0] });
+    } else {
+      setFormData({ ...formData, [name]: value });
     }
   };
 
-  // Handle form submit
+  // Handle form submit for documents only
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!userId) return;
 
-    dispatch(updateEmployeeProfile({ data: formData, id: userId }))
+    // Only submit profile photo and resume
+    const updateData = {
+      profilePhoto: formData.profilePhoto,
+      resume: formData.resume
+    };
+
+    dispatch(updateEmployeeProfile({ data: updateData, id: userId }))
       .unwrap()
       .then((res) => {
         toast.success(res.message || "Profile updated successfully");
@@ -85,143 +108,345 @@ const EmployeeProfile = () => {
       });
   };
 
-  // Reusable component for Label : Value display
-const InfoRow = ({ label, value }) => (
-  <Box display="flex" alignItems="center" sx={{ mb: 1 }}>
-    <Typography
-      sx={{
-        fontWeight: 600,
-        color: "#333",
-        minWidth: 160, // keeps labels aligned nicely
-      }}
-    >
-      {label}:
-    </Typography>
-    <Typography sx={{ color: "#555", ml: 1 }}>{value || "-"}</Typography>
-  </Box>
-);
-
-
   return (
     <>
       <ToastContainer position="top-right" autoClose={2000} />
-      <Box className="flex justify-center items-center bg-gray-100 p-4">
+      <Box sx={{ backgroundColor: "#f4f6f8", minHeight: "100vh", p: 4 }}>
         <Paper
-          elevation={4}
+          elevation={6}
           sx={{
+            maxWidth: 950,
+            mx: "auto",
             p: 4,
-            width: "100%",
-            maxWidth: 700,
-            borderRadius: 3,
-            bgcolor: "white",
+            borderRadius: 4,
+            backgroundColor: "white",
           }}
         >
-          <Typography
-            variant="h5"
-            align="center"
-            gutterBottom
-            sx={{ fontWeight: "bold", mb: 3 }}
+          {/* Header Card */}
+          <Box
+            display="flex"
+            alignItems="center"
+            gap={3}
+            sx={{
+              background: "linear-gradient(45deg, #2196f3, #21cbf3)",
+              borderRadius: 3,
+              p: 3,
+              color: "white",
+            }}
           >
-            Employee Profile
-          </Typography>
-
-          <Box component="form" onSubmit={handleSubmit}>
-            {/* Profile Info Section */}
-            <Box sx={{ mb: 3, pl: 1 }}>
-              <InfoRow label="Full Name" value={formData.name} />
-              <InfoRow label="Email" value={formData.email} />
-              <InfoRow label="Phone Number" value={formData.phone} />
-              <InfoRow label="Gender" value={formData.gender} />
-              <InfoRow label="Date of Birth" value={formData.dob} />
-              <InfoRow label="Date of Joining" value={formData.date_of_joining} />
-              <InfoRow label="Department" value={formData.department} />
-              <InfoRow label="Current Address" value={formData.address} />
-              <InfoRow label="Permanent Address" value={formData.permanent_address} />
-              <InfoRow label="Emergency Contact" value={formData.emergency_contact} />
-              <InfoRow label="Project Name" value={""} />
-               <InfoRow label="Reporting Manager" value={""} />
-            </Box>
-
-            {/* Profile Photo Section */}
-            <Grid container spacing={2} alignItems="center" sx={{ mb: 3 }}>
-              <Grid item xs={12} sm={6}>
-                <Typography sx={{ fontWeight: 600 }}>Profile Photo</Typography>
-                <input
-                  accept="image/png, image/jpeg"
-                  style={{ display: "none" }}
-                  id="profile-photo-upload"
-                  type="file"
-                  name="profilePhoto"
-                  onChange={handleChange}
-                />
-                <label htmlFor="profile-photo-upload">
-                  <Button
-                    variant="outlined"
-                    component="span"
-                    size="small"
-                    sx={{ mt: 1 }}
-                  >
-                    Upload
-                  </Button>
-                </label>
-              </Grid>
-              <Grid item>
-                <Avatar
-                  src={
-                    formData.profilePhoto instanceof File
-                      ? URL.createObjectURL(formData.profilePhoto)
-                      : profile?.profile_photo || undefined
-                  }
-                  sx={{ width: 64, height: 64 }}
-                />
-              </Grid>
-            </Grid>
-
-            {/* Resume Section */}
-            <Box sx={{ mb: 3 }}>
-              <Typography sx={{ fontWeight: 600 }}>Resume</Typography>
-              <input
-                type="file"
-                name="resume"
-                accept=".pdf,.doc,.docx"
-                style={{ display: "none" }}
-                id="resume-upload"
-                onChange={handleChange}
-              />
-              <label htmlFor="resume-upload">
-                <Button
-                  variant="outlined"
-                  component="span"
-                  size="small"
-                  sx={{ mt: 1 }}
-                >
-                  Upload
-                </Button>
-              </label>
-              <Typography sx={{ mt: 1, color: "#666", fontSize: 14 }}>
-                {formData.resume instanceof File
-                  ? formData.resume.name
-                  : profile?.resume
-                  ? profile.resume.split("/").pop()
-                  : "No file chosen"}
+            <Avatar
+              sx={{
+                width: 90,
+                height: 90,
+                fontSize: 32,
+                bgcolor: "white",
+                color: "#2196f3",
+                fontWeight: 600,
+                border: "3px solid rgba(255,255,255,0.3)",
+              }}
+              src={
+                formData.profilePhoto instanceof File
+                  ? URL.createObjectURL(formData.profilePhoto)
+                  : profile?.profile_photo || undefined
+              }
+            >
+              {formData.name?.[0]?.toUpperCase() || "E"}
+            </Avatar>
+            <Box>
+              <Typography variant="h5" fontWeight="bold">
+                {formData.name || "Employee Name"}
+              </Typography>
+              <Typography variant="subtitle2" color="rgba(255,255,255,0.8)">
+                {formData.department || "Department"} • Employee
+              </Typography>
+              <Typography variant="body2" color="rgba(255,255,255,0.8)" sx={{ mt: 0.5 }}>
+                {formData.email || "email@company.com"}
               </Typography>
             </Box>
+          </Box>
+
+          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 4 }}>
+            {/* PERSONAL INFORMATION */}
+            <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
+              👤 Personal Information
+            </Typography>
+            <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Full Name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    InputProps={{
+                      startAdornment: <PersonIcon sx={{ color: "#2196f3", mr: 1 }} />,
+                    }}
+                    disabled
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    type="date"
+                    label="Date of Birth"
+                    name="dob"
+                    value={formData.dob}
+                    onChange={handleChange}
+                    InputLabelProps={{ shrink: true }}
+                    InputProps={{
+                      startAdornment: <CakeIcon sx={{ color: "#2196f3", mr: 1 }} />,
+                    }}
+                    disabled
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Gender"
+                    name="gender"
+                    value={formData.gender}
+                    onChange={handleChange}
+                    InputProps={{
+                      startAdornment: <GenderIcon sx={{ color: "#2196f3", mr: 1 }} />,
+                    }}
+                    disabled
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    InputProps={{
+                      startAdornment: <EmailIcon sx={{ color: "#2196f3", mr: 1 }} />,
+                    }}
+                    disabled
+                  />
+                </Grid>
+              </Grid>
+            </Paper>
+
+            {/* PROFESSIONAL INFORMATION */}
+            <Typography variant="h6" fontWeight={600} sx={{ mt: 4, mb: 2 }}>
+              💼 Professional Information
+            </Typography>
+            <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Department"
+                    name="department"
+                    value={formData.department}
+                    onChange={handleChange}
+                    InputProps={{
+                      startAdornment: <DepartmentIcon sx={{ color: "#2196f3", mr: 1 }} />,
+                    }}
+                    disabled
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    type="date"
+                    label="Date of Joining"
+                    name="date_of_joining"
+                    value={formData.date_of_joining}
+                    onChange={handleChange}
+                    InputLabelProps={{ shrink: true }}
+                    InputProps={{
+                      startAdornment: <EventIcon sx={{ color: "#2196f3", mr: 1 }} />,
+                    }}
+                    disabled
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Phone Number"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    InputProps={{
+                      startAdornment: <PhoneIcon sx={{ color: "#2196f3", mr: 1 }} />,
+                    }}
+                    disabled
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Emergency Contact"
+                    name="emergency_contact"
+                    value={formData.emergency_contact}
+                    onChange={handleChange}
+                    InputProps={{
+                      startAdornment: <EmergencyIcon sx={{ color: "#2196f3", mr: 1 }} />,
+                    }}
+                    disabled
+                  />
+                </Grid>
+              </Grid>
+            </Paper>
+
+            {/* ADDRESS INFORMATION */}
+            <Typography variant="h6" fontWeight={600} sx={{ mt: 4, mb: 2 }}>
+              🏠 Address Information
+            </Typography>
+            <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Current Address"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                    multiline
+                    rows={2}
+                    fullWidth
+                    InputProps={{
+                      startAdornment: <AddressIcon sx={{ color: "#2196f3", mr: 1 }} />,
+                    }}
+                    disabled
+                  />
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    label="Permanent Address"
+                    name="permanent_address"
+                    value={formData.permanent_address}
+                    onChange={handleChange}
+                    multiline
+                    rows={2}
+                    fullWidth
+                    InputProps={{
+                      startAdornment: <AddressIcon sx={{ color: "#2196f3", mr: 1 }} />,
+                    }}
+                    disabled
+                  />
+                </Grid>
+              </Grid>
+            </Paper>
+
+            {/* DOCUMENTS SECTION */}
+            <Typography variant="h6" fontWeight={600} sx={{ mt: 4, mb: 2 }}>
+              📄 Documents
+            </Typography>
+            <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>
+              <Grid container spacing={3}>
+                {/* Profile Photo Upload */}
+                <Grid item xs={12} sm={6}>
+                  <Box display="flex" alignItems="center" gap={2}>
+                    <Avatar
+                      src={
+                        formData.profilePhoto instanceof File
+                          ? URL.createObjectURL(formData.profilePhoto)
+                          : profile?.profile_photo || undefined
+                      }
+                      sx={{ width: 70, height: 70 }}
+                    />
+                    <Box>
+                      <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>
+                        Profile Photo
+                      </Typography>
+                      <input
+                        accept="image/png, image/jpeg"
+                        style={{ display: "none" }}
+                        id="profile-photo-upload"
+                        type="file"
+                        name="profilePhoto"
+                        onChange={handleChange}
+                      />
+                      <label htmlFor="profile-photo-upload">
+                        <Button
+                          variant="outlined"
+                          component="span"
+                          size="small"
+                          startIcon={<UploadIcon />}
+                          sx={{ borderRadius: 2 }}
+                        >
+                          Change Photo
+                        </Button>
+                      </label>
+                    </Box>
+                  </Box>
+                </Grid>
+
+                {/* Resume Upload */}
+                <Grid item xs={12} sm={6}>
+                  <Box>
+                    <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>
+                      Resume
+                    </Typography>
+                    <Box display="flex" alignItems="center" gap={2}>
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          color: "#666", 
+                          flex: 1,
+                          fontStyle: formData.resume || profile?.resume ? "normal" : "italic"
+                        }}
+                      >
+                        {formData.resume instanceof File
+                          ? formData.resume.name
+                          : profile?.resume
+                          ? profile.resume.split("/").pop()
+                          : "No resume uploaded"}
+                      </Typography>
+                      <input
+                        type="file"
+                        name="resume"
+                        accept=".pdf,.doc,.docx"
+                        style={{ display: "none" }}
+                        id="resume-upload"
+                        onChange={handleChange}
+                      />
+                      <label htmlFor="resume-upload">
+                        <Button
+                          variant="outlined"
+                          component="span"
+                          size="small"
+                          startIcon={<UploadIcon />}
+                          sx={{ borderRadius: 2 }}
+                        >
+                          Upload Resume
+                        </Button>
+                      </label>
+                    </Box>
+                  </Box>
+                </Grid>
+              </Grid>
+            </Paper>
 
             {/* Update Button */}
-            <Button
-              type="submit"
-              variant="contained"
-              fullWidth
-              size="large"
-              sx={{
-                mt: 2,
-                borderRadius: "12px",
-                background: "#00c853",
-              }}
-              disabled={loading}
-            >
-              {loading ? "Updating..." : "Update"}
-            </Button>
+            <Box textAlign="center" mt={4}>
+              <Button
+                type="submit"
+                variant="contained"
+                size="large"
+                disabled={loading}
+                sx={{
+                  px: 6,
+                  py: 1.5,
+                  borderRadius: 3,
+                  background: "linear-gradient(45deg, #2196f3, #21cbf3)",
+                  "&:hover": {
+                    background: "linear-gradient(45deg, #1976d2, #00acc1)",
+                  },
+                }}
+              >
+                {loading ? "Updating..." : "Update Documents"}
+              </Button>
+            </Box>
           </Box>
         </Paper>
       </Box>

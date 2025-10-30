@@ -71,6 +71,15 @@ const AdminDashboard = () => {
       iconColor: "text-yellow-600",
       onClick: () => navigate("/accounts"),
     },
+
+     {
+      title: "Audits & logs",
+      message: "Manage accounts and transactions",
+      icon: BarChartIcon,
+      iconBg: "bg-yellow-100",
+      iconColor: "text-yellow-600",
+      onClick: () => navigate("/dashboard/audit-logs"),
+    },
   ];
 
   return (
