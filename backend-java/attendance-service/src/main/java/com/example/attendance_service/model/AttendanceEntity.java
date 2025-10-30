@@ -42,7 +42,7 @@ public class AttendanceEntity {
 	private UserEmployeeMasterEntity employee;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "project_id", referencedColumnName = "id", nullable = false)
+	@JoinColumn(name = "project_id", referencedColumnName = "id", nullable = true)
 	@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 	private ProjectEntity project;
 
@@ -83,6 +83,72 @@ public class AttendanceEntity {
 	@Column(nullable = false)
 	private Integer sl = 10;
 
+	@Column(name = "maternity_leave")
+	private Integer maternityLeave = 0;
+
+	@Column(name = "paternity_leave")
+	private Integer paternityLeave = 0;
+	
+	@Column(name = "working_days")
+	private Integer workingDays = 0;
+
+	@Column(name = "work_from_home")
+	private Integer workFromHome = 315;
+
+	@Column(name = "optional_holidays")
+	private Integer optionalHolidays = 2;
+	
+	@Column(name = "holidays")
+	private Integer holidays = 10;
+	
+
+	public Integer getOptionalHolidays() {
+		return optionalHolidays;
+	}
+
+	public void setOptionalHolidays(Integer optionalHolidays) {
+		this.optionalHolidays = optionalHolidays;
+	}
+
+	public Integer getHolidays() {
+		return holidays;
+	}
+
+	public void setHolidays(Integer holidays) {
+		this.holidays = holidays;
+	}
+
+	public Integer getWorkingDays() {
+		return workingDays;
+	}
+
+	public void setWorkingDays(Integer workingDays) {
+		this.workingDays = workingDays;
+	}
+
+	public Integer getWorkFromHome() {
+		return workFromHome;
+	}
+
+	public void setWorkFromHome(Integer workFromHome) {
+		this.workFromHome = workFromHome;
+	}
+
+	public Integer getMaternityLeave() {
+		return maternityLeave;
+	}
+
+	public void setMaternityLeave(Integer maternityLeave) {
+		this.maternityLeave = maternityLeave;
+	}
+
+	public Integer getPaternityLeave() {
+		return paternityLeave;
+	}
+
+	public void setPaternityLeave(Integer paternityLeave) {
+		this.paternityLeave = paternityLeave;
+	}
 
 	public String getMonthlyStatus() {
 		return monthlyStatus;

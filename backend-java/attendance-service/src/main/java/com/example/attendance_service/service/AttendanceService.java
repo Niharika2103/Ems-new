@@ -74,6 +74,35 @@ public List<AttendanceEntity> saveOrUpdateAttendance(
         return Collections.emptyList();
     }
 
+    if (!attendanceRepository.existsByEmployee_IdAndProjectIsNull(employeeId)) {
+        UserEmployeeMasterEntity employee = userRepository.findById(employeeId)
+                .orElseThrow(() -> new RuntimeException("Employee not found"));
+
+        AttendanceEntity firstTimeRecord = new AttendanceEntity();
+        firstTimeRecord.setEmployee(employee);
+        firstTimeRecord.setProject(null); // project_id = NULL
+        firstTimeRecord.setDate(LocalDate.now());
+        firstTimeRecord.setYear(LocalDate.now().getYear());
+        firstTimeRecord.setGender(employee.getGender());
+        firstTimeRecord.setWorkedHours(0.0);
+        firstTimeRecord.setTotalWorkedHours(0.0);
+        firstTimeRecord.setStatus("draft");
+        firstTimeRecord.setMonthlyStatus("draft");
+
+        // ✅ EXACT DEFAULT VALUES FROM YOUR INSERT STATEMENT
+        firstTimeRecord.setWorkingDays(0);
+        firstTimeRecord.setWorkFromHome(315);
+        firstTimeRecord.setHolidays(10);
+        firstTimeRecord.setOptionalHolidays(2);
+        firstTimeRecord.setEl(25);
+        firstTimeRecord.setSl(10);
+        firstTimeRecord.setExtraMilar(2);
+        firstTimeRecord.setMaternityLeave(0);
+        firstTimeRecord.setPaternityLeave(0);
+
+        attendanceRepository.save(firstTimeRecord);
+    }
+
     UserEmployeeMasterEntity employee = userRepository.findById(employeeId)
             .orElseThrow(() -> new RuntimeException("Employee not found"));
     ProjectEntity project = projectRepository.findById(projectId)
@@ -103,6 +132,18 @@ public List<AttendanceEntity> saveOrUpdateAttendance(
                 existing.setGender(employee.getGender());
                 existing.setDate(date);
                 existing.setYear(date.getYear());
+                
+
+                // ✅ SET WEEKLY RECORD DEFAULTS (NOT org-level defaults!)
+                existing.setWorkingDays(0);
+                existing.setWorkFromHome(0);          // ← 0, not 315
+                existing.setHolidays(0);              // ← 0, not 10
+                existing.setOptionalHolidays(0);      // ← 0, not 2
+                existing.setEl(0);
+                existing.setSl(0);
+                existing.setExtraMilar(0);
+                existing.setMaternityLeave(0);
+                existing.setPaternityLeave(0);
             }
 
             // ✅ Update leave type and worked hours properly
