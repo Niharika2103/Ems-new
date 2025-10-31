@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -32,7 +33,7 @@ public interface AttendanceRepository extends JpaRepository<AttendanceEntity, UU
 
 	 Optional<AttendanceEntity> findByEmployee_IdAndProject_IdAndDate(UUID employeeId, UUID projectId, LocalDate date);
 
-  
+	 
 	List<AttendanceEntity> findAllByOrderByDateAsc();
 	List<AttendanceEntity> findByEmployee_IdAndDateBetween(UUID employeeId, LocalDate startDate, LocalDate endDate);
 
@@ -44,6 +45,10 @@ public interface AttendanceRepository extends JpaRepository<AttendanceEntity, UU
 		    LocalDate startDate,
 		    LocalDate endDate
 		);
+	
+	long countByEmployee_IdAndLeaveType(UUID employeeId, String leaveType);
+	
+	Optional<AttendanceEntity> findByEmployee_IdAndProjectIsNull(UUID employeeId);
 
 
 	
