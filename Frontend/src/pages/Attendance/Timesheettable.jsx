@@ -60,9 +60,11 @@ const TimesheetTable = () => {
 
   // 🧩 Fetch data when component mounts or date range changes
   useEffect(() => {
-    const from = dateRange[0].format("YYYY-MM-DD");
-    const to = dateRange[1].format("YYYY-MM-DD");
-    dispatch(AttendanceFetchAllbasedonMonth({ from, to }));
+    const periodType="monthly"
+    const startDate = dateRange[0].format("YYYY-MM-DD");
+    const endDate = dateRange[1].format("YYYY-MM-DD");
+    console.log("Dispatching with params:", { periodType, startDate, endDate });
+    dispatch(AttendanceFetchAllbasedonMonth({ periodType,startDate,endDate}));
   }, [dispatch, dateRange]);
 
   // 🧩 If employee/project view

@@ -289,12 +289,13 @@ export const Admin_Approve_monthly_Attendance_Api = (employeeId, from,to) => {
   );
 };
 
-export const AttendanceFetchAllbasedonMonthApi = (from, to) => {
+
+export const AttendanceFetchAllbasedonMonthApi = (periodType, from, to) => {
   return AttendanceClient.get(
-    `${AUTH_API.ATTENDANCE}/attendance/monthly-approvals`,
-    { params: { startDate: from, endDate: to } } // ✅ dynamic query params
+    `${AUTH_API.ATTENDANCE}/attendance/approval-summary?periodType=${periodType}&startDate=${from}&endDate=${to}`
   );
 };
+
   // Apply parental leave (employee)
 export const applyParentalLeaveApi = (data) =>
   AttendanceClient.post(`${AUTH_API.EMPLOYEE}/attendance/apply-parental`, data);

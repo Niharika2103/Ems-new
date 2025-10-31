@@ -126,15 +126,17 @@ export const Admin_Approve_monthly_Attendance = createAsyncThunk(
 );
 export const AttendanceFetchAllbasedonMonth = createAsyncThunk(
   "attendance/fetchMonthlyApprovals",
-  async ({ from, to }, { rejectWithValue }) => {
+  async ({ periodType, startDate, endDate }, { rejectWithValue }) => {
     try {
-      const res = await AttendanceFetchAllbasedonMonthApi(from, to);
-      return res.data; // List<AttendanceResponseDTO>
+      const res = await AttendanceFetchAllbasedonMonthApi(periodType, startDate, endDate);
+      return res.data; 
     } catch (err) {
+      console.error("API error:", err); // Log error
       return rejectWithValue(err.response?.data || "Failed to fetch monthly data");
     }
   }
 );
+
 
 export const applyParentalLeave = createAsyncThunk(
   "attendance/applyParentalLeave",
