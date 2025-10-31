@@ -377,7 +377,7 @@ useEffect(() => {
 
       console.log("📅 Weekly Range:", fromDate, "→", toDate);
 
-      dispatch(Admin_Approve_Weekly_Attendance({ employeeId, from: fromDate, to: toDate }))
+      dispatch(Admin_Approve_Weekly_Attendance({ employeeId:employeeId, from: fromDate, to: toDate }))
         .unwrap()
         .then((res) => {
           console.log("✅ Weekly Approved:", res);
@@ -389,7 +389,7 @@ useEffect(() => {
       //  Monthly uses from & to from location.state
       console.log("Monthly Range (from navigation):", from, "→", to);
 
-      dispatch(Admin_Approve_monthly_Attendance({ employeeId, from, to }))
+      dispatch(Admin_Approve_monthly_Attendance({ employeeId:employeeId, from, to }))
         .unwrap()
         .then((res) => {
           console.log(" Monthly Approved:", res);
