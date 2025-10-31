@@ -89,7 +89,7 @@ const TimesheetTable = () => {
           employeeId: item.employeeId,
           projectId: item.projectId,
           employee: item.employee?.name || item.employeeName || item.name || "N/A",
-          ProjectName: item.projectName || item.ProjectName || item.project?.name,
+          projectName: item.projectName || item.projectName || item.project?.projectName,
           date: item.date,
           hours: item.workedHours,
           status: displayStatus,
@@ -217,7 +217,7 @@ const TimesheetTable = () => {
               .map((t) => (
                 <TableRow key={t.id} hover>
                   <TableCell>{t.employee}</TableCell>
-                  <TableCell>{t.name}</TableCell>
+                  <TableCell>{t.projectName}</TableCell>
                   <TableCell>
                     <Chip label={t.status} color={getStatusColor(t.status)} />
                   </TableCell>
