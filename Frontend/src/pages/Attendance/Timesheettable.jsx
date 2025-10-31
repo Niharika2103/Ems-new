@@ -10,8 +10,12 @@ import {
   TableHead,
   TableRow,
   Paper,
+  FormControl,
+  Select,
+  MenuItem,
   Typography,
   Chip,
+  Tooltip,
   TablePagination,
 } from "@mui/material";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
@@ -35,7 +39,7 @@ const TimesheetTable = () => {
   // pagination
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
-
+  const [viewType, setViewType] = useState("weekly");
   // 🧮 Helper function: get start(10) → end(9) of pay cycle
   const getPayCycle = (date) => {
     const start = dayjs(date).date() >= 10
@@ -50,6 +54,9 @@ const TimesheetTable = () => {
   // 🗓️ Default to current pay cycle (10 → 9)
   const { start: defaultStart, end: defaultEnd } = getPayCycle(dayjs());
   const [dateRange, setDateRange] = useState([defaultStart, defaultEnd]);
+  // Limits (defaults applied)
+  const MAX_PAST_WEEKS = 4; // current week + previous 3 weeks
+  const MAX_PAST_MONTHS = 3; // current month + previous 2 months
 
   // 🧩 Fetch data when component mounts or date range changes
   useEffect(() => {
@@ -114,9 +121,40 @@ const TimesheetTable = () => {
         return "warning";
     }
   };
+  const now = dayjs();
+  const currentWeekStart = now.startOf("week");
+  const currentWeekEnd = now.endOf("week");
+  const currentMonthStart = now.startOf("month");
+  const currentMonthEnd = now.endOf("month");
+  const allowedWeekStart = currentWeekStart.subtract(MAX_PAST_WEEKS - 1, "week");
+  const allowedMonthStart = currentMonthStart.subtract(MAX_PAST_MONTHS - 1, "month");
+  const handleViewTypeChange = (type) => {
+    setViewType(type);
+    if (type === "weekly") {
+      setDateRange([currentWeekStart, currentWeekEnd]);
+    } else {
+      setDateRange([currentMonthStart, currentMonthEnd]);
+    }
+  };
+  const nextDisabled = () => {
+    if (viewType === "weekly") {
+      const nextEnd = dateRange[1].add(1, "week").endOf("week");
+      return nextEnd.isAfter(currentWeekEnd, "day");
+    } else {
+      const nextEnd = dateRange[1].add(1, "month").endOf("month");
+      return nextEnd.isAfter(currentMonthEnd, "day");
+    }
+  };
 
-  // if (loading) return <p>Loading...</p>;
-  // if (error) return <p>Error: {JSON.stringify(error)}</p>;
+  const prevDisabled = () => {
+    if (viewType === "weekly") {
+      const prevStart = dateRange[0].add(-1, "week").startOf("week");
+      return prevStart.isBefore(allowedWeekStart, "day");
+    } else {
+      const prevStart = dateRange[0].add(-1, "month").startOf("month");
+      return prevStart.isBefore(allowedMonthStart, "day");
+    }
+  };
 
   return (
     <Box sx={{ maxWidth: 1200, mx: "auto", mt: 5, p: 3 }}>
@@ -128,17 +166,35 @@ const TimesheetTable = () => {
 
         {/* Pay cycle navigation */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <IconButton onClick={handlePrevMonth}>
-            <ChevronLeft />
-          </IconButton>
+          <FormControl size="small" sx={{ minWidth: 140 }}>
+            <Select
+              value={viewType}
+              onChange={(e) => handleViewTypeChange(e.target.value)}
+              MenuProps={{ PaperProps: { sx: { minWidth: 140 } } }}
+            >
+              <MenuItem value="weekly">Weekly</MenuItem>
+              <MenuItem value="monthly">Monthly</MenuItem>
+            </Select>
+          </FormControl>
+          <Tooltip title={prevDisabled() ? "No more history" : "Previous"}>
+            <span>
+              <IconButton onClick={handlePrevMonth}>
+                <ChevronLeft />
+              </IconButton>
 
-          <Typography variant="subtitle1" sx={{ minWidth: 260, textAlign: "center" }}>
-            {`${dateRange[0].format("DD MMM YYYY")} → ${dateRange[1].format("DD MMM YYYY")}`}
-          </Typography>
+              <Typography variant="subtitle1" sx={{ minWidth: 260, textAlign: "center" }}>
+                {`${dateRange[0].format("DD MMM YYYY")} → ${dateRange[1].format("DD MMM YYYY")}`}
+              </Typography>
 
-          <IconButton onClick={handleNextMonth}>
-            <ChevronRight />
-          </IconButton>
+              <IconButton onClick={handleNextMonth}>
+                <ChevronRight />
+              </IconButton>
+
+              
+            </span>
+
+          </Tooltip>
+
         </Box>
       </Box>
 
