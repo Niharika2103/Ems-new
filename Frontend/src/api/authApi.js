@@ -264,12 +264,14 @@ export const AdminAttendancFetchWeeklyDataByIdApi = (employeeId, from,to) => {
 };
 
 //Admin Approved a Weekly Employee Attendance
-export const Admin_Approve_Weekly_Attendance_Api = (employeeId, from,to) => {
+export const Admin_Approve_Weekly_Attendance_Api = (employeeId, from, to) => {
   return AttendanceClient.put(
     `${AUTH_API.ADMIN}/attendance/weekly/approve`,
-     { employeeId, from, to }
+    { employeeId, from, to }  // correct
   );
 };
+
+
 
 //Admin monthly attendance Fetch
 export const AdminAttendancFetchMonthlyDataByIdApi = (employeeId, from,to) => {

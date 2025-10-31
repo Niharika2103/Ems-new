@@ -215,7 +215,7 @@ const TimesheetTable = () => {
               .map((t) => (
                 <TableRow key={t.id} hover>
                   <TableCell>{t.employee}</TableCell>
-                  <TableCell>{t.ProjectName}</TableCell>
+                  <TableCell>{t.name}</TableCell>
                   <TableCell>
                     <Chip label={t.status} color={getStatusColor(t.status)} />
                   </TableCell>
