@@ -1071,7 +1071,7 @@ export const getPendingWeeklyApprovals = async (req, res) => {
       FROM attendance a
       JOIN user_employees_master u ON a.employee_id = u.id
       WHERE a.employee_id = $1
-        AND a.weekly_status = 'Pending_approval'
+        AND a.weekly_status IN ('Pending_approval', 'approved')
         AND a.date BETWEEN $2 AND $3
     `;
 
@@ -1151,7 +1151,7 @@ export const getPendingMonthlyApprovals = async (req, res) => {
       FROM attendance a
       JOIN user_employees_master u ON a.employee_id = u.id
       WHERE a.employee_id = $1
-        AND a.monthly_status = 'Pending_approval'
+        AND a.monthly_status IN ('Pending_approval', 'approved')
         AND a.date BETWEEN $2 AND $3
     `;
 
