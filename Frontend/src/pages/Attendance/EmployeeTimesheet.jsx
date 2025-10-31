@@ -114,13 +114,13 @@ export default function EmpTimesheet() {
     const statusKey = leaveType ? `${leaveType}_${dayIndex}` : `worked_${dayIndex}`;
     const status = approvalStatus[statusKey];
     
-    if (status === 'approved') {
-      return '#d4edda'; // Light green for approved
-    } else if (status === 'submitted') {
-      return '#fff3cd'; // Light yellow for submitted/awaiting approval
-    } else {
-      return '#ffffff'; // White for not submitted
-    }
+    // if (status === 'approved') {
+    //   return '#d4edda'; // Light green for approved
+    // } else if (status === 'submitted') {
+    //   return '#fff3cd'; // Light yellow for submitted/awaiting approval
+    // } else {
+    //   return '#ffffff'; // White for not submitted
+    // }
   };
 
   // Check if field is read-only based on status
