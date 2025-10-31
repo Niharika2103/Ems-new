@@ -19,7 +19,6 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   AttendanceSaveall,
   AttendanceReleaseWeek,
-  AttendanceFetchByEmployeeProject,
   setAttendanceData,
   AttendanceFetchExistingWeek,
 } from "../../features/attendance/attendanceSlice";
@@ -104,23 +103,7 @@ export default function EmpTimesheet() {
     return dayIndex >= 5; // 5 = Saturday, 6 = Sunday
   };
 
-  // Get background color based on status (only for weekdays)
-  const getStatusColor = (dayIndex, leaveType = null) => {
-    if (isWeekendDay(dayIndex)) {
-      return '#d7dce8ff'; // Dark grey for weekends (always)
-    }
-    
-    const statusKey = leaveType ? `${leaveType}_${dayIndex}` : `worked_${dayIndex}`;
-    const status = approvalStatus[statusKey];
-    
-    if (status === 'approved') {
-      return '#d4edda'; // Light green for approved
-    } else if (status === 'submitted') {
-      return '#fff3cd'; // Light yellow for submitted/awaiting approval
-    } else {
-      return '#ffffff'; // White for not submitted
-    }
-  };
+  
 
   // Check if field is read-only based on status
   const isFieldReadOnly = (dayIndex, leaveType = null) => {
@@ -439,6 +422,27 @@ export default function EmpTimesheet() {
       setIsSaveAllEnabled(false); // disable for other weeks
     }
   };
+ const getStatusColor = (dayIndex) => {
+  // Check if this index is a weekend (e.g., Saturday = 5, Sunday = 6)
+  const isWeekend = dayIndex === 5 || dayIndex === 6; // adjust if your week starts on Monday
+
+  if (isWeekend) {
+    return "#E0E0E0"; // always gray for weekends
+  }
+
+  const record = attendanceData?.[dayIndex];
+  if (!record) return "white";
+
+  switch (record.status) {
+    case "Pending_approval":
+      return "#FFF59D"; // light yellow
+    case "Approved":
+      return "#A5D6A7"; // light green
+    default:
+      return "white";
+  }
+};
+
 
   const workedTotal = hours.reduce((s, v) => s + (Number(v) || 0), 0);
   const rowTotals = usedLeaveTypes.reduce(
@@ -632,7 +636,7 @@ export default function EmpTimesheet() {
         </div>
 
         <div className="flex gap-2 justify-between">
-          <Button variant="contained" color="success" onClick={handleSaveAll}>
+          <Button variant="contained" color="success" onClick={handleSaveAll} disable={!isSaveAllEnabled}>
             Save All
           </Button>
 

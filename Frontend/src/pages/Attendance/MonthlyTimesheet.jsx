@@ -92,13 +92,17 @@ export default function MonthlyTimesheet({ onBack }) {
     const statusKey = leaveType ? `${leaveType}_${dayIndex}` : `worked_${dayIndex}`;
     const status = approvalStatus[statusKey];
     
-    if (status === 'approved') {
-      return '#d4edda'; // Light green for approved
-    } else if (status === 'submitted') {
-      return '#fff3cd'; // Light yellow for submitted/awaiting approval
-    } else {
-      return '#ffffff'; // White for not submitted
-    }
+    const record = attendanceData?.[dayIndex];
+  if (!record) return "white";
+
+  switch (record.monthlyStatus) {
+    case "Pending_approval":
+      return "#FFF59D"; // light yellow
+    case "Approved":
+      return "#A5D6A7"; // light green
+    default:
+      return "white";
+  }
   };
 
   // NEW: Check if field is read-only based on status
