@@ -267,9 +267,7 @@ export const AdminAttendancFetchWeeklyDataByIdApi = (employeeId, from,to) => {
 export const Admin_Approve_Weekly_Attendance_Api = (employeeId, from,to) => {
   return AttendanceClient.put(
     `${AUTH_API.ADMIN}/attendance/weekly/approve`,
-    {
-      params: { employeeId, from ,to }
-    }
+     { employeeId, from, to }
   );
 };
 
