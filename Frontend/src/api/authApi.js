@@ -231,7 +231,7 @@ export const AttendanceFetchAllApi =()=>{
 
 // Fetch attendance by employee and project
 export const AttendanceFetchByEmployeeProjectApi = (employeeId, projectId) => {
-  return AttendanceClient.get(`/attendance/employee/${employeeId}/project/${projectId}`);
+  return AttendanceClient.get(`${AUTH_API.ATTENDANCE}/attendance/employee/${employeeId}/project/${projectId}`);
 };
 
 //fetch release-week
@@ -260,13 +260,13 @@ export const AttendanceFetchByEmployeeProjectApi = (employeeId, projectId) => {
 
 export const AdminAttendancFetchWeeklyDataByIdApi = (employeeId, from,to) => {
   return AttendanceClient.get(
-    `${API_BASES.ADMIN}/attendance/pending-weekly?employeeId=${employeeId}&from=${from}&to=${to}`)
+    `${AUTH_API.ADMIN}/attendance/pending-weekly?employeeId=${employeeId}&from=${from}&to=${to}`)
 };
 
 //Admin Approved a Weekly Employee Attendance
 export const Admin_Approve_Weekly_Attendance_Api = (employeeId, from,to) => {
   return AttendanceClient.put(
-    `${API_BASES.ADMIN}/attendance/weekly/approve`,
+    `${AUTH_API.ADMIN}/attendance/weekly/approve`,
     {
       params: { employeeId, from ,to }
     }
@@ -276,16 +276,23 @@ export const Admin_Approve_Weekly_Attendance_Api = (employeeId, from,to) => {
 //Admin monthly attendance Fetch
 export const AdminAttendancFetchMonthlyDataByIdApi = (employeeId, from,to) => {
   return AttendanceClient.get(
-    `${API_BASES.ADMIN}/attendance/pending-monthly?employeeId=${employeeId}&from=${from}&to=${to}`)
+    `${AUTH_API.ADMIN}/attendance/pending-monthly?employeeId=${employeeId}&from=${from}&to=${to}`)
 };
 
 //Admin Approved a Weekly Employee Attendance
 export const Admin_Approve_monthly_Attendance_Api = (employeeId, from,to) => {
   return AttendanceClient.put(
-    `${API_BASES.ADMIN}/attendance/monthly/approve`,
+    `${AUTH_API.ADMIN}/attendance/monthly/approve`,
     {
       params: { employeeId, from ,to }
     }
+  );
+};
+
+export const AttendanceFetchAllbasedonMonthApi = (from, to) => {
+  return AttendanceClient.get(
+    `${AUTH_API.ATTENDANCE}/attendance/monthly-approvals`,
+    { params: { startDate: from, endDate: to } } // ✅ dynamic query params
   );
 };
   // Apply parental leave (employee)

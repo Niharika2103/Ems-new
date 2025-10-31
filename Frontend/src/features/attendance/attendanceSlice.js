@@ -124,6 +124,17 @@ export const Admin_Approve_monthly_Attendance = createAsyncThunk(
     }
   }
 );
+export const AttendanceFetchAllbasedonMonth = createAsyncThunk(
+  "attendance/fetchMonthlyApprovals",
+  async ({ from, to }, { rejectWithValue }) => {
+    try {
+      const res = await AttendanceFetchAllbasedonMonthApi(from, to);
+      return res.data; // List<AttendanceResponseDTO>
+    } catch (err) {
+      return rejectWithValue(err.response?.data || "Failed to fetch monthly data");
+    }
+  }
+);
 
 export const applyParentalLeave = createAsyncThunk(
   "attendance/applyParentalLeave",
@@ -218,14 +229,26 @@ const attendanceSlice = createSlice({
       state.loading = false;
       state.error = action.payload;
     })
-       .addCase(AttendanceFetchAll.pending, (state) => {
+      //  .addCase(AttendanceFetchAll.pending, (state) => {
+      //   state.loading = true;
+      // })
+      // .addCase(AttendanceFetchAll.fulfilled, (state,action) => {
+      //   state.loading = false;
+      //    state.attendance = action.payload;
+      // })
+      // .addCase(AttendanceFetchAll.rejected, (state, action) => {
+      //   state.loading = false;
+      //   state.error = action.payload;
+      // })
+       .addCase(AttendanceFetchAllbasedonMonth.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
-      .addCase(AttendanceFetchAll.fulfilled, (state,action) => {
+      .addCase(AttendanceFetchAllbasedonMonth.fulfilled, (state, action) => {
         state.loading = false;
-         state.attendance = action.payload;
+        state.attendance = action.payload;
       })
-      .addCase(AttendanceFetchAll.rejected, (state, action) => {
+      .addCase(AttendanceFetchAllbasedonMonth.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
