@@ -436,7 +436,7 @@ export default function EmpTimesheet() {
   switch (record.status) {
     case "Pending_approval":
       return "#FFF59D"; // light yellow
-    case "Approved":
+    case "approved":
       return "#A5D6A7"; // light green
     default:
       return "white";

@@ -113,154 +113,179 @@ export default function Timesheet() {
   }, [viewMode, monthStart]);
 
   // --- Safe attendance data handling ---
-  useEffect(() => {
-    if (!attendanceData) return;
+ // --- Safe attendance data handling (Weekly) ---
+useEffect(() => {
+  if (!attendanceData) return;
 
-    // Get week start & end (Monday → Sunday)
-    const start = new Date(weekStart);
-    const weekDays = Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(start);
-      d.setDate(start.getDate() + i);
-      return d.toISOString().slice(0, 10); // YYYY-MM-DD
-    });
+  // Get week start & end (Monday → Sunday)
+  const start = new Date(weekStart);
+  const weekDays = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    return d.toISOString().slice(0, 10); // YYYY-MM-DD
+  });
 
-    const list = Array.isArray(attendanceData.data)
-      ? attendanceData.data
-      : [];
+  const list = Array.isArray(attendanceData.data)
+    ? attendanceData.data
+    : [];
 
-    // Build map for faster lookup (key = date)
-    const dataMap = {};
-    list.forEach((item) => {
-      const dateKey = item.date?.slice(0, 10);
-      dataMap[dateKey] = item;
-    });
+  // Build map for faster lookup (key = date)
+  const dataMap = {};
+  list.forEach((item) => {
+    const dateKey = item.date?.slice(0, 10);
+    dataMap[dateKey] = item;
+  });
 
-    // 🟩 Build 7-day structured data (even if API empty)
-    const weeklyData = weekDays.map((date) => {
-      const record = dataMap[date] || {}; // if no record, fallback {}
-      const worked_hours = record.worked_hours || 0;
-      const leaveType = record.leave_type || "";
+  // 🟩 Build 7-day structured data (even if API empty)
+  const weeklyData = weekDays.map((date) => {
+    const record = dataMap[date] || {}; // if no record, fallback {}
+    const worked_hours = record.worked_hours || 0;
+    const leaveType = record.leave_type || "";
 
-      const leaveValues = {
-        CL: 0,
-        SL: 0,
-        PL: 0,
-        WFH: 0,
-        "Extra Milar": 0,
-        "Paternity Leave": 0,
-        "Maternity Leave": 0,
-      };
+    const leaveValues = {
+      CL: 0,
+      SL: 0,
+      PL: 0,
+      WFH: 0,
+      "Extra Milar": 0,
+      "Paternity Leave": 0,
+      "Maternity Leave": 0,
+    };
 
-      if (leaveType && leaveValues.hasOwnProperty(leaveType)) {
-        leaveValues[leaveType] = 9;
-      }
+    if (leaveType && leaveValues.hasOwnProperty(leaveType)) {
+      leaveValues[leaveType] = 9;
+    }
 
-      return {
-        date,
-        worked_hours: leaveType ? 0 : worked_hours,
-        ...leaveValues,
-      };
-    });
+    return {
+      date,
+      worked_hours: leaveType ? 0 : worked_hours,
+      ...leaveValues,
+    };
+  });
 
-    console.log("🗓️ Final Weekly Data (mapped to 7 days):", weeklyData);
+  console.log("🗓️ Final Weekly Data (mapped to 7 days):", weeklyData);
 
-    // 🟩 Map to UI arrays
-    const workedArray = weeklyData.map((d) => Number(d.worked_hours) || 0);
-    setWorkedHours(workedArray);
+  // 🟩 Map to UI arrays
+  const workedArray = weeklyData.map((d) => Number(d.worked_hours) || 0);
+  setWorkedHours(workedArray);
 
-    const newLeaveRows = {};
-    const allLeaveTypes = [
-      "CL",
-      "SL",
-      "PL",
-      "WFH",
-      "Extra Milar",
-      "Paternity Leave",
-      "Maternity Leave",
-    ];
+  const newLeaveRows = {};
+  const allLeaveTypes = [
+    "CL",
+    "SL",
+    "PL",
+    "WFH",
+    "Extra Milar",
+    "Paternity Leave",
+    "Maternity Leave",
+  ];
 
-    allLeaveTypes.forEach((lt) => {
-      newLeaveRows[lt] = weeklyData.map((d) => Number(d[lt]) || 0);
-    });
+  allLeaveTypes.forEach((lt) => {
+    newLeaveRows[lt] = weeklyData.map((d) => Number(d[lt]) || 0);
+  });
 
-    setLeaveRows(newLeaveRows);
-    setUsedLeaveTypes(allLeaveTypes.filter((lt) => newLeaveRows[lt].some((v) => v > 0)));
-  }, [attendanceData, weekStart]);
+  setLeaveRows(newLeaveRows);
+  setUsedLeaveTypes(allLeaveTypes.filter((lt) => newLeaveRows[lt].some((v) => v > 0)));
+
+  // 🟨 Update background color for weekly status
+  if (attendanceData && viewMode === "weekly") {
+    const firstItem = attendanceData.data?.[0];
+    if (firstItem) {
+      const bgColor = getStatusBackgroundColor(firstItem, "weekly");
+      setStatusColor(bgColor);
+    } else {
+      setStatusColor("#fff");
+    }
+  }
+}, [attendanceData, weekStart, viewMode]);
 
 
   // --- Monthly data mapping ---
-  useEffect(() => {
-    if (!attendanceData || viewMode !== "monthly") return;
+ // --- Monthly data mapping ---
+useEffect(() => {
+  if (!attendanceData || viewMode !== "monthly") return;
 
-    const list = Array.isArray(attendanceData)
-      ? attendanceData
-      : attendanceData.data || [];
+  const list = Array.isArray(attendanceData)
+    ? attendanceData
+    : attendanceData.data || [];
 
-    console.log("✅ Monthly data from API:", list);
+  console.log("✅ Monthly data from API:", list);
 
-    // 🔹 Build map by date (key = yyyy-mm-dd)
-    const dataMap = {};
-    list.forEach((item) => {
-      const dateKey = item.date?.slice(0, 10);
-      dataMap[dateKey] = item;
-    });
+  // 🔹 Build map by date (key = yyyy-mm-dd)
+  const dataMap = {};
+  list.forEach((item) => {
+    const dateKey = item.date?.slice(0, 10);
+    dataMap[dateKey] = item;
+  });
 
-    // 🔹 Build month days (10th → 9th next month)
-    const monthDays = getMonthDays(monthStart);
+  // 🔹 Build month days (10th → 9th next month)
+  const monthDays = getMonthDays(monthStart);
 
-    // 🔹 Create structured data for all days
-    const monthlyData = monthDays.map((d) => {
-      const dateKey = d.date.toISOString().slice(0, 10);
-      const record = dataMap[dateKey] || {};
+  // 🔹 Create structured data for all days
+  const monthlyData = monthDays.map((d) => {
+    const dateKey = d.date.toISOString().slice(0, 10);
+    const record = dataMap[dateKey] || {};
 
-      const worked_hours = record.worked_hours || 0;
-      const leaveType = record.leave_type || "";
+    const worked_hours = record.worked_hours || 0;
+    const leaveType = record.leave_type || "";
 
-      const leaveValues = {
-        CL: 0,
-        SL: 0,
-        PL: 0,
-        WFH: 0,
-        "Extra Milar": 0,
-        "Paternity Leave": 0,
-        "Maternity Leave": 0,
-      };
+    const leaveValues = {
+      CL: 0,
+      SL: 0,
+      PL: 0,
+      WFH: 0,
+      "Extra Milar": 0,
+      "Paternity Leave": 0,
+      "Maternity Leave": 0,
+    };
 
-      if (leaveType && leaveValues.hasOwnProperty(leaveType)) {
-        leaveValues[leaveType] = 9;
-      }
+    if (leaveType && leaveValues.hasOwnProperty(leaveType)) {
+      leaveValues[leaveType] = 9;
+    }
 
-      return {
-        date: dateKey,
-        worked_hours: leaveType ? 0 : worked_hours,
-        ...leaveValues,
-      };
-    });
+    return {
+      date: dateKey,
+      worked_hours: leaveType ? 0 : worked_hours,
+      ...leaveValues,
+    };
+  });
 
-    console.log("🗓️ Final Monthly Data (mapped to 10th→9th):", monthlyData);
+  console.log("🗓️ Final Monthly Data (mapped to 10th→9th):", monthlyData);
 
-    // 🔹 Set worked hours & leave arrays
-    const workedArray = monthlyData.map((d) => Number(d.worked_hours) || 0);
-    setMonthlyWorkedHours(workedArray);
+  // 🔹 Set worked hours & leave arrays
+  const workedArray = monthlyData.map((d) => Number(d.worked_hours) || 0);
+  setMonthlyWorkedHours(workedArray);
 
-    const newLeaveRows = {};
-    const allLeaveTypes = [
-      "CL",
-      "SL",
-      "PL",
-      "WFH",
-      "Extra Milar",
-      "Paternity Leave",
-      "Maternity Leave",
-    ];
+  const newLeaveRows = {};
+  const allLeaveTypes = [
+    "CL",
+    "SL",
+    "PL",
+    "WFH",
+    "Extra Milar",
+    "Paternity Leave",
+    "Maternity Leave",
+  ];
 
-    allLeaveTypes.forEach((lt) => {
-      newLeaveRows[lt] = monthlyData.map((d) => Number(d[lt]) || 0);
-    });
+  allLeaveTypes.forEach((lt) => {
+    newLeaveRows[lt] = monthlyData.map((d) => Number(d[lt]) || 0);
+  });
 
-    setLeaveRows(newLeaveRows);
-    setUsedLeaveTypes(allLeaveTypes.filter((lt) => newLeaveRows[lt].some((v) => v > 0)));
-  }, [attendanceData, monthStart, viewMode]);
+  setLeaveRows(newLeaveRows);
+  setUsedLeaveTypes(allLeaveTypes.filter((lt) => newLeaveRows[lt].some((v) => v > 0)));
+
+  // 🟩 Update background color for monthly status
+  if (attendanceData && viewMode === "monthly") {
+    const firstItem =
+      Array.isArray(attendanceData) ? attendanceData[0] : attendanceData.data?.[0];
+    if (firstItem) {
+      const bgColor = getStatusBackgroundColor(firstItem, "monthly");
+      setStatusColor(bgColor);
+    } else {
+      setStatusColor("#fff");
+    }
+  }
+}, [attendanceData, monthStart, viewMode]);
 
 
   // --- Calculate leave summary ---
@@ -381,37 +406,40 @@ export default function Timesheet() {
         .catch((err) => console.error("❌ Weekly Approve Error:", err));
     }
     else if (viewMode === "monthly") {
-      // 📆 Monthly uses from & to from location.state
-      console.log("📅 Monthly Range (from navigation):", from, "→", to);
+      //  Monthly uses from & to from location.state
+      console.log("Monthly Range (from navigation):", from, "→", to);
 
       dispatch(Admin_Approve_monthly_Attendance({ employeeId, from, to }))
         .unwrap()
         .then((res) => {
-          console.log("✅ Monthly Approved:", res);
-          setMonthlyStatus("Approved");
-          alert(`✅ Monthly Timesheet Approved!\nRange: ${from} → ${to}`);
+          console.log(" Monthly Approved:", res);
+          alert(` Monthly Timesheet Approved!\nRange: ${from} → ${to}`);
         })
-        .catch((err) => console.error("❌ Monthly Approve Error:", err));
+        .catch((err) => console.error(" Monthly Approve Error:", err));
     }
   };
-  const [monthlyStatus, setMonthlyStatus] = useState("Pending_approval");
-
+const [statusColor, setStatusColor] = useState("#fff");
 
  
-const getInputBackgroundColor = (leaveType, dayIndex, value) => {
-  const day = days?.[dayIndex];
-  if (!day) return "#fff"; // 🛡️ Prevent crash when switching view modes
+ 
+const getStatusBackgroundColor = (item, viewMode) => {
+  if (viewMode === "weekly") {
+    if (item.weekly_status === "Approved" || item.weekly_status === "approve") {
+      return "#b7f5b0"; // 🟩 Green
+    } else if (item.weekly_status === "Pending_approval") {
+      return "#fff3b0"; // 🟨 Yellow
+    }
+  } else if (viewMode === "monthly") {
+    if (item.monthly_status === "Approved" || item.monthly_status === "approve") {
+      return "#b7f5b0"; // 🟩 Green
+    } else if (item.monthly_status === "Pending_approval") {
+      return "#fff3b0"; // 🟨 Yellow
+    }
+  }
 
-  // 🟩 Gray for weekends
-  if (day.dayIndex === 0 || day.dayIndex === 6) return "#f0f0f0";
-
-  // 🟩 Use color based on approval status
-  if (monthlyStatus === "Pending_approval") return "#FFF59D"; // Light yellow
-  if (monthlyStatus === "Approved") return "#A5D6A7"; // Light green
-
-  // 🟩 Default white background
-  return "#fff";
+  return "#fff"; // default white
 };
+
 
 
 
@@ -574,14 +602,7 @@ const getInputBackgroundColor = (leaveType, dayIndex, value) => {
                     style={{
                       width: 50,
                       textAlign: "center",
-                      backgroundColor:
-      days[i].dayIndex === 0 || days[i].dayIndex === 6
-        ? "#f0f0f0"
-        : monthlyStatus === "Pending_approval"
-        ? "#FFF59D"
-        : monthlyStatus === "Approved"
-        ? "#A5D6A7"
-        : "#fff",
+                     backgroundColor: statusColor,
                       // backgroundColor: days[i].dayIndex === 0 || days[i].dayIndex === 6 ? "#f0f0f0" : "#fff", border: "1px solid #ccc",
                       borderRadius: 4,
                     }}
@@ -628,7 +649,7 @@ const getInputBackgroundColor = (leaveType, dayIndex, value) => {
                       style={{
                         width: 50,
                         textAlign: "center",
-                        backgroundColor: getInputBackgroundColor(lt, i, v),
+                        backgroundColor: statusColor,
                         border: "1px solid #ccc",
                         borderRadius: 4,
                       }}
