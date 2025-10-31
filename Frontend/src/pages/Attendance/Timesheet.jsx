@@ -257,19 +257,19 @@ export default function Timesheet() {
     }
     
     // For leave cells with values
-    if (value > 0) {
-      const status = approvalStatus[leaveType]?.[dayIndex] || "pending";
+    // if (value > 0) {
+    //   const status = approvalStatus[leaveType]?.[dayIndex] || "pending";
       
-      switch (status) {
-        case "approved":
-          return "#217034ff"; // Light green for approved
-        case "rejected":
-          return "#d15a64ff"; // Light red for rejected
-        case "pending":
-        default:
-          return "#b39d54ff"; // Light yellow for pending approval
-      }
-    }
+    //   switch (status) {
+    //     case "approved":
+    //       return "#217034ff"; // Light green for approved
+    //     case "rejected":
+    //       return "#d15a64ff"; // Light red for rejected
+    //     case "pending":
+    //     default:
+    //       return "#b39d54ff"; // Light yellow for pending approval
+    //   }
+    // }
     
     // Default white background for weekdays with no leave
     return "#fff";
