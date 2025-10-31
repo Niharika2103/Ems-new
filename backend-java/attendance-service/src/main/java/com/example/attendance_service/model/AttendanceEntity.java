@@ -1,6 +1,7 @@
 package com.example.attendance_service.model;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.hibernate.annotations.DynamicInsert;
@@ -101,6 +102,49 @@ public class AttendanceEntity {
 	@Column(name = "holidays")
 	private Integer holidays = 10;
 	
+	@Column(name = "created_by")
+    private String createdBy;
+ 
+    public String getCreatedBy() {
+		return createdBy;
+	}
+
+	public void setCreatedBy(String createdBy) {
+		this.createdBy = createdBy;
+	}
+
+	public String getUpdatedBy() {
+		return updatedBy;
+	}
+
+	public void setUpdatedBy(String updatedBy) {
+		this.updatedBy = updatedBy;
+	}
+
+	public LocalDateTime getUpdatedAt() {
+		return updatedAt;
+	}
+
+	public void setUpdatedAt(LocalDateTime updatedAt) {
+		this.updatedAt = updatedAt;
+	}
+
+	public LocalDateTime getCreatedAt() {
+		return createdAt;
+	}
+
+	public void setCreatedAt(LocalDateTime createdAt) {
+		this.createdAt = createdAt;
+	}
+
+	@Column(name = "updated_by")
+    private String updatedBy;
+ 
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+    
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
 	public Integer getOptionalHolidays() {
 		return optionalHolidays;

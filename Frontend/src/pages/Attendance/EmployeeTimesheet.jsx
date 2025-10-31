@@ -283,7 +283,9 @@ export default function EmpTimesheet() {
   };
 
   const handleSaveAll = async () => {
+    const employeename=projectDetails?.username;
     const employeeId = projectDetails?.employeeId;
+    console.log(employeeId,"employeeId")
     const projectId = projectDetails?.projectID;
     const monday = getMonday(weekStart);
     console.log(monday, "monday")
@@ -312,10 +314,10 @@ export default function EmpTimesheet() {
         approvalStatus: 'submitted' // Set status as submitted when saving
       };
     });
-
+  
     try {
       const resultAction = await dispatch(
-        AttendanceSaveall({ employeeId, projectId, formData: dataToSend }) // ✅ use projectId
+        AttendanceSaveall({ employeename, employeeId, projectId,  formData: dataToSend }) // ✅ use projectId
       );
 
       // Update approval status for all fields (only weekdays)

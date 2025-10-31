@@ -39,10 +39,12 @@ public class AttendanceController {
     public List<AttendanceEntity> saveAllWeek(
             @RequestParam UUID employeeId,
             @RequestParam UUID projectId,
+            @RequestParam String employeename,
+            
             @RequestBody(required = false) Optional<List<AttendanceRequestDTO>> attendanceListOpt) {
-
+System.out.println("@45::"+employeename);
         List<AttendanceRequestDTO> attendanceList = attendanceListOpt.orElseGet(ArrayList::new);
-        return attendanceService.saveOrUpdateAttendance(employeeId, projectId, attendanceList);
+        return attendanceService.saveOrUpdateAttendance(employeeId, projectId, attendanceList, employeename);
     }
 //fetch only current week
 //    @GetMapping("/currentweek")

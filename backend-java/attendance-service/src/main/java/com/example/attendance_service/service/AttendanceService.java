@@ -1,6 +1,7 @@
 package com.example.attendance_service.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.DayOfWeek;
 import java.util.Comparator;
@@ -69,7 +70,7 @@ public class AttendanceService {
 	
 	@Transactional
 public List<AttendanceEntity> saveOrUpdateAttendance(
-        UUID employeeId, UUID projectId, List<AttendanceRequestDTO> attendanceList) {
+        UUID employeeId, UUID projectId,  List<AttendanceRequestDTO> attendanceList, String employeename) {
 
     if (employeeId == null || projectId == null) {
         return Collections.emptyList();
@@ -89,6 +90,8 @@ public List<AttendanceEntity> saveOrUpdateAttendance(
         firstTimeRecord.setTotalWorkedHours(0.0);
         firstTimeRecord.setStatus("draft");
         firstTimeRecord.setMonthlyStatus("draft");
+        firstTimeRecord.setCreatedBy(employeename);
+        firstTimeRecord.setCreatedAt(LocalDateTime.now());
 
         // ✅ EXACT DEFAULT VALUES FROM YOUR INSERT STATEMENT
         firstTimeRecord.setWorkingDays(0);
@@ -145,6 +148,8 @@ public List<AttendanceEntity> saveOrUpdateAttendance(
                 existing.setExtraMilar(0);
                 existing.setMaternityLeave(0);
                 existing.setPaternityLeave(0);
+                existing.setUpdatedBy(employeename);
+                existing.setUpdatedAt(LocalDateTime.now());
             }
 
             // ✅ Update leave type and worked hours properly
