@@ -28,7 +28,7 @@ public class ProjectEntity {
     @Column(columnDefinition = "uuid")
     private UUID id;
 
-    @Column(name = "project_name")
+    @Column(name = "name")
     private String projectName;
 
 	public UUID getId() {

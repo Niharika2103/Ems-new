@@ -1,5 +1,6 @@
 package com.example.attendance_service.controller;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.time.LocalDate;
@@ -18,6 +19,7 @@ import com.example.attendance_service.requestdto.AttendanceRequestDTO;
 import com.example.attendance_service.responsedto.AttendanceResponseDTO;
 import com.example.attendance_service.service.AttendanceService;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 
 @RestController
@@ -131,14 +133,37 @@ public class AttendanceController {
      public List<AttendanceEntity> getAttendanceByEmployeeAndProject(@PathVariable UUID employeeId, @PathVariable UUID projectId) {
          return attendanceService.getAttendanceByEmployeeAndProject(employeeId, projectId);
      }
-  // Get by one monthly data
-     @GetMapping("/monthly-approvals")
-     public ResponseEntity<List<AttendanceResponseDTO>> getMonthlyApprovals(
-             @RequestParam LocalDate startDate,
-             @RequestParam LocalDate endDate) {
+  
+     @GetMapping("/approval-summary")
+     public ResponseEntity<List<AttendanceResponseDTO>> getApprovalSummary(
+             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+             @RequestParam(defaultValue = "monthly") String periodType) {
 
-         List<AttendanceResponseDTO> result = attendanceService.getMonthlyApprovalSummary(startDate, endDate);
+         List<AttendanceResponseDTO> result = attendanceService.getApprovalSummary(startDate, endDate, periodType);
          return ResponseEntity.ok(result);
+     }
+     
+     @GetMapping("/check-leave-eligibility")
+     public ResponseEntity<Map<String, Object>> checkLeaveEligibility(
+             @RequestParam UUID employeeId,
+             @RequestParam String leaveType,
+             @RequestParam(defaultValue = "1") int requestedDays) {
+
+         boolean canApply = attendanceService.canApplyLeave(employeeId, leaveType, requestedDays);
+
+         Map<String, Object> response = new HashMap<>();
+         response.put("leaveType", leaveType);
+         response.put("requestedDays", requestedDays);
+         response.put("canApply", canApply);
+
+         if (canApply) {
+             response.put("message", " You can apply for " + leaveType);
+             return ResponseEntity.ok(response);
+         } else {
+             response.put("message", " You have already used all available " + leaveType + " leaves.");
+             return ResponseEntity.badRequest().body(response);
+         }
      }
 
 }

@@ -1,6 +1,7 @@
 package com.example.attendance_service.service;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.DayOfWeek;
 import java.util.Comparator;
 import java.util.List;
@@ -254,58 +255,108 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 		return attendanceRepository.findByEmployee_IdAndProject_IdOrderByDateAsc(employeeId, projectId);
 	}
 
-	public List<AttendanceResponseDTO> getMonthlyApprovalSummary(LocalDate startDate, LocalDate endDate) {
-    // ✅ Fetch all attendance entries safely
-    List<AttendanceEntity> allRecords = attendanceRepository.findAllByOrderByDateAsc();
-    if (allRecords == null) allRecords = Collections.emptyList();
+	@Transactional
+	public List<AttendanceResponseDTO> getApprovalSummary(LocalDate startDate, LocalDate endDate, String periodType) {
+	    List<AttendanceEntity> allRecords = attendanceRepository.findAllByOrderByDateAsc();
+	    if (allRecords == null) allRecords = Collections.emptyList();
 
-    // ✅ Filter by date range
-    List<AttendanceEntity> recordsInRange = allRecords.stream()
-        .filter(a -> a.getDate() != null && !a.getDate().isBefore(startDate) && !a.getDate().isAfter(endDate))
-        .collect(Collectors.toList());
+	    // ✅ Filter by date range
+	    List<AttendanceEntity> recordsInRange = allRecords.stream()
+	        .filter(a -> a.getDate() != null && !a.getDate().isBefore(startDate) && !a.getDate().isAfter(endDate))
+	        .collect(Collectors.toList());
 
-    // ✅ Group by employee safely
-    Map<UUID, List<AttendanceEntity>> groupedByEmployee = recordsInRange.stream()
-        .filter(a -> a.getEmployee() != null && a.getEmployee().getId() != null)
-        .collect(Collectors.groupingBy(a -> a.getEmployee().getId()));
+	    // ✅ Consider only records with a project
+	    recordsInRange = recordsInRange.stream()
+	        .filter(a -> a.getEmployee() != null && a.getEmployee().getId() != null && a.getProject() != null)
+	        .collect(Collectors.toList());
 
-    // ✅ Map to response DTOs
-    return groupedByEmployee.entrySet().stream()
-        .map(entry -> {
-            UUID employeeId = entry.getKey();
-            List<AttendanceEntity> empRecords = entry.getValue();
+	    // ✅ Determine grouping key based on period type
+	    Map<String, List<AttendanceEntity>> grouped;
+	    if ("weekly".equalsIgnoreCase(periodType)) {
+	        grouped = recordsInRange.stream()
+	            .collect(Collectors.groupingBy(a -> {
+	                UUID empId = a.getEmployee().getId();
+	                UUID projectId = a.getProject().getId();
+	                LocalDate weekStart = a.getDate().with(java.time.DayOfWeek.MONDAY);
+	                return empId + "_" + projectId + "_" + weekStart;
+	            }));
+	    } else {
+	        // ✅ Monthly grouping (cross-month range = one period)
+	        grouped = recordsInRange.stream()
+	            .collect(Collectors.groupingBy(a -> {
+	                UUID empId = a.getEmployee().getId();
+	                UUID projectId = a.getProject().getId();
+	                return empId + "_" + projectId + "_" + startDate + "_" + endDate;
+	            }));
+	    }
 
-            AttendanceEntity first = empRecords.stream().findFirst().orElse(null);
+	    // ✅ Map grouped records to DTO
+	    return grouped.entrySet().stream().map(entry -> {
+	        List<AttendanceEntity> records = entry.getValue();
+	        AttendanceEntity first = records.get(0);
 
-            String employeeName = null;
-            String projectName = null;
-            String gender = null;
-            Integer year = null;
-            UUID projectId = null;
+	        double totalWorkedHours = records.stream()
+	            .mapToDouble(r -> r.getWorkedHours() != null ? r.getWorkedHours() : 0.0)
+	            .sum();
 
-            if (first != null) {
-                if (first.getEmployee() != null) {
-                    employeeName = first.getEmployee().getEmployeeName();
-                    gender = first.getEmployee().getGender();
-                }
-                if (first.getProject() != null) {
-                    projectName = first.getProject().getProjectName();
-                    projectId = first.getProject().getId();
-                }
-                year = first.getYear();
-            }
+	        UUID employeeId = first.getEmployee().getId();
+	        String employeeName = first.getEmployee().getEmployeeName();
+	        String gender = first.getEmployee().getGender();
+	        Integer year = first.getYear();
+	        UUID projectId = first.getProject().getId();
+	        String projectName = first.getProject().getProjectName();
 
-            return new AttendanceResponseDTO(
-                null, null, null, null, null, null, 
-                year, gender, employeeId, employeeName, 
-                null, projectId, projectName
-            );
-        })
-        .sorted(Comparator.comparing(
-            AttendanceResponseDTO::getEmployeeName,
-            Comparator.nullsLast(String::compareToIgnoreCase)
-        ))
-        .collect(Collectors.toList());
-}
+	        // ✅ Unified period start date
+	        LocalDate periodStartDate = "weekly".equalsIgnoreCase(periodType)
+	                ? first.getDate().with(java.time.DayOfWeek.MONDAY)
+	                : startDate; // <-- FIXED: use the actual requested startDate
+
+	        return new AttendanceResponseDTO(
+	            null,
+	            periodStartDate,
+	            null,
+	            totalWorkedHours,
+	            null,
+	            null,
+	            year,
+	            gender,
+	            employeeId,
+	            employeeName,
+	            null,
+	            projectId,
+	            projectName
+	        );
+	    })
+	    .sorted(Comparator.comparing(AttendanceResponseDTO::getEmployeeName,
+	            Comparator.nullsLast(String::compareToIgnoreCase)))
+	    .collect(Collectors.toList());
+	}
+	
+	@Transactional
+	public boolean canApplyLeave(UUID employeeId, String leaveType, int requestedDays) {
+	    // ✅ Fetch the employee's default attendance record (project = NULL)
+	    AttendanceEntity baseRecord = attendanceRepository
+	            .findByEmployee_IdAndProjectIsNull(employeeId)
+	            .orElseThrow(() -> new RuntimeException("Base attendance record not found"));
+
+	    // ✅ Get how many leaves already taken of this type
+	    long takenLeaves = attendanceRepository.countByEmployee_IdAndLeaveType(employeeId, leaveType);
+
+	    // ✅ Dynamically read allowed leaves from base record
+	    int allowed = switch (leaveType) {
+	        case "SL" -> baseRecord.getSl();
+	        case "EL" -> baseRecord.getEl();
+	        case "WFH" -> baseRecord.getWorkFromHome();
+	        case "Extra Millar" -> baseRecord.getExtraMilar();
+	        case "Paternity Leave" -> baseRecord.getPaternityLeave();
+	        case "Maternity Leave" -> baseRecord.getMaternityLeave();
+	        case "Optional Holidays" -> baseRecord.getOptionalHolidays();
+	        case "Holidays" -> baseRecord.getHolidays();
+	        default -> 0;
+	    };
+
+	    // ✅ Check balance
+	    return (takenLeaves + requestedDays) <= allowed;
+	}
 
 }
