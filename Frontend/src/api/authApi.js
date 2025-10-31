@@ -283,9 +283,7 @@ export const AdminAttendancFetchMonthlyDataByIdApi = (employeeId, from,to) => {
 export const Admin_Approve_monthly_Attendance_Api = (employeeId, from,to) => {
   return AttendanceClient.put(
     `${AUTH_API.ADMIN}/attendance/monthly/approve`,
-    {
-      params: { employeeId, from ,to }
-    }
+    { employeeId, from ,to },
   );
 };
 
