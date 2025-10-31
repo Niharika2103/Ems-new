@@ -48,7 +48,6 @@ export default function EmpTimesheet() {
   const [menuRow, setMenuRow] = useState(null);
   const [weekStart, setWeekStart] = useState(getMonday(new Date()));
   const [calendarAnchor, setCalendarAnchor] = useState(null);
-  const [isWeekComplete, setIsWeekComplete] = useState(false);
   const [selectDate, setSelectDate] = useState(new Date());
   const [isSaveAllEnabled, setIsSaveAllEnabled] = useState(true);
   const [leaveModalOpen, setLeaveModalOpen] = useState(false);
@@ -71,6 +70,7 @@ export default function EmpTimesheet() {
     }
   }, []);
 
+  //disbale removed
   useEffect(() => {
     const filled = [0, 1, 2, 3, 4].every(
       (i) => Number(hours[i]) > 0 || usedLeaveTypes.some((lt) => {
@@ -78,7 +78,6 @@ export default function EmpTimesheet() {
         return val !== 0 && val !== ""; // text leave codes count as filled
       })
     );
-    setIsWeekComplete(filled);
   }, [hours, leaveRows, usedLeaveTypes]);
 
   function getMonday(d) {
@@ -633,7 +632,7 @@ export default function EmpTimesheet() {
         </div>
 
         <div className="flex gap-2 justify-between">
-          <Button variant="contained" color="success" onClick={handleSaveAll} disabled={!isSaveAllEnabled && !isWeekComplete}>
+          <Button variant="contained" color="success" onClick={handleSaveAll}>
             Save All
           </Button>
 
@@ -641,7 +640,7 @@ export default function EmpTimesheet() {
             variant="contained"
             color="secondary"
             onClick={handleSaveWeek}
-            disabled={!isWeekComplete}
+           
           >
             Release Week
           </Button>
