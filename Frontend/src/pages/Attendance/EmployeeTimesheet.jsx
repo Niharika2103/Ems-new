@@ -356,7 +356,7 @@ export default function EmpTimesheet() {
   };
 
   const handleSaveWeek = async () => {
-    const employeeId = projects[0]?.employeeId;
+    const employeeId = projectDetails?.employeeId;
     const weekStartDate = getMonday(weekStart);
     const weekEnd = new Date(weekStartDate);
     weekEnd.setDate(weekStartDate.getDate() + 6); // Sunday
