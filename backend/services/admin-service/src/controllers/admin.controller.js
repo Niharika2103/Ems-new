@@ -1101,25 +1101,91 @@ export const getPendingWeeklyApprovals = async (req, res) => {
 /* -------------------------------------------------------------------------- */
 /*                          ADMIN APPROVE / REJECT WEEK                   */
 /* -------------------------------------------------------------------------- */
+// export const updateWeeklyApprovalStatus = async (req, res) => {
+//   const client = await pool.connect();
+//   try {
+//     const { employeeId, from, to } = req.body;
+//     const status = "approved"; // default status
+
+//     const query = `
+//       UPDATE attendance
+//       SET weekly_status = $1
+//       WHERE employee_id = $2
+//         AND date BETWEEN $3 AND $4
+//         AND weekly_status = 'Pending_approval'
+//       RETURNING *;
+//     `;
+
+//     const result = await client.query(query, [status, employeeId, from, to]);
+
+//     res.status(200).json({
+//       message: `Weekly attendance ${status} successfully`,
+//       updated_count: result.rows.length,
+//       data: result.rows,
+//     });
+//   } catch (err) {
+//     console.error("Update Weekly Status Error:", err.message);
+//     res.status(500).json({ error: "Failed to update weekly attendance" });
+//   } finally {
+//     client.release();
+//   }
+// };
+
 export const updateWeeklyApprovalStatus = async (req, res) => {
   const client = await pool.connect();
+
   try {
     const { employeeId, from, to } = req.body;
     const status = "approved"; // default status
 
+    // ✅ Extract admin name from JWT token or request body
+    let adminName = "System Admin";
+    const authHeader = req.headers["authorization"];
+
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.split(" ")[1];
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        adminName = decoded.name || decoded.email || "System Admin";
+      } catch (err) {
+        console.warn("Invalid or expired token:", err.message);
+      }
+    } else if (req.body.updatedBy) {
+      adminName = req.body.updatedBy;
+    }
+
+    const updatedBy = adminName.substring(0, 255);
+
+    // ✅ Update query
     const query = `
       UPDATE attendance
-      SET weekly_status = $1
+      SET weekly_status = $1,
+          updated_by = $5,
+          updated_at = NOW()
       WHERE employee_id = $2
-        AND date BETWEEN $3 AND $4
+        AND "date" BETWEEN $3 AND $4
         AND weekly_status = 'Pending_approval'
       RETURNING *;
     `;
 
-    const result = await client.query(query, [status, employeeId, from, to]);
+    const result = await client.query(query, [
+      status,
+      employeeId,
+      from,
+      to,
+      updatedBy,
+    ]);
+
+    // ✅ Response
+    if (result.rows.length === 0) {
+      return res.status(200).json({
+        message: "No pending approvals found for the given week.",
+        updated_count: 0,
+      });
+    }
 
     res.status(200).json({
-      message: `Weekly attendance ${status} successfully`,
+      message: `Weekly attendance ${status} successfully by ${updatedBy}`,
       updated_count: result.rows.length,
       data: result.rows,
     });
@@ -1130,7 +1196,6 @@ export const updateWeeklyApprovalStatus = async (req, res) => {
     client.release();
   }
 };
-
 
 /* -------------------------------------------------------------------------- */
 /*                      GET PENDING MONTHLY APPROVALS (ADMIN)                 */
@@ -1173,25 +1238,91 @@ export const getPendingMonthlyApprovals = async (req, res) => {
 /* -------------------------------------------------------------------------- */
 /*                       ADMIN APPROVES MONTHLY ATTENDANCE                    */
 /* -------------------------------------------------------------------------- */
+// export const updateMonthlyApprovalStatus = async (req, res) => {
+//   const client = await pool.connect();
+//   try {
+//     const { employeeId, from, to } = req.body;
+//     const status = "approved";
+
+//     const query = `
+//       UPDATE attendance
+//       SET monthly_status = $1
+//       WHERE employee_id = $2
+//         AND date BETWEEN $3 AND $4
+//         AND monthly_status = 'Pending_approval'
+//       RETURNING *;
+//     `;
+
+//     const result = await client.query(query, [status, employeeId, from, to]);
+
+//     res.status(200).json({
+//       message: `Monthly attendance ${status} successfully`,
+//       updated_count: result.rows.length,
+//       data: result.rows,
+//     });
+//   } catch (err) {
+//     console.error("Update Monthly Status Error:", err.message);
+//     res.status(500).json({ error: "Failed to update monthly attendance" });
+//   } finally {
+//     client.release();
+//   }
+// };
+
 export const updateMonthlyApprovalStatus = async (req, res) => {
   const client = await pool.connect();
+
   try {
     const { employeeId, from, to } = req.body;
     const status = "approved";
 
+    // ✅ Extract admin name from JWT token or body
+    let adminName = "System Admin";
+    const authHeader = req.headers["authorization"];
+
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.split(" ")[1];
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        adminName = decoded.name || decoded.email || "System Admin";
+      } catch (err) {
+        console.warn("Invalid or expired token:", err.message);
+      }
+    } else if (req.body.updatedBy) {
+      adminName = req.body.updatedBy;
+    }
+
+    const updatedBy = adminName.substring(0, 255);
+
+    // ✅ Update query for monthly status
     const query = `
       UPDATE attendance
-      SET monthly_status = $1
+      SET monthly_status = $1,
+          updated_by = $5,
+          updated_at = NOW()
       WHERE employee_id = $2
-        AND date BETWEEN $3 AND $4
+        AND "date" BETWEEN $3 AND $4
         AND monthly_status = 'Pending_approval'
       RETURNING *;
     `;
 
-    const result = await client.query(query, [status, employeeId, from, to]);
+    const result = await client.query(query, [
+      status,
+      employeeId,
+      from,
+      to,
+      updatedBy,
+    ]);
+
+    // ✅ Response handling
+    if (result.rows.length === 0) {
+      return res.status(200).json({
+        message: "No pending approvals found for the given month.",
+        updated_count: 0,
+      });
+    }
 
     res.status(200).json({
-      message: `Monthly attendance ${status} successfully`,
+      message: `Monthly attendance ${status} successfully by ${updatedBy}`,
       updated_count: result.rows.length,
       data: result.rows,
     });
@@ -1241,6 +1372,8 @@ export const adminUpdateWorkedHours = async (req, res) => {
     res.status(500).json({ error: "Failed to update worked hours" });
   }
 };
+
+
 
 
 
