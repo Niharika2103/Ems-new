@@ -21,6 +21,7 @@ import {
   AttendanceReleaseWeek,
   setAttendanceData,
   AttendanceFetchExistingWeek,
+  checkLeaveEligibility,
 } from "../../features/attendance/attendanceSlice";
 import LeaveApplicationModal from "../../components/LeaveApplicationModal";
 import { useNavigate } from "react-router-dom";
@@ -38,11 +39,11 @@ export default function EmpTimesheet() {
   const ProjectID = projectDetails?.projectID;
   const employeeId = projectDetails?.employeeId;
 
-  const [leaveType, setLeaveType] = useState("CL");
+  const [leaveType, setLeaveType] = useState("EL");
   const [hours, setHours] = useState(Array(7).fill(0));
-  const [usedLeaveTypes, setUsedLeaveTypes] = useState(["CL"]);
-  const [leaveRows, setLeaveRows] = useState({ CL: Array(7).fill(0) });
-  const [lockedRows, setLockedRows] = useState({ CL: false });
+  const [usedLeaveTypes, setUsedLeaveTypes] = useState(["EL"]);
+  const [leaveRows, setLeaveRows] = useState({ EL: Array(7).fill(0) });
+  const [lockedRows, setLockedRows] = useState({ EL: false });
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [menuRow, setMenuRow] = useState(null);
   const [weekStart, setWeekStart] = useState(getMonday(new Date()));
@@ -55,7 +56,7 @@ export default function EmpTimesheet() {
   // NEW: store leave periods for multi-week leaves
   const [leavePeriods, setLeavePeriods] = useState([]);
   const [approvalStatus, setApprovalStatus] = useState({}); // Track approval status for each day
-  const leaveTypes = ["CL", "SL", "PL", "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave"];
+  const leaveTypes = ["EL", "SL","WFH", "Extra Milar", "Paternity Leave", "Maternity Leave", "Optional Holidays", "Holidays"];
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
   // Fetch from localStorage when page loads
@@ -215,19 +216,65 @@ export default function EmpTimesheet() {
     setMenuRow(null);
   };
 
-  const handleAddActivity = () => {
-    if (leaveType === "Maternity Leave" || leaveType === "Paternity Leave") {
-      setModalLeaveType(leaveType);
-      setLeaveModalOpen(true);
-      return;
-    }
+  // const handleAddActivity = () => {
+  //   if (leaveType === "Maternity Leave" || leaveType === "Paternity Leave") {
+  //     setModalLeaveType(leaveType);
+  //     setLeaveModalOpen(true);
+  //     return;
+  //   }
 
-    if (leaveType && !usedLeaveTypes.includes(leaveType)) {
-      setUsedLeaveTypes([...usedLeaveTypes, leaveType]);
-      setLeaveRows((prev) => ({ ...prev, [leaveType]: Array(7).fill(0) }));
-      setLockedRows((prev) => ({ ...prev, [leaveType]: false }));
+  //   if (leaveType && !usedLeaveTypes.includes(leaveType)) {
+  //     setUsedLeaveTypes([...usedLeaveTypes, leaveType]);
+  //     setLeaveRows((prev) => ({ ...prev, [leaveType]: Array(7).fill(0) }));
+  //     setLockedRows((prev) => ({ ...prev, [leaveType]: false }));
+  //   }
+  // };
+
+  const handleAddActivity = async () => {
+  if (!leaveType) {
+    toast.error("Please select a leave type");
+    return;
+  }
+
+  if (!employeeId) {
+    toast.error("Employee ID missing!");
+    return;
+  }
+
+  // ✅ Step 1: Check eligibility first
+  try {
+    const resultAction = await dispatch(
+      checkLeaveEligibility({ employeeId, leaveType, requestedDays: 1 })
+    );
+
+    if (checkLeaveEligibility.fulfilled.match(resultAction)) {
+      const { canApply, message } = resultAction.payload;
+      if (canApply) {
+        toast.success(message);
+
+        // ✅ Step 2: Proceed with your existing leave add logic
+        if (leaveType === "Maternity Leave" || leaveType === "Paternity Leave") {
+          setModalLeaveType(leaveType);
+          setLeaveModalOpen(true);
+          return;
+        }
+
+        if (!usedLeaveTypes.includes(leaveType)) {
+          setUsedLeaveTypes([...usedLeaveTypes, leaveType]);
+          setLeaveRows((prev) => ({ ...prev, [leaveType]: Array(7).fill(0) }));
+          setLockedRows((prev) => ({ ...prev, [leaveType]: false }));
+        }
+      } else {
+        toast.warn(message);
+      }
+    } else {
+      toast.error(resultAction.payload?.message || "Failed to check leave eligibility");
     }
-  };
+  } catch (err) {
+    console.error("Eligibility check error:", err);
+    toast.error("Error checking leave eligibility");
+  }
+};
 
   const handleModalSubmit = async ({ startDate }) => {
     if (!employeeId) {

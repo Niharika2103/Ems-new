@@ -4,7 +4,7 @@ import { AttendanceSaveallApi,AttendanceFetchAllApi ,AttendanceFetchExistingWeek
   AttendanceFetchByEmployeeProjectApi,AttendanceReleaseWeekApi,
 AdminAttendancFetchWeeklyDataByIdApi,Admin_Approve_Weekly_Attendance_Api,
 AdminAttendancFetchMonthlyDataByIdApi,AttendanceFetchAllbasedonMonthApi,
-Admin_Approve_monthly_Attendance_Api,applyParentalLeaveApi, approveParentalLeaveApi,fetchPendingParentalLeavesApi} from "../../api/authApi";
+Admin_Approve_monthly_Attendance_Api,applyParentalLeaveApi, approveParentalLeaveApi,fetchPendingParentalLeavesApi, AttendanceCheckLeaveEligibilityApi} from "../../api/authApi";
 
 
 //Employee
@@ -175,12 +175,26 @@ export const fetchPendingParentalLeaves = createAsyncThunk(
   }
 );
 
+// ✅ Check Leave Eligibility (by attendanceId)
+export const checkLeaveEligibility = createAsyncThunk(
+  "attendance/checkLeaveEligibility",
+  async ({ employeeId, leaveType, requestedDays = 1 }, thunkAPI) => {
+    try {
+      const res = await AttendanceCheckLeaveEligibilityApi( employeeId, leaveType, requestedDays);
+      return res.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+
 const attendanceSlice = createSlice({
   name: "attendance",
   initialState: {
     attendance:[],
      attendanceData: [], 
       pendingLeaves: [],
+      leaveEligibility: null, 
       loading: false,
     error: null,
   },
@@ -293,8 +307,20 @@ const attendanceSlice = createSlice({
 
     .addCase(Admin_Approve_monthly_Attendance.pending, (state) => { state.loading = true; })
     .addCase(Admin_Approve_monthly_Attendance.fulfilled, (state) => { state.loading = false; })
-    .addCase(Admin_Approve_monthly_Attendance.rejected, (state, action) => { state.loading = false; state.error = action.payload; });
-      
+    .addCase(Admin_Approve_monthly_Attendance.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
+     
+    .addCase(checkLeaveEligibility.pending, (state) => {
+  state.loading = true;
+  state.error = null;
+})
+.addCase(checkLeaveEligibility.fulfilled, (state, action) => {
+  state.loading = false;
+  state.leaveEligibility = action.payload; // ✅ store backend response
+})
+.addCase(checkLeaveEligibility.rejected, (state, action) => {
+  state.loading = false;
+  state.error = action.payload;
+})
   },
 });
 
