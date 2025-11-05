@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.example.attendance_service.model.AttendanceEntity;
 import com.example.attendance_service.requestdto.AttendanceRequestDTO;
+import com.example.attendance_service.requestdto.LeaveDeductRequest;
 import com.example.attendance_service.responsedto.AttendanceResponseDTO;
 import com.example.attendance_service.service.AttendanceService;
 import java.util.ArrayList;
@@ -168,4 +169,9 @@ System.out.println("@45::"+employeename);
          }
      }
 
+     @PostMapping("/deduct-leaves")
+     public ResponseEntity<String> deductLeaves(@RequestBody LeaveDeductRequest request) {
+         attendanceService.deductLeaves(request.getEmployeeId(), request.getFrom(), request.getTo());
+         return ResponseEntity.ok("Leaves updated successfully");
+     }
 }

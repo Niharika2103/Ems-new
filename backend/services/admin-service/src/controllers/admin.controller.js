@@ -7,6 +7,9 @@ import { sendEmail } from "../services/emailserviceadmin.js";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+
+import axios from "axios";
+
 // ✅ Updated table names
 const USER_MASTER_TABLE = "user_employees_master";
 const REGISTRATIONS_TABLE = "registrations";
@@ -1156,7 +1159,7 @@ export const updateWeeklyApprovalStatus = async (req, res) => {
 
     const updatedBy = adminName.substring(0, 255);
 
-    // ✅ Update query
+    // ✅ 1. Update weekly attendance status
     const query = `
       UPDATE attendance
       SET weekly_status = $1,
@@ -1176,7 +1179,7 @@ export const updateWeeklyApprovalStatus = async (req, res) => {
       updatedBy,
     ]);
 
-    // ✅ Response
+    // ✅ 2. Handle if no records to approve
     if (result.rows.length === 0) {
       return res.status(200).json({
         message: "No pending approvals found for the given week.",
@@ -1184,13 +1187,28 @@ export const updateWeeklyApprovalStatus = async (req, res) => {
       });
     }
 
+    console.log(`✅ Weekly records approved for employee: ${employeeId}`);
+
+    // ✅ 3. Call Java API to deduct leaves for that week
+    try {
+      await axios.post("http://localhost:9090/api/attendance/deduct-leaves", {
+        employeeId,
+        from,
+        to,
+      });
+      console.log("✅ Leave balance updated in Java service");
+    } catch (err) {
+      console.error("⚠️ Failed to update leave balance in Java service:", err.message);
+    }
+
+    // ✅ 4. Send success response to frontend
     res.status(200).json({
       message: `Weekly attendance ${status} successfully by ${updatedBy}`,
       updated_count: result.rows.length,
       data: result.rows,
     });
   } catch (err) {
-    console.error("Update Weekly Status Error:", err.message);
+    console.error("❌ Update Weekly Status Error:", err.message);
     res.status(500).json({ error: "Failed to update weekly attendance" });
   } finally {
     client.release();

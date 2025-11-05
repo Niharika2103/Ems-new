@@ -363,5 +363,47 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 	    // ✅ Check balance
 	    return (takenLeaves + requestedDays) <= allowed;
 	}
+	
+	@Transactional
+	public void deductLeaves(UUID employeeId, LocalDate from, LocalDate to) {
+	    // 1️⃣ Fetch all attendance entries in that range
+	    List<AttendanceEntity> weekRecords =
+	            attendanceRepository.findByEmployee_IdAndDateBetween(employeeId, from, to);
+
+	    if (weekRecords.isEmpty()) return;
+
+	    // 2️⃣ Fetch base (hardcoded) record — project = null
+	    AttendanceEntity baseRecord = attendanceRepository
+	            .findByEmployee_IdAndProjectIsNull(employeeId)
+	            .orElseThrow(() -> new RuntimeException("Base attendance record not found"));
+
+	    // 3️⃣ Count leave types in that week
+	    Map<String, Long> leaveCount = weekRecords.stream()
+	            .filter(a -> a.getLeaveType() != null && !a.getLeaveType().isBlank())
+	            .collect(Collectors.groupingBy(AttendanceEntity::getLeaveType, Collectors.counting()));
+
+	    // 4️⃣ Deduct the leaves
+	    leaveCount.forEach((type, count) -> {
+	        switch (type.trim()) {
+	            case "SL" -> baseRecord.setSl(Math.max(0, baseRecord.getSl() - count.intValue()));
+	            case "EL" -> baseRecord.setEl(Math.max(0, baseRecord.getEl() - count.intValue()));
+	            case "WFH" -> baseRecord.setWorkFromHome(Math.max(0, baseRecord.getWorkFromHome() - count.intValue()));
+	            case "Optional Holidays" ->
+	                    baseRecord.setOptionalHolidays(Math.max(0, baseRecord.getOptionalHolidays() - count.intValue()));
+	            case "Holidays" ->
+	                    baseRecord.setHolidays(Math.max(0, baseRecord.getHolidays() - count.intValue()));
+	            case "Maternity Leave" ->
+	                    baseRecord.setMaternityLeave(Math.max(0, baseRecord.getMaternityLeave() - count.intValue()));
+	            case "Paternity Leave" ->
+	                    baseRecord.setPaternityLeave(Math.max(0, baseRecord.getPaternityLeave() - count.intValue()));
+	            case "Extra Milar" -> 
+	                    baseRecord.setExtraMilar(Math.max(0, baseRecord.getExtraMilar() - count.intValue())); // ✅ Added this
+	            default -> System.out.println("⚠️ Unknown leave type: " + type);
+	        }
+	    });
+
+	    // 5️⃣ Save updated leave counts
+	    attendanceRepository.save(baseRecord);
+	}
 
 }
