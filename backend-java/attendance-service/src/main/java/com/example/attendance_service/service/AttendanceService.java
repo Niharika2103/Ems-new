@@ -137,6 +137,19 @@ public List<AttendanceEntity> saveOrUpdateAttendance(
                 existing.setDate(date);
                 existing.setYear(date.getYear());
                 
+                if (dto.getWorkedHours() == 0 && "sl".equalsIgnoreCase(dto.getLeaveType())) {
+                    // ✅ Case: Sick Leave (SL)
+                    LocalDate previousDate = dto.getDate().minusDays(1);
+ 
+                    AttendanceEntity previousRecord = attendanceRepository
+                            .findByEmployee_IdAndProject_IdAndDate(employeeId, projectId, previousDate)
+                            .orElse(null);
+ 
+                    if (previousRecord != null) {
+                        existing.setSl(previousRecord.getSl() - 1);
+                    }
+                }
+
 
                 // ✅ SET WEEKLY RECORD DEFAULTS (NOT org-level defaults!)
                 existing.setWorkingDays(0);
@@ -144,7 +157,7 @@ public List<AttendanceEntity> saveOrUpdateAttendance(
                 existing.setHolidays(0);              // ← 0, not 10
                 existing.setOptionalHolidays(0);      // ← 0, not 2
                 existing.setEl(0);
-                existing.setSl(0);
+//                existing.setSl(0);
                 existing.setExtraMilar(0);
                 existing.setMaternityLeave(0);
                 existing.setPaternityLeave(0);
@@ -339,28 +352,23 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 	
 	@Transactional
 	public boolean canApplyLeave(UUID employeeId, String leaveType, int requestedDays) {
-	    // ✅ Fetch the employee's default attendance record (project = NULL)
-	    AttendanceEntity baseRecord = attendanceRepository
-	            .findByEmployee_IdAndProjectIsNull(employeeId)
-	            .orElseThrow(() -> new RuntimeException("Base attendance record not found"));
-
-	    // ✅ Get how many leaves already taken of this type
+	    // ✅ Count how many leaves of this type the employee has already taken
 	    long takenLeaves = attendanceRepository.countByEmployee_IdAndLeaveType(employeeId, leaveType);
 
-	    // ✅ Dynamically read allowed leaves from base record
+	    // ✅ Hardcoded allowed leave limits
 	    int allowed = switch (leaveType) {
-	        case "SL" -> baseRecord.getSl();
-	        case "EL" -> baseRecord.getEl();
-	        case "WFH" -> baseRecord.getWorkFromHome();
-	        case "Extra Millar" -> baseRecord.getExtraMilar();
-	        case "Paternity Leave" -> baseRecord.getPaternityLeave();
-	        case "Maternity Leave" -> baseRecord.getMaternityLeave();
-	        case "Optional Holidays" -> baseRecord.getOptionalHolidays();
-	        case "Holidays" -> baseRecord.getHolidays();
+	        case "SL" -> 10;   // Sick Leave
+	        case "EL" -> 25;  // Earned Leave
+	        case "WFH" -> 315; // Work From Home
+	        case "Extra Milar" -> 2;
+	        case "Paternity Leave" -> 7;
+	        case "Maternity Leave" -> 180;
+	        case "Optional Holidays" -> 2;
+	        case "Holidays" -> 10;
 	        default -> 0;
 	    };
 
-	    // ✅ Check balance
+	    // ✅ Compare requested vs available
 	    return (takenLeaves + requestedDays) <= allowed;
 	}
 	

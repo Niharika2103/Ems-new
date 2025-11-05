@@ -305,3 +305,9 @@ export const approveParentalLeaveApi = (data) =>
 // Fetch pending parental leaves (admin only)
 export const fetchPendingParentalLeavesApi = () =>
   AttendanceClient.get(`${AUTH_API.ADMIN}/attendance/pending-parental`);
+
+export const AttendanceCheckLeaveEligibilityApi = (employeeId, leaveType, requestedDays = 1) => {
+  return AttendanceClient.get(`${AUTH_API.ATTENDANCE}/attendance/check-leave-eligibility`, {
+    params: { employeeId, leaveType, requestedDays },
+  });
+};
