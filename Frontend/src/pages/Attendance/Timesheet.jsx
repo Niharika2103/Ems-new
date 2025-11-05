@@ -18,7 +18,7 @@ import {
   Paper,
   Popover,
 } from "@mui/material";
-import { ChevronLeft, ChevronRight, MoreVert, CalendarToday } from "@mui/icons-material";
+import { ChevronLeft, ChevronRight, MoreVert, CalendarToday, Edit, Save } from "@mui/icons-material";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import { useDispatch, useSelector } from "react-redux";
@@ -28,7 +28,6 @@ import {
   Admin_Approve_monthly_Attendance
 } from "../../features/attendance/attendanceSlice";
 import { useLocation } from "react-router-dom";
-
 
 // --- Utility: get Monday of a week ---
 function getMonday(date) {
@@ -67,7 +66,6 @@ export default function Timesheet() {
   const [workedHours, setWorkedHours] = useState(Array(7).fill(0));
   const [monthlyWorkedHours, setMonthlyWorkedHours] = useState([]);
   const [weekStart, setWeekStart] = useState(getMonday(new Date()));
-  console.log(weekStart, "weekstart")
   const [monthStart, setMonthStart] = useState(new Date());
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [menuRow, setMenuRow] = useState(null);
@@ -75,6 +73,9 @@ export default function Timesheet() {
   const [usedLeaves, setUsedLeaves] = useState(0);
   const [remainingLeaves, setRemainingLeaves] = useState(0);
   const [usedLeavesDetails, setUsedLeavesDetails] = useState({});
+  const [approvalStatus, setApprovalStatus] = useState({});
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [statusColor, setStatusColor] = useState("#fff");
 
   const dispatch = useDispatch();
   const { attendanceData = [], loading } = useSelector((state) => state.attendance || {});
@@ -101,10 +102,23 @@ export default function Timesheet() {
       const days = getMonthDays(monthStart);
       setMonthlyWorkedHours(Array(days.length).fill(0));
       const newLeaveRows = {};
+      const newApprovalStatus = { ...approvalStatus };
+      
       usedLeaveTypes.forEach((lt) => {
-        newLeaveRows[lt] = Array(days.length).fill(0);
+        if (!leaveRows[lt] || leaveRows[lt].length !== days.length) {
+          newLeaveRows[lt] = Array(days.length).fill(0);
+          if (!newApprovalStatus[lt]) {
+            newApprovalStatus[lt] = Array(days.length).fill("pending");
+          }
+        } else {
+          newLeaveRows[lt] = leaveRows[lt].slice(0, days.length);
+          if (newApprovalStatus[lt] && newApprovalStatus[lt].length !== days.length) {
+            newApprovalStatus[lt] = [...newApprovalStatus[lt].slice(0, days.length), ...Array(Math.max(0, days.length - newApprovalStatus[lt].length)).fill("pending")];
+          }
+        }
       });
       setLeaveRows(newLeaveRows);
+      setApprovalStatus(newApprovalStatus);
     }
   };
 
@@ -112,161 +126,167 @@ export default function Timesheet() {
     initializeTable();
   }, [viewMode, monthStart]);
 
-  // --- Safe attendance data handling ---
- // --- Safe attendance data handling (Weekly) ---
-useEffect(() => {
-  if (!attendanceData || !attendanceData.data) return;
+  // --- Safe attendance data handling (Weekly) ---
+  useEffect(() => {
+    if (!attendanceData || !attendanceData.data) return;
 
-  // 1️⃣ Build week dates (Mon–Sun)
-  const start = new Date(weekStart);
-  const weekDays = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(start);
-    d.setDate(start.getDate() + i);
-    return d.toISOString().slice(0, 10); // "YYYY-MM-DD"
-  });
+    // 1️⃣ Build week dates (Mon–Sun)
+    const start = new Date(weekStart);
+    const weekDays = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      return d.toISOString().slice(0, 10); // "YYYY-MM-DD"
+    });
 
-  const list = Array.isArray(attendanceData.data) ? attendanceData.data : [];
+    const list = Array.isArray(attendanceData.data) ? attendanceData.data : [];
 
-  // 2️⃣ Make quick lookup map (key = date)
-  const dataMap = {};
-  list.forEach((item) => {
-    const dateKey = item.date?.slice(0, 10);
-    dataMap[dateKey] = item;
-  });
+    // 2️⃣ Make quick lookup map (key = date)
+    const dataMap = {};
+    list.forEach((item) => {
+      const dateKey = item.date?.slice(0, 10);
+      dataMap[dateKey] = item;
+    });
 
-  // 3️⃣ Build structured data for 7 days
-  const weeklyData = weekDays.map((date) => {
-    const record = dataMap[date] || {}; // fallback if not found
-    const worked_hours = record.worked_hours || 0;
-    const leaveType = record.leave_type || "";
+    // 3️⃣ Build structured data for 7 days
+    const weeklyData = weekDays.map((date) => {
+      const record = dataMap[date] || {}; // fallback if not found
+      const worked_hours = record.worked_hours || 0;
+      const leaveType = record.leave_type || "";
 
-    const leaveValues = {
-      CL: 0, SL: 0, PL: 0, WFH: 0,
-      "Extra Milar": 0, "Paternity Leave": 0, "Maternity Leave": 0,
-    };
-    if (leaveType && leaveValues.hasOwnProperty(leaveType)) {
-      leaveValues[leaveType] = 9;
-    }
+      const leaveValues = {
+        CL: 0, SL: 0, PL: 0, WFH: 0,
+        "Extra Milar": 0, "Paternity Leave": 0, "Maternity Leave": 0,
+      };
+      if (leaveType && leaveValues.hasOwnProperty(leaveType)) {
+        leaveValues[leaveType] = 9;
+      }
 
-    return {
-      date,
-      worked_hours: leaveType ? 0 : worked_hours,
-      weekly_status: record.weekly_status || "draft", // 👈 include status
-      ...leaveValues,
-    };
-  });
+      return {
+        date,
+        worked_hours: leaveType ? 0 : worked_hours,
+        weekly_status: record.weekly_status || "draft", // 👈 include status
+        ...leaveValues,
+      };
+    });
 
-  // Debug
-  console.log("🗓️ Final Weekly Data (mapped to 7 days):", weeklyData);
+    // Debug
+    console.log("🗓️ Final Weekly Data (mapped to 7 days):", weeklyData);
 
-  // 4️⃣ Update worked hours + leaves
-  setWorkedHours(weeklyData.map((d) => Number(d.worked_hours) || 0));
+    // 4️⃣ Update worked hours + leaves
+    setWorkedHours(weeklyData.map((d) => Number(d.worked_hours) || 0));
 
-  const newLeaveRows = {};
-  const allLeaveTypes = [
-    "CL", "SL", "PL", "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave",
-  ];
+    const newLeaveRows = {};
+    const newApprovalStatus = { ...approvalStatus };
+    const allLeaveTypes = [
+      "CL", "SL", "PL", "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave",
+    ];
 
-  allLeaveTypes.forEach((lt) => {
-    newLeaveRows[lt] = weeklyData.map((d) => Number(d[lt]) || 0);
-  });
-  setLeaveRows(newLeaveRows);
-  setUsedLeaveTypes(allLeaveTypes.filter((lt) => newLeaveRows[lt].some((v) => v > 0)));
+    allLeaveTypes.forEach((lt) => {
+      newLeaveRows[lt] = weeklyData.map((d) => Number(d[lt]) || 0);
+      if (!newApprovalStatus[lt]) {
+        newApprovalStatus[lt] = Array(7).fill("pending");
+      }
+    });
+    
+    setLeaveRows(newLeaveRows);
+    setApprovalStatus(newApprovalStatus);
+    setUsedLeaveTypes(allLeaveTypes.filter((lt) => newLeaveRows[lt].some((v) => v > 0)));
 
-  // 5️⃣ Save per-day status color array
-  const colorArray = weeklyData.map((item) => getStatusBackgroundColor(item, "weekly"));
-  setStatusColor(colorArray); // 👈 statusColor becomes an array (one per day)
-}, [attendanceData, weekStart, viewMode]);
-
+    // 5️⃣ Save per-day status color array
+    const colorArray = weeklyData.map((item) => getStatusBackgroundColor(item, "weekly"));
+    setStatusColor(colorArray);
+  }, [attendanceData, weekStart, viewMode]);
 
   // --- Monthly data mapping ---
- // --- Monthly data mapping ---
-useEffect(() => {
-  if (!attendanceData || viewMode !== "monthly") return;
+  useEffect(() => {
+    if (!attendanceData || viewMode !== "monthly") return;
 
-  const list = Array.isArray(attendanceData)
-    ? attendanceData
-    : attendanceData.data || [];
+    const list = Array.isArray(attendanceData)
+      ? attendanceData
+      : attendanceData.data || [];
 
-  console.log("✅ Monthly data from API:", list);
+    console.log("✅ Monthly data from API:", list);
 
-  // 🔹 Build map by date (key = yyyy-mm-dd)
-  const dataMap = {};
-  list.forEach((item) => {
-    const dateKey = item.date?.slice(0, 10);
-    dataMap[dateKey] = item;
-  });
+    // 🔹 Build map by date (key = yyyy-mm-dd)
+    const dataMap = {};
+    list.forEach((item) => {
+      const dateKey = item.date?.slice(0, 10);
+      dataMap[dateKey] = item;
+    });
 
-  // 🔹 Build month days (10th → 9th next month)
-  const monthDays = getMonthDays(monthStart);
+    // 🔹 Build month days (10th → 9th next month)
+    const monthDays = getMonthDays(monthStart);
 
-  // 🔹 Create structured data for all days
-  const monthlyData = monthDays.map((d) => {
-    const dateKey = d.date.toISOString().slice(0, 10);
-    const record = dataMap[dateKey] || {};
+    // 🔹 Create structured data for all days
+    const monthlyData = monthDays.map((d) => {
+      const dateKey = d.date.toISOString().slice(0, 10);
+      const record = dataMap[dateKey] || {};
 
-    const worked_hours = record.worked_hours || 0;
-    const leaveType = record.leave_type || "";
+      const worked_hours = record.worked_hours || 0;
+      const leaveType = record.leave_type || "";
 
-    const leaveValues = {
-      CL: 0,
-      SL: 0,
-      PL: 0,
-      WFH: 0,
-      "Extra Milar": 0,
-      "Paternity Leave": 0,
-      "Maternity Leave": 0,
-    };
+      const leaveValues = {
+        CL: 0,
+        SL: 0,
+        PL: 0,
+        WFH: 0,
+        "Extra Milar": 0,
+        "Paternity Leave": 0,
+        "Maternity Leave": 0,
+      };
 
-    if (leaveType && leaveValues.hasOwnProperty(leaveType)) {
-      leaveValues[leaveType] = 9;
+      if (leaveType && leaveValues.hasOwnProperty(leaveType)) {
+        leaveValues[leaveType] = 9;
+      }
+
+      return {
+        date: dateKey,
+        worked_hours: leaveType ? 0 : worked_hours,
+        ...leaveValues,
+      };
+    });
+
+    console.log("🗓️ Final Monthly Data (mapped to 10th→9th):", monthlyData);
+
+    // 🔹 Set worked hours & leave arrays
+    const workedArray = monthlyData.map((d) => Number(d.worked_hours) || 0);
+    setMonthlyWorkedHours(workedArray);
+
+    const newLeaveRows = {};
+    const newApprovalStatus = { ...approvalStatus };
+    const allLeaveTypes = [
+      "CL",
+      "SL",
+      "PL",
+      "WFH",
+      "Extra Milar",
+      "Paternity Leave",
+      "Maternity Leave",
+    ];
+
+    allLeaveTypes.forEach((lt) => {
+      newLeaveRows[lt] = monthlyData.map((d) => Number(d[lt]) || 0);
+      if (!newApprovalStatus[lt]) {
+        newApprovalStatus[lt] = Array(monthDays.length).fill("pending");
+      }
+    });
+
+    setLeaveRows(newLeaveRows);
+    setApprovalStatus(newApprovalStatus);
+    setUsedLeaveTypes(allLeaveTypes.filter((lt) => newLeaveRows[lt].some((v) => v > 0)));
+
+    // 🟩 Update background color for monthly status
+    if (attendanceData && viewMode === "monthly") {
+      const firstItem =
+        Array.isArray(attendanceData) ? attendanceData[0] : attendanceData.data?.[0];
+      if (firstItem) {
+        const bgColor = getStatusBackgroundColor(firstItem, "monthly");
+        setStatusColor(bgColor);
+      } else {
+        setStatusColor("#fff");
+      }
     }
-
-    return {
-      date: dateKey,
-      worked_hours: leaveType ? 0 : worked_hours,
-      ...leaveValues,
-    };
-  });
-
-  console.log("🗓️ Final Monthly Data (mapped to 10th→9th):", monthlyData);
-
-  // 🔹 Set worked hours & leave arrays
-  const workedArray = monthlyData.map((d) => Number(d.worked_hours) || 0);
-  setMonthlyWorkedHours(workedArray);
-
-  const newLeaveRows = {};
-  const allLeaveTypes = [
-    "CL",
-    "SL",
-    "PL",
-    "WFH",
-    "Extra Milar",
-    "Paternity Leave",
-    "Maternity Leave",
-  ];
-
-  allLeaveTypes.forEach((lt) => {
-    newLeaveRows[lt] = monthlyData.map((d) => Number(d[lt]) || 0);
-  });
-
-  setLeaveRows(newLeaveRows);
-  setUsedLeaveTypes(allLeaveTypes.filter((lt) => newLeaveRows[lt].some((v) => v > 0)));
-
-  // 🟩 Update background color for monthly status
-  if (attendanceData && viewMode === "monthly") {
-    const firstItem =
-      Array.isArray(attendanceData) ? attendanceData[0] : attendanceData.data?.[0];
-    if (firstItem) {
-      const bgColor = getStatusBackgroundColor(firstItem, "monthly");
-      
-      setStatusColor(bgColor);
-    } else {
-      setStatusColor("#fff");
-    }
-  }
-}, [attendanceData, monthStart, viewMode]);
-
+  }, [attendanceData, monthStart, viewMode]);
 
   // --- Calculate leave summary ---
   useEffect(() => {
@@ -321,13 +341,36 @@ useEffect(() => {
     setMonthStart(newMonth);
   };
 
+  // Handle view mode change with proper date synchronization
+  const handleViewModeChange = () => {
+    if (viewMode === "weekly") {
+      // Switching from weekly to monthly
+      // Set month start to the month of the current week
+      const newMonthStart = new Date(weekStart.getFullYear(), weekStart.getMonth(), 10);
+      setMonthStart(newMonthStart);
+      setViewMode("monthly");
+    } else {
+      // Switching from monthly to weekly
+      // Set week start to the first Monday of the current month
+      const firstDayOfMonth = new Date(monthStart.getFullYear(), monthStart.getMonth(), 10);
+      const newWeekStart = getMonday(firstDayOfMonth);
+      setWeekStart(newWeekStart);
+      setViewMode("weekly");
+    }
+    // Reset edit mode when changing views
+    setIsEditMode(false);
+  };
+
   // --- Add activity ---
   const addActivity = () => {
     if (!usedLeaveTypes.includes(leaveType)) {
-      const len =
-        viewMode === "weekly" ? 7 : getMonthDays(monthStart).length;
+      const len = viewMode === "weekly" ? 7 : getMonthDays(monthStart).length;
       setUsedLeaveTypes((prev) => [...prev, leaveType]);
       setLeaveRows((prev) => ({ ...prev, [leaveType]: Array(len).fill(0) }));
+      setApprovalStatus(prev => ({
+        ...prev,
+        [leaveType]: Array(len).fill("pending")
+      }));
     }
   };
 
@@ -346,6 +389,10 @@ useEffect(() => {
       viewMode === "weekly" ? setWorkedHours(Array(len).fill(0)) : setMonthlyWorkedHours(Array(len).fill(0));
     } else {
       setLeaveRows((prev) => ({ ...prev, [row]: Array(len).fill(0) }));
+      setApprovalStatus(prev => ({
+        ...prev,
+        [row]: Array(len).fill("pending")
+      }));
     }
     handleMenuClose();
   };
@@ -357,11 +404,95 @@ useEffect(() => {
       delete updated[row];
       return updated;
     });
+    setApprovalStatus(prev => {
+      const updated = { ...prev };
+      delete updated[row];
+      return updated;
+    });
     handleMenuClose();
   };
 
+  // Enhanced approval functions
+  const handleSaveAll = () => {
+    setIsEditMode(false);
+    alert("Timesheet saved!");
+  };
 
-  // ...
+  const handleApproveAll = () => {
+    const newApprovalStatus = { ...approvalStatus };
+    
+    Object.keys(leaveRows).forEach(leaveType => {
+      newApprovalStatus[leaveType] = leaveRows[leaveType].map((value, index) => 
+        value > 0 ? "approved" : newApprovalStatus[leaveType][index] || "pending"
+      );
+    });
+    
+    setApprovalStatus(newApprovalStatus);
+    alert("All leaves approved!");
+  };
+
+  const handleRejectAll = () => {
+    const newApprovalStatus = { ...approvalStatus };
+    
+    Object.keys(newApprovalStatus).forEach(leaveType => {
+      newApprovalStatus[leaveType] = newApprovalStatus[leaveType].map(() => "pending");
+    });
+    
+    setApprovalStatus(newApprovalStatus);
+    alert("All leaves rejected!");
+  };
+
+  const handleEditAll = () => {
+    setIsEditMode(true);
+  };
+
+  // Handle individual cell approval
+  const handleCellApproval = (leaveType, dayIndex) => {
+    if (!isEditMode) {
+      const newApprovalStatus = { ...approvalStatus };
+      const currentStatus = newApprovalStatus[leaveType]?.[dayIndex] || "pending";
+      
+      // Toggle between pending and approved
+      newApprovalStatus[leaveType][dayIndex] = currentStatus === "approved" ? "pending" : "approved";
+      setApprovalStatus(newApprovalStatus);
+    }
+  };
+
+  // Enhanced color coding function
+  const getInputBackgroundColor = (leaveType, dayIndex, value) => {
+    // For weekends - light gray background
+    if (days[dayIndex].dayIndex === 0 || days[dayIndex].dayIndex === 6) {
+      return "#f0f0f0";
+    }
+    
+    // For leave cells with values
+    if (value > 0) {
+      const status = approvalStatus[leaveType]?.[dayIndex] || "pending";
+      
+      switch (status) {
+        case "approved":
+          return "#d4edda"; // Light green for approved
+        case "rejected":
+          return "#f8d7da"; // Light red for rejected
+        case "pending":
+        default:
+          return "#fff3cd"; // Light yellow for pending approval
+      }
+    }
+    
+    // Default white background for weekdays with no leave
+    return "#fff";
+  };
+
+  // Handle calendar date selection
+  const handleCalendarDateSelect = (date) => {
+    if (viewMode === "weekly") {
+      setWeekStart(getMonday(date));
+    } else {
+      setMonthStart(new Date(date.getFullYear(), date.getMonth(), 10));
+    }
+    setCalendarAnchor(null);
+  };
 
   const handleApproved = () => {
     let fromDate = "";
@@ -398,28 +529,18 @@ useEffect(() => {
         .catch((err) => console.error(" Monthly Approve Error:", err));
     }
   };
-const [statusColor, setStatusColor] = useState("#fff");
 
- 
- 
-const getStatusBackgroundColor = (item, viewMode) => {
-  if (viewMode === "weekly") {
-    if (item.weekly_status?.toLowerCase() === "approved") return "#b7f5b0"; // green
-    if (item.weekly_status?.toLowerCase() === "pending_approval") return "#fff3b0"; // yellow
-  }
-  if (viewMode === "monthly") {
-    if (item.monthly_status?.toLowerCase() === "approved") return "#b7f5b0";
-    if (item.monthly_status?.toLowerCase() === "pending_approval") return "#fff3b0";
-  }
-  return "#fff"; // default white
-};
-
-
-
-
-
-
-
+  const getStatusBackgroundColor = (item, viewMode) => {
+    if (viewMode === "weekly") {
+      if (item.weekly_status?.toLowerCase() === "approved") return "#b7f5b0"; // green
+      if (item.weekly_status?.toLowerCase() === "pending_approval") return "#fff3b0"; // yellow
+    }
+    if (viewMode === "monthly") {
+      if (item.monthly_status?.toLowerCase() === "approved") return "#b7f5b0";
+      if (item.monthly_status?.toLowerCase() === "pending_approval") return "#fff3b0";
+    }
+    return "#fff"; // default white
+  };
 
   // --- Days list ---
   const days =
@@ -442,22 +563,6 @@ const getStatusBackgroundColor = (item, viewMode) => {
   const grandTotal = workedTotal + Object.values(rowTotals).reduce((a, b) => a + b, 0);
 
   // --- API Range (10 → 9)
-  // const employeeId = "cadeb784-9272-421c-8394-0af6e2923e8d";
-  const computeRange = () => {
-    if (viewMode === "weekly") {
-      const from = new Date(weekStart);
-      const to = new Date(weekStart);
-      to.setDate(weekStart.getDate() + 6);
-      return { from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) };
-    }
-
-    const from = new Date(monthStart.getFullYear(), monthStart.getMonth(), 10);
-    const to = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 9);
-    return { from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) };
-  };
-
-
-
   useEffect(() => {
     if (!employeeId) return;
 
@@ -483,18 +588,15 @@ const getStatusBackgroundColor = (item, viewMode) => {
 
       dispatch(AdminAttendancFetchMonthlyDataById({ employeeId, from, to }))
         .unwrap()
-    .then((res) => {
-  console.log("✅ Monthly Data:", res);
-  // 🟩 Set monthly status from API if available
-  if (Array.isArray(res) && res.length > 0 && res[0].monthly_status) {
-  }
-})
-
+        .then((res) => {
+          console.log("✅ Monthly Data:", res);
+          // 🟩 Set monthly status from API if available
+          if (Array.isArray(res) && res.length > 0 && res[0].monthly_status) {
+          }
+        })
         .catch((err) => console.error("❌ Monthly Error:", err));
     }
   }, [dispatch, weekStart, monthStart, viewMode, employeeId]);
-
-
 
   return (
     <Box p={2}>
@@ -519,26 +621,34 @@ const getStatusBackgroundColor = (item, viewMode) => {
           >
             <Box p={2}>
               <Calendar
-                onChange={(date) => {
-                  if (viewMode === "weekly") {
-                    setWeekStart(getMonday(date));
-                  } else {
-                    setMonthStart(new Date(date.getFullYear(), date.getMonth(), 10));
-                  }
-                  setCalendarAnchor(null);
-                }}
+                onChange={handleCalendarDateSelect}
                 value={viewMode === "weekly" ? weekStart : monthStart}
               />
-
             </Box>
           </Popover>
         </Box>
         <Typography variant="h6" fontWeight="bold">
           {viewMode === "weekly" ? "Weekly Timesheet" : "Monthly Timesheet"}
         </Typography>
-        <Button variant="contained" onClick={() => setViewMode(viewMode === "weekly" ? "monthly" : "weekly")}>
+        <Button variant="contained" onClick={handleViewModeChange}>
           {viewMode === "weekly" ? "View Monthly" : "View Weekly"}
         </Button>
+      </Box>
+
+      {/* Color Legend */}
+      <Box display="flex" gap={2} mb={2} justifyContent="center">
+        <Box display="flex" alignItems="center" gap={1}>
+          <Box width={20} height={20} bgcolor="#fff3cd" border="1px solid #ccc" />
+          <Typography variant="body2">Pending Approval</Typography>
+        </Box>
+        <Box display="flex" alignItems="center" gap={1}>
+          <Box width={20} height={20} bgcolor="#d4edda" border="1px solid #ccc" />
+          <Typography variant="body2">Approved</Typography>
+        </Box>
+        <Box display="flex" alignItems="center" gap={1}>
+          <Box width={20} height={20} bgcolor="#f8d7da" border="1px solid #ccc" />
+          <Typography variant="body2">Rejected</Typography>
+        </Box>
       </Box>
 
       {/* Table */}
@@ -552,6 +662,7 @@ const getStatusBackgroundColor = (item, viewMode) => {
                   key={i}
                   align="center"
                   sx={{
+                    backgroundColor: d.dayIndex === 0 || d.dayIndex === 6 ? "#f9f9f9" : "#fff",
                     fontWeight: "bold",
                   }}
                 >
@@ -577,10 +688,11 @@ const getStatusBackgroundColor = (item, viewMode) => {
                     style={{
                       width: 50,
                       textAlign: "center",
-                     backgroundColor: statusColor?.[i] || "#fff",
+                      backgroundColor: days[i].dayIndex === 0 || days[i].dayIndex === 6 ? "#f0f0f0" : "#fff",
+                      border: "1px solid #ccc",
                       borderRadius: 4,
                     }}
-                    disabled={days[i].isWeekend}
+                    disabled={!isEditMode || days[i].dayIndex === 0 || days[i].dayIndex === 6}
                     onChange={(e) => {
                       const val = parseHour(e.target.value);
                       if (viewMode === "weekly") {
@@ -613,7 +725,12 @@ const getStatusBackgroundColor = (item, viewMode) => {
               <TableRow key={lt}>
                 <TableCell sx={{ fontWeight: "bold" }}>{lt}</TableCell>
                 {(leaveRows[lt] || Array(days.length).fill(0)).map((v, i) => (
-                  <TableCell key={i} align="center">
+                  <TableCell 
+                    key={i} 
+                    align="center"
+                    onClick={() => handleCellApproval(lt, i)}
+                    sx={{ cursor: !isEditMode ? 'pointer' : 'default' }}
+                  >
                     <input
                       type="number"
                       value={v}
@@ -623,11 +740,13 @@ const getStatusBackgroundColor = (item, viewMode) => {
                       style={{
                         width: 50,
                         textAlign: "center",
-                        backgroundColor: statusColor?.[i] || "#fff",
+                        backgroundColor: getInputBackgroundColor(lt, i, v),
                         border: "1px solid #ccc",
                         borderRadius: 4,
+                        transition: "background-color 0.3s ease",
+                        cursor: "text"
                       }}
-                      disabled={days[i].isWeekend}
+                      disabled={!isEditMode || days[i].dayIndex === 0 || days[i].dayIndex === 6}
                       onChange={(e) => {
                         const val = parseHour(e.target.value);
                         setLeaveRows((prev) => {
@@ -635,8 +754,20 @@ const getStatusBackgroundColor = (item, viewMode) => {
                           arr[i] = val;
                           return { ...prev, [lt]: arr };
                         });
+                        
+                        const newApprovalStatus = { ...approvalStatus };
+                        if (newApprovalStatus[lt]) {
+                          newApprovalStatus[lt][i] = "pending";
+                          setApprovalStatus(newApprovalStatus);
+                        }
                       }}
                     />
+                    {!isEditMode && v > 0 && (
+                      <Typography variant="caption" display="block" color="text.secondary">
+                        {approvalStatus[lt]?.[i] === "approved" ? "✓ Approved" : 
+                         approvalStatus[lt]?.[i] === "rejected" ? "✗ Rejected" : "Pending"}
+                      </Typography>
+                    )}
                   </TableCell>
                 ))}
                 <TableCell align="center">{rowTotals[lt]}</TableCell>
@@ -673,7 +804,12 @@ const getStatusBackgroundColor = (item, viewMode) => {
         <Box display="flex" gap={1}>
           <FormControl size="small" sx={{ minWidth: 180 }}>
             <InputLabel>Leave Type</InputLabel>
-            <Select value={leaveType} onChange={(e) => setLeaveType(e.target.value)} label="Leave Type">
+            <Select 
+              value={leaveType} 
+              onChange={(e) => setLeaveType(e.target.value)} 
+              label="Leave Type"
+              disabled={!isEditMode}
+            >
               {leaveTypes.map((lt) => (
                 <MenuItem key={lt} value={lt}>
                   {lt}
@@ -681,23 +817,99 @@ const getStatusBackgroundColor = (item, viewMode) => {
               ))}
             </Select>
           </FormControl>
-          <Button variant="contained" onClick={addActivity}>
+          <Button 
+            variant="contained" 
+            onClick={addActivity}
+            disabled={!isEditMode}
+          >
             Add Activity
           </Button>
         </Box>
         <Box display="flex" gap={1}>
-          <Button variant="contained" color="success" onClick={handleApproved}>
-            {viewMode === "weekly" ? "Approve Weekly" : "Approve Monthly"}
-          </Button>
-
+          {isEditMode ? (
+            <Button 
+              variant="contained" 
+              color="success" 
+              startIcon={<Save />}
+              onClick={handleSaveAll}
+            >
+              Save
+            </Button>
+          ) : (
+            <>
+              <Button 
+                variant="contained" 
+                color="success" 
+                onClick={handleApproveAll}
+              >
+                Approved
+              </Button>
+              <Button 
+                variant="contained" 
+                color="error" 
+                onClick={handleRejectAll}
+              >
+                Rejected
+              </Button>
+              <Button 
+                variant="contained" 
+                color="primary" 
+                startIcon={<Edit />}
+                onClick={handleEditAll}
+              >
+                Edit
+              </Button>
+              <Button variant="contained" color="success" onClick={handleApproved}>
+                {viewMode === "weekly" ? "Approve Weekly" : "Approve Monthly"}
+              </Button>
+            </>
+          )}
         </Box>
+      </Box>
+
+      {/* Leave Summary */}
+      <Box
+        mt={3}
+        p={2}
+        display="flex"
+        justifyContent="space-evenly"
+        alignItems="center"
+        sx={{
+          backgroundColor: "#f5f5f5",
+          borderRadius: 2,
+          boxShadow: 1,
+        }}
+      >
+        <Box>
+          <Typography variant="body1" fontWeight="bold" color="primary">
+            Used Leaves: {usedLeaves}
+          </Typography>
+          {Object.entries(usedLeavesDetails).map(([lt, val]) => (
+            <Typography key={lt} variant="body2">
+              {lt}: {val}
+            </Typography>
+          ))}
+        </Box>
+        <Typography variant="body1" fontWeight="bold" color="success.main">
+          Remaining Leaves: {remainingLeaves}
+        </Typography>
       </Box>
 
       {/* Menu */}
       <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={handleMenuClose}>
-        <MenuItem onClick={() => handleResetRow(menuRow)}>Reset</MenuItem>
+        <MenuItem 
+          onClick={() => handleResetRow(menuRow)}
+          disabled={!isEditMode}
+        >
+          Reset
+        </MenuItem>
         {menuRow !== "Worked Hours" && (
-          <MenuItem onClick={() => handleDeleteRow(menuRow)}>Delete</MenuItem>
+          <MenuItem 
+            onClick={() => handleDeleteRow(menuRow)}
+            disabled={!isEditMode}
+          >
+            Delete
+          </MenuItem>
         )}
       </Menu>
     </Box>
