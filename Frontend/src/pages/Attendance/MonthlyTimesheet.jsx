@@ -126,9 +126,9 @@ export default function MonthlyTimesheet({ onBack }) {
 
     const dateStr = formatDate(day.date);
 
-    if (holidays.includes(dateStr)) {
-      return "#FFCDD2"; // orange for holidays
-    }
+    // if (holidays.includes(dateStr)) {
+    //   return "#FFCDD2"; // orange for holidays
+    // }
 
     if (day.isWeekend) {
       return "#ccd5e6ff"; // grey for weekends
@@ -465,7 +465,7 @@ export default function MonthlyTimesheet({ onBack }) {
                 <div
                   key={i}
                   className={`min-w-[70px] h-8 flex items-center justify-center 
-                    border rounded-md mx-1 bg-[#FFCDD2] text-red-600 font-semibold`}
+                    border rounded-md mx-1 text-[#FFCDD2] text-red-600 font-semibold`}
                 >
                   H
                 </div>
