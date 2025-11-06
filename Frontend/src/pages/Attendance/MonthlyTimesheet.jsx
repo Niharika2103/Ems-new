@@ -42,7 +42,39 @@ export default function MonthlyTimesheet({ onBack }) {
   const [leaveModalOpen, setLeaveModalOpen] = useState(false);
   const [modalLeaveType, setModalLeaveType] = useState("");
   const [monthDays, setMonthDays] = useState([]);
-  
+
+  const [holidays, setHolidays] = useState([]);
+
+  const holidaysCache = {};
+  useEffect(() => {
+    const fetchHolidays = async () => {
+      try {
+        const year = monthStart.getFullYear();
+
+        // Check if holidays are already available for the year
+        if (holidaysCache[year]) {
+          setHolidays(holidaysCache[year]);
+          return;
+        }
+
+        const res = await fetch(`http://localhost:9090/api/holidays/${year}`);
+        const data = await res.json();
+
+        if (data?.response?.holidays) {
+          const holidayDates = data.response.holidays.map(h => h.date.iso);
+          setHolidays(holidayDates);
+          holidaysCache[year] = holidayDates; // Cache holidays for this year
+        } else {
+          console.error("No holidays data available.");
+        }
+      } catch (err) {
+        console.error("Failed to fetch holidays", err);
+      }
+    };
+
+    fetchHolidays();
+  }, [monthStart]);
+
   // NEW: Approval status state for monthly timesheet
   const [approvalStatus, setApprovalStatus] = useState({});
 
@@ -85,25 +117,34 @@ export default function MonthlyTimesheet({ onBack }) {
 
   // NEW: Get background color based on status
   const getStatusColor = (dayIndex, leaveType = null) => {
-    if (monthDays[dayIndex]?.isWeekend) {
-      return '#ccd5e6ff'; // Dark grey for weekends (always)
+    const day = monthDays[dayIndex]; // ✅ get the actual day object
+    if (!day) return "white";
+
+    const dateStr = formatDate(day.date);
+
+    if (holidays.includes(dateStr)) {
+      return "#FFCDD2"; // orange for holidays
     }
-    
+
+    if (day.isWeekend) {
+      return "#ccd5e6ff"; // grey for weekends
+    }
+
     const statusKey = leaveType ? `${leaveType}_${dayIndex}` : `worked_${dayIndex}`;
     const status = approvalStatus[statusKey];
-    
-    const record = attendanceData?.[dayIndex];
-  if (!record) return "white";
+    const record = attendanceData?.find(a => a.date === dateStr);
+    if (!record) return "white";
 
-  switch (record.monthlyStatus) {
-    case "Pending_approval":
-      return "#FFF59D"; // light yellow
-    case "Approved":
-      return "#A5D6A7"; // light green
-    default:
-      return "white";
-  }
+    switch (record.monthlyStatus) {
+      case "Pending_approval":
+        return "#FFF59D"; // light yellow
+      case "Approved":
+        return "#A5D6A7"; // light green
+      default:
+        return "white";
+    }
   };
+
 
   // NEW: Check if field is read-only based on status
   const isFieldReadOnly = (dayIndex, leaveType = null) => {
@@ -142,12 +183,12 @@ export default function MonthlyTimesheet({ onBack }) {
     setMenuAnchor(e.currentTarget);
     setMenuRow(row);
   };
-  
+
   const handleMenuClose = () => {
     setMenuAnchor(null);
     setMenuRow(null);
   };
-  
+
   const { attendanceData, loading } = useSelector((state) => state.attendance);
   const [projectDetails, setProjectDetails] = useState(null);
 
@@ -245,7 +286,7 @@ export default function MonthlyTimesheet({ onBack }) {
 
       if (AttendanceReleaseMonth.fulfilled.match(resultAction)) {
         toast.success("Month released successfully!");
-        
+
         // NEW: Update approval status to 'submitted' after releasing month
         const newApprovalStatus = { ...approvalStatus };
         monthDays.forEach((day, dayIndex) => {
@@ -255,7 +296,7 @@ export default function MonthlyTimesheet({ onBack }) {
             if (newApprovalStatus[statusKey] !== 'approved') {
               newApprovalStatus[statusKey] = 'submitted';
             }
-            
+
             usedLeaveTypes.forEach(lt => {
               const leaveStatusKey = `${lt}_${dayIndex}`;
               if (leaveRows[lt] && leaveRows[lt][dayIndex] && leaveRows[lt][dayIndex] !== 0 && leaveRows[lt][dayIndex] !== "") {
@@ -398,10 +439,26 @@ export default function MonthlyTimesheet({ onBack }) {
         <div className="flex items-center py-1 text-sm">
           <div className="min-w-[150px] font-semibold">Worked Hours</div>
           {hours.map((h, i) => {
-            const isWeekend = monthDays[i]?.isWeekend;
+            const day = monthDays[i];
+            const isWeekend = day?.isWeekend;
             const backgroundColor = getStatusColor(i);
             const isEditable = isFieldEditable(i);
-            
+            const dateStr = formatDate(day.date);
+            const isHoliday = holidays.includes(dateStr);
+
+            // ✅ Show "H" for holidays
+            if (isHoliday) {
+              return (
+                <div
+                  key={i}
+                  className={`min-w-[70px] h-8 flex items-center justify-center 
+                    border rounded-md mx-1 bg-[#FFCDD2] text-red-600 font-semibold`}
+                >
+                  H
+                </div>
+              );
+            }
+
             return (
               <input
                 key={i}
@@ -409,11 +466,12 @@ export default function MonthlyTimesheet({ onBack }) {
                 value={h}
                 min="0"
                 max="9"
-                disabled={!isEditable}
+                disabled={!isEditable || isWeekend}
                 style={{ backgroundColor }}
-                className={`min-w-[70px] h-8 text-center border rounded-md mx-1 ${
-                  !isEditable ? "cursor-not-allowed" : "bg-white"
-                } ${isWeekend ? "text-gray-400" : ""}`}
+                className={`min-w-[70px] h-8 text-center border rounded-md mx-1
+        ${!isEditable ? "cursor-not-allowed" : "bg-white"}
+        ${isWeekend ? "text-gray-400" : "text-black"}
+      `}
                 onChange={(e) => {
                   if (isEditable) {
                     const newHours = [...hours];
@@ -424,6 +482,7 @@ export default function MonthlyTimesheet({ onBack }) {
               />
             );
           })}
+
           <IconButton onClick={(e) => handleMenuOpen(e, "Worked Hours")}>
             <MoreVert />
           </IconButton>
@@ -437,7 +496,7 @@ export default function MonthlyTimesheet({ onBack }) {
               const isWeekend = monthDays[i]?.isWeekend;
               const backgroundColor = getStatusColor(i, lt);
               const isEditable = isFieldEditable(i, lt) && !lockedRows[lt];
-              
+
               return (
                 <input
                   key={i}
@@ -447,9 +506,8 @@ export default function MonthlyTimesheet({ onBack }) {
                   max="9"
                   disabled={!isEditable}
                   style={{ backgroundColor }}
-                  className={`min-w-[70px] h-8 text-center border rounded-md mx-1 ${
-                    !isEditable ? "cursor-not-allowed" : "bg-white"
-                  } ${isWeekend ? "text-gray-400" : ""}`}
+                  className={`min-w-[70px] h-8 text-center border rounded-md mx-1 ${!isEditable ? "cursor-not-allowed" : "bg-white"
+                    } ${isWeekend ? "text-gray-400" : ""}`}
                   onChange={(e) => {
                     if (isEditable) {
                       const updated = [...leaveRows[lt]];

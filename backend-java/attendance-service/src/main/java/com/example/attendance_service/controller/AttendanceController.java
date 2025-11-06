@@ -21,13 +21,19 @@ import com.example.attendance_service.responsedto.AttendanceResponseDTO;
 import com.example.attendance_service.service.AttendanceService;
 import java.util.ArrayList;
 import java.util.HashMap;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.client.RestTemplate;
+
 
 
 @RestController
-@RequestMapping("/api/attendance")
+@RequestMapping("/api")
 @CrossOrigin(origins = "*")
 public class AttendanceController {
 
+	 @Value("${calendarific.api.key}")
+	    private String apiKey;
+	 
     private final AttendanceService attendanceService;
 
     public AttendanceController(AttendanceService attendanceService) {
@@ -36,7 +42,7 @@ public class AttendanceController {
     
     
 //save and update current week
-    @PostMapping("/saveall")
+    @PostMapping("/attendance/saveall")
     public List<AttendanceEntity> saveAllWeek(
             @RequestParam UUID employeeId,
             @RequestParam UUID projectId,
@@ -47,19 +53,21 @@ System.out.println("@45::"+employeename);
         List<AttendanceRequestDTO> attendanceList = attendanceListOpt.orElseGet(ArrayList::new);
         return attendanceService.saveOrUpdateAttendance(employeeId, projectId, attendanceList, employeename);
     }
-//fetch only current week
-//    @GetMapping("/currentweek")
-//    public List<AttendanceEntity> getOrCreateWeekData(
-//            @RequestParam UUID employeeId,
-//            @RequestParam UUID projectId) {
-//
-//        return attendanceService.getOrCreateCurrentWeek(employeeId, projectId);
-//    }
+    
+   
+    @GetMapping("/holidays/{year}")
+    public ResponseEntity<?> getIndianHolidays(@PathVariable int year) {
+        String url = "https://calendarific.com/api/v2/holidays?api_key=" + apiKey + "&country=IN&year=" + year;
 
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+
+        return ResponseEntity.ok(response.getBody());
+    }
 
     // ✅ Fetch custom week attendance
     
-    @GetMapping("/week")
+    @GetMapping("/attendance/week")
     public List<AttendanceEntity> getAttendanceForWeek(
             @RequestParam UUID employeeId,
             @RequestParam UUID projectId,
@@ -69,7 +77,7 @@ System.out.println("@45::"+employeename);
         return attendanceService.getAttendanceForWeek(employeeId, projectId, weekStart);
     }
       
-    @GetMapping("/month/range")
+    @GetMapping("/attendance/month/range")
     public List<AttendanceEntity> getAttendanceForMonthRange(
             @RequestParam UUID employeeId,          // required: specific employee
             @RequestParam String startDate,        // format: yyyy-MM-dd
@@ -81,7 +89,7 @@ System.out.println("@45::"+employeename);
         return attendanceService.getAttendanceForMonthRange(employeeId, start, end);
     }
 
-    @PostMapping("/release-weekly")
+    @PostMapping("/attendance/release-weekly")
     public ResponseEntity<String> releaseWeekly(
             @RequestParam UUID employeeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate weekStart,
@@ -91,7 +99,7 @@ System.out.println("@45::"+employeename);
         return ResponseEntity.ok("Weekly attendance released successfully.");
     }
     
-    @PostMapping("/release-monthly")
+    @PostMapping("/attendance/release-monthly")
     public ResponseEntity<String> releaseMonth(
             @RequestParam UUID employeeId,
             @RequestParam UUID projectId,
@@ -114,30 +122,30 @@ System.out.println("@45::"+employeename);
 
  
      // ✅ GET all attendance
-     @GetMapping
+     @GetMapping("/attendance")
      public List<AttendanceResponseDTO> getAllAttendance() {
          return attendanceService.getAllAttendance();
      }
 
      // ✅ GET attendance by employee
-     @GetMapping("/employee/{employeeId}")
+     @GetMapping("/attendance/employee/{employeeId}")
      public List<AttendanceEntity> getAttendanceByEmployee(@PathVariable UUID employeeId) {
          return attendanceService.getAttendanceByEmployee(employeeId);
      }
 
      // ✅ GET attendance by project
-     @GetMapping("/project/{projectId}")
+     @GetMapping("/attendance/project/{projectId}")
      public List<AttendanceEntity> getAttendanceByProject(@PathVariable UUID projectId) {
          return attendanceService.getAttendanceByProject(projectId);
      }
 
      // ✅ GET attendance by both employee + project
-     @GetMapping("/employee/{employeeId}/project/{projectId}")
+     @GetMapping("/attendance/employee/{employeeId}/project/{projectId}")
      public List<AttendanceEntity> getAttendanceByEmployeeAndProject(@PathVariable UUID employeeId, @PathVariable UUID projectId) {
          return attendanceService.getAttendanceByEmployeeAndProject(employeeId, projectId);
      }
   
-     @GetMapping("/approval-summary")
+     @GetMapping("/attendance/approval-summary")
      public ResponseEntity<List<AttendanceResponseDTO>> getApprovalSummary(
              @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
              @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
@@ -147,7 +155,7 @@ System.out.println("@45::"+employeename);
          return ResponseEntity.ok(result);
      }
      
-     @GetMapping("/check-leave-eligibility")
+     @GetMapping("/attendance/check-leave-eligibility")
      public ResponseEntity<Map<String, Object>> checkLeaveEligibility(
     		 
     		 @RequestParam UUID employeeId,
@@ -170,7 +178,7 @@ System.out.println("@45::"+employeename);
          }
      }
 
-     @PostMapping("/deduct-leaves")
+     @PostMapping("/attendance/deduct-leaves")
      public ResponseEntity<String> deductLeaves(@RequestBody LeaveDeductRequest request) {
          attendanceService.deductLeaves(request.getEmployeeId(), request.getFrom(), request.getTo());
          return ResponseEntity.ok("Leaves updated successfully");
