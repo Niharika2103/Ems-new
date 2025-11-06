@@ -102,6 +102,17 @@ public class AttendanceEntity {
 	@Column(name = "holidays")
 	private Integer holidays = 10;
 	
+	@Column(name = "remaining_leaves")
+	private Integer remainingLeaves = 49; 
+	
+	public Integer getRemainingLeaves() {
+		return remainingLeaves;
+	}
+
+	public void setRemainingLeaves(Integer remainingLeaves) {
+		this.remainingLeaves = remainingLeaves;
+	}
+
 	@Column(name = "created_by")
     private String createdBy;
  
