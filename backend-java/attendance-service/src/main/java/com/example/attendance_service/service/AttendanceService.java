@@ -103,6 +103,8 @@ public List<AttendanceEntity> saveOrUpdateAttendance(
         firstTimeRecord.setExtraMilar(2);
         firstTimeRecord.setMaternityLeave(0);
         firstTimeRecord.setPaternityLeave(0);
+        
+        firstTimeRecord.setRemainingLeaves(49);
 
         attendanceRepository.save(firstTimeRecord);
     }
@@ -137,18 +139,18 @@ public List<AttendanceEntity> saveOrUpdateAttendance(
                 existing.setDate(date);
                 existing.setYear(date.getYear());
                 
-                if (dto.getWorkedHours() == 0 && "sl".equalsIgnoreCase(dto.getLeaveType())) {
-                    // ✅ Case: Sick Leave (SL)
-                    LocalDate previousDate = dto.getDate().minusDays(1);
- 
-                    AttendanceEntity previousRecord = attendanceRepository
-                            .findByEmployee_IdAndProject_IdAndDate(employeeId, projectId, previousDate)
-                            .orElse(null);
- 
-                    if (previousRecord != null) {
-                        existing.setSl(previousRecord.getSl() - 1);
-                    }
-                }
+//                if (dto.getWorkedHours() == 0 && "sl".equalsIgnoreCase(dto.getLeaveType())) {
+//                    // ✅ Case: Sick Leave (SL)
+//                    LocalDate previousDate = dto.getDate().minusDays(1);
+// 
+//                    AttendanceEntity previousRecord = attendanceRepository
+//                            .findByEmployee_IdAndProject_IdAndDate(employeeId, projectId, previousDate)
+//                            .orElse(null);
+// 
+//                    if (previousRecord != null) {
+//                        existing.setSl(previousRecord.getSl() - 1);
+//                    }
+//                }
 
 
                 // ✅ SET WEEKLY RECORD DEFAULTS (NOT org-level defaults!)
@@ -157,12 +159,13 @@ public List<AttendanceEntity> saveOrUpdateAttendance(
                 existing.setHolidays(0);              // ← 0, not 10
                 existing.setOptionalHolidays(0);      // ← 0, not 2
                 existing.setEl(0);
-//                existing.setSl(0);
+                existing.setSl(0);
                 existing.setExtraMilar(0);
                 existing.setMaternityLeave(0);
                 existing.setPaternityLeave(0);
                 existing.setUpdatedBy(employeename);
                 existing.setUpdatedAt(LocalDateTime.now());
+                existing.setRemainingLeaves(0);
             }
 
             // ✅ Update leave type and worked hours properly
@@ -408,6 +411,7 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 	                    baseRecord.setExtraMilar(Math.max(0, baseRecord.getExtraMilar() - count.intValue())); // ✅ Added this
 	            default -> System.out.println("⚠️ Unknown leave type: " + type);
 	        }
+	        baseRecord.setRemainingLeaves(Math.max(0, baseRecord.getRemainingLeaves() - count.intValue()));
 	    });
 
 	    // 5️⃣ Save updated leave counts
