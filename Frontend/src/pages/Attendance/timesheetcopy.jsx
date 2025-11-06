@@ -48,11 +48,7 @@ const getMonthDays = (date) => {
     const dayName = current.toLocaleDateString("en-US", { weekday: "short" });
     days.push({
       date: new Date(current),
-      // label: `${dayName} / ${current.getDate().toString().padStart(2, "0")}`,
-       label: `${current.getDate().toString().padStart(2, "0")}/${(current.getMonth() + 1)
-        .toString()
-        .padStart(2, "0")} (${dayName})`,
-
+      label: `${dayName} / ${current.getDate().toString().padStart(2, "0")}`,
       dayIndex: current.getDay(),
       isWeekend: dayName === "Sat" || dayName === "Sun",
     });

@@ -383,14 +383,33 @@ const getDateStringForIndex = (index) => {
         }
       }
 
-      return {
-        date: new Date(currentDate.getTime() - currentDate.getTimezoneOffset() * 60000)
-          .toISOString()
-          .split("T")[0],
-        workedHours: Number(hours[i]) || 0,
-        leaveType: appliedLeaveType || "",
-        approvalStatus: 'submitted' // Set status as submitted when saving
-      };
+ return {
+  date: new Date(currentDate.getTime() - currentDate.getTimezoneOffset() * 60000)
+    .toISOString()
+    .split("T")[0],
+
+  // ✅ Worked hours should always be a number (0 for holiday)
+  workedHours: holidays.includes(
+    new Date(currentDate.getTime() - currentDate.getTimezoneOffset() * 60000)
+      .toISOString()
+      .split("T")[0]
+  )
+    ? 0 // 👈 backend accepts only numbers
+    : Number(hours[i]) || 0,
+
+  // ✅ Leave type is 'holiday' if that date is a holiday
+  leaveType: holidays.includes(
+    new Date(currentDate.getTime() - currentDate.getTimezoneOffset() * 60000)
+      .toISOString()
+      .split("T")[0]
+  )
+    ? "holiday"
+    : appliedLeaveType || "",
+
+  approvalStatus: "submitted",
+};
+
+
     });
   
     try {
@@ -509,10 +528,10 @@ const getDateStringForIndex = (index) => {
   if (isWeekend) {
     return "#E0E0E0"; // always gray for weekends
   }
- const isHoliday = holidays.includes(getDateStringForIndex(dayIndex)); // Use your existing function to get the date string
-  if (isHoliday) {
-    return "#FFCDD2"; // Light red/pink for holidays (adjust color as needed)
-  }
+//  const isHoliday = holidays.includes(getDateStringForIndex(dayIndex)); // Use your existing function to get the date string
+//   if (isHoliday) {
+//     return "#FFCDD2"; // Light red/pink for holidays (adjust color as needed)
+//   }
   const record = attendanceData?.[dayIndex];
   if (!record) return "white";
 
