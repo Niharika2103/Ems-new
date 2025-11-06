@@ -552,7 +552,10 @@ export default function Timesheet() {
       ? Array.from({ length: 7 }, (_, i) => {
         const date = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + i);
         const dayName = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][date.getDay()];
-        return { dayIndex: date.getDay(), label: `${dayName} / ${date.getDate().toString().padStart(2, "0")}`, date };
+            const month = (date.getMonth() + 1).toString().padStart(2, "0");
+        return { dayIndex: date.getDay(), 
+         label: `${dayName} / ${date.getDate().toString().padStart(2, "0")}/${month}`, 
+          date  };
       })
       : getMonthDays(monthStart);
 
