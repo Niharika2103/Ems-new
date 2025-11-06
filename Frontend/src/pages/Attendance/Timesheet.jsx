@@ -37,10 +37,10 @@ function getMonday(date) {
   return new Date(d.setDate(diff));
 }
 
-// --- Utility: month cycle (10th → 9th next month) ---
+// --- Utility: month cycle (1st → end of the month) ---
 const getMonthDays = (date) => {
-  const start = new Date(date.getFullYear(), date.getMonth(), 10);
-  const end = new Date(date.getFullYear(), date.getMonth() + 1, 9);
+  const start = new Date(date.getFullYear(), date.getMonth(), 1);
+  const end = new Date(date.getFullYear(), date.getMonth() + 1, 0);
   const days = [];
   let current = new Date(start);
 
@@ -218,7 +218,7 @@ export default function Timesheet() {
       dataMap[dateKey] = item;
     });
 
-    // 🔹 Build month days (10th → 9th next month)
+    // 🔹 Build month days (1st → end of the month)
     const monthDays = getMonthDays(monthStart);
 
     // 🔹 Create structured data for all days
@@ -250,7 +250,7 @@ export default function Timesheet() {
       };
     });
 
-    console.log("🗓️ Final Monthly Data (mapped to 10th→9th):", monthlyData);
+    console.log("🗓️ Final Monthly Data (mapped to 1st→end of the month):", monthlyData);
 
     // 🔹 Set worked hours & leave arrays
     const workedArray = monthlyData.map((d) => Number(d.worked_hours) || 0);
@@ -319,8 +319,8 @@ export default function Timesheet() {
           .padStart(2, "0")}/${d.getFullYear()}`;
       return `${fmt(weekStart)} - ${fmt(endDate)}`;
     } else {
-      const start = new Date(monthStart.getFullYear(), monthStart.getMonth(), 10);
-      const end = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 9);
+      const start = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1);
+      const end = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
 
       const startMonth = start.toLocaleString("default", { month: "short" });
       const endMonth = end.toLocaleString("default", { month: "short" });
@@ -341,7 +341,7 @@ export default function Timesheet() {
   };
 
   const changeMonth = (delta) => {
-    const newMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() + delta, 10);
+    const newMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() + delta, 1);
     setMonthStart(newMonth);
   };
 
@@ -356,7 +356,7 @@ export default function Timesheet() {
     } else {
       // Switching from monthly to weekly
       // Set week start to the first Monday of the current month
-      const firstDayOfMonth = new Date(monthStart.getFullYear(), monthStart.getMonth(), 10);
+      const firstDayOfMonth = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1);
       const newWeekStart = getMonday(firstDayOfMonth);
       setWeekStart(newWeekStart);
       setViewMode("weekly");
@@ -493,7 +493,7 @@ export default function Timesheet() {
     if (viewMode === "weekly") {
       setWeekStart(getMonday(date));
     } else {
-      setMonthStart(new Date(date.getFullYear(), date.getMonth(), 10));
+      setMonthStart(new Date(date.getFullYear(), date.getMonth(), 1));
     }
     setCalendarAnchor(null);
   };

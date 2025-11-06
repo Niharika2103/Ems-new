@@ -58,12 +58,23 @@ useEffect(() => {
   fetchHolidays(currentYear);
 }, []);
   // 🗓️ Get current week (Monday to Sunday)
-  const getCurrentWeek = () => {
-    const today = dayjs();
-    const start = today.startOf('week'); // Monday
-    const end = today.endOf('week');     // Sunday
-    return { start, end };
-  };
+  // const getCurrentWeek = () => {
+  //   const today = dayjs();
+  //   const start = today.startOf('week'); // Monday
+  //   const end = today.endOf('week');     // Sunday
+  //   return { start, end };
+  // };
+  // 🗓️ Get current week (Monday to Sunday)
+const getCurrentWeek = () => {
+  const today = dayjs();
+  const dayOfWeek = today.day(); // 0 = Sunday, 1 = Monday, etc.
+  
+  // Calculate Monday (if today is Sunday, go back 6 days)
+  const start = today.subtract(dayOfWeek === 0 ? 6 : dayOfWeek - 1, 'day');
+  const end = start.add(6, 'day');
+  
+  return { start, end };
+};
 
   // 🗓️ Get pay cycle (10th to 9th of next month)
   const getPayCycle = (date) => {
@@ -84,13 +95,25 @@ useEffect(() => {
   };
 
   // Default date range based on view type
-  const getDefaultDateRange = (type) => {
-    if (type === "weekly") {
-      return getCurrentWeek();
-    } else {
-      return getPayCycle(dayjs());
-    }
-  };
+  // const getDefaultDateRange = (type) => {
+  //   if (type === "weekly") {
+  //     return getCurrentWeek();
+  //   } else {
+  //     return getPayCycle(dayjs());
+  //   }
+  // };
+  // Default date range based on view type
+const getDefaultDateRange = (type) => {
+  if (type === "weekly") {
+    return getCurrentWeek();
+  } else {
+    // For monthly view: current month (1st to last day)
+    const today = dayjs();
+    const start = today.startOf('month');
+    const end = today.endOf('month');
+    return { start, end };
+  }
+};
 
   const defaultRange = getDefaultDateRange(viewType);
   const [dateRange, setDateRange] = useState([defaultRange.start, defaultRange.end]);
@@ -141,30 +164,55 @@ useEffect(() => {
 
 
   // ⏪ Previous period
-  const handlePrevPeriod = () => {
-    if (viewType === "weekly") {
-      const newStart = dateRange[0].subtract(1, "week").startOf('week');
-      const newEnd = dateRange[0].subtract(1, "week").endOf('week');
-      setDateRange([newStart, newEnd]);
-    } else {
-      const newStart = dateRange[0].subtract(1, "month");
-      const { start, end } = getPayCycle(newStart);
-      setDateRange([start, end]);
-    }
-  };
+  // const handlePrevPeriod = () => {
+  //   if (viewType === "weekly") {
+  //     const newStart = dateRange[0].subtract(1, "week").startOf('week');
+  //     const newEnd = dateRange[0].subtract(1, "week").endOf('week');
+  //     setDateRange([newStart, newEnd]);
+  //   } else {
+  //     const newStart = dateRange[0].subtract(1, "month");
+  //     const { start, end } = getPayCycle(newStart);
+  //     setDateRange([start, end]);
+  //   }
+  // };
 
-  // ⏩ Next period
-  const handleNextPeriod = () => {
-    if (viewType === "weekly") {
-      const newStart = dateRange[0].add(1, "week").startOf('week');
-      const newEnd = dateRange[0].add(1, "week").endOf('week');
-      setDateRange([newStart, newEnd]);
-    } else {
-      const newStart = dateRange[0].add(1, "month");
-      const { start, end } = getPayCycle(newStart);
-      setDateRange([start, end]);
-    }
-  };
+  // // ⏩ Next period
+  // const handleNextPeriod = () => {
+  //   if (viewType === "weekly") {
+  //     const newStart = dateRange[0].add(1, "week").startOf('week');
+  //     const newEnd = dateRange[0].add(1, "week").endOf('week');
+  //     setDateRange([newStart, newEnd]);
+  //   } else {
+  //     const newStart = dateRange[0].add(1, "month");
+  //     const { start, end } = getPayCycle(newStart);
+  //     setDateRange([start, end]);
+  //   }
+  // };
+  // ⏪ Previous period
+const handlePrevPeriod = () => {
+  if (viewType === "weekly") {
+    const newStart = dateRange[0].subtract(1, "week");
+    const newEnd = dateRange[1].subtract(1, "week");
+    setDateRange([newStart, newEnd]);
+  } else {
+    const newStart = dateRange[0].subtract(1, "month").startOf('month');
+    const newEnd = dateRange[0].subtract(1, "month").endOf('month');
+    setDateRange([newStart, newEnd]);
+  }
+};
+
+// ⏩ Next period
+const handleNextPeriod = () => {
+  if (viewType === "weekly") {
+    const newStart = dateRange[0].add(1, "week");
+    const newEnd = dateRange[1].add(1, "week");
+    setDateRange([newStart, newEnd]);
+  } else {
+    const newStart = dateRange[0].add(1, "month").startOf('month');
+    const newEnd = dateRange[0].add(1, "month").endOf('month');
+    setDateRange([newStart, newEnd]);
+  }
+};
 
   const handleViewTypeChange = (type) => {
     setViewType(type);
@@ -189,16 +237,26 @@ useEffect(() => {
   const currentWeek = getCurrentWeek();
   const currentPayCycle = getPayCycle(now);
   
+  // const nextDisabled = () => {
+  //   if (viewType === "weekly") {
+  //     const nextWeekStart = dateRange[0].add(1, "week");
+  //     return nextWeekStart.isAfter(currentWeek.start, "day");
+  //   } else {
+  //     const nextCycleStart = dateRange[0].add(1, "month");
+  //     const nextCycle = getPayCycle(nextCycleStart);
+  //     return nextCycle.start.isAfter(currentPayCycle.start, "day");
+  //   }
+  // };
+
   const nextDisabled = () => {
-    if (viewType === "weekly") {
-      const nextWeekStart = dateRange[0].add(1, "week");
-      return nextWeekStart.isAfter(currentWeek.start, "day");
-    } else {
-      const nextCycleStart = dateRange[0].add(1, "month");
-      const nextCycle = getPayCycle(nextCycleStart);
-      return nextCycle.start.isAfter(currentPayCycle.start, "day");
-    }
-  };
+  if (viewType === "weekly") {
+    const nextWeekStart = dateRange[0].add(1, "week");
+    return nextWeekStart.isAfter(currentWeek.start, "day");
+  } else {
+    const nextMonthStart = dateRange[0].add(1, "month").startOf('month');
+    return nextMonthStart.isAfter(dayjs().startOf('month'), "day");
+  }
+};
 
   const prevDisabled = () => {
     if (viewType === "weekly") {
