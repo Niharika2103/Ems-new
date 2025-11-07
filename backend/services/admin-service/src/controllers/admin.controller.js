@@ -1068,7 +1068,7 @@ export const getPendingWeeklyApprovals = async (req, res) => {
         error: "Missing required query parameters (employeeId, from, to)",
       });
     }
-
+    
     const query = `
       SELECT a.*, u.id AS user_id, u.name, u.email
       FROM attendance a
