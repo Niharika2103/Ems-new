@@ -473,32 +473,52 @@ const getDateStringForIndex = (index) => {
         weekEnd: formattedWeekEnd
       }));
 
-      if (AttendanceReleaseWeek.fulfilled.match(resultAction)) {
-        toast.success("Week released successfully!");
+      // if (AttendanceReleaseWeek.fulfilled.match(resultAction)) {
+      //   toast.success("Week released successfully!");
         
-        // Update approval status to 'submitted' after releasing week
-        const newApprovalStatus = { ...approvalStatus };
-        days.forEach((_, i) => {
-          if (!isWeekendDay(i)) { // Only update status for weekdays
-            const statusKey = `worked_${i}`;
-            // Only update to 'submitted' if not already 'approved'
-            if (newApprovalStatus[statusKey] !== 'approved') {
-              newApprovalStatus[statusKey] = 'submitted';
-            }
+      //   // Update approval status to 'submitted' after releasing week
+      //   const newApprovalStatus = { ...approvalStatus };
+      //   days.forEach((_, i) => {
+      //     if (!isWeekendDay(i)) { // Only update status for weekdays
+      //       const statusKey = `worked_${i}`;
+      //       // Only update to 'submitted' if not already 'approved'
+      //       if (newApprovalStatus[statusKey] !== 'approved') {
+      //         newApprovalStatus[statusKey] = 'submitted';
+      //       }
             
-            usedLeaveTypes.forEach(lt => {
-              const leaveStatusKey = `${lt}_${i}`;
-              if (leaveRows[lt][i] && leaveRows[lt][i] !== 0 && leaveRows[lt][i] !== "") {
-                // Only update to 'submitted' if not already 'approved'
-                if (newApprovalStatus[leaveStatusKey] !== 'approved') {
-                  newApprovalStatus[leaveStatusKey] = 'submitted';
-                }
-              }
-            });
-          }
-        });
-        setApprovalStatus(newApprovalStatus);
-      } else {
+      //       usedLeaveTypes.forEach(lt => {
+      //         const leaveStatusKey = `${lt}_${i}`;
+      //         if (leaveRows[lt][i] && leaveRows[lt][i] !== 0 && leaveRows[lt][i] !== "") {
+      //           // Only update to 'submitted' if not already 'approved'
+      //           if (newApprovalStatus[leaveStatusKey] !== 'approved') {
+      //             newApprovalStatus[leaveStatusKey] = 'submitted';
+      //           }
+      //         }
+      //       });
+      //     }
+      //   });
+      //   setApprovalStatus(newApprovalStatus);
+      if (AttendanceReleaseWeek.fulfilled.match(resultAction)) {
+  toast.success("Week released successfully!");
+
+  // ✅ Lock ALL worked hours and leave fields (make non-editable)
+  const newApprovalStatus = { ...approvalStatus };
+
+  days.forEach((_, i) => {
+    if (!isWeekendDay(i)) {
+      // Lock worked hours
+      newApprovalStatus[`worked_${i}`] = "approved";
+
+      // Lock all leaves
+      usedLeaveTypes.forEach((lt) => {
+        newApprovalStatus[`${lt}_${i}`] = "approved";
+      });
+    }
+  });
+
+  setApprovalStatus(newApprovalStatus);
+
+ } else {
         throw new Error("Failed to release week");
       }
     } catch (err) {
