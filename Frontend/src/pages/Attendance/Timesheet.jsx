@@ -561,12 +561,10 @@ export default function Timesheet() {
 
   const currentWorkedHours = viewMode === "weekly" ? workedHours : monthlyWorkedHours;
   const workedTotal = (currentWorkedHours || []).reduce((a, b) => a + Number(b || 0), 0);
-
   const rowTotals = {};
   usedLeaveTypes.forEach((lt) => {
     rowTotals[lt] = (leaveRows[lt] || Array(days.length).fill(0)).reduce((a, b) => a + Number(b || 0), 0);
   });
-
   const grandTotal = workedTotal + Object.values(rowTotals).reduce((a, b) => a + b, 0);
 
   // --- API Range (10 → 9)

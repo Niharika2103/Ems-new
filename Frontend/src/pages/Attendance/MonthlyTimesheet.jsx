@@ -31,17 +31,23 @@ export default function MonthlyTimesheet({ onBack }) {
   const [lockedRows, setLockedRows] = useState({ CL: false });
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [menuRow, setMenuRow] = useState(null);
+  // const [monthStart, setMonthStart] = useState(() => {
+  //   const today = new Date();
+  //   return today.getDate() >= 10
+  //     ? new Date(today.getFullYear(), today.getMonth(), 10)
+  //     : new Date(today.getFullYear(), today.getMonth() - 1, 10);
+  // });
   const [monthStart, setMonthStart] = useState(() => {
-    const today = new Date();
-    return today.getDate() >= 10
-      ? new Date(today.getFullYear(), today.getMonth(), 10)
-      : new Date(today.getFullYear(), today.getMonth() - 1, 10);
-  });
+  const today = new Date();
+  return new Date(today.getFullYear(), today.getMonth(), 1); // Always 1st of current month
+});
 
   const [calendarAnchor, setCalendarAnchor] = useState(null);
   const [leaveModalOpen, setLeaveModalOpen] = useState(false);
   const [modalLeaveType, setModalLeaveType] = useState("");
   const [monthDays, setMonthDays] = useState([]);
+  const [isMonthReleased, setIsMonthReleased] = useState(false);
+
 
   const [holidays, setHolidays] = useState([]);
 
@@ -83,8 +89,8 @@ export default function MonthlyTimesheet({ onBack }) {
     `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
 
   const getMonthDays = (date) => {
-    const start = new Date(date.getFullYear(), date.getMonth(), 10);
-    const end = new Date(date.getFullYear(), date.getMonth() + 1, 9);
+    const start = new Date(date.getFullYear(), date.getMonth(), 1);
+    const end = new Date(date.getFullYear(), date.getMonth() + 1, 0);
     const days = [];
     let current = new Date(start);
 
@@ -102,8 +108,8 @@ export default function MonthlyTimesheet({ onBack }) {
   };
 
   const formatMonthRange = () => {
-    const start = new Date(monthStart.getFullYear(), monthStart.getMonth(), 10);
-    const end = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 9);
+    const start = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1);
+    const end = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
 
     const startMonth = start.toLocaleString("default", { month: "short" });
     const endMonth = end.toLocaleString("default", { month: "short" });
@@ -209,7 +215,7 @@ export default function MonthlyTimesheet({ onBack }) {
 
   useEffect(() => {
     if (employeeId) {
-      const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 9)
+      const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0)
       dispatch(
         AttendanceFetchExistingMonth({
           employeeId,
@@ -272,7 +278,7 @@ export default function MonthlyTimesheet({ onBack }) {
     const ProjectID = projectDetails?.projectID;
     const employeeId = projectDetails?.employeeId;
     const today = new Date();
-    const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 9);
+    const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
     const formatDate = (date) =>
       `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
 
@@ -286,6 +292,8 @@ export default function MonthlyTimesheet({ onBack }) {
 
       if (AttendanceReleaseMonth.fulfilled.match(resultAction)) {
         toast.success("Month released successfully!");
+        setIsMonthReleased(true); // 🔒 Lock inputs after releasing month
+
 
         // NEW: Update approval status to 'submitted' after releasing month
         const newApprovalStatus = { ...approvalStatus };
@@ -424,14 +432,23 @@ export default function MonthlyTimesheet({ onBack }) {
         {/* DATES HEADER */}
         <div className="flex font-semibold border-b pb-2 text-sm">
           <div className="min-w-[150px]">{projectName}</div>
-          {monthDays.map((d, index) => (
+          {/* {monthDays.map((d, index) => (
             <div
               key={index}
               className={`min-w-[70px] text-center mx-1 ${d.isWeekend ? "text-gray-400" : "text-black"}`}
             >
               {d.label}
             </div>
-          ))}
+          ))} */}
+
+          {monthDays.map((d, index) => (
+  <div
+    key={index}
+    className={`min-w-[70px] text-center mx-1 ${d.isWeekend ? "text-gray-400" : "text-black"}`}
+  >
+    {`${d.date.getDate()}/${d.date.getMonth() + 1}`}
+  </div>
+))}
           <div className="min-w-[70px] text-center">Action</div>
         </div>
 
@@ -466,7 +483,8 @@ export default function MonthlyTimesheet({ onBack }) {
                 value={h}
                 min="0"
                 max="9"
-                disabled={!isEditable || isWeekend}
+                // disabled={!isEditable || isWeekend}
+                disabled={!isEditable || isWeekend || isMonthReleased}
                 style={{ backgroundColor }}
                 className={`min-w-[70px] h-8 text-center border rounded-md mx-1
         ${!isEditable ? "cursor-not-allowed" : "bg-white"}
@@ -504,7 +522,9 @@ export default function MonthlyTimesheet({ onBack }) {
                   value={v}
                   min="0"
                   max="9"
-                  disabled={!isEditable}
+                  // disabled={!isEditable}
+                  disabled={!isEditable || isMonthReleased}
+
                   style={{ backgroundColor }}
                   className={`min-w-[70px] h-8 text-center border rounded-md mx-1 ${!isEditable ? "cursor-not-allowed" : "bg-white"
                     } ${isWeekend ? "text-gray-400" : ""}`}
