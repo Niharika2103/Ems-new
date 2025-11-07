@@ -52,10 +52,10 @@ public class AttendanceEntity {
 
 
 	@Column(name = "worked_hours", nullable = false)
-	private Double workedHours = 0.0;
+	private Double workedHours ;
 
 	@Column(name = "total_hours", nullable = false)
-	private Double totalWorkedHours = 0.0;
+	private Double totalWorkedHours;
 
 	@Column(name = "weekly_status", nullable = false)
 	private String status;
@@ -76,34 +76,33 @@ public class AttendanceEntity {
 
 
 	@Column(nullable = false)
-	private Integer el = 25;
+	private Integer el ;
 
 	@Column(nullable = false)
-	private Integer extraMilar = 2;
+	private Integer extraMilar ;
 
 	@Column(nullable = false)
-	private Integer sl = 10;
+	private Integer sl ;
 
 	@Column(name = "maternity_leave")
-	private Integer maternityLeave = 0;
+	private Integer maternityLeave ;
 
 	@Column(name = "paternity_leave")
-	private Integer paternityLeave = 0;
+	private Integer paternityLeave ;
 	
 	@Column(name = "working_days")
-	private Integer workingDays = 0;
+	private Integer workingDays ;
 
 	@Column(name = "work_from_home")
-	private Integer workFromHome = 315;
-
+	private Integer workFromHome;
 	@Column(name = "optional_holidays")
-	private Integer optionalHolidays = 2;
+	private Integer optionalHolidays ;
 	
 	@Column(name = "holidays")
-	private Integer holidays = 10;
+	private Integer holidays ;
 	
 	@Column(name = "remaining_leaves")
-	private Integer remainingLeaves = 49; 
+	private Integer remainingLeaves ;
 	
 	public Integer getRemainingLeaves() {
 		return remainingLeaves;
