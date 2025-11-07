@@ -94,15 +94,69 @@ public List<AttendanceEntity> saveOrUpdateAttendance(
         firstTimeRecord.setCreatedAt(LocalDateTime.now());
 
         // ✅ EXACT DEFAULT VALUES FROM YOUR INSERT STATEMENT
+//        firstTimeRecord.setWorkingDays(0);
+//        firstTimeRecord.setWorkFromHome(315);
+//        firstTimeRecord.setHolidays(10);
+//        firstTimeRecord.setOptionalHolidays(2);
+//        firstTimeRecord.setEl(25);
+//        firstTimeRecord.setSl(10);
+//        firstTimeRecord.setExtraMilar(2);
+//        firstTimeRecord.setMaternityLeave(0);
+//        firstTimeRecord.setPaternityLeave(0);
+        
+     // ✅ Use joining date as the base for pro-rated leave calculation
+//        LocalDate joiningDate = LocalDate.now();
+//        Map<String, Double> proRatedLeaves = calculateProRatedLeaves(joiningDate);
+//
+//        
+//        firstTimeRecord.setDate(joiningDate);
+//        firstTimeRecord.setYear(joiningDate.getYear());
+//        firstTimeRecord.setWorkingDays(0);
+//        firstTimeRecord.setWorkFromHome(315);
+//
+//        
+//        firstTimeRecord.setSl(proRatedLeaves.get("SL").intValue());
+//        firstTimeRecord.setEl(proRatedLeaves.get("EL").intValue());
+//        firstTimeRecord.setExtraMilar(proRatedLeaves.get("Extra Milar").intValue());
+//        firstTimeRecord.setHolidays(proRatedLeaves.get("Holidays").intValue());
+//        firstTimeRecord.setOptionalHolidays(proRatedLeaves.get("Optional Holidays").intValue());
+//
+//        
+//        firstTimeRecord.setMaternityLeave(0);
+//        firstTimeRecord.setPaternityLeave(0);
+
+        
+     
+        LocalDate joiningDate = employee.getDateOfJoining();
+
+        if (joiningDate == null) {
+            // fallback if somehow missing
+            joiningDate = LocalDate.now();
+            System.out.println("⚠️ Joining date missing for employee " + employee.getEmployeeName()
+                               + ", using current date instead.");
+        } else {
+            System.out.println("✅ Using actual joining date: " + joiningDate);
+        }
+
+        Map<String, Integer> assignedLeaves = calculateLeavesBasedOnJoining(joiningDate);
+
+        // 🗓️ Basic info
+        firstTimeRecord.setDate(joiningDate);
+        firstTimeRecord.setYear(joiningDate.getYear());
         firstTimeRecord.setWorkingDays(0);
-        firstTimeRecord.setWorkFromHome(315);
-        firstTimeRecord.setHolidays(10);
-        firstTimeRecord.setOptionalHolidays(2);
-        firstTimeRecord.setEl(25);
-        firstTimeRecord.setSl(10);
-        firstTimeRecord.setExtraMilar(2);
+        firstTimeRecord.setWorkFromHome(315); // fixed
+
+       
+        firstTimeRecord.setSl(assignedLeaves.get("SL"));
+        firstTimeRecord.setEl(assignedLeaves.get("EL"));
+        firstTimeRecord.setExtraMilar(assignedLeaves.get("Extra Milar"));
+        firstTimeRecord.setHolidays(assignedLeaves.get("Holidays"));
+        firstTimeRecord.setOptionalHolidays(assignedLeaves.get("Optional Holidays"));
+
+        // Other leave types
         firstTimeRecord.setMaternityLeave(0);
         firstTimeRecord.setPaternityLeave(0);
+
 
         attendanceRepository.save(firstTimeRecord);
     }
@@ -123,13 +177,13 @@ public List<AttendanceEntity> saveOrUpdateAttendance(
             LocalDate date = dto.getDate();
             if (date == null) continue;
 
-            // ✅ Find if record exists for that exact date
+            //  Find if record exists for that exact date
             AttendanceEntity existing = attendanceRepository
                     .findByEmployee_IdAndProject_IdAndDate(employeeId, projectId, date)
                     .orElse(null);
 
             if (existing == null) {
-                // ✅ Create new record
+                //  Create new record
                 existing = new AttendanceEntity();
                 existing.setEmployee(employee);
                 existing.setProject(project);
@@ -138,7 +192,7 @@ public List<AttendanceEntity> saveOrUpdateAttendance(
                 existing.setYear(date.getYear());
                 
                 if (dto.getWorkedHours() == 0 && "sl".equalsIgnoreCase(dto.getLeaveType())) {
-                    // ✅ Case: Sick Leave (SL)
+                    //  Case: Sick Leave (SL)
                     LocalDate previousDate = dto.getDate().minusDays(1);
  
                     AttendanceEntity previousRecord = attendanceRepository
@@ -413,5 +467,53 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 	    // 5️⃣ Save updated leave counts
 	    attendanceRepository.save(baseRecord);
 	}
+	
+	
+//	private Map<String, Double> calculateProRatedLeaves(LocalDate joiningDate) {
+//	    int joiningMonth = joiningDate.getMonthValue();
+//	    int monthsRemaining = 12 - joiningMonth + 1; 
+//
+//	    Map<String, Integer> yearlyLeaves = Map.of(
+//	        "SL", 10,
+//	        "EL", 25,
+//	        "Extra Milar", 2,
+//	        "Holidays", 10,
+//	        "Optional Holidays", 2
+//	    );
+//
+//	    Map<String, Double> proRated = new java.util.HashMap<>();
+//	    yearlyLeaves.forEach((type, total) -> {
+//	        double leaves = (total / 12.0) * monthsRemaining;
+//	        proRated.put(type, Math.round(leaves * 100.0) / 100.0);
+//	    });
+//
+//	    return proRated;
+//	}
+	
+	// 🔹 Calculates leaves based on mid-year joining logic (Jan–Dec year)
+	private Map<String, Integer> calculateLeavesBasedOnJoining(LocalDate joiningDate) {
+	    // Full-year leave configuration
+	    Map<String, Integer> yearlyLeaves = Map.of(
+	        "SL", 10,
+	        "EL", 25,
+	        "Extra Milar", 2,
+	        "Holidays", 10,
+	        "Optional Holidays", 2
+	    );
+
+	    // 🗓️ Mid-year cutoff = June 30
+	    LocalDate midYear = LocalDate.of(joiningDate.getYear(), 6, 30);
+	    boolean joinedBeforeMidYear = !joiningDate.isAfter(midYear);
+
+	    Map<String, Integer> finalLeaves = new java.util.HashMap<>();
+	    yearlyLeaves.forEach((type, total) -> {
+	        int leaves = joinedBeforeMidYear ? total : total / 2; // Half if joined after mid-year
+	        finalLeaves.put(type, leaves);
+	    });
+
+	    return finalLeaves;
+	}
+
+
 
 }
