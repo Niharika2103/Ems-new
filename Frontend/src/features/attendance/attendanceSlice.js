@@ -77,9 +77,9 @@ export const AttendanceReleaseWeek= createAsyncThunk("attendance/release-week", 
   }
 })
 
-export const AttendanceReleaseMonth= createAsyncThunk("attendance/release-Month", async ({ employeeId,  monthStart,monthEnd }, thunkAPI) => {
+export const AttendanceReleaseMonth= createAsyncThunk("attendance/release-Month", async ({ employeeId,  projectId,monthStart,monthEnd }, thunkAPI) => {
   try {
-    const res = await AttendanceReleaseMonthApi( employeeId,  monthStart,monthEnd );
+    const res = await AttendanceReleaseMonthApi( employeeId, projectId, monthStart,monthEnd );
     return res.data;
   } catch (err) {
     return thunkAPI.rejectWithValue(err.response?.data || err.message);

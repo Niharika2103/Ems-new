@@ -46,6 +46,8 @@ export default function MonthlyTimesheet({ onBack }) {
   const [leaveModalOpen, setLeaveModalOpen] = useState(false);
   const [modalLeaveType, setModalLeaveType] = useState("");
   const [monthDays, setMonthDays] = useState([]);
+  const [isMonthReleased, setIsMonthReleased] = useState(false);
+
 
   const [holidays, setHolidays] = useState([]);
 
@@ -290,6 +292,8 @@ export default function MonthlyTimesheet({ onBack }) {
 
       if (AttendanceReleaseMonth.fulfilled.match(resultAction)) {
         toast.success("Month released successfully!");
+        setIsMonthReleased(true); // 🔒 Lock inputs after releasing month
+
 
         // NEW: Update approval status to 'submitted' after releasing month
         const newApprovalStatus = { ...approvalStatus };
@@ -479,7 +483,8 @@ export default function MonthlyTimesheet({ onBack }) {
                 value={h}
                 min="0"
                 max="9"
-                disabled={!isEditable || isWeekend}
+                // disabled={!isEditable || isWeekend}
+                disabled={!isEditable || isWeekend || isMonthReleased}
                 style={{ backgroundColor }}
                 className={`min-w-[70px] h-8 text-center border rounded-md mx-1
         ${!isEditable ? "cursor-not-allowed" : "bg-white"}
@@ -517,7 +522,9 @@ export default function MonthlyTimesheet({ onBack }) {
                   value={v}
                   min="0"
                   max="9"
-                  disabled={!isEditable}
+                  // disabled={!isEditable}
+                  disabled={!isEditable || isMonthReleased}
+
                   style={{ backgroundColor }}
                   className={`min-w-[70px] h-8 text-center border rounded-md mx-1 ${!isEditable ? "cursor-not-allowed" : "bg-white"
                     } ${isWeekend ? "text-gray-400" : ""}`}
