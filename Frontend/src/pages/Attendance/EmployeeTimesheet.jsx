@@ -52,7 +52,8 @@ export default function EmpTimesheet() {
   const [isSaveAllEnabled, setIsSaveAllEnabled] = useState(true);
   const [leaveModalOpen, setLeaveModalOpen] = useState(false);
   const [modalLeaveType, setModalLeaveType] = useState("");
-
+const [holidays, setHolidays] = useState([]);
+  const [holidaysCache, setHolidaysCache] = useState({});
   // NEW: store leave periods for multi-week leaves
   const [leavePeriods, setLeavePeriods] = useState([]);
   const [approvalStatus, setApprovalStatus] = useState({}); // Track approval status for each day
@@ -79,6 +80,36 @@ export default function EmpTimesheet() {
       })
     );
   }, [hours, leaveRows, usedLeaveTypes]);
+
+useEffect(() => {
+  const fetchHolidays = async () => {
+    try {
+      const year = weekStart.getFullYear(); // Get current year
+      // Call backend API to fetch holidays for the year
+      const res = await fetch(`http://localhost:9090/api/holidays/${year}`);
+      const data = await res.json();
+
+      if (data?.response?.holidays) {
+        // Extract holiday dates from the API response
+        const holidayDates = data.response.holidays.map(h => h.date.iso);
+        setHolidays(holidayDates);
+      } else {
+        console.error("No holidays data available.");
+      }
+    } catch (err) {
+      console.error("Failed to fetch holidays", err);
+    }
+  };
+
+  fetchHolidays();
+}, [weekStart]); // Re-run on weekStart change
+
+    
+const getDateStringForIndex = (index) => {
+    const currentDate = new Date(weekStart); 
+    currentDate.setDate(weekStart.getDate() + index); 
+    return currentDate.toISOString().split('T')[0]; // Return date in YYYY-MM-DD format
+  };
 
   function getMonday(d) {
     d = new Date(d);
@@ -352,14 +383,33 @@ export default function EmpTimesheet() {
         }
       }
 
-      return {
-        date: new Date(currentDate.getTime() - currentDate.getTimezoneOffset() * 60000)
-          .toISOString()
-          .split("T")[0],
-        workedHours: Number(hours[i]) || 0,
-        leaveType: appliedLeaveType || "",
-        approvalStatus: 'submitted' // Set status as submitted when saving
-      };
+ return {
+  date: new Date(currentDate.getTime() - currentDate.getTimezoneOffset() * 60000)
+    .toISOString()
+    .split("T")[0],
+
+  // ✅ Worked hours should always be a number (0 for holiday)
+  workedHours: holidays.includes(
+    new Date(currentDate.getTime() - currentDate.getTimezoneOffset() * 60000)
+      .toISOString()
+      .split("T")[0]
+  )
+    ? 0 // 👈 backend accepts only numbers
+    : Number(hours[i]) || 0,
+
+  // ✅ Leave type is 'holiday' if that date is a holiday
+  leaveType: holidays.includes(
+    new Date(currentDate.getTime() - currentDate.getTimezoneOffset() * 60000)
+      .toISOString()
+      .split("T")[0]
+  )
+    ? "holiday"
+    : appliedLeaveType || "",
+
+  approvalStatus: "submitted",
+};
+
+
     });
   
     try {
@@ -423,32 +473,52 @@ export default function EmpTimesheet() {
         weekEnd: formattedWeekEnd
       }));
 
-      if (AttendanceReleaseWeek.fulfilled.match(resultAction)) {
-        toast.success("Week released successfully!");
+      // if (AttendanceReleaseWeek.fulfilled.match(resultAction)) {
+      //   toast.success("Week released successfully!");
         
-        // Update approval status to 'submitted' after releasing week
-        const newApprovalStatus = { ...approvalStatus };
-        days.forEach((_, i) => {
-          if (!isWeekendDay(i)) { // Only update status for weekdays
-            const statusKey = `worked_${i}`;
-            // Only update to 'submitted' if not already 'approved'
-            if (newApprovalStatus[statusKey] !== 'approved') {
-              newApprovalStatus[statusKey] = 'submitted';
-            }
+      //   // Update approval status to 'submitted' after releasing week
+      //   const newApprovalStatus = { ...approvalStatus };
+      //   days.forEach((_, i) => {
+      //     if (!isWeekendDay(i)) { // Only update status for weekdays
+      //       const statusKey = `worked_${i}`;
+      //       // Only update to 'submitted' if not already 'approved'
+      //       if (newApprovalStatus[statusKey] !== 'approved') {
+      //         newApprovalStatus[statusKey] = 'submitted';
+      //       }
             
-            usedLeaveTypes.forEach(lt => {
-              const leaveStatusKey = `${lt}_${i}`;
-              if (leaveRows[lt][i] && leaveRows[lt][i] !== 0 && leaveRows[lt][i] !== "") {
-                // Only update to 'submitted' if not already 'approved'
-                if (newApprovalStatus[leaveStatusKey] !== 'approved') {
-                  newApprovalStatus[leaveStatusKey] = 'submitted';
-                }
-              }
-            });
-          }
-        });
-        setApprovalStatus(newApprovalStatus);
-      } else {
+      //       usedLeaveTypes.forEach(lt => {
+      //         const leaveStatusKey = `${lt}_${i}`;
+      //         if (leaveRows[lt][i] && leaveRows[lt][i] !== 0 && leaveRows[lt][i] !== "") {
+      //           // Only update to 'submitted' if not already 'approved'
+      //           if (newApprovalStatus[leaveStatusKey] !== 'approved') {
+      //             newApprovalStatus[leaveStatusKey] = 'submitted';
+      //           }
+      //         }
+      //       });
+      //     }
+      //   });
+      //   setApprovalStatus(newApprovalStatus);
+      if (AttendanceReleaseWeek.fulfilled.match(resultAction)) {
+  toast.success("Week released successfully!");
+
+  // ✅ Lock ALL worked hours and leave fields (make non-editable)
+  const newApprovalStatus = { ...approvalStatus };
+
+  days.forEach((_, i) => {
+    if (!isWeekendDay(i)) {
+      // Lock worked hours
+      newApprovalStatus[`worked_${i}`] = "approved";
+
+      // Lock all leaves
+      usedLeaveTypes.forEach((lt) => {
+        newApprovalStatus[`${lt}_${i}`] = "approved";
+      });
+    }
+  });
+
+  setApprovalStatus(newApprovalStatus);
+
+ } else {
         throw new Error("Failed to release week");
       }
     } catch (err) {
@@ -478,7 +548,10 @@ export default function EmpTimesheet() {
   if (isWeekend) {
     return "#E0E0E0"; // always gray for weekends
   }
-
+//  const isHoliday = holidays.includes(getDateStringForIndex(dayIndex)); // Use your existing function to get the date string
+//   if (isHoliday) {
+//     return "#FFCDD2"; // Light red/pink for holidays (adjust color as needed)
+//   }
   const record = attendanceData?.[dayIndex];
   if (!record) return "white";
 
@@ -564,40 +637,57 @@ export default function EmpTimesheet() {
 
       {/* WORKED HOURS */}
       <div className="flex justify-between items-center py-1 text-sm">
-        <div className="flex-1 font-semibold">Worked Hours</div>
-        <div className="flex gap-5 justify-end flex-1">
-          {hours.map((h, i) => {
-            const isWeekend = isWeekendDay(i);
-            const backgroundColor = getStatusColor(i);
-            const isReadOnly = isFieldReadOnly(i);
-            const isEditable = isFieldEditable(i);
-            
-            return (
-              <input
-                key={i}
-                type="number"
-                value={h}
-                min="0"
-                max="9"
-                disabled={!isEditable}
-                style={{ backgroundColor }}
-                className={`w-17 h-8 text-center border rounded-md ${
-                  !isEditable ? "cursor-not-allowed" : "bg-white"
-                } ${isWeekend ? "text-gray-400" : ""}`}
-                onChange={(e) => {
-                  if (isEditable) {
-                    const newHours = [...hours];
-                    newHours[i] = e.target.value;
-                    setHours(newHours);
-                  }
-                }}
-              />
-            );
-          })}
-          <div className="text-center w-12">{workedTotal}/45</div>
-          <IconButton onClick={(e) => handleMenuOpen(e, "Worked Hours")}><MoreVert /></IconButton>
-        </div>
-      </div>
+  <div className="flex-1 font-semibold">Worked Hours</div>
+  <div className="flex gap-5 justify-end flex-1">
+    {hours.map((h, i) => {
+      const isWeekend = isWeekendDay(i);
+      const backgroundColor = getStatusColor(i);
+      const isReadOnly = isFieldReadOnly(i);
+      const isEditable = isFieldEditable(i);
+
+      // Check if the current day (i) is a holiday
+      const isHoliday = holidays.includes(getDateStringForIndex(i)); // Assume you have a way to map index to date string
+      
+      // If it's a holiday, don't show the input field
+      if (isHoliday) {
+        return (
+          <div
+            key={i}
+           className={`min-w-[70px] h-8 flex items-center justify-center 
+                    border rounded-md mx-1 text-[#FFCDD2] text-red-600 font-semibold`}
+                >
+            H
+          </div>
+        );
+      }
+
+      return (
+        <input
+          key={i}
+          type="number"
+          value={h}
+          min="0"
+          max="9"
+          disabled={!isEditable}
+          style={{ backgroundColor }}
+          className={`w-17 h-8 text-center border rounded-md ${
+            !isEditable ? "cursor-not-allowed" : "bg-white"
+          } ${isWeekend ? "text-gray-400" : ""}`}
+          onChange={(e) => {
+            if (isEditable) {
+              const newHours = [...hours];
+              newHours[i] = e.target.value;
+              setHours(newHours);
+            }
+          }}
+        />
+      );
+    })}
+    <div className="text-center w-12">{workedTotal}/45</div>
+    <IconButton onClick={(e) => handleMenuOpen(e, "Worked Hours")}><MoreVert /></IconButton>
+  </div>
+</div>
+
 
       {/* LEAVES */}
       {usedLeaveTypes.map((lt) => (

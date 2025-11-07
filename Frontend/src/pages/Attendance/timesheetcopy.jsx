@@ -37,10 +37,10 @@ function getMonday(date) {
   return new Date(d.setDate(diff));
 }
 
-// --- Utility: month cycle (1st → end of the month) ---
+// --- Utility: month cycle (10th → 9th next month) ---
 const getMonthDays = (date) => {
-  const start = new Date(date.getFullYear(), date.getMonth(), 1);
-  const end = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+  const start = new Date(date.getFullYear(), date.getMonth(), 10);
+  const end = new Date(date.getFullYear(), date.getMonth() + 1, 9);
   const days = [];
   let current = new Date(start);
 
@@ -48,11 +48,7 @@ const getMonthDays = (date) => {
     const dayName = current.toLocaleDateString("en-US", { weekday: "short" });
     days.push({
       date: new Date(current),
-      // label: `${dayName} / ${current.getDate().toString().padStart(2, "0")}`,
-       label: `${current.getDate().toString().padStart(2, "0")}/${(current.getMonth() + 1)
-        .toString()
-        .padStart(2, "0")} (${dayName})`,
-
+      label: `${dayName} / ${current.getDate().toString().padStart(2, "0")}`,
       dayIndex: current.getDay(),
       isWeekend: dayName === "Sat" || dayName === "Sun",
     });
@@ -218,7 +214,7 @@ export default function Timesheet() {
       dataMap[dateKey] = item;
     });
 
-    // 🔹 Build month days (1st → end of the month)
+    // 🔹 Build month days (10th → 9th next month)
     const monthDays = getMonthDays(monthStart);
 
     // 🔹 Create structured data for all days
@@ -250,7 +246,7 @@ export default function Timesheet() {
       };
     });
 
-    console.log("🗓️ Final Monthly Data (mapped to 1st→end of the month):", monthlyData);
+    console.log("🗓️ Final Monthly Data (mapped to 10th→9th):", monthlyData);
 
     // 🔹 Set worked hours & leave arrays
     const workedArray = monthlyData.map((d) => Number(d.worked_hours) || 0);
@@ -319,8 +315,8 @@ export default function Timesheet() {
           .padStart(2, "0")}/${d.getFullYear()}`;
       return `${fmt(weekStart)} - ${fmt(endDate)}`;
     } else {
-      const start = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1);
-      const end = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
+      const start = new Date(monthStart.getFullYear(), monthStart.getMonth(), 10);
+      const end = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 9);
 
       const startMonth = start.toLocaleString("default", { month: "short" });
       const endMonth = end.toLocaleString("default", { month: "short" });
@@ -341,7 +337,7 @@ export default function Timesheet() {
   };
 
   const changeMonth = (delta) => {
-    const newMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() + delta, 1);
+    const newMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() + delta, 10);
     setMonthStart(newMonth);
   };
 
@@ -356,7 +352,7 @@ export default function Timesheet() {
     } else {
       // Switching from monthly to weekly
       // Set week start to the first Monday of the current month
-      const firstDayOfMonth = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1);
+      const firstDayOfMonth = new Date(monthStart.getFullYear(), monthStart.getMonth(), 10);
       const newWeekStart = getMonday(firstDayOfMonth);
       setWeekStart(newWeekStart);
       setViewMode("weekly");
@@ -493,7 +489,7 @@ export default function Timesheet() {
     if (viewMode === "weekly") {
       setWeekStart(getMonday(date));
     } else {
-      setMonthStart(new Date(date.getFullYear(), date.getMonth(), 1));
+      setMonthStart(new Date(date.getFullYear(), date.getMonth(), 10));
     }
     setCalendarAnchor(null);
   };
@@ -552,19 +548,18 @@ export default function Timesheet() {
       ? Array.from({ length: 7 }, (_, i) => {
         const date = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + i);
         const dayName = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][date.getDay()];
-            const month = (date.getMonth() + 1).toString().padStart(2, "0");
-        return { dayIndex: date.getDay(), 
-         label: `${dayName} / ${date.getDate().toString().padStart(2, "0")}/${month}`, 
-          date  };
+        return { dayIndex: date.getDay(), label: `${dayName} / ${date.getDate().toString().padStart(2, "0")}`, date };
       })
       : getMonthDays(monthStart);
 
   const currentWorkedHours = viewMode === "weekly" ? workedHours : monthlyWorkedHours;
   const workedTotal = (currentWorkedHours || []).reduce((a, b) => a + Number(b || 0), 0);
+
   const rowTotals = {};
   usedLeaveTypes.forEach((lt) => {
     rowTotals[lt] = (leaveRows[lt] || Array(days.length).fill(0)).reduce((a, b) => a + Number(b || 0), 0);
   });
+
   const grandTotal = workedTotal + Object.values(rowTotals).reduce((a, b) => a + b, 0);
 
   // --- API Range (10 → 9)
