@@ -37,10 +37,10 @@ function getMonday(date) {
   return new Date(d.setDate(diff));
 }
 
-// --- Utility: month cycle (10th → 9th next month) ---
+// --- Utility: month cycle (1st → end of the month) ---
 const getMonthDays = (date) => {
-  const start = new Date(date.getFullYear(), date.getMonth(), 10);
-  const end = new Date(date.getFullYear(), date.getMonth() + 1, 9);
+  const start = new Date(date.getFullYear(), date.getMonth(), 1);
+  const end = new Date(date.getFullYear(), date.getMonth() + 1, 0);
   const days = [];
   let current = new Date(start);
 
@@ -218,7 +218,7 @@ export default function Timesheet() {
       dataMap[dateKey] = item;
     });
 
-    // 🔹 Build month days (10th → 9th next month)
+    // 🔹 Build month days (1st → end of the month)
     const monthDays = getMonthDays(monthStart);
 
     // 🔹 Create structured data for all days
@@ -250,7 +250,7 @@ export default function Timesheet() {
       };
     });
 
-    console.log("🗓️ Final Monthly Data (mapped to 10th→9th):", monthlyData);
+    console.log("🗓️ Final Monthly Data (mapped to 1st→end of the month):", monthlyData);
 
     // 🔹 Set worked hours & leave arrays
     const workedArray = monthlyData.map((d) => Number(d.worked_hours) || 0);
@@ -319,8 +319,8 @@ export default function Timesheet() {
           .padStart(2, "0")}/${d.getFullYear()}`;
       return `${fmt(weekStart)} - ${fmt(endDate)}`;
     } else {
-      const start = new Date(monthStart.getFullYear(), monthStart.getMonth(), 10);
-      const end = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 9);
+      const start = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1);
+      const end = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
 
       const startMonth = start.toLocaleString("default", { month: "short" });
       const endMonth = end.toLocaleString("default", { month: "short" });
@@ -341,7 +341,7 @@ export default function Timesheet() {
   };
 
   const changeMonth = (delta) => {
-    const newMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() + delta, 10);
+    const newMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() + delta, 1);
     setMonthStart(newMonth);
   };
 
@@ -356,7 +356,7 @@ export default function Timesheet() {
     } else {
       // Switching from monthly to weekly
       // Set week start to the first Monday of the current month
-      const firstDayOfMonth = new Date(monthStart.getFullYear(), monthStart.getMonth(), 10);
+      const firstDayOfMonth = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1);
       const newWeekStart = getMonday(firstDayOfMonth);
       setWeekStart(newWeekStart);
       setViewMode("weekly");
@@ -493,7 +493,7 @@ export default function Timesheet() {
     if (viewMode === "weekly") {
       setWeekStart(getMonday(date));
     } else {
-      setMonthStart(new Date(date.getFullYear(), date.getMonth(), 10));
+      setMonthStart(new Date(date.getFullYear(), date.getMonth(), 1));
     }
     setCalendarAnchor(null);
   };
@@ -552,7 +552,10 @@ export default function Timesheet() {
       ? Array.from({ length: 7 }, (_, i) => {
         const date = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + i);
         const dayName = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][date.getDay()];
-        return { dayIndex: date.getDay(), label: `${dayName} / ${date.getDate().toString().padStart(2, "0")}`, date };
+            const month = (date.getMonth() + 1).toString().padStart(2, "0");
+        return { dayIndex: date.getDay(), 
+         label: `${dayName} / ${date.getDate().toString().padStart(2, "0")}/${month}`, 
+          date  };
       })
       : getMonthDays(monthStart);
 
@@ -681,41 +684,61 @@ export default function Timesheet() {
             {/* Worked Hours */}
             <TableRow>
               <TableCell sx={{ fontWeight: "bold" }}>Worked Hours</TableCell>
-              {(currentWorkedHours || Array(days.length).fill(0)).map((h, i) => (
-                <TableCell key={i} align="center">
-                  <input
-                    type="number"
-                    value={h}
-                    min="0"
-                    max="9"
-                    step="0.5"
-                    style={{
-                      width: 50,
-                      textAlign: "center",
-                      backgroundColor: days[i].dayIndex === 0 || days[i].dayIndex === 6 ? "#f0f0f0" : "#fff",
-                      border: "1px solid #ccc",
-                      borderRadius: 4,
-                    }}
-                    disabled={!isEditMode || days[i].dayIndex === 0 || days[i].dayIndex === 6}
-                    onChange={(e) => {
-                      const val = parseHour(e.target.value);
-                      if (viewMode === "weekly") {
-                        setWorkedHours((prev) => {
-                          const arr = [...prev];
-                          arr[i] = val;
-                          return arr;
-                        });
-                      } else {
-                        setMonthlyWorkedHours((prev) => {
-                          const arr = [...prev];
-                          arr[i] = val;
-                          return arr;
-                        });
-                      }
-                    }}
-                  />
-                </TableCell>
-              ))}
+     {(currentWorkedHours || Array(days.length).fill(0)).map((h, i) => {
+  const isWeekend = days[i].dayIndex === 0 || days[i].dayIndex === 6;
+  const isHoliday = days[i].leaveType === "Holiday" && h === 0; // ✅ both conditions must match
+
+  return (
+    <TableCell key={i} align="center">
+      {isHoliday ? (
+        // 👇 Show "H" only when leaveType = "Holiday" AND workedHours = 0
+        <Typography
+          variant="body2"
+          sx={{
+            color: "red",
+            fontWeight: "bold",
+          }}
+        >
+          H
+        </Typography>
+      ) : (
+        // 👇 Otherwise show the input box
+        <input
+          type="number"
+          value={h}
+          min="0"
+          max="9"
+          step="0.5"
+          style={{
+            width: 50,
+            textAlign: "center",
+            backgroundColor: isWeekend ? "#f0f0f0" : "#fff",
+            border: "1px solid #ccc",
+            borderRadius: 4,
+          }}
+          disabled={!isEditMode || isWeekend}
+          onChange={(e) => {
+            const val = parseHour(e.target.value);
+            if (viewMode === "weekly") {
+              setWorkedHours((prev) => {
+                const arr = [...prev];
+                arr[i] = val;
+                return arr;
+              });
+            } else {
+              setMonthlyWorkedHours((prev) => {
+                const arr = [...prev];
+                arr[i] = val;
+                return arr;
+              });
+            }
+          }}
+        />
+      )}
+    </TableCell>
+  );
+})}
+
               <TableCell align="center">{`${workedTotal}/45`}</TableCell>
               <TableCell align="center">
                 <IconButton onClick={(e) => handleMenuOpen(e, "Worked Hours")}>
