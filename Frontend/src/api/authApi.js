@@ -311,3 +311,19 @@ export const AttendanceCheckLeaveEligibilityApi = (employeeId, leaveType, reques
     params: { employeeId, leaveType, requestedDays },
   });
 };
+
+
+export const Admin_Reject_Weekly_Attendance_Api = (employeeId, from, to) => {
+  return AttendanceClient.post(
+    `${AUTH_API.ADMIN}/attendance/weekly/reject`,
+    { employeeId, from, to }
+  );
+};
+
+//  Reject Monthly Attendance
+export const Admin_Reject_Monthly_Attendance_Api = (employeeId, from, to) => {
+  return AttendanceClient.post(
+    `${AUTH_API.ADMIN}/attendance/monthly/reject`,
+    { employeeId, from, to }
+  );
+};

@@ -1356,41 +1356,55 @@ export const updateMonthlyApprovalStatus = async (req, res) => {
 /* -------------------------------------------------------------------------- */
 export const adminUpdateWorkedHours = async (req, res) => {
   try {
-    const { employeeId, date, worked_hours, type } = req.body;
+    const updates = Array.isArray(req.body) ? req.body : [req.body]; // handle both single & multiple
+    const updatedRows = [];
 
-    if (!employeeId || !date || worked_hours === undefined || !type) {
-      return res.status(400).json({ error: "Missing required fields" });
+    for (const update of updates) {
+      const { employeeId, date, worked_hours, type } = update;
+
+      // ✅ Validate required fields
+      if (!employeeId || !date || worked_hours === undefined || !type) {
+        console.warn("⚠️ Skipping invalid update record:", update);
+        continue;
+      }
+
+      const statusField = type === "monthly" ? "monthly_status" : "weekly_status";
+
+      const query = `
+        UPDATE attendance
+        SET worked_hours = $1
+        WHERE employee_id = $2
+          AND date = $3
+          AND ${statusField} = 'Pending_approval'
+        RETURNING *;
+      `;
+
+      const { rows } = await pool.query(query, [worked_hours, employeeId, date]);
+
+      if (rows.length > 0) {
+        updatedRows.push(rows[0]);
+      }
     }
 
-    const statusField = type === "monthly" ? "monthly_status" : "weekly_status";
-
-    const query = `
-      UPDATE attendance
-      SET worked_hours = $1
-      WHERE employee_id = $2
-        AND date = $3
-        AND ${statusField} = 'Pending_approval'
-      RETURNING *;
-    `;
-
-    const { rows } = await pool.query(query, [worked_hours, employeeId, date]);
-
-    if (rows.length === 0) {
+    // ✅ If no records updated, respond accordingly
+    if (updatedRows.length === 0) {
       return res.status(400).json({
-        message: `No pending ${type} record found for this date (already approved or invalid)`,
+        message: `No pending records found for the provided dates (already approved or invalid).`,
       });
     }
 
+    // ✅ Final success response
     res.status(200).json({
-      message: `Worked hours updated successfully for ${type}`,
-      data: rows,
+      message: `Worked hours updated successfully for ${updatedRows.length} record(s).`,
+      updatedCount: updatedRows.length,
+      data: updatedRows,
     });
+
   } catch (err) {
     console.error("Admin Update Worked Hours Error:", err.message);
     res.status(500).json({ error: "Failed to update worked hours" });
   }
 };
-
 
 
 

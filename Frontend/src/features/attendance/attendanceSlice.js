@@ -4,7 +4,7 @@ import { AttendanceSaveallApi,AttendanceFetchAllApi ,AttendanceFetchExistingWeek
   AttendanceFetchByEmployeeProjectApi,AttendanceReleaseWeekApi,
 AdminAttendancFetchWeeklyDataByIdApi,Admin_Approve_Weekly_Attendance_Api,
 AdminAttendancFetchMonthlyDataByIdApi,AttendanceFetchAllbasedonMonthApi,
-Admin_Approve_monthly_Attendance_Api,applyParentalLeaveApi, approveParentalLeaveApi,fetchPendingParentalLeavesApi, AttendanceCheckLeaveEligibilityApi} from "../../api/authApi";
+Admin_Approve_monthly_Attendance_Api,applyParentalLeaveApi, approveParentalLeaveApi,fetchPendingParentalLeavesApi, AttendanceCheckLeaveEligibilityApi, Admin_Reject_Weekly_Attendance_Api, Admin_Reject_Monthly_Attendance_Api} from "../../api/authApi";
 
 
 //Employee
@@ -188,6 +188,32 @@ export const checkLeaveEligibility = createAsyncThunk(
   }
 );
 
+//  Reject Weekly Attendance
+export const Admin_Reject_Weekly_Attendance = createAsyncThunk(
+  "admin/rejectWeekly",
+  async ({ employeeId, from, to }, thunkAPI) => {
+    try {
+      const res = await Admin_Reject_Weekly_Attendance_Api(employeeId, from, to);
+      return res.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+
+//  Reject Monthly Attendance
+export const Admin_Reject_Monthly_Attendance = createAsyncThunk(
+  "admin/rejectMonthly",
+  async ({ employeeId, from, to }, thunkAPI) => {
+    try {
+      const res = await Admin_Reject_Monthly_Attendance_Api(employeeId, from, to);
+      return res.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+
 const attendanceSlice = createSlice({
   name: "attendance",
   initialState: {
@@ -321,6 +347,62 @@ const attendanceSlice = createSlice({
   state.loading = false;
   state.error = action.payload;
 })
+// .addCase(Admin_Update_Worked_Hours.pending, (state) => {
+//   state.loading = true;
+// })
+// .addCase(Admin_Update_Worked_Hours.fulfilled, (state, action) => {
+//   state.loading = false;
+  
+//   if (action.payload?.data?.length > 0) {
+//     const updatedRecords = action.payload.data;
+
+//     // Update only the matching dates in attendanceData
+//     state.attendanceData = state.attendanceData.map((item) => {
+//       const match = updatedRecords.find((u) => u.date === item.date);
+//       return match ? { ...item, worked_hours: match.worked_hours } : item;
+//     });
+//   }
+// })
+// .addCase(Admin_Update_Worked_Hours.rejected, (state, action) => {
+//   state.loading = false;
+//   state.error = action.payload;
+// })
+
+
+.addCase(Admin_Reject_Weekly_Attendance.pending, (state) => {
+  state.loading = true;
+})
+.addCase(Admin_Reject_Weekly_Attendance.fulfilled, (state, action) => {
+  state.loading = false;
+  state.attendanceData = state.attendanceData.map((item) =>
+    new Date(item.date) >= new Date(action.meta.arg.from) &&
+    new Date(item.date) <= new Date(action.meta.arg.to)
+      ? { ...item, weekly_status: "rejected" }
+      : item
+  );
+})
+.addCase(Admin_Reject_Weekly_Attendance.rejected, (state, action) => {
+  state.loading = false;
+  state.error = action.payload;
+})
+
+
+.addCase(Admin_Reject_Monthly_Attendance.pending, (state) => {
+  state.loading = true;
+})
+.addCase(Admin_Reject_Monthly_Attendance.fulfilled, (state, action) => {
+  state.loading = false;
+  state.attendanceData = state.attendanceData.map((item) =>
+    new Date(item.date) >= new Date(action.meta.arg.from) &&
+    new Date(item.date) <= new Date(action.meta.arg.to)
+      ? { ...item, monthly_status: "rejected" }
+      : item
+  );
+})
+.addCase(Admin_Reject_Monthly_Attendance.rejected, (state, action) => {
+  state.loading = false;
+  state.error = action.payload;
+});
   },
 });
 
