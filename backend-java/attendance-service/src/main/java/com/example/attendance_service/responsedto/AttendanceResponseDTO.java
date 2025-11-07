@@ -224,23 +224,6 @@ public class AttendanceResponseDTO {
 
 
 
-	// ✅ Custom parameterized constructor used by stream mapping
-    public AttendanceResponseDTO(UUID id, LocalDate date, Double workedHours, Double totalWorkedHours,
-                                 String status, String leaveType, Integer year, String gender,
-                                 UUID employeeId, String employeeName, String employeeGender,
-                                 UUID projectId, String projectName) {
-        this.id = id;
-        this.date = date;
-        this.workedHours = workedHours;
-        this.totalWorkedHours = totalWorkedHours;
-        this.status = status;
-        this.leaveType = leaveType;
-        this.year = year;
-        this.gender = gender;
-        this.employeeId = employeeId;
-        this.employeeName = employeeName;
-        this.employeeGender = employeeGender;
-        this.projectId = projectId;
-        this.projectName = projectName;
-    }
+	
+    
 }
