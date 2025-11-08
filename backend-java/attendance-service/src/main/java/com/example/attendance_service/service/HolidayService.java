@@ -25,8 +25,8 @@ public class HolidayService {
 
     private final List<String> allowedNames = List.of(
         "Sankranti", "Republic Day", "Maha Shivaratri", "Ugadi",
-         "International Labour Day", "Ganesh Chaturthi", "Independence Day",
-        "Gandhi Jayanti", "Dussehra", "Diwali", "Christmas", "Varalakshmi Vratam"
+         "International Worker's Day", "Ganesh Chaturthi", "Independence Day",
+        "Gandhi Jayanti", "Dussehra", "Diwali", "Christmas"
     );
 
     public HolidayService(HolidayRepository repo) {

@@ -4,7 +4,7 @@ export const API_BASES = {
   ADMIN: import.meta.env.VITE_ADMIN_URL || "http://localhost:5002",
   EMPLOYEE: import.meta.env.VITE_EMPLOYEE_URL || "http://localhost:5004",
   PROJECT:import.meta.env.VITE_Project_URL || "http://localhost:8080/api",
-  ATTENDANCE:import.meta.env.VITE_Attendance_URL || "http://localhost:9090/api",
+  ATTENDANCE:import.meta.env.VITE_Attendance_URL || "http://localhost:9091/api",
 };
 
 
