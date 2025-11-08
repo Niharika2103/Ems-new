@@ -12,6 +12,8 @@ export const API_BASES = {
 //   // SUPERADMIN: import.meta.env.VITE_SUPERADMIN_URL || "http://20.40.57.43:5001/auth/superadmin",
 //   // ADMIN: import.meta.env.VITE_ADMIN_URL || "http://20.40.57.43:5002/admin",
 //   EMPLOYEE: import.meta.env.VITE_EMPLOYEE_URL || "http://20.40.57.43:5004",
+  // PROJECT:import.meta.env.VITE_Project_URL || "http://20.40.57.43:8081/api",
+
 // };
 
 // Auth endpoints
