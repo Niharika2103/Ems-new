@@ -1,4 +1,5 @@
 package com.example.attendance_service.model;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -37,6 +38,17 @@ public class UserEmployeeMasterEntity {
     @Column(name = "gender", nullable = false)
     private String gender;
     
+    @Column(name = "date_of_joining")
+    private LocalDate dateOfJoining;
+
+
+	public LocalDate getDateOfJoining() {
+		return dateOfJoining;
+	}
+
+	public void setDateOfJoining(LocalDate dateOfJoining) {
+		this.dateOfJoining = dateOfJoining;
+	}
 
 	public void setEmployeeName(String employeeName) {
 		this.employeeName = employeeName;
