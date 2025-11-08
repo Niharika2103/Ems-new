@@ -195,6 +195,9 @@ export default function Timesheet() {
     setLeaveRows(newLeaveRows);
     setApprovalStatus(newApprovalStatus);
     setUsedLeaveTypes(allLeaveTypes.filter((lt) => newLeaveRows[lt].some((v) => v > 0)));
+    // ✅ Initialize Worked Hours approval status (Pending by default)
+newApprovalStatus["Worked Hours"] = Array(7).fill("pending");
+
 
     // 5️⃣ Save per-day status color array
     const colorArray = weeklyData.map((item) => getStatusBackgroundColor(item, "weekly"));
@@ -422,33 +425,119 @@ export default function Timesheet() {
     alert("Timesheet saved!");
   };
 
+  // const handleApproveAll = () => {
+  //   const newApprovalStatus = { ...approvalStatus };
+    
+  //   Object.keys(leaveRows).forEach(leaveType => {
+  //     newApprovalStatus[leaveType] = leaveRows[leaveType].map((value, index) => 
+  //       value > 0 ? "approved" : newApprovalStatus[leaveType][index] || "pending"
+  //     );
+  //   });
+    
+  //   setApprovalStatus(newApprovalStatus);
+  //   alert("All leaves approved!");
+  // };
+
   const handleApproveAll = () => {
-    const newApprovalStatus = { ...approvalStatus };
+  const newApprovalStatus = { ...approvalStatus };
+
+  // ✅ Include Worked Hours
+  newApprovalStatus["Worked Hours"] = (viewMode === "weekly"
+    ? workedHours
+    : monthlyWorkedHours
+  ).map(() => "approved");
+
+  Object.keys(leaveRows).forEach((leaveType) => {
+    newApprovalStatus[leaveType] = leaveRows[leaveType].map((value, index) =>
+      value > 0 ? "approved" : newApprovalStatus[leaveType][index] || "pending"
+    );
+  });
+
+  setApprovalStatus(newApprovalStatus);
+  alert("All approved!");
+};
+
+
+  // const handleRejectAll = () => {
+  //   const newApprovalStatus = { ...approvalStatus };
     
-    Object.keys(leaveRows).forEach(leaveType => {
-      newApprovalStatus[leaveType] = leaveRows[leaveType].map((value, index) => 
-        value > 0 ? "approved" : newApprovalStatus[leaveType][index] || "pending"
-      );
-    });
+  //   Object.keys(newApprovalStatus).forEach(leaveType => {
+  //     newApprovalStatus[leaveType] = newApprovalStatus[leaveType].map(() => "pending");
+  //   });
     
-    setApprovalStatus(newApprovalStatus);
-    alert("All leaves approved!");
-  };
+  //   setApprovalStatus(newApprovalStatus);
+  //   alert("All leaves rejected!");
+  // };
 
   const handleRejectAll = () => {
-    const newApprovalStatus = { ...approvalStatus };
-    
-    Object.keys(newApprovalStatus).forEach(leaveType => {
-      newApprovalStatus[leaveType] = newApprovalStatus[leaveType].map(() => "pending");
-    });
-    
-    setApprovalStatus(newApprovalStatus);
-    alert("All leaves rejected!");
-  };
+  const newApprovalStatus = { ...approvalStatus };
+
+  // ✅ Include Worked Hours
+  newApprovalStatus["Worked Hours"] = (viewMode === "weekly"
+    ? workedHours
+    : monthlyWorkedHours
+  ).map(() => "rejected");
+
+  Object.keys(newApprovalStatus).forEach((leaveType) => {
+    if (leaveType !== "Worked Hours") {
+      newApprovalStatus[leaveType] = newApprovalStatus[leaveType].map(() => "rejected");
+    }
+  });
+
+  setApprovalStatus(newApprovalStatus);
+  alert("All rejected!");
+};
 
   const handleEditAll = () => {
     setIsEditMode(true);
   };
+
+  // ✅ Approve Weekly button logic
+const handleApprovedWeek = () => {
+  const newStatus = { ...approvalStatus };
+
+  days.forEach((day, i) => {
+    if (day.dayIndex !== 0 && day.dayIndex !== 6) { // skip weekends
+      // ✅ Worked Hours
+      if (!newStatus["Worked Hours"]) newStatus["Worked Hours"] = [];
+      newStatus["Worked Hours"][i] = "approved";
+
+      // ✅ Leave Rows
+      usedLeaveTypes.forEach((lt) => {
+        if (!newStatus[lt]) newStatus[lt] = [];
+        if (leaveRows[lt]?.[i] > 0) {
+          newStatus[lt][i] = "approved";
+        }
+      });
+    }
+  });
+
+  setApprovalStatus(newStatus);
+  alert("✅ Weekly timesheet approved successfully!");
+};
+
+// ❌ Reject Weekly button logic
+const handleRejectWeek = () => {
+  const newStatus = { ...approvalStatus };
+
+  days.forEach((day, i) => {
+    if (day.dayIndex !== 0 && day.dayIndex !== 6) { // skip weekends
+      if (!newStatus["Worked Hours"]) newStatus["Worked Hours"] = [];
+      newStatus["Worked Hours"][i] = "rejected";
+
+      usedLeaveTypes.forEach((lt) => {
+        if (!newStatus[lt]) newStatus[lt] = [];
+        if (leaveRows[lt]?.[i] > 0) {
+          newStatus[lt][i] = "rejected";
+        }
+      });
+    }
+  });
+
+  setApprovalStatus(newStatus);
+  alert("❌ Weekly timesheet rejected!");
+};
+
 
   // Handle individual cell approval
   const handleCellApproval = (leaveType, dayIndex) => {
@@ -463,32 +552,60 @@ export default function Timesheet() {
   };
 
   // Enhanced color coding function
-  const getInputBackgroundColor = (leaveType, dayIndex, value) => {
-    // For weekends - light gray background
-    if (days[dayIndex].dayIndex === 0 || days[dayIndex].dayIndex === 6) {
-      return "#f0f0f0";
-    }
+  // const getInputBackgroundColor = (leaveType, dayIndex, value) => {
+  //   // For weekends - light gray background
+  //   if (days[dayIndex].dayIndex === 0 || days[dayIndex].dayIndex === 6) {
+  //     return "#f0f0f0";
+  //   }
     
-    // For leave cells with values
-    if (value > 0) {
-      const status = approvalStatus[leaveType]?.[dayIndex] || "pending";
+  //   // For leave cells with values
+  //   if (value > 0) {
+  //     const status = approvalStatus[leaveType]?.[dayIndex] || "pending";
       
-      switch (status) {
-        case "approved":
-          return "#d4edda"; // Light green for approved
-        case "rejected":
-          return "#f8d7da"; // Light red for rejected
-        case "pending":
-        default:
-          return "#fff3cd"; // Light yellow for pending approval
-      }
-    }
+  //     switch (status) {
+  //       case "approved":
+  //         return "#d4edda"; // Light green for approved
+  //       case "rejected":
+  //         return "#f8d7da"; // Light red for rejected
+  //       case "pending":
+  //       default:
+  //         return "#fff3cd"; // Light yellow for pending approval
+  //     }
+  //   }
     
-    // Default white background for weekdays with no leave
-    return "#fff";
-  };
+  //   // Default white background for weekdays with no leave
+  //   return "#fff";
+  // };
+// ✅ Updated version — keeps Sat/Sun as gray with no status color
+const getInputBackgroundColor = (leaveType, dayIndex, value) => {
+  // For Saturday (6) and Sunday (0): always gray, no status logic
+  if (days[dayIndex].dayIndex === 0 || days[dayIndex].dayIndex === 6) {
+    return "#f0f0f0"; // weekend color
+  }
 
-  // Handle calendar date selection
+  // For weekdays — apply approval status color
+  const status =
+    approvalStatus[leaveType]?.[dayIndex] ||
+    approvalStatus["Worked Hours"]?.[dayIndex] ||
+    "pending";
+
+  if (value > 0 || leaveType === "Worked Hours") {
+    switch (status) {
+      case "approved":
+        return "#d4edda"; // green
+      case "rejected":
+        return "#f8d7da"; // red
+      default:
+        return "#fff3cd"; // yellow pending
+    }
+  }
+
+  return "#fff"; // normal weekdays
+};
+
+
+
+// Handle calendar date selection
   const handleCalendarDateSelect = (date) => {
     if (viewMode === "weekly") {
       setWeekStart(getMonday(date));
@@ -680,7 +797,7 @@ export default function Timesheet() {
           </TableHead>
           <TableBody>
             {/* Worked Hours */}
-            <TableRow>
+            {/* <TableRow>
               <TableCell sx={{ fontWeight: "bold" }}>Worked Hours</TableCell>
               {(currentWorkedHours || Array(days.length).fill(0)).map((h, i) => (
                 <TableCell key={i} align="center">
@@ -723,7 +840,72 @@ export default function Timesheet() {
                   <MoreVert />
                 </IconButton>
               </TableCell>
-            </TableRow>
+            </TableRow> */}
+
+            {/* Worked Hours */}
+<TableRow>
+  <TableCell sx={{ fontWeight: "bold" }}>Worked Hours</TableCell>
+  {(currentWorkedHours || Array(days.length).fill(0)).map((h, i) => (
+    <TableCell key={i} align="center">
+      <input
+        type="number"
+        value={h}
+        min="0"
+        max="9"
+        step="0.5"
+        style={{
+          width: 50,
+          textAlign: "center",
+          backgroundColor: getInputBackgroundColor("Worked Hours", i, h),
+          border: "1px solid #ccc",
+          borderRadius: 4,
+        }}
+        disabled={!isEditMode || days[i].dayIndex === 0 || days[i].dayIndex === 6}
+        onChange={(e) => {
+          const val = parseHour(e.target.value);
+          if (viewMode === "weekly") {
+            setWorkedHours((prev) => {
+              const arr = [...prev];
+              arr[i] = val;
+              return arr;
+            });
+          } else {
+            setMonthlyWorkedHours((prev) => {
+              const arr = [...prev];
+              arr[i] = val;
+              return arr;
+            });
+          }
+
+          // ✅ Mark as pending if value changes
+          const newApprovalStatus = { ...approvalStatus };
+          if (newApprovalStatus["Worked Hours"]) {
+            newApprovalStatus["Worked Hours"][i] = "pending";
+            setApprovalStatus(newApprovalStatus);
+          }
+        }}
+      />
+    {/* ✅ Hide status text for Saturday and Sunday */}
+{!isEditMode && days[i].dayIndex !== 0 && days[i].dayIndex !== 6 && (
+  <Typography variant="caption" display="block" color="text.secondary">
+    {approvalStatus["Worked Hours"]?.[i] === "approved"
+      ? "✓ Approved"
+      : approvalStatus["Worked Hours"]?.[i] === "rejected"
+      ? "✗ Rejected"
+      : "Pending"}
+  </Typography>
+)}
+
+    </TableCell>
+  ))}
+  <TableCell align="center">{`${workedTotal}/45`}</TableCell>
+  <TableCell align="center">
+    <IconButton onClick={(e) => handleMenuOpen(e, "Worked Hours")}>
+      <MoreVert />
+    </IconButton>
+  </TableCell>
+</TableRow>
+
 
             {/* Leave Rows */}
             {usedLeaveTypes.map((lt) => (
@@ -767,12 +949,19 @@ export default function Timesheet() {
                         }
                       }}
                     />
-                    {!isEditMode && v > 0 && (
-                      <Typography variant="caption" display="block" color="text.secondary">
-                        {approvalStatus[lt]?.[i] === "approved" ? "✓ Approved" : 
-                         approvalStatus[lt]?.[i] === "rejected" ? "✗ Rejected" : "Pending"}
-                      </Typography>
-                    )}
+                    {/* ✅ Hide status text for Saturday and Sunday */}
+{/* ✅ Show status only for cells with data (v > 0) and weekdays */}
+{!isEditMode && v > 0 && days[i].dayIndex !== 0 && days[i].dayIndex !== 6 && (
+  <Typography variant="caption" display="block" color="text.secondary">
+    {approvalStatus[lt]?.[i] === "approved"
+      ? "✓ Approved"
+      : approvalStatus[lt]?.[i] === "rejected"
+      ? "✗ Rejected"
+      : "Pending"}
+  </Typography>
+)}
+
+
                   </TableCell>
                 ))}
                 <TableCell align="center">{rowTotals[lt]}</TableCell>
@@ -831,7 +1020,7 @@ export default function Timesheet() {
           </Button>
         </Box>
         <Box display="flex" gap={1}>
-          {isEditMode ? (
+          {/* {isEditMode ? (
             <Button 
               variant="contained" 
               color="success" 
@@ -868,7 +1057,26 @@ export default function Timesheet() {
                 {viewMode === "weekly" ? "Approve Weekly" : "Approve Monthly"}
               </Button>
             </>
-          )}
+          )} */}
+          {/* ✅ Only Approve Weekly & Reject buttons */}
+<>
+  <Button
+    variant="contained"
+    color="success"
+    onClick={handleApprovedWeek}
+  >
+    Approve Weekly
+  </Button>
+
+  <Button
+    variant="contained"
+    color="error"
+    onClick={handleRejectWeek}
+  >
+    Reject Weekly
+  </Button>
+</>
+
         </Box>
       </Box>
 
