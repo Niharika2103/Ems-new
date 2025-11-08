@@ -4,9 +4,15 @@ export const API_BASES = {
   ADMIN: import.meta.env.VITE_ADMIN_URL || "http://localhost:5002",
   EMPLOYEE: import.meta.env.VITE_EMPLOYEE_URL || "http://localhost:5004",
   PROJECT:import.meta.env.VITE_Project_URL || "http://localhost:8080/api",
+<<<<<<< HEAD
   ATTENDANCE:import.meta.env.VITE_Attendance_URL || "http://localhost:9090/api",
 }
   
+=======
+  ATTENDANCE:import.meta.env.VITE_Attendance_URL || "http://localhost:9091/api",
+};
+
+>>>>>>> 29d9e2fb56f5d7c033f414fba40c2d2c1d34051a
 
 // export const API_BASES = {
 //   // SUPERADMIN: import.meta.env.VITE_SUPERADMIN_URL || "http://20.40.57.43:5001/auth/superadmin",
