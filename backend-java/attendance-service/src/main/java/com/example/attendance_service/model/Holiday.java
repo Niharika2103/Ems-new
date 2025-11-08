@@ -1,8 +1,7 @@
 package com.example.attendance_service.model;
 
 import jakarta.persistence.*;
-import lombok.*;  // ✅ includes @Builder, @Getter, @Setter, etc.
-
+import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
