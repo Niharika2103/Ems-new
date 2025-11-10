@@ -1180,9 +1180,9 @@ const tileContent = ({ date, view }) => {
               >
                 Edit
               </Button> */}
-              <Button variant="contained" color="success" onClick={handleApproved}>
+              {/* <Button variant="contained" color="success" onClick={handleApproved}>
                 {viewMode === "weekly" ? "Approve Weekly" : "Approve Monthly"}
-              </Button>
+              </Button> */}
             </>
           
           {/* ✅ Only Approve Weekly & Reject buttons
