@@ -25,7 +25,9 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   AdminAttendancFetchWeeklyDataById, Admin_Approve_Weekly_Attendance,
   AdminAttendancFetchMonthlyDataById,
-  Admin_Approve_monthly_Attendance
+  Admin_Approve_monthly_Attendance,
+  Admin_Reject_Weekly_Attendance,
+  Admin_Reject_Monthly_Attendance,
 } from "../../features/attendance/attendanceSlice";
 import { useLocation } from "react-router-dom";
 
@@ -561,24 +563,70 @@ const tileContent = ({ date, view }) => {
   //   alert("All leaves rejected!");
   // };
 
+  // const handleRejectAll = () => {
+  //   const newApprovalStatus = { ...approvalStatus };
+
+  //   // ✅ Include Worked Hours
+  //   newApprovalStatus["Worked Hours"] = (viewMode === "weekly"
+  //     ? workedHours
+  //     : monthlyWorkedHours
+  //   ).map(() => "rejected");
+
+  //   Object.keys(newApprovalStatus).forEach((leaveType) => {
+  //     if (leaveType !== "Worked Hours") {
+  //       newApprovalStatus[leaveType] = newApprovalStatus[leaveType].map(() => "rejected");
+  //     }
+  //   });
+
+  //   setApprovalStatus(newApprovalStatus);
+  //   alert("All rejected!");
+  // };
+
   const handleRejectAll = () => {
+    if (!employeeId) {
+      alert("Employee ID is required!");
+      return;
+    }
+  
+    let fromDate, toDate;
+  
+    if (viewMode === "weekly") {
+      const from = new Date(weekStart);
+      const to = new Date(weekStart);
+      to.setDate(weekStart.getDate() + 6);
+      fromDate = from.toISOString().slice(0, 10);
+      toDate = to.toISOString().slice(0, 10);
+  
+      dispatch(Admin_Reject_Weekly_Attendance({ employeeId, from: fromDate, to: toDate }))
+        .unwrap()
+        .then((res) => {
+          const message = res?.message || `❌ Weekly Timesheet Rejected!\nRange: ${fromDate} → ${toDate}`;
+          alert(message);
+        })
+        .catch((err) => console.error("❌ Weekly Reject Error:", err));
+    } else if (viewMode === "monthly") {
+      const from = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1);
+      const to = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
+      fromDate = from.toISOString().slice(0, 10);
+      toDate = to.toISOString().slice(0, 10);
+  
+      dispatch(Admin_Reject_Monthly_Attendance({ employeeId, from: fromDate, to: toDate }))
+        .unwrap()
+        .then((res) => {
+          const message = res?.message || `❌ Monthly Timesheet Rejected!\nRange: ${fromDate} → ${toDate}`;
+          alert(message);
+        })
+        .catch((err) => console.error("❌ Monthly Reject Error:", err));
+    }
+  
+    // Update UI
     const newApprovalStatus = { ...approvalStatus };
-
-    // ✅ Include Worked Hours
-    newApprovalStatus["Worked Hours"] = (viewMode === "weekly"
-      ? workedHours
-      : monthlyWorkedHours
-    ).map(() => "rejected");
-
-    Object.keys(newApprovalStatus).forEach((leaveType) => {
-      if (leaveType !== "Worked Hours") {
-        newApprovalStatus[leaveType] = newApprovalStatus[leaveType].map(() => "rejected");
-      }
+    Object.keys(newApprovalStatus).forEach(leaveType => {
+      newApprovalStatus[leaveType] = newApprovalStatus[leaveType].map(() => "rejected");
     });
-
     setApprovalStatus(newApprovalStatus);
-    alert("All rejected!");
   };
+  
 
   const handleEditAll = () => {
     setIsEditMode(true);
