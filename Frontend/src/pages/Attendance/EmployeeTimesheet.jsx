@@ -653,7 +653,7 @@ const getDateStringForIndex = (index) => {
         return (
           <div
             key={i}
-           className={`min-w-[70px] h-8 flex items-center justify-center 
+           className={`min-w-[60px] h-8 flex items-center justify-center 
                     border rounded-md mx-1 text-[#FFCDD2] text-red-600 font-semibold`}
                 >
             H
