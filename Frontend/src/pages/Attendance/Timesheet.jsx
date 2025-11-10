@@ -1158,13 +1158,13 @@ const tileContent = ({ date, view }) => {
             </Button>
           ) : ( */}
             <>
-              {/* <Button 
+              <Button 
                 variant="contained" 
                 color="success" 
                 onClick={handleApproveAll}
               >
                 Approved
-              </Button> */}
+              </Button>
               <Button 
                 variant="contained" 
                 color="error" 
