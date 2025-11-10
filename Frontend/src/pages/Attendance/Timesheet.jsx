@@ -1155,15 +1155,15 @@ const tileContent = ({ date, view }) => {
             >
               Save
             </Button>
-          ) : (
+          ) : ( */}
             <>
-              <Button 
+              {/* <Button 
                 variant="contained" 
                 color="success" 
                 onClick={handleApproveAll}
               >
                 Approved
-              </Button>
+              </Button> */}
               <Button 
                 variant="contained" 
                 color="error" 
@@ -1171,20 +1171,20 @@ const tileContent = ({ date, view }) => {
               >
                 Rejected
               </Button>
-              <Button 
+              {/* <Button 
                 variant="contained" 
                 color="primary" 
                 startIcon={<Edit />}
                 onClick={handleEditAll}
               >
                 Edit
-              </Button>
+              </Button> */}
               <Button variant="contained" color="success" onClick={handleApproved}>
                 {viewMode === "weekly" ? "Approve Weekly" : "Approve Monthly"}
               </Button>
             </>
-          )} */}
-          {/* ✅ Only Approve Weekly & Reject buttons */}
+          
+          {/* ✅ Only Approve Weekly & Reject buttons
           <>
             <Button
               variant="contained"
@@ -1201,7 +1201,7 @@ const tileContent = ({ date, view }) => {
             >
               Reject Weekly
             </Button>
-          </>
+          </> */}
 
         </Box>
       </Box>
