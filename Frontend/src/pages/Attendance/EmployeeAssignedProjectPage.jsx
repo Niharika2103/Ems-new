@@ -50,7 +50,7 @@ export default function EmployeeAssignedProjectPage() {
     const projectName = projects[0]?.project?.name;
     const projectID = projects[0]?.project?.id;
     const employeeId = projects[0]?.employeeId;
-
+    
     const ProjectDetails = { projectName, projectID, employeeId, username, email };
     localStorage.setItem("ProjectDetails", JSON.stringify(ProjectDetails));
 
