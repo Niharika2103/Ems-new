@@ -43,6 +43,19 @@ export default function MonthlyTimesheet({ onBack }) {
   const [isMonthReleased, setIsMonthReleased] = useState(false);
   const [holidays, setHolidays] = useState([]);
 
+
+  useEffect(() => {
+  const savedReleasedMonth = localStorage.getItem("releasedMonth");
+  const currentMonthKey = formatDate(monthStart);
+
+  if (savedReleasedMonth === currentMonthKey) {
+    setIsMonthReleased(true); // lock this month
+  } else {
+    setIsMonthReleased(false); // other months remain editable
+  }
+}, [monthStart]);
+
+
   //  UPDATED HOLIDAY FETCH LOGIC
   const holidaysCache = {};
 
@@ -297,6 +310,8 @@ export default function MonthlyTimesheet({ onBack }) {
       if (AttendanceReleaseMonth.fulfilled.match(resultAction)) {
         toast.success("Month released successfully!");
         setIsMonthReleased(true);
+        localStorage.setItem("releasedMonth", formatDate(monthStart)); // ✅ store released month start date
+
 
         //  Update attendanceData instantly to trigger yellow color
         const updatedData = attendanceData.map((item) => ({
