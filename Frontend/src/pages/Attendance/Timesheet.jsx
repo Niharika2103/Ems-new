@@ -844,52 +844,7 @@ export default function Timesheet() {
           </TableHead>
           <TableBody>
             {/* Worked Hours */}
-            {/* <TableRow>
-              <TableCell sx={{ fontWeight: "bold" }}>Worked Hours</TableCell>
-              {(currentWorkedHours || Array(days.length).fill(0)).map((h, i) => (
-                <TableCell key={i} align="center">
-                  <input
-                    type="number"
-                    value={h}
-                    min="0"
-                    max="9"
-                    step="0.5"
-                    style={{
-                      width: 50,
-                      textAlign: "center",
-                      backgroundColor: days[i].dayIndex === 0 || days[i].dayIndex === 6 ? "#f0f0f0" : "#fff",
-                      border: "1px solid #ccc",
-                      borderRadius: 4,
-                    }}
-                    disabled={!isEditMode || days[i].dayIndex === 0 || days[i].dayIndex === 6}
-                    onChange={(e) => {
-                      const val = parseHour(e.target.value);
-                      if (viewMode === "weekly") {
-                        setWorkedHours((prev) => {
-                          const arr = [...prev];
-                          arr[i] = val;
-                          return arr;
-                        });
-                      } else {
-                        setMonthlyWorkedHours((prev) => {
-                          const arr = [...prev];
-                          arr[i] = val;
-                          return arr;
-                        });
-                      }
-                    }}
-                  />
-                </TableCell>
-              ))}
-              <TableCell align="center">{`${workedTotal}/45`}</TableCell>
-              <TableCell align="center">
-                <IconButton onClick={(e) => handleMenuOpen(e, "Worked Hours")}>
-                  <MoreVert />
-                </IconButton>
-              </TableCell>
-            </TableRow> */}
 
-            {/* Worked Hours */}
             <TableRow>
               <TableCell sx={{ fontWeight: "bold" }}>Worked Hours</TableCell>
               {(currentWorkedHours || Array(days.length).fill(0)).map((h, i) => {
@@ -902,30 +857,34 @@ export default function Timesheet() {
                 // 🔥 Highlight holiday cell
                 if (isHoliday) {
                   return (
-                    <TableCell key={i} align="center" title={holidayName}>
-                      <Box
-                        sx={{
+                    <TableCell key={i} align="center" sx={{ p: 0.5 }}>
+                      <input
+                        type="text"
+                        value="H"
+                        title={holidayName}
+                        disabled
+                        style={{
                           width: 50,
-                          height: 30,
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                          backgroundColor: "#ffeaea",
-                          color: "#d32f2f",
-                          border: "1px solid #f0b4b4",
-                          borderRadius: "4px",
+                          height: 22,
+                          textAlign: "center",
+                          backgroundColor: "#ffeaea", // holiday background
+                          color: "#d32f2f", // red text
+                          border: "1px solid #ccc",
+                          borderRadius: 4,
+                          boxSizing: "border-box",
+                          verticalAlign: "middle",
+                          margin: 0,
+                          padding: 0,
                           fontWeight: "bold",
+                          cursor: "not-allowed",
                         }}
-                      >
-                        H
-                      </Box>
+                      />
                     </TableCell>
                   );
                 }
 
-                // 🔹 Default (normal weekday or weekend)
                 return (
-                  <TableCell key={i} align="center">
+                  <TableCell key={i} align="center" sx={{ p: 0.5 }}>
                     <input
                       type="number"
                       value={h}
@@ -934,10 +893,16 @@ export default function Timesheet() {
                       step="0.5"
                       style={{
                         width: 50,
+                        height: 22,
                         textAlign: "center",
                         backgroundColor: isWeekend ? "#f0f0f0" : "#fff",
                         border: "1px solid #ccc",
                         borderRadius: 4,
+                        boxSizing: "border-box",
+                        verticalAlign: "middle",
+                        margin: 0,
+                        padding: 0,
+                        outline: "none",
                       }}
                       disabled={!isEditMode || isWeekend}
                       onChange={(e) => {
@@ -959,6 +924,7 @@ export default function Timesheet() {
                     />
                   </TableCell>
                 );
+              
               })}
 
               <TableCell align="center">{`${workedTotal}/45`}</TableCell>

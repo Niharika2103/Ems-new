@@ -3,9 +3,8 @@ import StatCard from "../../components/StatCard";
 import { Link, useLocation } from "react-router-dom";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import DescriptionIcon from "@mui/icons-material/Description";
-import MailOutlineIcon from "@mui/icons-material/MailOutline";
-import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
-import GroupAddIcon from "@mui/icons-material/GroupAdd";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+
 
 const EmpAttendanceDashboard = () => {
   const navigate = useNavigate();
@@ -33,6 +32,15 @@ const EmpAttendanceDashboard = () => {
       iconColor: "text-purple-600",
       onClick: () => navigate("/dashboard/employee/leave"),
     },
+    {
+      title: "List Holidays",
+      message: "View Your holidays List",
+      icon: CalendarMonthIcon,
+      iconBg: "bg-purple-100", 
+      iconColor: "text-purple-600",
+      onClick: () => navigate("/dashboard/employee/holiday"),
+    },  
+
     ];
 
   return (
@@ -53,16 +61,10 @@ const EmpAttendanceDashboard = () => {
             <span className="text-gray-400">{secondLevel}</span>
           </li>
         )}
-
-       
       </ol>
     </nav>
  
-
-  
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-       
-
       {stats.map((stat) => (
         <StatCard key={stat.title} {...stat} />
       ))}

@@ -483,7 +483,7 @@ export default function MonthlyTimesheet({ onBack }) {
               return (
                 <div
                   key={i}
-                  className="min-w-[70px] h-8 flex items-center justify-center 
+                  className="min-w-[60px] h-8 flex items-center justify-center 
       border rounded-md mx-1 bg-red-100 text-red-700 font-semibold"
                   title={holidayName || "Holiday"} // ✅ Tooltip shows holiday name
                 >
