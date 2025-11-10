@@ -31,15 +31,9 @@ export default function MonthlyTimesheet({ onBack }) {
   const [lockedRows, setLockedRows] = useState({ CL: false });
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [menuRow, setMenuRow] = useState(null);
-  // const [monthStart, setMonthStart] = useState(() => {
-  //   const today = new Date();
-  //   return today.getDate() >= 10
-  //     ? new Date(today.getFullYear(), today.getMonth(), 10)
-  //     : new Date(today.getFullYear(), today.getMonth() - 1, 10);
-  // });
   const [monthStart, setMonthStart] = useState(() => {
     const today = new Date();
-    return new Date(today.getFullYear(), today.getMonth(), 1); // Always 1st of current month
+    return new Date(today.getFullYear(), today.getMonth(), 1);
   });
 
   const [calendarAnchor, setCalendarAnchor] = useState(null);
@@ -49,7 +43,7 @@ export default function MonthlyTimesheet({ onBack }) {
   const [isMonthReleased, setIsMonthReleased] = useState(false);
   const [holidays, setHolidays] = useState([]);
 
-  // 🔥 UPDATED HOLIDAY FETCH LOGIC
+  //  UPDATED HOLIDAY FETCH LOGIC
   const holidaysCache = {};
 
   useEffect(() => {
@@ -63,11 +57,11 @@ export default function MonthlyTimesheet({ onBack }) {
           return;
         }
 
-        // ✅ Updated API URL (matches backend)
+        //  Updated API URL (matches backend)
         const res = await fetch(`http://localhost:9091/api/holidays/${year}`);
         const data = await res.json();
 
-        // ✅ Our backend returns an array of objects directly
+        //  Our backend returns an array of objects directly
         if (Array.isArray(data)) {
           setHolidays(data);
           holidaysCache[year] = data; // cache it
@@ -75,14 +69,14 @@ export default function MonthlyTimesheet({ onBack }) {
           console.error("Unexpected response format:", data);
         }
       } catch (error) {
-        console.error("❌ Failed to fetch holidays:", error);
+        console.error(" Failed to fetch holidays:", error);
       }
     };
 
     fetchHolidays();
   }, [monthStart]);
 
-  // ✅ Helper functions to check if a date is a holiday
+  //  Helper functions to check if a date is a holiday
   const isHolidayDate = (dateStr) =>
     holidays.some((h) => h.date === dateStr);
 
@@ -92,9 +86,7 @@ export default function MonthlyTimesheet({ onBack }) {
   };
 
 
-
-
-  // NEW: Approval status state for monthly timesheet
+  // Approval status state for monthly timesheet
   const [approvalStatus, setApprovalStatus] = useState({});
 
   const leaveTypes = ["CL", "SL", "PL", "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave"];
@@ -136,14 +128,10 @@ export default function MonthlyTimesheet({ onBack }) {
 
   // NEW: Get background color based on status
   const getStatusColor = (dayIndex, leaveType = null) => {
-    const day = monthDays[dayIndex]; // ✅ get the actual day object
+    const day = monthDays[dayIndex]; // get the actual day object
     if (!day) return "white";
 
     const dateStr = formatDate(day.date);
-
-    // if (holidays.includes(dateStr)) {
-    //   return "#FFCDD2"; // orange for holidays
-    // }
 
     if (day.isWeekend) {
       return "#ccd5e6ff"; // grey for weekends
@@ -164,8 +152,7 @@ export default function MonthlyTimesheet({ onBack }) {
     }
   };
 
-
-  // NEW: Check if field is read-only based on status
+  // Check if field is read-only based on status
   const isFieldReadOnly = (dayIndex, leaveType = null) => {
     if (monthDays[dayIndex]?.isWeekend) {
       return true; // Always read-only for weekends
@@ -290,42 +277,48 @@ export default function MonthlyTimesheet({ onBack }) {
   const handleSaveMonth = async () => {
     const ProjectID = projectDetails?.projectID;
     const employeeId = projectDetails?.employeeId;
-    const today = new Date();
     const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
+
     const formatDate = (date) =>
-      `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+      `${date.getFullYear()}-${(date.getMonth() + 1)
+        .toString()
+        .padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
 
     try {
-      const resultAction = await dispatch(AttendanceReleaseMonth({
-        employeeId: employeeId,
-        projectId: ProjectID,
-        monthStart: formatDate(monthStart),
-        monthEnd: formatDate(monthEnd)
-      }));
+      const resultAction = await dispatch(
+        AttendanceReleaseMonth({
+          employeeId,
+          projectId: ProjectID,
+          monthStart: formatDate(monthStart),
+          monthEnd: formatDate(monthEnd),
+        })
+      );
 
       if (AttendanceReleaseMonth.fulfilled.match(resultAction)) {
         toast.success("Month released successfully!");
-        setIsMonthReleased(true); // 🔒 Lock inputs after releasing month
+        setIsMonthReleased(true);
 
+        //  Update attendanceData instantly to trigger yellow color
+        const updatedData = attendanceData.map((item) => ({
+          ...item,
+          monthlyStatus: "Pending_approval", // triggers yellow in getStatusColor
+        }));
 
-        // NEW: Update approval status to 'submitted' after releasing month
+        dispatch({
+          type: "attendance/setAttendanceData",
+          payload: updatedData,
+        });
+
+        //  Optionally also update local approval state (for locks)
         const newApprovalStatus = { ...approvalStatus };
-        monthDays.forEach((day, dayIndex) => {
-          if (!day.isWeekend) { // Only update status for weekdays
-            const statusKey = `worked_${dayIndex}`;
-            // Only update to 'submitted' if not already 'approved'
-            if (newApprovalStatus[statusKey] !== 'approved') {
-              newApprovalStatus[statusKey] = 'submitted';
-            }
+        monthDays.forEach((day, i) => {
+          if (!day.isWeekend) {
+            const workedKey = `worked_${i}`;
+            newApprovalStatus[workedKey] = "submitted";
 
-            usedLeaveTypes.forEach(lt => {
-              const leaveStatusKey = `${lt}_${dayIndex}`;
-              if (leaveRows[lt] && leaveRows[lt][dayIndex] && leaveRows[lt][dayIndex] !== 0 && leaveRows[lt][dayIndex] !== "") {
-                // Only update to 'submitted' if not already 'approved'
-                if (newApprovalStatus[leaveStatusKey] !== 'approved') {
-                  newApprovalStatus[leaveStatusKey] = 'submitted';
-                }
-              }
+            usedLeaveTypes.forEach((lt) => {
+              const leaveKey = `${lt}_${i}`;
+              newApprovalStatus[leaveKey] = "submitted";
             });
           }
         });
@@ -334,7 +327,7 @@ export default function MonthlyTimesheet({ onBack }) {
         throw new Error("Failed to release month");
       }
     } catch (err) {
-      console.log(err); // log the actual error
+      console.error(err);
       toast.error("Error releasing month!");
     }
   };
@@ -445,15 +438,6 @@ export default function MonthlyTimesheet({ onBack }) {
         {/* DATES HEADER */}
         <div className="flex font-semibold border-b pb-2 text-sm">
           <div className="min-w-[150px]">{projectName}</div>
-          {/* {monthDays.map((d, index) => (
-            <div
-              key={index}
-              className={`min-w-[70px] text-center mx-1 ${d.isWeekend ? "text-gray-400" : "text-black"}`}
-            >
-              {d.label}
-            </div>
-          ))} */}
-
           {monthDays.map((d, index) => (
             <div
               key={index}
@@ -478,14 +462,14 @@ export default function MonthlyTimesheet({ onBack }) {
             const isHoliday = isHolidayDate(dateStr);
             const holidayName = getHolidayName(dateStr);
 
-            // ✅ Show "H" for holidays
+            // Show "H" for holidays
             if (isHoliday) {
               return (
                 <div
                   key={i}
                   className="min-w-[60px] h-8 flex items-center justify-center 
       border rounded-md mx-1 bg-red-100 text-red-700 font-semibold"
-                  title={holidayName || "Holiday"} // ✅ Tooltip shows holiday name
+                  title={holidayName || "Holiday"} //  Tooltip shows holiday name
                 >
                   H
                 </div>

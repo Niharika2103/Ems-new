@@ -135,6 +135,53 @@ export default function Timesheet() {
     return h ? h.name : null;
   };
 
+  // Highlight holiday tiles in the calendar
+const tileClassName = ({ date, view }) => {
+  if (view === "month") {
+    const dateStr = date.toISOString().slice(0, 10);
+    if (isHolidayDate(dateStr)) {
+      return "holiday-tile"; // custom CSS class
+    }
+  }
+  return null;
+};
+
+//  Add a small dot or emoji for holidays
+
+const tileContent = ({ date, view }) => {
+  if (view === "month") {
+    const dateStr = date.toISOString().slice(0, 10);
+    const holiday = holidays.find((h) => h.date === dateStr);
+
+    if (holiday) {
+      return (
+        <div
+          title={holiday.name}
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            marginTop: "4px",
+          }}
+        >
+          <div
+            style={{
+              width: "6px",
+              height: "6px",
+              borderRadius: "50%",
+              backgroundColor: holiday.isOptional ? "#2196F3" : "#e53935", // 🔵 optional / 🔴 public
+              boxShadow: "0 0 4px rgba(0,0,0,0.15)",
+            }}
+          />
+        </div>
+      );
+    }
+  }
+  return null;
+};
+
+
+
   const parseHour = (v) => {
     const n = Number(v);
     if (Number.isNaN(n)) return 0;
@@ -792,6 +839,8 @@ export default function Timesheet() {
               <Calendar
                 onChange={handleCalendarDateSelect}
                 value={viewMode === "weekly" ? weekStart : monthStart}
+                  tileClassName={tileClassName}     // 🔥 Added
+  tileContent={tileContent} 
               />
             </Box>
           </Popover>

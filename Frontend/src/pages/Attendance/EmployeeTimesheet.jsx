@@ -54,7 +54,7 @@ export default function EmpTimesheet() {
   const [modalLeaveType, setModalLeaveType] = useState("");
   const [holidays, setHolidays] = useState([]);
   const [holidaysCache, setHolidaysCache] = useState({});
-  // NEW: store leave periods for multi-week leaves
+  //  store leave periods for multi-week leaves
   const [leavePeriods, setLeavePeriods] = useState([]);
   const [approvalStatus, setApprovalStatus] = useState({}); // Track approval status for each day
   const leaveTypes = ["EL", "SL", "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave", "Optional Holidays", "Holidays"];
@@ -89,7 +89,7 @@ export default function EmpTimesheet() {
         const data = await res.json();
 
         if (Array.isArray(data)) {
-          // ✅ Extract only the dates in YYYY-MM-DD format
+          //  Extract only the dates in YYYY-MM-DD format
           const holidayDates = data.map(h => h.date);
           setHolidays(holidayDates);
         } else {
@@ -135,12 +135,10 @@ export default function EmpTimesheet() {
     return dayIndex >= 5; // 5 = Saturday, 6 = Sunday
   };
 
-
-
   // Check if field is read-only based on status
   const isFieldReadOnly = (dayIndex, leaveType = null) => {
     if (isWeekendDay(dayIndex)) {
-      return true; // Always read-only for weekends
+      return true; 
     }
     const statusKey = leaveType ? `${leaveType}_${dayIndex}` : `worked_${dayIndex}`;
     return approvalStatus[statusKey] === 'approved'; // Read-only only when approved
@@ -247,19 +245,6 @@ export default function EmpTimesheet() {
     setMenuRow(null);
   };
 
-  // const handleAddActivity = () => {
-  //   if (leaveType === "Maternity Leave" || leaveType === "Paternity Leave") {
-  //     setModalLeaveType(leaveType);
-  //     setLeaveModalOpen(true);
-  //     return;
-  //   }
-
-  //   if (leaveType && !usedLeaveTypes.includes(leaveType)) {
-  //     setUsedLeaveTypes([...usedLeaveTypes, leaveType]);
-  //     setLeaveRows((prev) => ({ ...prev, [leaveType]: Array(7).fill(0) }));
-  //     setLockedRows((prev) => ({ ...prev, [leaveType]: false }));
-  //   }
-  // };
 
   const handleAddActivity = async () => {
     if (!leaveType) {
@@ -272,7 +257,7 @@ export default function EmpTimesheet() {
       return;
     }
 
-    // ✅ Step 1: Check eligibility first
+    // Check eligibility first
     try {
       const resultAction = await dispatch(
         checkLeaveEligibility({ employeeId, leaveType, requestedDays: 1 })
@@ -283,7 +268,7 @@ export default function EmpTimesheet() {
         if (canApply) {
           toast.success(message);
 
-          // ✅ Step 2: Proceed with your existing leave add logic
+          //  Proceed with your existing leave add logic
           if (leaveType === "Maternity Leave" || leaveType === "Paternity Leave") {
             setModalLeaveType(leaveType);
             setLeaveModalOpen(true);
@@ -388,7 +373,7 @@ export default function EmpTimesheet() {
           .toISOString()
           .split("T")[0],
 
-        // ✅ Worked hours should always be a number (0 for holiday)
+        //  Worked hours should always be a number (0 for holiday)
         workedHours: holidays.includes(
           new Date(currentDate.getTime() - currentDate.getTimezoneOffset() * 60000)
             .toISOString()
@@ -397,7 +382,7 @@ export default function EmpTimesheet() {
           ? 0 // 👈 backend accepts only numbers
           : Number(hours[i]) || 0,
 
-        // ✅ Leave type is 'holiday' if that date is a holiday
+        //  Leave type is 'holiday' if that date is a holiday
         leaveType: holidays.includes(
           new Date(currentDate.getTime() - currentDate.getTimezoneOffset() * 60000)
             .toISOString()
@@ -460,72 +445,49 @@ export default function EmpTimesheet() {
     const weekEnd = new Date(weekStartDate);
     weekEnd.setDate(weekStartDate.getDate() + 6); // Sunday
 
-    // Format in local time yyyy-MM-dd
     const formattedWeekEnd = `${weekEnd.getFullYear()}-${(weekEnd.getMonth() + 1)
-      .toString().padStart(2, '0')}-${weekEnd.getDate().toString().padStart(2, '0')}`;
+      .toString().padStart(2, "0")}-${weekEnd.getDate().toString().padStart(2, "0")}`;
     const formattedStartEnd = `${weekStartDate.getFullYear()}-${(weekStartDate.getMonth() + 1)
-      .toString().padStart(2, '0')}-${weekStartDate.getDate().toString().padStart(2, '0')}`;
+      .toString().padStart(2, "0")}-${weekStartDate.getDate().toString().padStart(2, "0")}`;
 
     try {
-      const resultAction = await dispatch(AttendanceReleaseWeek({
-        employeeId: employeeId,
-        weekStart: formattedStartEnd,
-        weekEnd: formattedWeekEnd
-      }));
+      const resultAction = await dispatch(
+        AttendanceReleaseWeek({
+          employeeId: employeeId,
+          weekStart: formattedStartEnd,
+          weekEnd: formattedWeekEnd,
+        })
+      );
 
-      // if (AttendanceReleaseWeek.fulfilled.match(resultAction)) {
-      //   toast.success("Week released successfully!");
-
-      //   // Update approval status to 'submitted' after releasing week
-      //   const newApprovalStatus = { ...approvalStatus };
-      //   days.forEach((_, i) => {
-      //     if (!isWeekendDay(i)) { // Only update status for weekdays
-      //       const statusKey = `worked_${i}`;
-      //       // Only update to 'submitted' if not already 'approved'
-      //       if (newApprovalStatus[statusKey] !== 'approved') {
-      //         newApprovalStatus[statusKey] = 'submitted';
-      //       }
-
-      //       usedLeaveTypes.forEach(lt => {
-      //         const leaveStatusKey = `${lt}_${i}`;
-      //         if (leaveRows[lt][i] && leaveRows[lt][i] !== 0 && leaveRows[lt][i] !== "") {
-      //           // Only update to 'submitted' if not already 'approved'
-      //           if (newApprovalStatus[leaveStatusKey] !== 'approved') {
-      //             newApprovalStatus[leaveStatusKey] = 'submitted';
-      //           }
-      //         }
-      //       });
-      //     }
-      //   });
-      //   setApprovalStatus(newApprovalStatus);
       if (AttendanceReleaseWeek.fulfilled.match(resultAction)) {
         toast.success("Week released successfully!");
 
-        // ✅ Lock ALL worked hours and leave fields (make non-editable)
-        const newApprovalStatus = { ...approvalStatus };
+        //  Immediately update frontend data to show yellow
+        const updatedData = attendanceData.map((item) => ({
+          ...item,
+          status: "Pending_approval", // triggers yellow in getStatusColor()
+        }));
 
+        dispatch(setAttendanceData(updatedData)); // updates Redux instantly
+
+        // Also update local approval state (optional, for lock behavior)
+        const newApprovalStatus = { ...approvalStatus };
         days.forEach((_, i) => {
           if (!isWeekendDay(i)) {
-            // Lock worked hours
-            newApprovalStatus[`worked_${i}`] = "approved";
-
-            // Lock all leaves
-            usedLeaveTypes.forEach((lt) => {
-              newApprovalStatus[`${lt}_${i}`] = "approved";
-            });
+            newApprovalStatus[`worked_${i}`] = "submitted"; // mark as submitted (yellow)
           }
         });
-
         setApprovalStatus(newApprovalStatus);
 
       } else {
         throw new Error("Failed to release week");
       }
     } catch (err) {
-      console.log(err); // log the actual error
+      console.log(err);
       toast.error("Error releasing week!");
     }
   };
+
 
   const handleCalendarChange = (date) => {
     setSelectDate(date);
@@ -548,10 +510,7 @@ export default function EmpTimesheet() {
     if (isWeekend) {
       return "#E0E0E0"; // always gray for weekends
     }
-    //  const isHoliday = holidays.includes(getDateStringForIndex(dayIndex)); // Use your existing function to get the date string
-    //   if (isHoliday) {
-    //     return "#FFCDD2"; // Light red/pink for holidays (adjust color as needed)
-    //   }
+   
     const record = attendanceData?.[dayIndex];
     if (!record) return "white";
 
