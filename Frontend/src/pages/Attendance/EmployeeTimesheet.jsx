@@ -84,17 +84,16 @@ const [holidays, setHolidays] = useState([]);
 useEffect(() => {
   const fetchHolidays = async () => {
     try {
-      const year = weekStart.getFullYear(); // Get current year
-      // Call backend API to fetch holidays for the year
-      const res = await fetch(`http://localhost:9090/api/holidays/${year}`);
+      const year = weekStart.getFullYear();
+      const res = await fetch(`http://localhost:9091/api/holidays/${year}`);
       const data = await res.json();
 
-      if (data?.response?.holidays) {
-        // Extract holiday dates from the API response
-        const holidayDates = data.response.holidays.map(h => h.date.iso);
+      if (Array.isArray(data)) {
+        // ✅ Extract only the dates in YYYY-MM-DD format
+        const holidayDates = data.map(h => h.date);
         setHolidays(holidayDates);
       } else {
-        console.error("No holidays data available.");
+        console.error("Unexpected holiday response:", data);
       }
     } catch (err) {
       console.error("Failed to fetch holidays", err);
@@ -102,7 +101,8 @@ useEffect(() => {
   };
 
   fetchHolidays();
-}, [weekStart]); // Re-run on weekStart change
+}, [weekStart]);
+ // Re-run on weekStart change
 
     
 const getDateStringForIndex = (index) => {

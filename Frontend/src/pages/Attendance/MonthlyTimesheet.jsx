@@ -38,48 +38,61 @@ export default function MonthlyTimesheet({ onBack }) {
   //     : new Date(today.getFullYear(), today.getMonth() - 1, 10);
   // });
   const [monthStart, setMonthStart] = useState(() => {
-  const today = new Date();
-  return new Date(today.getFullYear(), today.getMonth(), 1); // Always 1st of current month
-});
+    const today = new Date();
+    return new Date(today.getFullYear(), today.getMonth(), 1); // Always 1st of current month
+  });
 
   const [calendarAnchor, setCalendarAnchor] = useState(null);
   const [leaveModalOpen, setLeaveModalOpen] = useState(false);
   const [modalLeaveType, setModalLeaveType] = useState("");
   const [monthDays, setMonthDays] = useState([]);
   const [isMonthReleased, setIsMonthReleased] = useState(false);
-
-
   const [holidays, setHolidays] = useState([]);
 
+  // 🔥 UPDATED HOLIDAY FETCH LOGIC
   const holidaysCache = {};
+
   useEffect(() => {
     const fetchHolidays = async () => {
       try {
         const year = monthStart.getFullYear();
 
-        // Check if holidays are already available for the year
+        // Use cached holidays if already loaded
         if (holidaysCache[year]) {
           setHolidays(holidaysCache[year]);
           return;
         }
 
-        const res = await fetch(`http://localhost:9090/api/holidays/${year}`);
+        // ✅ Updated API URL (matches backend)
+        const res = await fetch(`http://localhost:9091/api/holidays/${year}`);
         const data = await res.json();
 
-        if (data?.response?.holidays) {
-          const holidayDates = data.response.holidays.map(h => h.date.iso);
-          setHolidays(holidayDates);
-          holidaysCache[year] = holidayDates; // Cache holidays for this year
+        // ✅ Our backend returns an array of objects directly
+        if (Array.isArray(data)) {
+          setHolidays(data);
+          holidaysCache[year] = data; // cache it
         } else {
-          console.error("No holidays data available.");
+          console.error("Unexpected response format:", data);
         }
-      } catch (err) {
-        console.error("Failed to fetch holidays", err);
+      } catch (error) {
+        console.error("❌ Failed to fetch holidays:", error);
       }
     };
 
     fetchHolidays();
   }, [monthStart]);
+
+  // ✅ Helper functions to check if a date is a holiday
+  const isHolidayDate = (dateStr) =>
+    holidays.some((h) => h.date === dateStr);
+
+  const getHolidayName = (dateStr) => {
+    const h = holidays.find((h) => h.date === dateStr);
+    return h ? h.name : null;
+  };
+
+
+
 
   // NEW: Approval status state for monthly timesheet
   const [approvalStatus, setApprovalStatus] = useState({});
@@ -442,13 +455,13 @@ export default function MonthlyTimesheet({ onBack }) {
           ))} */}
 
           {monthDays.map((d, index) => (
-  <div
-    key={index}
-    className={`min-w-[70px] text-center mx-1 ${d.isWeekend ? "text-gray-400" : "text-black"}`}
-  >
-    {`${d.date.getDate()}/${d.date.getMonth() + 1}`}
-  </div>
-))}
+            <div
+              key={index}
+              className={`min-w-[70px] text-center mx-1 ${d.isWeekend ? "text-gray-400" : "text-black"}`}
+            >
+              {`${d.date.getDate()}/${d.date.getMonth() + 1}`}
+            </div>
+          ))}
           <div className="min-w-[70px] text-center">Action</div>
         </div>
 
@@ -460,16 +473,19 @@ export default function MonthlyTimesheet({ onBack }) {
             const isWeekend = day?.isWeekend;
             const backgroundColor = getStatusColor(i);
             const isEditable = isFieldEditable(i);
+
             const dateStr = formatDate(day.date);
-            const isHoliday = holidays.includes(dateStr);
+            const isHoliday = isHolidayDate(dateStr);
+            const holidayName = getHolidayName(dateStr);
 
             // ✅ Show "H" for holidays
             if (isHoliday) {
               return (
                 <div
                   key={i}
-                  className={`min-w-[70px] h-8 flex items-center justify-center 
-                    border rounded-md mx-1 text-[#FFCDD2] text-red-600 font-semibold`}
+                  className="min-w-[70px] h-8 flex items-center justify-center 
+      border rounded-md mx-1 bg-red-100 text-red-700 font-semibold"
+                  title={holidayName || "Holiday"} // ✅ Tooltip shows holiday name
                 >
                   H
                 </div>

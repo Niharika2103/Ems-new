@@ -49,7 +49,7 @@ const getMonthDays = (date) => {
     days.push({
       date: new Date(current),
       // label: `${dayName} / ${current.getDate().toString().padStart(2, "0")}`,
-       label: `${current.getDate().toString().padStart(2, "0")}/${(current.getMonth() + 1)
+      label: `${current.getDate().toString().padStart(2, "0")}/${(current.getMonth() + 1)
         .toString()
         .padStart(2, "0")} (${dayName})`,
 
@@ -89,6 +89,50 @@ export default function Timesheet() {
 
   console.log(attendanceData, "attendanceData")
   const leaveTypes = ["CL", "SL", "PL", "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave"];
+  // 🔥 ADD BELOW OTHER useState HOOKS
+  const [holidays, setHolidays] = useState([]);
+  const holidaysCache = {};
+
+  // 🔥 Fetch holidays for both weekly & monthly views
+  useEffect(() => {
+    const fetchHolidays = async () => {
+      try {
+        const year =
+          viewMode === "weekly"
+            ? weekStart.getFullYear()
+            : monthStart.getFullYear();
+
+        // ✅ Cache check
+        if (holidaysCache[year]) {
+          setHolidays(holidaysCache[year]);
+          return;
+        }
+
+        const res = await fetch(`http://localhost:9091/api/holidays/${year}`);
+        const data = await res.json();
+
+        if (Array.isArray(data)) {
+          setHolidays(data);
+          holidaysCache[year] = data;
+        } else {
+          console.error("Unexpected holiday response:", data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch holidays", err);
+      }
+    };
+
+    fetchHolidays();
+  }, [weekStart, monthStart, viewMode]);
+
+  // 🔥 Helper functions
+  const isHolidayDate = (dateStr) =>
+    holidays.some((h) => h.date === dateStr);
+
+  const getHolidayName = (dateStr) => {
+    const h = holidays.find((h) => h.date === dateStr);
+    return h ? h.name : null;
+  };
 
   const parseHour = (v) => {
     const n = Number(v);
@@ -107,7 +151,7 @@ export default function Timesheet() {
       setMonthlyWorkedHours(Array(days.length).fill(0));
       const newLeaveRows = {};
       const newApprovalStatus = { ...approvalStatus };
-      
+
       usedLeaveTypes.forEach((lt) => {
         if (!leaveRows[lt] || leaveRows[lt].length !== days.length) {
           newLeaveRows[lt] = Array(days.length).fill(0);
@@ -191,7 +235,7 @@ export default function Timesheet() {
         newApprovalStatus[lt] = Array(7).fill("pending");
       }
     });
-    
+
     setLeaveRows(newLeaveRows);
     setApprovalStatus(newApprovalStatus);
     setUsedLeaveTypes(allLeaveTypes.filter((lt) => newLeaveRows[lt].some((v) => v > 0)));
@@ -424,24 +468,24 @@ export default function Timesheet() {
 
   const handleApproveAll = () => {
     const newApprovalStatus = { ...approvalStatus };
-    
+
     Object.keys(leaveRows).forEach(leaveType => {
-      newApprovalStatus[leaveType] = leaveRows[leaveType].map((value, index) => 
+      newApprovalStatus[leaveType] = leaveRows[leaveType].map((value, index) =>
         value > 0 ? "approved" : newApprovalStatus[leaveType][index] || "pending"
       );
     });
-    
+
     setApprovalStatus(newApprovalStatus);
     alert("All leaves approved!");
   };
 
   const handleRejectAll = () => {
     const newApprovalStatus = { ...approvalStatus };
-    
+
     Object.keys(newApprovalStatus).forEach(leaveType => {
       newApprovalStatus[leaveType] = newApprovalStatus[leaveType].map(() => "pending");
     });
-    
+
     setApprovalStatus(newApprovalStatus);
     alert("All leaves rejected!");
   };
@@ -455,7 +499,7 @@ export default function Timesheet() {
     if (!isEditMode) {
       const newApprovalStatus = { ...approvalStatus };
       const currentStatus = newApprovalStatus[leaveType]?.[dayIndex] || "pending";
-      
+
       // Toggle between pending and approved
       newApprovalStatus[leaveType][dayIndex] = currentStatus === "approved" ? "pending" : "approved";
       setApprovalStatus(newApprovalStatus);
@@ -468,11 +512,11 @@ export default function Timesheet() {
     if (days[dayIndex].dayIndex === 0 || days[dayIndex].dayIndex === 6) {
       return "#f0f0f0";
     }
-    
+
     // For leave cells with values
     if (value > 0) {
       const status = approvalStatus[leaveType]?.[dayIndex] || "pending";
-      
+
       switch (status) {
         case "approved":
           return "#d4edda"; // Light green for approved
@@ -483,7 +527,7 @@ export default function Timesheet() {
           return "#fff3cd"; // Light yellow for pending approval
       }
     }
-    
+
     // Default white background for weekdays with no leave
     return "#fff";
   };
@@ -512,7 +556,7 @@ export default function Timesheet() {
 
       console.log("📅 Weekly Range:", fromDate, "→", toDate);
 
-      dispatch(Admin_Approve_Weekly_Attendance({ employeeId:employeeId, from: fromDate, to: toDate }))
+      dispatch(Admin_Approve_Weekly_Attendance({ employeeId: employeeId, from: fromDate, to: toDate }))
         .unwrap()
         .then((res) => {
           console.log("✅ Weekly Approved:", res);
@@ -524,7 +568,7 @@ export default function Timesheet() {
       //  Monthly uses from & to from location.state
       console.log("Monthly Range (from navigation):", from, "→", to);
 
-      dispatch(Admin_Approve_monthly_Attendance({ employeeId:employeeId, from, to }))
+      dispatch(Admin_Approve_monthly_Attendance({ employeeId: employeeId, from, to }))
         .unwrap()
         .then((res) => {
           console.log(" Monthly Approved:", res);
@@ -552,10 +596,12 @@ export default function Timesheet() {
       ? Array.from({ length: 7 }, (_, i) => {
         const date = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + i);
         const dayName = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][date.getDay()];
-            const month = (date.getMonth() + 1).toString().padStart(2, "0");
-        return { dayIndex: date.getDay(), 
-         label: `${dayName} / ${date.getDate().toString().padStart(2, "0")}/${month}`, 
-          date  };
+        const month = (date.getMonth() + 1).toString().padStart(2, "0");
+        return {
+          dayIndex: date.getDay(),
+          label: `${dayName} / ${date.getDate().toString().padStart(2, "0")}/${month}`,
+          date
+        };
       })
       : getMonthDays(monthStart);
 
@@ -682,41 +728,75 @@ export default function Timesheet() {
             {/* Worked Hours */}
             <TableRow>
               <TableCell sx={{ fontWeight: "bold" }}>Worked Hours</TableCell>
-              {(currentWorkedHours || Array(days.length).fill(0)).map((h, i) => (
-                <TableCell key={i} align="center">
-                  <input
-                    type="number"
-                    value={h}
-                    min="0"
-                    max="9"
-                    step="0.5"
-                    style={{
-                      width: 50,
-                      textAlign: "center",
-                      backgroundColor: days[i].dayIndex === 0 || days[i].dayIndex === 6 ? "#f0f0f0" : "#fff",
-                      border: "1px solid #ccc",
-                      borderRadius: 4,
-                    }}
-                    disabled={!isEditMode || days[i].dayIndex === 0 || days[i].dayIndex === 6}
-                    onChange={(e) => {
-                      const val = parseHour(e.target.value);
-                      if (viewMode === "weekly") {
-                        setWorkedHours((prev) => {
-                          const arr = [...prev];
-                          arr[i] = val;
-                          return arr;
-                        });
-                      } else {
-                        setMonthlyWorkedHours((prev) => {
-                          const arr = [...prev];
-                          arr[i] = val;
-                          return arr;
-                        });
-                      }
-                    }}
-                  />
-                </TableCell>
-              ))}
+              {(currentWorkedHours || Array(days.length).fill(0)).map((h, i) => {
+                const dateObj = days[i].date;
+                const dateStr = dateObj.toISOString().slice(0, 10);
+                const isWeekend = days[i].dayIndex === 0 || days[i].dayIndex === 6;
+                const isHoliday = isHolidayDate(dateStr);
+                const holidayName = getHolidayName(dateStr);
+
+                // 🔥 Highlight holiday cell
+                if (isHoliday) {
+                  return (
+                    <TableCell key={i} align="center" title={holidayName}>
+                      <Box
+                        sx={{
+                          width: 50,
+                          height: 30,
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          backgroundColor: "#ffeaea",
+                          color: "#d32f2f",
+                          border: "1px solid #f0b4b4",
+                          borderRadius: "4px",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        H
+                      </Box>
+                    </TableCell>
+                  );
+                }
+
+                // 🔹 Default (normal weekday or weekend)
+                return (
+                  <TableCell key={i} align="center">
+                    <input
+                      type="number"
+                      value={h}
+                      min="0"
+                      max="9"
+                      step="0.5"
+                      style={{
+                        width: 50,
+                        textAlign: "center",
+                        backgroundColor: isWeekend ? "#f0f0f0" : "#fff",
+                        border: "1px solid #ccc",
+                        borderRadius: 4,
+                      }}
+                      disabled={!isEditMode || isWeekend}
+                      onChange={(e) => {
+                        const val = parseHour(e.target.value);
+                        if (viewMode === "weekly") {
+                          setWorkedHours((prev) => {
+                            const arr = [...prev];
+                            arr[i] = val;
+                            return arr;
+                          });
+                        } else {
+                          setMonthlyWorkedHours((prev) => {
+                            const arr = [...prev];
+                            arr[i] = val;
+                            return arr;
+                          });
+                        }
+                      }}
+                    />
+                  </TableCell>
+                );
+              })}
+
               <TableCell align="center">{`${workedTotal}/45`}</TableCell>
               <TableCell align="center">
                 <IconButton onClick={(e) => handleMenuOpen(e, "Worked Hours")}>
@@ -730,8 +810,8 @@ export default function Timesheet() {
               <TableRow key={lt}>
                 <TableCell sx={{ fontWeight: "bold" }}>{lt}</TableCell>
                 {(leaveRows[lt] || Array(days.length).fill(0)).map((v, i) => (
-                  <TableCell 
-                    key={i} 
+                  <TableCell
+                    key={i}
                     align="center"
                     onClick={() => handleCellApproval(lt, i)}
                     sx={{ cursor: !isEditMode ? 'pointer' : 'default' }}
@@ -759,7 +839,7 @@ export default function Timesheet() {
                           arr[i] = val;
                           return { ...prev, [lt]: arr };
                         });
-                        
+
                         const newApprovalStatus = { ...approvalStatus };
                         if (newApprovalStatus[lt]) {
                           newApprovalStatus[lt][i] = "pending";
@@ -769,8 +849,8 @@ export default function Timesheet() {
                     />
                     {!isEditMode && v > 0 && (
                       <Typography variant="caption" display="block" color="text.secondary">
-                        {approvalStatus[lt]?.[i] === "approved" ? "✓ Approved" : 
-                         approvalStatus[lt]?.[i] === "rejected" ? "✗ Rejected" : "Pending"}
+                        {approvalStatus[lt]?.[i] === "approved" ? "✓ Approved" :
+                          approvalStatus[lt]?.[i] === "rejected" ? "✗ Rejected" : "Pending"}
                       </Typography>
                     )}
                   </TableCell>
@@ -809,9 +889,9 @@ export default function Timesheet() {
         <Box display="flex" gap={1}>
           <FormControl size="small" sx={{ minWidth: 180 }}>
             <InputLabel>Leave Type</InputLabel>
-            <Select 
-              value={leaveType} 
-              onChange={(e) => setLeaveType(e.target.value)} 
+            <Select
+              value={leaveType}
+              onChange={(e) => setLeaveType(e.target.value)}
               label="Leave Type"
               disabled={!isEditMode}
             >
@@ -822,8 +902,8 @@ export default function Timesheet() {
               ))}
             </Select>
           </FormControl>
-          <Button 
-            variant="contained" 
+          <Button
+            variant="contained"
             onClick={addActivity}
             disabled={!isEditMode}
           >
@@ -832,9 +912,9 @@ export default function Timesheet() {
         </Box>
         <Box display="flex" gap={1}>
           {isEditMode ? (
-            <Button 
-              variant="contained" 
-              color="success" 
+            <Button
+              variant="contained"
+              color="success"
               startIcon={<Save />}
               onClick={handleSaveAll}
             >
@@ -842,23 +922,23 @@ export default function Timesheet() {
             </Button>
           ) : (
             <>
-              <Button 
-                variant="contained" 
-                color="success" 
+              <Button
+                variant="contained"
+                color="success"
                 onClick={handleApproveAll}
               >
                 Approved
               </Button>
-              <Button 
-                variant="contained" 
-                color="error" 
+              <Button
+                variant="contained"
+                color="error"
                 onClick={handleRejectAll}
               >
                 Rejected
               </Button>
-              <Button 
-                variant="contained" 
-                color="primary" 
+              <Button
+                variant="contained"
+                color="primary"
                 startIcon={<Edit />}
                 onClick={handleEditAll}
               >
@@ -902,14 +982,14 @@ export default function Timesheet() {
 
       {/* Menu */}
       <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={handleMenuClose}>
-        <MenuItem 
+        <MenuItem
           onClick={() => handleResetRow(menuRow)}
           disabled={!isEditMode}
         >
           Reset
         </MenuItem>
         {menuRow !== "Worked Hours" && (
-          <MenuItem 
+          <MenuItem
             onClick={() => handleDeleteRow(menuRow)}
             disabled={!isEditMode}
           >
