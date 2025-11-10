@@ -33,7 +33,7 @@ import EmployeeLeave from "../pages/Attendance/EmployeeLeave";
 import MaternityPaternityLeaveTable from "../pages/Attendance/MaternityPaternityLeaveTable";
 import EmpAttendanceDashboard from "../pages/dashbaord/EmpAttendanceDashboard";
 import AuditLogsTable from "../pages/Attendance/AuditLogs";
-
+import EmployeeHolidayList from "../pages/Attendance/EmployeeHolidayList";
 function AppRoutes() {
   return (
     <Routes>
@@ -62,17 +62,17 @@ function AppRoutes() {
         <Route
           path="/dashboard/assign_project"
           element={
-            <ProtectedRoute allowedRoles={["employee" ,"admin"]}>
+            <ProtectedRoute allowedRoles={["employee", "admin"]}>
               <EmployeeAssignedProjectPage />
             </ProtectedRoute>
           }
         />
 
         <Route path="dashboard/employee/leave" element={
-            <ProtectedRoute allowedRoles={["employee"]}>
-              <EmployeeLeave />
-            </ProtectedRoute>
-          }/>
+          <ProtectedRoute allowedRoles={["employee"]}>
+            <EmployeeLeave />
+          </ProtectedRoute>
+        } />
         <Route
           path="/cal"
           element={
@@ -85,7 +85,7 @@ function AppRoutes() {
         <Route
           path="/attendance/projects"
           element={
-            <ProtectedRoute allowedRoles={["employee","admin"]}>
+            <ProtectedRoute allowedRoles={["employee", "admin"]}>
               <AssignProjectPage />
             </ProtectedRoute>
           }
@@ -95,24 +95,30 @@ function AppRoutes() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile" element={<Profile />} />
 
-         <Route
+        <Route
           path="/dashboard/employeeinfo/employeeprofile"
           element={
             <ProtectedRoute allowedRoles={["employee"]}>
-              <EmployeeProfile/>
+              <EmployeeProfile />
             </ProtectedRoute>
-          }/>
+          } />
 
-          <Route
-  path="/dashboard/emp_attendance"
-  element={
-    <ProtectedRoute allowedRoles={["employee","admin"]}>
-      <EmpAttendanceDashboard />
-    </ProtectedRoute>
-  }
-/>
-       
-
+        <Route
+          path="/dashboard/emp_attendance"
+          element={
+            <ProtectedRoute allowedRoles={["employee", "admin"]}>
+              <EmpAttendanceDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/employee/holiday"
+          element={
+            <ProtectedRoute allowedRoles={["employee", "admin"]}>
+              <EmployeeHolidayList />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Superadmin routes */}
         <Route
@@ -136,7 +142,7 @@ function AppRoutes() {
         <Route
           path="/dashboard/emp_info"
           element={
-            <ProtectedRoute allowedRoles={["admin","employee"]}>
+            <ProtectedRoute allowedRoles={["admin", "employee"]}>
               <EmpInfoDashboard />
             </ProtectedRoute>
           }
@@ -173,12 +179,12 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-               
+
         <Route
           path="/dashboard/audit-logs"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
-              < AuditLogsTable/>
+              < AuditLogsTable />
             </ProtectedRoute>
           }
         />
@@ -193,30 +199,30 @@ function AppRoutes() {
         <Route
           path="/documents/letters"
           element={
-            <ProtectedRoute allowedRoles={["admin","employee"]}>
+            <ProtectedRoute allowedRoles={["admin", "employee"]}>
               <Letters />
             </ProtectedRoute>
           }
         />
 
-         {/* 👇 Admin Dashboard page for Maternity & Paternity Leaves
+        {/* 👇 Admin Dashboard page for Maternity & Paternity Leaves
         <Route
           path="/maternity-paternity-leaves"
           element={<MaternityPaternityLeaveTable />}
         /> */}
 
-         <Route
+        <Route
           path="/attendance/maternity-paternity-leaves"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
-              < MaternityPaternityLeaveTable/>
+              < MaternityPaternityLeaveTable />
             </ProtectedRoute>
           }
         />
       </Route>
     </Routes>
 
-    
+
   );
 }
 

@@ -854,7 +854,7 @@ export default function Timesheet() {
                 const isHoliday = isHolidayDate(dateStr);
                 const holidayName = getHolidayName(dateStr);
 
-                // 🔥 Highlight holiday cell
+                // Highlight holiday cell
                 if (isHoliday) {
                   return (
                     <TableCell key={i} align="center" sx={{ p: 0.5 }}>
