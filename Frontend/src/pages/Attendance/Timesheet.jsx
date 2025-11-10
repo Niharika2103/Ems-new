@@ -736,7 +736,7 @@ const tileContent = ({ date, view }) => {
         case "rejected":
           return "#f8d7da"; // red
         default:
-          return "#fff3cd"; // yellow pending
+          return "#FFF59D"; // yellow pending
       }
     }
 
@@ -992,7 +992,8 @@ const tileContent = ({ date, view }) => {
                         width: 50,
                         height: 22,
                         textAlign: "center",
-                        backgroundColor: isWeekend ? "#f0f0f0" : "#fff",
+                        // backgroundColor: isWeekend ? "#f0f0f0" : "#fff",
+                         backgroundColor: getInputBackgroundColor("Worked Hours", i, h),
                         border: "1px solid #ccc",
                         borderRadius: 4,
                         boxSizing: "border-box",
