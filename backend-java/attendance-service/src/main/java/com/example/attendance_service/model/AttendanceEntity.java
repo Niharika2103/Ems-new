@@ -316,5 +316,10 @@ public class AttendanceEntity {
 	public void setTotalWorkedHours(Double totalWorkedHours) {
 		this.totalWorkedHours = totalWorkedHours;
 	}
+
+	public void setWeeklyStatus(String string) {
+		// TODO Auto-generated method stub
+		
+	}
 }
 

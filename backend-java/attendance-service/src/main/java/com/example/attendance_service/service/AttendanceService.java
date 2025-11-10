@@ -76,89 +76,7 @@ public List<AttendanceEntity> saveOrUpdateAttendance(
         return Collections.emptyList();
     }
 
-    if (!attendanceRepository.existsByEmployee_IdAndProjectIsNull(employeeId)) {
-        UserEmployeeMasterEntity employee = userRepository.findById(employeeId)
-                .orElseThrow(() -> new RuntimeException("Employee not found"));
 
-        AttendanceEntity firstTimeRecord = new AttendanceEntity();
-        firstTimeRecord.setEmployee(employee);
-        firstTimeRecord.setProject(null); // project_id = NULL
-        firstTimeRecord.setDate(LocalDate.now());
-        firstTimeRecord.setYear(LocalDate.now().getYear());
-        firstTimeRecord.setGender(employee.getGender());
-        firstTimeRecord.setWorkedHours(0.0);
-        firstTimeRecord.setTotalWorkedHours(0.0);
-        firstTimeRecord.setStatus("draft");
-        firstTimeRecord.setMonthlyStatus("draft");
-        firstTimeRecord.setCreatedBy(employeename);
-        firstTimeRecord.setCreatedAt(LocalDateTime.now());
-
-        // ✅ EXACT DEFAULT VALUES FROM YOUR INSERT STATEMENT
-//        firstTimeRecord.setWorkingDays(0);
-//        firstTimeRecord.setWorkFromHome(315);
-//        firstTimeRecord.setHolidays(10);
-//        firstTimeRecord.setOptionalHolidays(2);
-//        firstTimeRecord.setEl(25);
-//        firstTimeRecord.setSl(10);
-//        firstTimeRecord.setExtraMilar(2);
-//        firstTimeRecord.setMaternityLeave(0);
-//        firstTimeRecord.setPaternityLeave(0);
-        
-     // ✅ Use joining date as the base for pro-rated leave calculation
-//        LocalDate joiningDate = LocalDate.now();
-//        Map<String, Double> proRatedLeaves = calculateProRatedLeaves(joiningDate);
-//
-//        
-//        firstTimeRecord.setDate(joiningDate);
-//        firstTimeRecord.setYear(joiningDate.getYear());
-//        firstTimeRecord.setWorkingDays(0);
-//        firstTimeRecord.setWorkFromHome(315);
-//
-//        
-//        firstTimeRecord.setSl(proRatedLeaves.get("SL").intValue());
-//        firstTimeRecord.setEl(proRatedLeaves.get("EL").intValue());
-//        firstTimeRecord.setExtraMilar(proRatedLeaves.get("Extra Milar").intValue());
-//        firstTimeRecord.setHolidays(proRatedLeaves.get("Holidays").intValue());
-//        firstTimeRecord.setOptionalHolidays(proRatedLeaves.get("Optional Holidays").intValue());
-//
-//        
-//        firstTimeRecord.setMaternityLeave(0);
-//        firstTimeRecord.setPaternityLeave(0);
-
-        
-     
-        LocalDate joiningDate = employee.getDateOfJoining();
-
-        if (joiningDate == null) {
-            // fallback if somehow missing
-            joiningDate = LocalDate.now();
-            System.out.println("⚠️ Joining date missing for employee " + employee.getEmployeeName()
-                               + ", using current date instead.");
-        } else {
-            System.out.println("✅ Using actual joining date: " + joiningDate);
-        }
-
-        Map<String, Integer> assignedLeaves = calculateLeavesBasedOnJoining(joiningDate);
-
-        // 🗓️ Basic info
-        firstTimeRecord.setDate(joiningDate);
-        firstTimeRecord.setYear(joiningDate.getYear());
-        firstTimeRecord.setWorkingDays(0);
-        firstTimeRecord.setWorkFromHome(315); // fixed
-
-       
-        firstTimeRecord.setSl(assignedLeaves.get("SL"));
-        firstTimeRecord.setEl(assignedLeaves.get("EL"));
-        firstTimeRecord.setExtraMilar(assignedLeaves.get("Extra Milar"));
-        firstTimeRecord.setHolidays(assignedLeaves.get("Holidays"));
-        firstTimeRecord.setOptionalHolidays(assignedLeaves.get("Optional Holidays"));
-
-        // Other leave types
-        firstTimeRecord.setMaternityLeave(0);
-        firstTimeRecord.setPaternityLeave(0);
-
-        attendanceRepository.save(firstTimeRecord);
-    }
 
     UserEmployeeMasterEntity employee = userRepository.findById(employeeId)
             .orElseThrow(() -> new RuntimeException("Employee not found"));
@@ -513,6 +431,70 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 	    });
 
 	    return finalLeaves;
+	}
+
+	@Transactional
+	public void initializeDefaultLeaves(UUID employeeId, String adminName) {
+	    
+	    boolean exists = attendanceRepository.existsByEmployee_IdAndProjectIsNull(employeeId);
+	    if (exists) {
+	        System.out.println("✅ Default leaves already exist for employee: " + employeeId);
+	        return;
+	    }
+
+	    //  Fetch employee info
+	    UserEmployeeMasterEntity employee = userRepository.findById(employeeId)
+	            .orElseThrow(() -> new RuntimeException("Employee not found"));
+
+	    LocalDate joiningDate = employee.getDateOfJoining();
+	    if (joiningDate == null) {
+	        throw new RuntimeException("Employee joining date is missing!");
+	    }
+
+	    // Compute leaves dynamically using your helper
+	    Map<String, Integer> leaveConfig = calculateLeavesBasedOnJoining(joiningDate);
+
+	    // Create base attendance record
+	    AttendanceEntity base = new AttendanceEntity();
+	    base.setEmployee(employee);
+	    base.setProject(null); // indicates organization-level base record
+	    base.setDate(joiningDate); 
+	    base.setYear(joiningDate.getYear());
+	    base.setGender(employee.getGender());
+
+	    //  Default approval states
+	    base.setStatus("approved");
+	    base.setWeeklyStatus("approved");
+	    base.setMonthlyStatus("approved");
+
+	    //  Assign leaves based on calculation
+	    base.setSl(leaveConfig.get("SL"));
+	    base.setEl(leaveConfig.get("EL"));
+	    base.setExtraMilar(leaveConfig.get("Extra Milar"));
+	    base.setHolidays(leaveConfig.get("Holidays"));
+	    base.setOptionalHolidays(leaveConfig.get("Optional Holidays"));
+
+	    int totalLeaves = leaveConfig.values().stream().mapToInt(Integer::intValue).sum();
+	    base.setRemainingLeaves(totalLeaves);
+
+	    // Initialize other leave types
+	    base.setWorkingDays(0);
+	    base.setWorkFromHome(0);
+	    base.setMaternityLeave(0);
+	    base.setPaternityLeave(0);
+
+	    // Mandatory non-null columns
+	    base.setWorkedHours(0.0);
+	    base.setTotalWorkedHours(0.0);
+	    base.setLeaveType("");
+	    base.setUpdatedBy(adminName);
+	    base.setUpdatedAt(LocalDateTime.now());
+
+	    // Save record
+	    attendanceRepository.save(base);
+
+	    System.out.println(" Default leaves (pro-rated) created for employee ID: "
+	            + employee.getId() + " | Joined: " + joiningDate);
 	}
 
 
