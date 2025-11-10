@@ -734,7 +734,7 @@ const tileContent = ({ date, view }) => {
         case "approved":
           return "#d4edda"; // green
         case "rejected":
-          return "#f8d7da"; // red
+          return "#d3323fff"; // red
         default:
           return "#FFF59D"; // yellow pending
       }
@@ -912,7 +912,7 @@ const tileContent = ({ date, view }) => {
           <Typography variant="body2">Approved</Typography>
         </Box>
         <Box display="flex" alignItems="center" gap={1}>
-          <Box width={20} height={20} bgcolor="#f8d7da" border="1px solid #ccc" />
+          <Box width={20} height={20} bgcolor="#d3323fff" border="1px solid #ccc" />
           <Typography variant="body2">Rejected</Typography>
         </Box>
       </Box>
