@@ -154,20 +154,38 @@ export default function EmpTimesheet() {
   };
 
   //while changing date get all datas 
+  // useEffect(() => {
+  //   if (employeeId && ProjectID && weekStart) {
+  //     const mondayDate = selectDate.getFullYear() + '-' +
+  //       String(selectDate.getMonth() + 1).padStart(2, '0') + '-' +
+  //       String(selectDate.getDate()).padStart(2, '0');
+  //     dispatch(
+  //       AttendanceFetchExistingWeek({
+  //         employeeId,
+  //         projectId: ProjectID,
+  //         startDate: mondayDate
+  //       })
+  //     )
+  //       .then((res) => {
+  //         console.log("Existing week data:", res.payload);
   useEffect(() => {
-    if (employeeId && ProjectID && weekStart) {
-      const mondayDate = selectDate.getFullYear() + '-' +
-        String(selectDate.getMonth() + 1).padStart(2, '0') + '-' +
-        String(selectDate.getDate()).padStart(2, '0');
-      dispatch(
-        AttendanceFetchExistingWeek({
-          employeeId,
-          projectId: ProjectID,
-          startDate: mondayDate
-        })
-      )
-        .then((res) => {
-          console.log("Existing week data:", res.payload);
+  if (employeeId && ProjectID && weekStart) {
+    const mondayDate = weekStart.getFullYear() + '-' +  // ← Change selectDate to weekStart
+      String(weekStart.getMonth() + 1).padStart(2, '0') + '-' +
+      String(weekStart.getDate()).padStart(2, '0');
+    
+    console.log("🔄 Fetching data for week:", mondayDate);
+    
+    dispatch(
+      AttendanceFetchExistingWeek({
+        employeeId,
+        projectId: ProjectID,
+        startDate: mondayDate
+      })
+    )
+    .then((res) => {
+      console.log("Existing week data:", res.payload);
+      // ... keep the rest of your existing code
           // Initialize approval status based on fetched data
           if (res.payload && res.payload.length > 0) {
             const newApprovalStatus = {};
@@ -191,7 +209,7 @@ export default function EmpTimesheet() {
         })
         .catch((err) => console.error(err));
     }
-  }, [employeeId, ProjectID, weekStart, dispatch]);
+  }, [employeeId, ProjectID, weekStart, dispatch,selectDate]);
 
   useEffect(() => {
     if (attendanceData?.length > 0) {
@@ -531,8 +549,16 @@ export default function EmpTimesheet() {
     {}
   );
   const grandTotal = workedTotal + Object.values(rowTotals).reduce((s, v) => s + v, 0);
-  const changeWeek = (offset) =>
-    setWeekStart(getMonday(new Date(weekStart.setDate(weekStart.getDate() + offset * 7))));
+  // const changeWeek = (offset) =>
+  //   setWeekStart(getMonday(new Date(weekStart.setDate(weekStart.getDate() + offset * 7))));
+  const changeWeek = (offset) => {
+  const newWeekStart = getMonday(new Date(weekStart.getTime() + offset * 7 * 24 * 60 * 60 * 1000));
+  setWeekStart(newWeekStart);
+  setSelectDate(newWeekStart); // ← CRITICAL: This triggers the data fetch
+  
+  const currentWeekStart = getMonday(new Date());
+  setIsSaveAllEnabled(newWeekStart.toDateString() === currentWeekStart.toDateString());
+};
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -540,11 +566,31 @@ export default function EmpTimesheet() {
 
       {/* TOP LINE */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        {/* <div className="flex items-center gap-2">
           <IconButton onClick={() => changeWeek(-1)}><ChevronLeft /></IconButton>
           <Typography variant="subtitle2">{formatDateRange()}</Typography>
           <IconButton onClick={() => changeWeek(1)}><ChevronRight /></IconButton>
-          <IconButton onClick={(e) => setCalendarAnchor(e.currentTarget)}><CalendarToday /></IconButton>
+          <IconButton onClick={(e) => setCalendarAnchor(e.currentTarget)}><CalendarToday /></IconButton> */}
+          <div className="flex items-center gap-2">
+  <IconButton 
+    onClick={() => changeWeek(-1)} 
+    disabled={loading}
+  >
+    <ChevronLeft />
+  </IconButton>
+  <Typography variant="subtitle2">{formatDateRange()}</Typography>
+  <IconButton 
+    onClick={() => changeWeek(1)} 
+    disabled={loading}
+  >
+    <ChevronRight />
+  </IconButton>
+  <IconButton 
+    onClick={(e) => setCalendarAnchor(e.currentTarget)}
+    disabled={loading}
+  >
+    <CalendarToday />
+  </IconButton>
           <Popover
             open={Boolean(calendarAnchor)}
             anchorEl={calendarAnchor}
