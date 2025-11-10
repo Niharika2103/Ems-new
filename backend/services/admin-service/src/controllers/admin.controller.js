@@ -1189,9 +1189,19 @@ export const updateWeeklyApprovalStatus = async (req, res) => {
 
     console.log(`✅ Weekly records approved for employee: ${employeeId}`);
 
-    // ✅ 3. Call Java API to deduct leaves for that week
+
     try {
-      await axios.post("http://localhost:9090/api/attendance/deduct-leaves", {
+      await axios.post("http://localhost:9091/api/initialize-default-leaves", {
+        employeeId,
+        adminName: updatedBy,
+      });
+      console.log("✅ Default leaves initialized in Java service");
+    } catch (err) {
+      console.warn("⚠️ Default leaves may already exist or failed:", err.message);
+    }
+    //  Call Java API to deduct leaves for that week
+    try {
+      await axios.post("http://localhost:9091/api/attendance/deduct-leaves", {
         employeeId,
         from,
         to,

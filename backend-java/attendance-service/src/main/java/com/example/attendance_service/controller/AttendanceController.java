@@ -172,7 +172,7 @@ System.out.println("@45::"+employeename);
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate monthStart,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate monthEnd) {
 
-        System.out.println("✅ release-monthly called with:");
+        System.out.println(" release-monthly called with:");
         System.out.println("Employee ID: " + employeeId);
         System.out.println("Project ID: " + projectId);
         System.out.println("Month Start: " + monthStart);
@@ -249,4 +249,13 @@ System.out.println("@45::"+employeename);
          attendanceService.deductLeaves(request.getEmployeeId(), request.getFrom(), request.getTo());
          return ResponseEntity.ok("Leaves updated successfully");
      }
+     
+     @PostMapping("/initialize-default-leaves")
+     public ResponseEntity<String> initializeDefaultLeaves(@RequestBody Map<String, String> request) {
+         UUID employeeId = UUID.fromString(request.get("employeeId"));
+         String adminName = request.get("adminName");
+         attendanceService.initializeDefaultLeaves(employeeId, adminName);
+         return ResponseEntity.ok("Default leaves initialized successfully for employee.");
+     }
+
 }
