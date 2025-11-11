@@ -1166,7 +1166,7 @@ export const updateWeeklyApprovalStatus = async (req, res) => {
 
     const updatedBy = adminName.substring(0, 255);
 
-    // ✅ 1. Update weekly attendance status
+    // ✅ 1. Update weekly attendance status to "approved" in PostgreSQL
     const query = `
       UPDATE attendance
       SET weekly_status = $1,
@@ -1186,7 +1186,7 @@ export const updateWeeklyApprovalStatus = async (req, res) => {
       updatedBy,
     ]);
 
-    // ✅ 2. Handle if no records to approve
+    // ✅ 2. Handle if no pending records found
     if (result.rows.length === 0) {
       return res.status(200).json({
         message: "No pending approvals found for the given week.",
@@ -1196,26 +1196,20 @@ export const updateWeeklyApprovalStatus = async (req, res) => {
 
     console.log(`✅ Weekly records approved for employee: ${employeeId}`);
 
-
+    // ✅ 3. Call Java backend to handle:
+    // - Assign default leaves (first approval)
+    // - Reset leaves for new year if week crosses Jan 1
+    // - Deduct taken leaves (SL, EL, etc.)
     try {
-      await axios.post("http://localhost:9091/api/initialize-default-leaves", {
-        employeeId,
-        adminName: updatedBy,
-      });
-      console.log("✅ Default leaves initialized in Java service");
-    } catch (err) {
-      console.warn("⚠️ Default leaves may already exist or failed:", err.message);
-    }
-    //  Call Java API to deduct leaves for that week
-    try {
-      await axios.post("http://localhost:9091/api/attendance/deduct-leaves", {
+      await axios.post("http://localhost:9091/api/attendance/apply-default-leaves-on-approval", {
         employeeId,
         from,
         to,
+        adminName: updatedBy,
       });
-      console.log("✅ Leave balance updated in Java service");
+      console.log("✅ Leaves initialized, reset (if new year), and deducted successfully in Java service");
     } catch (err) {
-      console.error("⚠️ Failed to update leave balance in Java service:", err.message);
+      console.error("⚠️ Failed to apply default leaves on approval:", err.message);
     }
 
     // ✅ 4. Send success response to frontend
