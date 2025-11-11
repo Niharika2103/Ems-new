@@ -1069,6 +1069,7 @@ export const getPendingWeeklyApprovals = async (req, res) => {
       });
     }
     
+    
     const query = `
       SELECT a.*, u.id AS user_id, u.name, u.email
       FROM attendance a
@@ -1080,12 +1081,18 @@ export const getPendingWeeklyApprovals = async (req, res) => {
 
     const result = await client.query(query, [employeeId, from, to]);
 
-    // ✅ Format the date to remove time (YYYY-MM-DD)
-    const formattedData = result.rows.map((row) => ({
-      ...row,
-      date: row.date ? row.date.toISOString().split("T")[0] : null, // only date part
-    }));
+    
 
+    // ✅ Format the date to remove time (YYYY-MM-DD)
+    const formattedData = result.rows.map(row => {
+  if (!row.date) return row;
+  const localDate = new Date(row.date);
+  const dateOnly = new Date(localDate.getTime() - localDate.getTimezoneOffset() * 60000)
+    .toISOString()
+    .split("T")[0];
+  return { ...row, date: dateOnly };
+});
+    
     res.status(200).json({
       message: "Pending weekly approvals fetched successfully",
       count: formattedData.length,
