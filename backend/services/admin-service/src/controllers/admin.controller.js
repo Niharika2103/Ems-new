@@ -1432,21 +1432,26 @@ export const rejectWeeklyApproval = async (req, res) => {
     const status = "rejected";
 
     const query = `
-      UPDATE attendance
-      SET weekly_status = $1
-      WHERE employee_id = $2
-        AND date BETWEEN $3 AND $4
-        AND weekly_status = 'Pending_approval'
-      RETURNING *;
+     UPDATE attendance
+  SET weekly_status = $1
+  WHERE employee_id = $2
+    AND date BETWEEN $3 AND $4
+    AND weekly_status = 'Pending_approval'
+  RETURNING *, TO_CHAR(date, 'YYYY-MM-DD') AS formatted_date;
     `;
 
     const { rows } = await pool.query(query, [status, employeeId, from, to]);
 
+    
+
     res.status(200).json({
-      message: `Weekly attendance ${status} successfully`,
-      updated_count: rows.length,
-      data: rows,
-    });
+  message: `Weekly attendance ${status} successfully`,
+  updated_count: rows.length,
+  data: rows.map(r => ({
+    ...r,
+    date: r.formatted_date, // ✅ Pure YYYY-MM-DD from DB
+  })),
+});
   } catch (err) {
     console.error("Reject Weekly Status Error:", err.message);
     res.status(500).json({ error: "Failed to reject weekly attendance" });
