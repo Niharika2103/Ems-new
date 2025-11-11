@@ -24,11 +24,11 @@ import { applyParentalLeave } from "../../features/attendance/attendanceSlice";
 export default function MonthlyTimesheet({ onBack }) {
   const { projects } = useSelector((state) => state.project);
   const dispatch = useDispatch();
-  const [leaveType, setLeaveType] = useState("CL");
+  const [leaveType, setLeaveType] = useState("EL");
   const [hours, setHours] = useState([]);
-  const [usedLeaveTypes, setUsedLeaveTypes] = useState(["CL"]);
-  const [leaveRows, setLeaveRows] = useState({ CL: [] });
-  const [lockedRows, setLockedRows] = useState({ CL: false });
+  const [usedLeaveTypes, setUsedLeaveTypes] = useState(["EL"]);
+  const [leaveRows, setLeaveRows] = useState({ EL: [] });
+  const [lockedRows, setLockedRows] = useState({ EL: false });
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [menuRow, setMenuRow] = useState(null);
   const [monthStart, setMonthStart] = useState(() => {
@@ -42,6 +42,19 @@ export default function MonthlyTimesheet({ onBack }) {
   const [monthDays, setMonthDays] = useState([]);
   const [isMonthReleased, setIsMonthReleased] = useState(false);
   const [holidays, setHolidays] = useState([]);
+
+
+  useEffect(() => {
+  const savedReleasedMonth = localStorage.getItem("releasedMonth");
+  const currentMonthKey = formatDate(monthStart);
+
+  if (savedReleasedMonth === currentMonthKey) {
+    setIsMonthReleased(true); // lock this month
+  } else {
+    setIsMonthReleased(false); // other months remain editable
+  }
+}, [monthStart]);
+
 
   //  UPDATED HOLIDAY FETCH LOGIC
   const holidaysCache = {};
@@ -89,7 +102,7 @@ export default function MonthlyTimesheet({ onBack }) {
   // Approval status state for monthly timesheet
   const [approvalStatus, setApprovalStatus] = useState({});
 
-  const leaveTypes = ["CL", "SL", "PL", "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave"];
+  const leaveTypes = ["EL", "SL", "PL", "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave"];
   const formatDate = (date) =>
     `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
 
@@ -299,6 +312,8 @@ export default function MonthlyTimesheet({ onBack }) {
       if (AttendanceReleaseMonth.fulfilled.match(resultAction)) {
         toast.success("Month released successfully!");
         setIsMonthReleased(true);
+        localStorage.setItem("releasedMonth", formatDate(monthStart)); // ✅ store released month start date
+
 
         //  Update attendanceData instantly to trigger yellow color
         const updatedData = attendanceData.map((item) => ({

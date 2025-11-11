@@ -54,11 +54,24 @@ export default function EmpTimesheet() {
   const [modalLeaveType, setModalLeaveType] = useState("");
   const [holidays, setHolidays] = useState([]);
   const [holidaysCache, setHolidaysCache] = useState({});
+  const [isWeekReleased, setIsWeekReleased] = useState(false);
+
   //  store leave periods for multi-week leaves
   const [leavePeriods, setLeavePeriods] = useState([]);
   const [approvalStatus, setApprovalStatus] = useState({}); // Track approval status for each day
   const leaveTypes = ["EL", "SL", "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave", "Optional Holidays", "Holidays"];
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+
+  useEffect(() => {
+  const savedReleasedWeek = localStorage.getItem("releasedWeek");
+  if (savedReleasedWeek && new Date(savedReleasedWeek).toDateString() === weekStart.toDateString()) {
+    setIsWeekReleased(true);
+  } else {
+    setIsWeekReleased(false);
+  }
+}, [weekStart]);
+
 
   // Fetch from localStorage when page loads
   useEffect(() => {
@@ -479,6 +492,8 @@ export default function EmpTimesheet() {
 
       if (AttendanceReleaseWeek.fulfilled.match(resultAction)) {
         toast.success("Week released successfully!");
+        setIsWeekReleased(true);
+        localStorage.setItem("releasedWeek", weekStart.toISOString());
 
         //  Immediately update frontend data to show yellow
         const updatedData = attendanceData.map((item) => ({
@@ -675,7 +690,9 @@ export default function EmpTimesheet() {
                 value={h}
                 min="0"
                 max="9"
-                disabled={!isEditable}
+                // disabled={!isEditable}
+                disabled={isWeekReleased || !isEditable}
+
                 style={{ backgroundColor }}
                 className={`w-17 h-8 text-center border rounded-md ${!isEditable ? "cursor-not-allowed" : "bg-white"
                   } ${isWeekend ? "text-gray-400" : ""}`}

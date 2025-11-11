@@ -244,25 +244,18 @@ System.out.println("@45::"+employeename);
          }
      }
 
-   
+     @PostMapping("/attendance/deduct-leaves")
+     public ResponseEntity<String> deductLeaves(@RequestBody LeaveDeductRequest request) {
+         attendanceService.deductLeaves(request.getEmployeeId(), request.getFrom(), request.getTo());
+         return ResponseEntity.ok("Leaves updated successfully");
+     }
      
-//     @PostMapping("/initialize-default-leaves")
-//     public ResponseEntity<String> initializeDefaultLeaves(@RequestBody Map<String, String> request) {
-//         UUID employeeId = UUID.fromString(request.get("employeeId"));
-//         String adminName = request.get("adminName");
-//         attendanceService.initializeDefaultLeaves(employeeId, adminName);
-//         return ResponseEntity.ok("Default leaves initialized successfully for employee.");
-//     }
-
-     @PostMapping("/attendance/apply-default-leaves-on-approval")
-     public ResponseEntity<String> applyDefaultLeavesOnApproval(@RequestBody Map<String, String> body) {
-         UUID employeeId = UUID.fromString(body.get("employeeId"));
-         LocalDate from = LocalDate.parse(body.get("from"));
-         LocalDate to = LocalDate.parse(body.get("to"));
-         String adminName = body.get("adminName");
-
-         attendanceService.updateApprovedRecordsWithDefaultLeaves(employeeId, from, to, adminName);
-         return ResponseEntity.ok("Default leaves added, reset if new year, and deducted on approved records");
+     @PostMapping("/initialize-default-leaves")
+     public ResponseEntity<String> initializeDefaultLeaves(@RequestBody Map<String, String> request) {
+         UUID employeeId = UUID.fromString(request.get("employeeId"));
+         String adminName = request.get("adminName");
+         attendanceService.initializeDefaultLeaves(employeeId, adminName);
+         return ResponseEntity.ok("Default leaves initialized successfully for employee.");
      }
 
 }

@@ -8,7 +8,6 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.example.attendance_service.model.AttendanceEntity;
@@ -51,29 +50,6 @@ public interface AttendanceRepository extends JpaRepository<AttendanceEntity, UU
 	
 	Optional<AttendanceEntity> findByEmployee_IdAndProjectIsNull(UUID employeeId);
 
-	// ✅ Checks if leaves are already initialized for that employee in a specific year
-	@Query("SELECT CASE WHEN COUNT(a) > 0 THEN true ELSE false END " +
-	       "FROM AttendanceEntity a " +
-	       "WHERE a.employee.id = :employeeId " +
-	       "AND EXTRACT(YEAR FROM a.date) = :year " +
-	       "AND COALESCE(a.sl, 0) > :value")
-	boolean existsByEmployee_IdAndYearAndSlGreaterThan(
-	        @Param("employeeId") UUID employeeId,
-	        @Param("year") int year,
-	        @Param("value") int value);
 
-	// ✅ Fetch last approved record for carrying balances
-	Optional<AttendanceEntity> findTopByEmployee_IdAndStatusOrderByDateDesc(UUID employeeId, String status);
-
-	// ✅ Find last approved attendance BEFORE a given date
 	
-	@Query("SELECT a FROM AttendanceEntity a " +
-		       "WHERE a.employee.id = :employeeId " +
-		       "AND a.status = 'approved' " +          // 👈 NOTE: 'status', NOT 'weekly_status'
-		       "AND a.date < :beforeDate " +
-		       "ORDER BY a.date DESC")
-		List<AttendanceEntity> findLastApprovedBeforeDate(
-		    @Param("employeeId") UUID employeeId,
-		    @Param("beforeDate") LocalDate beforeDate
-		);
 }

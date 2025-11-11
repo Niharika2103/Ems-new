@@ -50,11 +50,9 @@ const getMonthDays = (date) => {
     const dayName = current.toLocaleDateString("en-US", { weekday: "short" });
     days.push({
       date: new Date(current),
-      // label: `${dayName} / ${current.getDate().toString().padStart(2, "0")}`,
       label: `${current.getDate().toString().padStart(2, "0")}/${(current.getMonth() + 1)
         .toString()
         .padStart(2, "0")} (${dayName})`,
-
       dayIndex: current.getDay(),
       isWeekend: dayName === "Sat" || dayName === "Sun",
     });
@@ -65,14 +63,42 @@ const getMonthDays = (date) => {
 };
 
 export default function Timesheet() {
-  const [viewMode, setViewMode] = useState("weekly");
-  const [leaveType, setLeaveType] = useState("CL");
-  const [usedLeaveTypes, setUsedLeaveTypes] = useState(["CL"]);
-  const [leaveRows, setLeaveRows] = useState({ CL: Array(7).fill(0) });
+  const dispatch = useDispatch();
+  const location = useLocation();
+  const { 
+    employeeId, 
+    from, 
+    to, 
+    viewType,  // This comes from the table navigation
+    currentStartDate,
+    currentEndDate 
+  } = location.state || {};
+
+  // Initialize viewMode from navigation or default to weekly
+  const [viewMode, setViewMode] = useState(viewType || "weekly");
+  const [leaveType, setLeaveType] = useState("EL");
+  const [usedLeaveTypes, setUsedLeaveTypes] = useState(["EL"]);
+  const [leaveRows, setLeaveRows] = useState({ EL: Array(7).fill(0) });
   const [workedHours, setWorkedHours] = useState(Array(7).fill(0));
   const [monthlyWorkedHours, setMonthlyWorkedHours] = useState([]);
-  const [weekStart, setWeekStart] = useState(getMonday(new Date()));
-  const [monthStart, setMonthStart] = useState(new Date());
+  
+  // Initialize dates from navigation or use defaults
+  const [weekStart, setWeekStart] = useState(() => {
+    if (currentStartDate && viewType === "weekly") {
+      return getMonday(new Date(currentStartDate));
+    }
+    return getMonday(new Date());
+  });
+  
+  const [monthStart, setMonthStart] = useState(() => {
+    if (currentStartDate && viewType === "monthly") {
+      const date = new Date(currentStartDate);
+      return new Date(date.getFullYear(), date.getMonth(), 1);
+    }
+    const today = new Date();
+    return new Date(today.getFullYear(), today.getMonth(), 1);
+  });
+
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [menuRow, setMenuRow] = useState(null);
   const [calendarAnchor, setCalendarAnchor] = useState(null);
@@ -83,14 +109,11 @@ export default function Timesheet() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [statusColor, setStatusColor] = useState("#fff");
 
-  const dispatch = useDispatch();
   const { attendanceData = [], loading } = useSelector((state) => state.attendance || {});
-  const location = useLocation();
-  const { employeeId, from, to } = location.state || {};
   const gender = localStorage.getItem("gender");
 
   console.log(attendanceData, "attendanceData")
-  const leaveTypes = ["CL", "SL", "PL", "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave"];
+  const leaveTypes = ["EL", "SL", "PL", "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave"];
 
   // 🔥 ADD BELOW OTHER useState HOOKS
   const [holidays, setHolidays] = useState([]);
@@ -127,6 +150,21 @@ export default function Timesheet() {
 
     fetchHolidays();
   }, [weekStart, monthStart, viewMode]);
+
+  // Sync view mode with navigation parameters when component mounts
+  useEffect(() => {
+    if (viewType) {
+      setViewMode(viewType);
+      
+      // Also set the appropriate date range based on navigation
+      if (viewType === "weekly" && currentStartDate) {
+        setWeekStart(getMonday(new Date(currentStartDate)));
+      } else if (viewType === "monthly" && currentStartDate) {
+        const date = new Date(currentStartDate);
+        setMonthStart(new Date(date.getFullYear(), date.getMonth(), 1));
+      }
+    }
+  }, [viewType, currentStartDate]);
 
   // 🔥 Helper functions
   const isHolidayDate = (dateStr) =>
@@ -252,7 +290,7 @@ const tileContent = ({ date, view }) => {
       const leaveType = record.leave_type || "";
 
       const leaveValues = {
-        CL: 0, SL: 0, PL: 0, WFH: 0,
+        EL: 0, SL: 0, PL: 0, WFH: 0,
         "Extra Milar": 0, "Paternity Leave": 0, "Maternity Leave": 0,
       };
       if (leaveType && leaveValues.hasOwnProperty(leaveType)) {
@@ -276,7 +314,7 @@ const tileContent = ({ date, view }) => {
     const newLeaveRows = {};
     const newApprovalStatus = { ...approvalStatus };
     const allLeaveTypes = [
-      "CL", "SL", "PL", "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave",
+      "EL", "SL", "PL", "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave",
     ];
 
     allLeaveTypes.forEach((lt) => {
@@ -327,7 +365,7 @@ const tileContent = ({ date, view }) => {
       const leaveType = record.leave_type || "";
 
       const leaveValues = {
-        CL: 0,
+      EL: 0,
         SL: 0,
         PL: 0,
         WFH: 0,
@@ -356,7 +394,7 @@ const tileContent = ({ date, view }) => {
     const newLeaveRows = {};
     const newApprovalStatus = { ...approvalStatus };
     const allLeaveTypes = [
-      "CL",
+      "EL",
       "SL",
       "PL",
       "WFH",
@@ -407,29 +445,25 @@ const tileContent = ({ date, view }) => {
 
   // --- Format header range ---
   const formatDateRange = () => {
-    if (viewMode === "weekly") {
-      const endDate = new Date(weekStart);
-      endDate.setDate(weekStart.getDate() + 6);
-      const fmt = (d) =>
-        `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1)
-          .toString()
-          .padStart(2, "0")}/${d.getFullYear()}`;
-      return `${fmt(weekStart)} - ${fmt(endDate)}`;
-    } else {
-      const start = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1);
-      const end = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
+  if (viewMode === "weekly") {
+    const endDate = new Date(weekStart);
+    endDate.setDate(weekStart.getDate() + 6);
+    const fmt = (d) =>
+      `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1)
+        .toString()
+        .padStart(2, "0")}/${d.getFullYear()}`;
+    return `${fmt(weekStart)} - ${fmt(endDate)}`;
+  } else {
+    // FIX: Always use 1st as start date and last day as end date
+    const start = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1);
+    const end = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
 
-      const startMonth = start.toLocaleString("default", { month: "short" });
-      const endMonth = end.toLocaleString("default", { month: "short" });
-      const year =
-        end.getMonth() === 0 && start.getMonth() === 11
-          ? `${start.getFullYear()}–${end.getFullYear()}`
-          : start.getFullYear();
+    const fmt = (d) => 
+      `${d.getDate().toString().padStart(2, "0")}-${(d.getMonth() + 1).toString().padStart(2, "0")}-${d.getFullYear()}`;
 
-      return `${startMonth} ${start.getDate()} – ${endMonth} ${end.getDate()}, ${year}`;
-    }
-  };
-
+    return `${fmt(start)} - ${fmt(end)}`;
+  }
+};
   // --- Change week/month ---
   const changeWeek = (delta) => {
     const newWeek = new Date(weekStart);
@@ -437,30 +471,32 @@ const tileContent = ({ date, view }) => {
     setWeekStart(getMonday(newWeek));
   };
 
-  const changeMonth = (delta) => {
-    const newMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() + delta, 1);
-    setMonthStart(newMonth);
-  };
+  
+
+const changeMonth = (delta) => {
+  const newMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() + delta, 1);
+  setMonthStart(newMonth);
+};
 
   // Handle view mode change with proper date synchronization
   const handleViewModeChange = () => {
-    if (viewMode === "weekly") {
-      // Switching from weekly to monthly
-      // Set month start to the month of the current week
-      const newMonthStart = new Date(weekStart.getFullYear(), weekStart.getMonth(), 10);
-      setMonthStart(newMonthStart);
-      setViewMode("monthly");
-    } else {
-      // Switching from monthly to weekly
-      // Set week start to the first Monday of the current month
-      const firstDayOfMonth = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1);
-      const newWeekStart = getMonday(firstDayOfMonth);
-      setWeekStart(newWeekStart);
-      setViewMode("weekly");
-    }
-    // Reset edit mode when changing views
-    setIsEditMode(false);
-  };
+  if (viewMode === "weekly") {
+    // Switching from weekly to monthly
+    // Always use 1st of current week's month
+    const newMonthStart = new Date(weekStart.getFullYear(), weekStart.getMonth(), 1);
+    setMonthStart(newMonthStart);
+    setViewMode("monthly");
+  } else {
+    // Switching from monthly to weekly
+    // Set week start to the first Monday of the current month
+    const firstDayOfMonth = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1);
+    const newWeekStart = getMonday(firstDayOfMonth);
+    setWeekStart(newWeekStart);
+    setViewMode("weekly");
+  }
+  // Reset edit mode when changing views
+  setIsEditMode(false);
+};
 
   // --- Add activity ---
   const addActivity = () => {
@@ -519,19 +555,7 @@ const tileContent = ({ date, view }) => {
     alert("Timesheet saved!");
   };
 
-  // const handleApproveAll = () => {
-  //   const newApprovalStatus = { ...approvalStatus };
-
-  //   Object.keys(leaveRows).forEach(leaveType => {
-  //     newApprovalStatus[leaveType] = leaveRows[leaveType].map((value, index) => 
-  //       value > 0 ? "approved" : newApprovalStatus[leaveType][index] || "pending"
-  //     );
-  //   });
-
-  //   setApprovalStatus(newApprovalStatus);
-  //   alert("All leaves approved!");
-  // };
-
+ 
   const handleApproveAll = () => {
     const newApprovalStatus = { ...approvalStatus };
 
@@ -552,35 +576,7 @@ const tileContent = ({ date, view }) => {
   };
 
 
-  // const handleRejectAll = () => {
-  //   const newApprovalStatus = { ...approvalStatus };
-
-  //   Object.keys(newApprovalStatus).forEach(leaveType => {
-  //     newApprovalStatus[leaveType] = newApprovalStatus[leaveType].map(() => "pending");
-  //   });
-
-  //   setApprovalStatus(newApprovalStatus);
-  //   alert("All leaves rejected!");
-  // };
-
-  // const handleRejectAll = () => {
-  //   const newApprovalStatus = { ...approvalStatus };
-
-  //   // ✅ Include Worked Hours
-  //   newApprovalStatus["Worked Hours"] = (viewMode === "weekly"
-  //     ? workedHours
-  //     : monthlyWorkedHours
-  //   ).map(() => "rejected");
-
-  //   Object.keys(newApprovalStatus).forEach((leaveType) => {
-  //     if (leaveType !== "Worked Hours") {
-  //       newApprovalStatus[leaveType] = newApprovalStatus[leaveType].map(() => "rejected");
-  //     }
-  //   });
-
-  //   setApprovalStatus(newApprovalStatus);
-  //   alert("All rejected!");
-  // };
+ 
 
   const handleRejectAll = () => {
     if (!employeeId) {
@@ -604,20 +600,21 @@ const tileContent = ({ date, view }) => {
           alert(message);
         })
         .catch((err) => console.error("❌ Weekly Reject Error:", err));
-    } else if (viewMode === "monthly") {
-      const from = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1);
-      const to = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
-      fromDate = from.toISOString().slice(0, 10);
-      toDate = to.toISOString().slice(0, 10);
   
-      dispatch(Admin_Reject_Monthly_Attendance({ employeeId, from: fromDate, to: toDate }))
-        .unwrap()
-        .then((res) => {
-          const message = res?.message || `❌ Monthly Timesheet Rejected!\nRange: ${fromDate} → ${toDate}`;
-          alert(message);
-        })
-        .catch((err) => console.error("❌ Monthly Reject Error:", err));
-    }
+      }
+else if (viewMode === "monthly") {
+  // Always use 1st to last day of the current month view
+  const fromDate = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1).toISOString().slice(0, 10);
+  const toDate = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0).toISOString().slice(0, 10);
+
+  dispatch(Admin_Reject_Monthly_Attendance({ employeeId, from: fromDate, to: toDate }))
+    .unwrap()
+    .then((res) => {
+      const message = res?.message || `❌ Monthly Timesheet Rejected!\nRange: ${fromDate} → ${toDate}`;
+      alert(message);
+    })
+    .catch((err) => console.error("❌ Monthly Reject Error:", err));
+}
   
     // Update UI
     const newApprovalStatus = { ...approvalStatus };
@@ -691,31 +688,7 @@ const tileContent = ({ date, view }) => {
     }
   };
 
-  // Enhanced color coding function
-  // const getInputBackgroundColor = (leaveType, dayIndex, value) => {
-  //   // For weekends - light gray background
-  //   if (days[dayIndex].dayIndex === 0 || days[dayIndex].dayIndex === 6) {
-  //     return "#f0f0f0";
-  //   }
-
-  //   // For leave cells with values
-  //   if (value > 0) {
-  //     const status = approvalStatus[leaveType]?.[dayIndex] || "pending";
-
-  //     switch (status) {
-  //       case "approved":
-  //         return "#d4edda"; // Light green for approved
-  //       case "rejected":
-  //         return "#f8d7da"; // Light red for rejected
-  //       case "pending":
-  //       default:
-  //         return "#fff3cd"; // Light yellow for pending approval
-  //     }
-  //   }
-
-  //   // Default white background for weekdays with no leave
-  //   return "#fff";
-  // };
+ 
   // ✅ Updated version — keeps Sat/Sun as gray with no status color
   const getInputBackgroundColor = (leaveType, dayIndex, value) => {
     // For Saturday (6) and Sunday (0): always gray, no status logic
@@ -777,18 +750,23 @@ const tileContent = ({ date, view }) => {
         })
         .catch((err) => console.error("❌ Weekly Approve Error:", err));
     }
-    else if (viewMode === "monthly") {
-      //  Monthly uses from & to from location.state
-      console.log("Monthly Range (from navigation):", from, "→", to);
+   
 
-      dispatch(Admin_Approve_monthly_Attendance({ employeeId: employeeId, from, to }))
-        .unwrap()
-        .then((res) => {
-          console.log(" Monthly Approved:", res);
-          alert(` Monthly Timesheet Approved!\nRange: ${from} → ${to}`);
-        })
-        .catch((err) => console.error(" Monthly Approve Error:", err));
-    }
+  else if (viewMode === "monthly") {
+  // Always calculate from 1st to last day of the month
+  const fromDate = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1).toISOString().slice(0, 10);
+  const toDate = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0).toISOString().slice(0, 10);
+
+  console.log("📆 Monthly Fetch Range:", fromDate, "→", toDate);
+
+  dispatch(Admin_Approve_monthly_Attendance({ employeeId: employeeId, from: fromDate, to: toDate }))
+    .unwrap()
+    .then((res) => {
+      console.log(" Monthly Approved:", res);
+      alert(` Monthly Timesheet Approved!\nRange: ${fromDate} → ${toDate}`);
+    })
+    .catch((err) => console.error(" Monthly Approve Error:", err));
+}
   };
 
   const getStatusBackgroundColor = (item, viewMode) => {
@@ -826,41 +804,45 @@ const tileContent = ({ date, view }) => {
   });
   const grandTotal = workedTotal + Object.values(rowTotals).reduce((a, b) => a + b, 0);
 
-  // --- API Range (10 → 9)
-  useEffect(() => {
-    if (!employeeId) return;
+  
 
-    if (viewMode === "weekly") {
-      // 🔹 Compute weekly range (Monday → Sunday)
-      const fromDate = new Date(weekStart);
-      const toDate = new Date(weekStart);
-      toDate.setDate(weekStart.getDate() + 6);
+useEffect(() => {
+  if (!employeeId) return;
 
-      const from = fromDate.toISOString().slice(0, 10);
-      const to = toDate.toISOString().slice(0, 10);
+  if (viewMode === "weekly") {
+    // 🔹 Compute weekly range (Monday → Sunday)
+    const fromDate = new Date(weekStart);
+    const toDate = new Date(weekStart);
+    toDate.setDate(weekStart.getDate() + 6);
 
-      console.log("📅 Weekly Fetch Range:", from, "→", to);
+    const weeklyFrom = fromDate.toISOString().slice(0, 10);
+    const weeklyTo = toDate.toISOString().slice(0, 10);
 
-      dispatch(AdminAttendancFetchWeeklyDataById({ employeeId, from, to }))
-        .unwrap()
-        .then((res) => console.log("✅ Weekly Data:", res))
-        .catch((err) => console.error("❌ Weekly Error:", err));
-    }
-    else if (viewMode === "monthly") {
-      // 🔹 Use from/to from location.state (passed from previous page)
-      console.log("📆 Monthly Fetch Range:", from, "→", to);
+    console.log("📅 Weekly Fetch Range:", weeklyFrom, "→", weeklyTo);
 
-      dispatch(AdminAttendancFetchMonthlyDataById({ employeeId, from, to }))
-        .unwrap()
-        .then((res) => {
-          console.log("✅ Monthly Data:", res);
-          // 🟩 Set monthly status from API if available
-          if (Array.isArray(res) && res.length > 0 && res[0].monthly_status) {
-          }
-        })
-        .catch((err) => console.error("❌ Monthly Error:", err));
-    }
-  }, [dispatch, weekStart, monthStart, viewMode, employeeId]);
+    dispatch(AdminAttendancFetchWeeklyDataById({ employeeId, from: weeklyFrom, to: weeklyTo }))
+      .unwrap()
+      .then((res) => console.log("✅ Weekly Data:", res))
+      .catch((err) => console.error("❌ Weekly Error:", err));
+  }
+  else if (viewMode === "monthly") {
+    // 🔹 ALWAYS use 1st to last day of the current month view
+    const fromDate = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1);
+    const toDate = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
+
+    const monthlyFrom = fromDate.toISOString().slice(0, 10);
+    const monthlyTo = toDate.toISOString().slice(0, 10);
+
+    console.log("📆 Monthly Fetch Range:", monthlyFrom, "→", monthlyTo);
+
+    dispatch(AdminAttendancFetchMonthlyDataById({ employeeId, from: monthlyFrom, to: monthlyTo }))
+      .unwrap()
+      .then((res) => {
+        console.log("✅ Monthly Data:", res);
+      })
+      .catch((err) => console.error("❌ Monthly Error:", err));
+  }
+}, [dispatch, weekStart, monthStart, viewMode, employeeId]);
 
   return (
     <Box p={2}>
@@ -885,7 +867,7 @@ const tileContent = ({ date, view }) => {
           >
             <Box p={2}>
               <Calendar
-                onChange={handleCalendarDateSelect}
+               onChange={handleCalendarDateSelect}
                 value={viewMode === "weekly" ? weekStart : monthStart}
                   tileClassName={tileClassName}     // 🔥 Added
   tileContent={tileContent} 
@@ -1147,16 +1129,7 @@ const tileContent = ({ date, view }) => {
           </Button>
         </Box>
         <Box display="flex" gap={1}>
-          {/* {isEditMode ? (
-            <Button 
-              variant="contained" 
-              color="success" 
-              startIcon={<Save />}
-              onClick={handleSaveAll}
-            >
-              Save
-            </Button>
-          ) : ( */}
+        
             <>
               <Button 
                 variant="contained" 
@@ -1172,37 +1145,8 @@ const tileContent = ({ date, view }) => {
               >
                 Rejected
               </Button>
-              {/* <Button 
-                variant="contained" 
-                color="primary" 
-                startIcon={<Edit />}
-                onClick={handleEditAll}
-              >
-                Edit
-              </Button> */}
-              {/* <Button variant="contained" color="success" onClick={handleApproved}>
-                {viewMode === "weekly" ? "Approve Weekly" : "Approve Monthly"}
-              </Button> */}
-            </>
           
-          {/* ✅ Only Approve Weekly & Reject buttons
-          <>
-            <Button
-              variant="contained"
-              color="success"
-              onClick={handleApprovedWeek}
-            >
-              Approve Weekly
-            </Button>
-
-            <Button
-              variant="contained"
-              color="error"
-              onClick={handleRejectWeek}
-            >
-              Reject Weekly
-            </Button>
-          </> */}
+          </>
 
         </Box>
       </Box>

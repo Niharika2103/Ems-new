@@ -40,7 +40,6 @@ const EmployeeLeave = () => {
     optional_holidays: 2,
     el: 25,
     sl: 10,
-    cl: 2,
     extra_milar: 2,
     maternity_leave: 180,
     paternity_leave: 7,
@@ -52,7 +51,6 @@ const EmployeeLeave = () => {
     optional_holidays: "#9C6ADE",
     el: "#47C1BF",
     sl: "#FFB545",
-    cl: "#FF7A7A",
     extra_milar: "#64B6AC",
     maternity_leave: "#F472B6",
     paternity_leave: "#7E57C2",
@@ -63,7 +61,6 @@ const EmployeeLeave = () => {
     { key: "optional_holidays", label: "Optional Holidays" },
     { key: "el", label: "Earned Leave (EL)" },
     { key: "sl", label: "Sick Leave (SL)" },
-    { key: "cl", label: "Casual Leave (CL)" },
     { key: "extra_milar", label: "Extra Milar" },
   ];
 
