@@ -76,9 +76,9 @@ export default function Timesheet() {
 
   // Initialize viewMode from navigation or default to weekly
   const [viewMode, setViewMode] = useState(viewType || "weekly");
-  const [leaveType, setLeaveType] = useState("CL");
-  const [usedLeaveTypes, setUsedLeaveTypes] = useState(["CL"]);
-  const [leaveRows, setLeaveRows] = useState({ CL: Array(7).fill(0) });
+  const [leaveType, setLeaveType] = useState("EL");
+  const [usedLeaveTypes, setUsedLeaveTypes] = useState(["EL"]);
+  const [leaveRows, setLeaveRows] = useState({ EL: Array(7).fill(0) });
   const [workedHours, setWorkedHours] = useState(Array(7).fill(0));
   const [monthlyWorkedHours, setMonthlyWorkedHours] = useState([]);
   
@@ -113,7 +113,7 @@ export default function Timesheet() {
   const gender = localStorage.getItem("gender");
 
   console.log(attendanceData, "attendanceData")
-  const leaveTypes = ["CL", "SL", "PL", "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave"];
+  const leaveTypes = ["EL", "SL", "PL", "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave"];
 
   // 🔥 ADD BELOW OTHER useState HOOKS
   const [holidays, setHolidays] = useState([]);
@@ -290,7 +290,7 @@ const tileContent = ({ date, view }) => {
       const leaveType = record.leave_type || "";
 
       const leaveValues = {
-        CL: 0, SL: 0, PL: 0, WFH: 0,
+        EL: 0, SL: 0, PL: 0, WFH: 0,
         "Extra Milar": 0, "Paternity Leave": 0, "Maternity Leave": 0,
       };
       if (leaveType && leaveValues.hasOwnProperty(leaveType)) {
@@ -314,7 +314,7 @@ const tileContent = ({ date, view }) => {
     const newLeaveRows = {};
     const newApprovalStatus = { ...approvalStatus };
     const allLeaveTypes = [
-      "CL", "SL", "PL", "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave",
+      "EL", "SL", "PL", "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave",
     ];
 
     allLeaveTypes.forEach((lt) => {
@@ -365,7 +365,7 @@ const tileContent = ({ date, view }) => {
       const leaveType = record.leave_type || "";
 
       const leaveValues = {
-        CL: 0,
+        EL: 0,
         SL: 0,
         PL: 0,
         WFH: 0,
@@ -394,7 +394,7 @@ const tileContent = ({ date, view }) => {
     const newLeaveRows = {};
     const newApprovalStatus = { ...approvalStatus };
     const allLeaveTypes = [
-      "CL",
+      "EL",
       "SL",
       "PL",
       "WFH",
