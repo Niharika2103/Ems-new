@@ -138,7 +138,7 @@ export default function EmpTimesheet() {
   // Check if field is read-only based on status
   const isFieldReadOnly = (dayIndex, leaveType = null) => {
     if (isWeekendDay(dayIndex)) {
-      return true; 
+      return true;
     }
     const statusKey = leaveType ? `${leaveType}_${dayIndex}` : `worked_${dayIndex}`;
     return approvalStatus[statusKey] === 'approved'; // Read-only only when approved
@@ -169,23 +169,23 @@ export default function EmpTimesheet() {
   //       .then((res) => {
   //         console.log("Existing week data:", res.payload);
   useEffect(() => {
-  if (employeeId && ProjectID && weekStart) {
-    const mondayDate = weekStart.getFullYear() + '-' +  // ← Change selectDate to weekStart
-      String(weekStart.getMonth() + 1).padStart(2, '0') + '-' +
-      String(weekStart.getDate()).padStart(2, '0');
-    
-    console.log("🔄 Fetching data for week:", mondayDate);
-    
-    dispatch(
-      AttendanceFetchExistingWeek({
-        employeeId,
-        projectId: ProjectID,
-        startDate: mondayDate
-      })
-    )
-    .then((res) => {
-      console.log("Existing week data:", res.payload);
-      // ... keep the rest of your existing code
+    if (employeeId && ProjectID && weekStart) {
+      const mondayDate = weekStart.getFullYear() + '-' +  // ← Change selectDate to weekStart
+        String(weekStart.getMonth() + 1).padStart(2, '0') + '-' +
+        String(weekStart.getDate()).padStart(2, '0');
+
+      console.log("🔄 Fetching data for week:", mondayDate);
+
+      dispatch(
+        AttendanceFetchExistingWeek({
+          employeeId,
+          projectId: ProjectID,
+          startDate: mondayDate
+        })
+      )
+        .then((res) => {
+          console.log("Existing week data:", res.payload);
+          // ... keep the rest of your existing code
           // Initialize approval status based on fetched data
           if (res.payload && res.payload.length > 0) {
             const newApprovalStatus = {};
@@ -209,7 +209,7 @@ export default function EmpTimesheet() {
         })
         .catch((err) => console.error(err));
     }
-  }, [employeeId, ProjectID, weekStart, dispatch,selectDate]);
+  }, [employeeId, ProjectID, weekStart, dispatch, selectDate]);
 
   useEffect(() => {
     if (attendanceData?.length > 0) {
@@ -528,7 +528,7 @@ export default function EmpTimesheet() {
     if (isWeekend) {
       return "#E0E0E0"; // always gray for weekends
     }
-   
+
     const record = attendanceData?.[dayIndex];
     if (!record) return "white";
 
@@ -536,7 +536,9 @@ export default function EmpTimesheet() {
       case "Pending_approval":
         return "#FFF59D"; // light yellow
       case "approved":
-        return "#A5D6A7"; // light green
+        return "#A5D6A7";
+      case "rejected":
+        return "#d3323fff";
       default:
         return "white";
     }
@@ -552,13 +554,13 @@ export default function EmpTimesheet() {
   // const changeWeek = (offset) =>
   //   setWeekStart(getMonday(new Date(weekStart.setDate(weekStart.getDate() + offset * 7))));
   const changeWeek = (offset) => {
-  const newWeekStart = getMonday(new Date(weekStart.getTime() + offset * 7 * 24 * 60 * 60 * 1000));
-  setWeekStart(newWeekStart);
-  setSelectDate(newWeekStart); // ← CRITICAL: This triggers the data fetch
-  
-  const currentWeekStart = getMonday(new Date());
-  setIsSaveAllEnabled(newWeekStart.toDateString() === currentWeekStart.toDateString());
-};
+    const newWeekStart = getMonday(new Date(weekStart.getTime() + offset * 7 * 24 * 60 * 60 * 1000));
+    setWeekStart(newWeekStart);
+    setSelectDate(newWeekStart); // ← CRITICAL: This triggers the data fetch
+
+    const currentWeekStart = getMonday(new Date());
+    setIsSaveAllEnabled(newWeekStart.toDateString() === currentWeekStart.toDateString());
+  };
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -571,26 +573,26 @@ export default function EmpTimesheet() {
           <Typography variant="subtitle2">{formatDateRange()}</Typography>
           <IconButton onClick={() => changeWeek(1)}><ChevronRight /></IconButton>
           <IconButton onClick={(e) => setCalendarAnchor(e.currentTarget)}><CalendarToday /></IconButton> */}
-          <div className="flex items-center gap-2">
-  <IconButton 
-    onClick={() => changeWeek(-1)} 
-    disabled={loading}
-  >
-    <ChevronLeft />
-  </IconButton>
-  <Typography variant="subtitle2">{formatDateRange()}</Typography>
-  <IconButton 
-    onClick={() => changeWeek(1)} 
-    disabled={loading}
-  >
-    <ChevronRight />
-  </IconButton>
-  <IconButton 
-    onClick={(e) => setCalendarAnchor(e.currentTarget)}
-    disabled={loading}
-  >
-    <CalendarToday />
-  </IconButton>
+        <div className="flex items-center gap-2">
+          <IconButton
+            onClick={() => changeWeek(-1)}
+            disabled={loading}
+          >
+            <ChevronLeft />
+          </IconButton>
+          <Typography variant="subtitle2">{formatDateRange()}</Typography>
+          <IconButton
+            onClick={() => changeWeek(1)}
+            disabled={loading}
+          >
+            <ChevronRight />
+          </IconButton>
+          <IconButton
+            onClick={(e) => setCalendarAnchor(e.currentTarget)}
+            disabled={loading}
+          >
+            <CalendarToday />
+          </IconButton>
           <Popover
             open={Boolean(calendarAnchor)}
             anchorEl={calendarAnchor}

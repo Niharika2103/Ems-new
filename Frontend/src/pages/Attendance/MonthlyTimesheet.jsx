@@ -146,8 +146,8 @@ export default function MonthlyTimesheet({ onBack }) {
       case "Pending_approval":
         return "#FFF59D"; // light yellow
       case "Approved":
-        return "#A5D6A7"; 
-        case "rejected":
+        return "#A5D6A7";
+      case "rejected":
         return "#d3323fff"; // light green
       default:
         return "white";
