@@ -37,6 +37,14 @@ const ProjectDashboard = () => {
       iconColor: "text-pink-700",
       onClick: () => navigate("/attendance/maternity-paternity-leaves"),
     },
+    {
+      title: "List Holidays",
+      message: "View Your holidays List",
+      icon: AssignmentIcon,
+      iconBg: "bg-gradient-to-r from-pink-100 to-rose-200",
+      iconColor: "text-pink-700",
+      onClick: () => navigate("/dashboard/employee/holiday"),
+    },
   ];
 
   return (

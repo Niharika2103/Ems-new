@@ -62,16 +62,29 @@ const getMonthDays = (date) => {
   return days;
 };
 
+// --- Leave Allocation Helper ---
+const getLeaveAllocation = (leaveType) => {
+  const allocations = {
+    "EL": 12,       // Earned Leave
+    "SL": 6,        // Sick Leave
+    "WFH": 0,       // Work From Home (usually not counted against leave balance)
+    "Extra Milar": 0,
+    "Paternity Leave": 15,
+    "Maternity Leave": 180
+  };
+  return allocations[leaveType] || 0;
+};
+
 export default function Timesheet() {
   const dispatch = useDispatch();
   const location = useLocation();
-  const { 
-    employeeId, 
-    from, 
-    to, 
+  const {
+    employeeId,
+    from,
+    to,
     viewType,  // This comes from the table navigation
     currentStartDate,
-    currentEndDate 
+    currentEndDate
   } = location.state || {};
 
   // Initialize viewMode from navigation or default to weekly
@@ -81,7 +94,7 @@ export default function Timesheet() {
   const [leaveRows, setLeaveRows] = useState({ EL: Array(7).fill(0) });
   const [workedHours, setWorkedHours] = useState(Array(7).fill(0));
   const [monthlyWorkedHours, setMonthlyWorkedHours] = useState([]);
-  
+
   // Initialize dates from navigation or use defaults
   const [weekStart, setWeekStart] = useState(() => {
     if (currentStartDate && viewType === "weekly") {
@@ -89,7 +102,7 @@ export default function Timesheet() {
     }
     return getMonday(new Date());
   });
-  
+
   const [monthStart, setMonthStart] = useState(() => {
     if (currentStartDate && viewType === "monthly") {
       const date = new Date(currentStartDate);
@@ -106,6 +119,7 @@ export default function Timesheet() {
   const [remainingLeaves, setRemainingLeaves] = useState(0);
   const [usedLeavesDetails, setUsedLeavesDetails] = useState({});
   const [approvalStatus, setApprovalStatus] = useState({});
+  console.log("approvalStatus",approvalStatus)
   const [isEditMode, setIsEditMode] = useState(false);
   const [statusColor, setStatusColor] = useState("#fff");
 
@@ -113,13 +127,11 @@ export default function Timesheet() {
   const gender = localStorage.getItem("gender");
 
   console.log(attendanceData, "attendanceData")
-  const leaveTypes = ["EL", "SL", "PL", "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave"];
+  const leaveTypes = ["EL", "SL",  "WFH", "Extra Milar","Paternity Leave", "Maternity Leave"];
 
-  // 🔥 ADD BELOW OTHER useState HOOKS
   const [holidays, setHolidays] = useState([]);
   const holidaysCache = {};
 
-  // 🔥 Fetch holidays for both weekly & monthly views
   useEffect(() => {
     const fetchHolidays = async () => {
       try {
@@ -128,7 +140,7 @@ export default function Timesheet() {
             ? weekStart.getFullYear()
             : monthStart.getFullYear();
 
-        // ✅ Cache check
+        //  Cache check
         if (holidaysCache[year]) {
           setHolidays(holidaysCache[year]);
           return;
@@ -155,7 +167,7 @@ export default function Timesheet() {
   useEffect(() => {
     if (viewType) {
       setViewMode(viewType);
-      
+
       // Also set the appropriate date range based on navigation
       if (viewType === "weekly" && currentStartDate) {
         setWeekStart(getMonday(new Date(currentStartDate)));
@@ -166,7 +178,7 @@ export default function Timesheet() {
     }
   }, [viewType, currentStartDate]);
 
-  // 🔥 Helper functions
+  //  Helper functions
   const isHolidayDate = (dateStr) =>
     holidays.some((h) => h.date === dateStr);
 
@@ -176,49 +188,49 @@ export default function Timesheet() {
   };
 
   // Highlight holiday tiles in the calendar
-const tileClassName = ({ date, view }) => {
-  if (view === "month") {
-    const dateStr = date.toISOString().slice(0, 10);
-    if (isHolidayDate(dateStr)) {
-      return "holiday-tile"; // custom CSS class
+  const tileClassName = ({ date, view }) => {
+    if (view === "month") {
+      const dateStr = date.toISOString().slice(0, 10);
+      if (isHolidayDate(dateStr)) {
+        return "holiday-tile"; // custom CSS class
+      }
     }
-  }
-  return null;
-};
+    return null;
+  };
 
-//  Add a small dot or emoji for holidays
+  //  Add a small dot or emoji for holidays
 
-const tileContent = ({ date, view }) => {
-  if (view === "month") {
-    const dateStr = date.toISOString().slice(0, 10);
-    const holiday = holidays.find((h) => h.date === dateStr);
+  const tileContent = ({ date, view }) => {
+    if (view === "month") {
+      const dateStr = date.toISOString().slice(0, 10);
+      const holiday = holidays.find((h) => h.date === dateStr);
 
-    if (holiday) {
-      return (
-        <div
-          title={holiday.name}
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            marginTop: "4px",
-          }}
-        >
+      if (holiday) {
+        return (
           <div
+            title={holiday.name}
             style={{
-              width: "6px",
-              height: "6px",
-              borderRadius: "50%",
-              backgroundColor: holiday.isOptional ? "#2196F3" : "#e53935", // 🔵 optional / 🔴 public
-              boxShadow: "0 0 4px rgba(0,0,0,0.15)",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              marginTop: "4px",
             }}
-          />
-        </div>
-      );
+          >
+            <div
+              style={{
+                width: "6px",
+                height: "6px",
+                borderRadius: "50%",
+                backgroundColor: holiday.isOptional ? "#2196F3" : "#e53935", // 🔵 optional / 🔴 public
+                boxShadow: "0 0 4px rgba(0,0,0,0.15)",
+              }}
+            />
+          </div>
+        );
+      }
     }
-  }
-  return null;
-};
+    return null;
+  };
 
 
 
@@ -257,175 +269,119 @@ const tileContent = ({ date, view }) => {
       setApprovalStatus(newApprovalStatus);
     }
   };
-
+//weekly data
   useEffect(() => {
     initializeTable();
   }, [viewMode, monthStart]);
 
-  // --- Safe attendance data handling (Weekly) ---
-  useEffect(() => {
-    if (!attendanceData || !attendanceData.data) return;
+// monthly data
+useEffect(() => {
+  if (!attendanceData?.data) return;
 
-    // 1️⃣ Build week dates (Mon–Sun)
-    const start = new Date(weekStart);
-    const weekDays = Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(start);
-      d.setDate(start.getDate() + i);
-      return d.toISOString().slice(0, 10); // "YYYY-MM-DD"
-    });
+  const start = new Date(weekStart);
+  const weekDays = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    return d.toISOString().slice(0, 10);
+  });
 
-    const list = Array.isArray(attendanceData.data) ? attendanceData.data : [];
+  const list = Array.isArray(attendanceData.data) ? attendanceData.data : [];
+  const dataMap = Object.fromEntries(list.map(i => [i.date?.slice(0, 10), i]));
 
-    // 2️⃣ Make quick lookup map (key = date)
-    const dataMap = {};
-    list.forEach((item) => {
-      const dateKey = item.date?.slice(0, 10);
-      dataMap[dateKey] = item;
-    });
+  const weeklyData = weekDays.map(date => {
+    const r = dataMap[date] || {};
+    const leaveType = r.leave_type || "";
+    const leaveValues = {
+      EL: 0, SL: 0,  WFH: 0,
+      "Extra Milar": 0, "Paternity Leave": 0, "Maternity Leave": 0
+    };
+    if (leaveType && leaveValues[leaveType] !== undefined) leaveValues[leaveType] = 9;
 
-    // 3️⃣ Build structured data for 7 days
-    const weeklyData = weekDays.map((date) => {
-      const record = dataMap[date] || {}; // fallback if not found
-      const worked_hours = record.worked_hours || 0;
-      const leaveType = record.leave_type || "";
+    return {
+      date,
+      worked_hours: leaveType ? 0 : (r.worked_hours || 0),
+      weekly_status: r.weekly_status || "draft",
+      ...leaveValues
+    };
+  });
 
-      const leaveValues = {
-        EL: 0, SL: 0, PL: 0, WFH: 0,
-        "Extra Milar": 0, "Paternity Leave": 0, "Maternity Leave": 0,
-      };
-      if (leaveType && leaveValues.hasOwnProperty(leaveType)) {
-        leaveValues[leaveType] = 9;
-      }
+  setWorkedHours(weeklyData.map(d => +d.worked_hours || 0));
 
-      return {
-        date,
-        worked_hours: leaveType ? 0 : worked_hours,
-        weekly_status: record.weekly_status || "draft", // 👈 include status
-        ...leaveValues,
-      };
-    });
+  const newLeaveRows = {}, newApprovalStatus = {};
+  const types = ["EL", "SL",  "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave"];
 
-    // Debug
-    console.log("🗓️ Final Weekly Data (mapped to 7 days):", weeklyData);
+  const mapStatus = s => {
+    s = s?.toLowerCase();
+    return s === "approved" ? "approved" :
+           s === "pending_approval" ? "pending_approval" :
+           s === "rejected" ? "rejected" : "draft";
+  };
 
-    // 4️⃣ Update worked hours + leaves
-    setWorkedHours(weeklyData.map((d) => Number(d.worked_hours) || 0));
+  types.forEach(t => {
+    newLeaveRows[t] = weeklyData.map(d => +d[t] || 0);
+    newApprovalStatus[t] = weeklyData.map(d => mapStatus(d.weekly_status));
+  });
 
-    const newLeaveRows = {};
-    const newApprovalStatus = { ...approvalStatus };
-    const allLeaveTypes = [
-      "EL", "SL", "PL", "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave",
-    ];
+  newApprovalStatus["Worked Hours"] = weeklyData.map(d => mapStatus(d.weekly_status));
 
-    allLeaveTypes.forEach((lt) => {
-      newLeaveRows[lt] = weeklyData.map((d) => Number(d[lt]) || 0);
-      if (!newApprovalStatus[lt]) {
-        newApprovalStatus[lt] = Array(7).fill("pending");
-      }
-    });
-
-    setLeaveRows(newLeaveRows);
-    setApprovalStatus(newApprovalStatus);
-    setUsedLeaveTypes(allLeaveTypes.filter((lt) => newLeaveRows[lt].some((v) => v > 0)));
-    // ✅ Initialize Worked Hours approval status (Pending by default)
-    newApprovalStatus["Worked Hours"] = Array(7).fill("pending");
+  setLeaveRows(newLeaveRows);
+  setApprovalStatus(newApprovalStatus);
+  setUsedLeaveTypes(types.filter(t => newLeaveRows[t].some(v => v > 0)));
+  setStatusColor(weeklyData.map(i => getStatusBackgroundColor(i, "weekly")));
+}, [attendanceData, weekStart, viewMode]);
 
 
-    // 5️⃣ Save per-day status color array
-    const colorArray = weeklyData.map((item) => getStatusBackgroundColor(item, "weekly"));
-    setStatusColor(colorArray);
-  }, [attendanceData, weekStart, viewMode]);
+// --- MONTHLY DATA ---
+useEffect(() => {
+  if (!attendanceData || viewMode !== "monthly") return;
 
-  // --- Monthly data mapping ---
-  useEffect(() => {
-    if (!attendanceData || viewMode !== "monthly") return;
+  const list = Array.isArray(attendanceData)
+    ? attendanceData : attendanceData.data || [];
+  const dataMap = Object.fromEntries(list.map(i => [i.date?.slice(0, 10), i]));
+  const monthDays = getMonthDays(monthStart);
 
-    const list = Array.isArray(attendanceData)
-      ? attendanceData
-      : attendanceData.data || [];
+  const monthlyData = monthDays.map(d => {
+    const date = d.date.toISOString().slice(0, 10);
+    const r = dataMap[date] || {};
+    const leaveType = r.leave_type || "";
+    const leaveValues = {
+      EL: 0, SL: 0,  WFH: 0,
+      "Extra Milar": 0, "Paternity Leave": 0, "Maternity Leave": 0
+    };
+    if (leaveType && leaveValues[leaveType] !== undefined) leaveValues[leaveType] = 9;
 
-    console.log("✅ Monthly data from API:", list);
+    return {
+      date,
+      worked_hours: leaveType ? 0 : (r.worked_hours || 0),
+      monthly_status: r.monthly_status || "draft",
+      ...leaveValues
+    };
+  });
 
-    // 🔹 Build map by date (key = yyyy-mm-dd)
-    const dataMap = {};
-    list.forEach((item) => {
-      const dateKey = item.date?.slice(0, 10);
-      dataMap[dateKey] = item;
-    });
+  setMonthlyWorkedHours(monthlyData.map(d => +d.worked_hours || 0));
 
-    // 🔹 Build month days (1st → end of the month)
-    const monthDays = getMonthDays(monthStart);
+  const newLeaveRows = {}, newApprovalStatus = {};
+  const types = ["EL", "SL",  "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave"];
 
-    // 🔹 Create structured data for all days
-    const monthlyData = monthDays.map((d) => {
-      const dateKey = d.date.toISOString().slice(0, 10);
-      const record = dataMap[dateKey] || {};
+  const mapStatus = s => {
+    s = s?.toLowerCase();
+    return s === "approved" ? "approved" :
+           s === "pending_approval" ? "pending_approval" :
+           s === "rejected" ? "rejected" : "draft";
+  };
 
-      const worked_hours = record.worked_hours || 0;
-      const leaveType = record.leave_type || "";
+  types.forEach(t => {
+    newLeaveRows[t] = monthlyData.map(d => +d[t] || 0);
+    newApprovalStatus[t] = monthlyData.map(d => mapStatus(d.monthly_status));
+  });
 
-      const leaveValues = {
-      EL: 0,
-        SL: 0,
-        PL: 0,
-        WFH: 0,
-        "Extra Milar": 0,
-        "Paternity Leave": 0,
-        "Maternity Leave": 0,
-      };
+  newApprovalStatus["Worked Hours"] = monthlyData.map(d => mapStatus(d.monthly_status));
 
-      if (leaveType && leaveValues.hasOwnProperty(leaveType)) {
-        leaveValues[leaveType] = 9;
-      }
-
-      return {
-        date: dateKey,
-        worked_hours: leaveType ? 0 : worked_hours,
-        ...leaveValues,
-      };
-    });
-
-    console.log("🗓️ Final Monthly Data (mapped to 1st→end of the month):", monthlyData);
-
-    // 🔹 Set worked hours & leave arrays
-    const workedArray = monthlyData.map((d) => Number(d.worked_hours) || 0);
-    setMonthlyWorkedHours(workedArray);
-
-    const newLeaveRows = {};
-    const newApprovalStatus = { ...approvalStatus };
-    const allLeaveTypes = [
-      "EL",
-      "SL",
-      "PL",
-      "WFH",
-      "Extra Milar",
-      "Paternity Leave",
-      "Maternity Leave",
-    ];
-
-    allLeaveTypes.forEach((lt) => {
-      newLeaveRows[lt] = monthlyData.map((d) => Number(d[lt]) || 0);
-      if (!newApprovalStatus[lt]) {
-        newApprovalStatus[lt] = Array(monthDays.length).fill("pending");
-      }
-    });
-
-    setLeaveRows(newLeaveRows);
-    setApprovalStatus(newApprovalStatus);
-    setUsedLeaveTypes(allLeaveTypes.filter((lt) => newLeaveRows[lt].some((v) => v > 0)));
-
-    // 🟩 Update background color for monthly status
-    if (attendanceData && viewMode === "monthly") {
-      const firstItem =
-        Array.isArray(attendanceData) ? attendanceData[0] : attendanceData.data?.[0];
-      if (firstItem) {
-        const bgColor = getStatusBackgroundColor(firstItem, "monthly");
-        setStatusColor(bgColor);
-      } else {
-        setStatusColor("#fff");
-      }
-    }
-  }, [attendanceData, monthStart, viewMode]);
+  setLeaveRows(newLeaveRows);
+  setApprovalStatus(newApprovalStatus);
+  setUsedLeaveTypes(types.filter(t => newLeaveRows[t].some(v => v > 0)));
+  setStatusColor(monthlyData.map(i => getStatusBackgroundColor(i, "monthly")));
+}, [attendanceData, monthStart, viewMode]);
 
   // --- Calculate leave summary ---
   useEffect(() => {
@@ -445,25 +401,25 @@ const tileContent = ({ date, view }) => {
 
   // --- Format header range ---
   const formatDateRange = () => {
-  if (viewMode === "weekly") {
-    const endDate = new Date(weekStart);
-    endDate.setDate(weekStart.getDate() + 6);
-    const fmt = (d) =>
-      `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1)
-        .toString()
-        .padStart(2, "0")}/${d.getFullYear()}`;
-    return `${fmt(weekStart)} - ${fmt(endDate)}`;
-  } else {
-    // FIX: Always use 1st as start date and last day as end date
-    const start = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1);
-    const end = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
+    if (viewMode === "weekly") {
+      const endDate = new Date(weekStart);
+      endDate.setDate(weekStart.getDate() + 6);
+      const fmt = (d) =>
+        `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1)
+          .toString()
+          .padStart(2, "0")}/${d.getFullYear()}`;
+      return `${fmt(weekStart)} - ${fmt(endDate)}`;
+    } else {
+      // FIX: Always use 1st as start date and last day as end date
+      const start = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1);
+      const end = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
 
-    const fmt = (d) => 
-      `${d.getDate().toString().padStart(2, "0")}-${(d.getMonth() + 1).toString().padStart(2, "0")}-${d.getFullYear()}`;
+      const fmt = (d) =>
+        `${d.getDate().toString().padStart(2, "0")}-${(d.getMonth() + 1).toString().padStart(2, "0")}-${d.getFullYear()}`;
 
-    return `${fmt(start)} - ${fmt(end)}`;
-  }
-};
+      return `${fmt(start)} - ${fmt(end)}`;
+    }
+  };
   // --- Change week/month ---
   const changeWeek = (delta) => {
     const newWeek = new Date(weekStart);
@@ -471,32 +427,32 @@ const tileContent = ({ date, view }) => {
     setWeekStart(getMonday(newWeek));
   };
 
-  
 
-const changeMonth = (delta) => {
-  const newMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() + delta, 1);
-  setMonthStart(newMonth);
-};
+
+  const changeMonth = (delta) => {
+    const newMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() + delta, 1);
+    setMonthStart(newMonth);
+  };
 
   // Handle view mode change with proper date synchronization
   const handleViewModeChange = () => {
-  if (viewMode === "weekly") {
-    // Switching from weekly to monthly
-    // Always use 1st of current week's month
-    const newMonthStart = new Date(weekStart.getFullYear(), weekStart.getMonth(), 1);
-    setMonthStart(newMonthStart);
-    setViewMode("monthly");
-  } else {
-    // Switching from monthly to weekly
-    // Set week start to the first Monday of the current month
-    const firstDayOfMonth = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1);
-    const newWeekStart = getMonday(firstDayOfMonth);
-    setWeekStart(newWeekStart);
-    setViewMode("weekly");
-  }
-  // Reset edit mode when changing views
-  setIsEditMode(false);
-};
+    if (viewMode === "weekly") {
+      // Switching from weekly to monthly
+      // Always use 1st of current week's month
+      const newMonthStart = new Date(weekStart.getFullYear(), weekStart.getMonth(), 1);
+      setMonthStart(newMonthStart);
+      setViewMode("monthly");
+    } else {
+      // Switching from monthly to weekly
+      // Set week start to the first Monday of the current month
+      const firstDayOfMonth = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1);
+      const newWeekStart = getMonday(firstDayOfMonth);
+      setWeekStart(newWeekStart);
+      setViewMode("weekly");
+    }
+    // Reset edit mode when changing views
+    setIsEditMode(false);
+  };
 
   // --- Add activity ---
   const addActivity = () => {
@@ -549,50 +505,24 @@ const changeMonth = (delta) => {
     handleMenuClose();
   };
 
-  // Enhanced approval functions
-  const handleSaveAll = () => {
-    setIsEditMode(false);
-    alert("Timesheet saved!");
-  };
-
  
-  const handleApproveAll = () => {
-    const newApprovalStatus = { ...approvalStatus };
 
-    // ✅ Include Worked Hours
-    newApprovalStatus["Worked Hours"] = (viewMode === "weekly"
-      ? workedHours
-      : monthlyWorkedHours
-    ).map(() => "approved");
-
-    Object.keys(leaveRows).forEach((leaveType) => {
-      newApprovalStatus[leaveType] = leaveRows[leaveType].map((value, index) =>
-        value > 0 ? "approved" : newApprovalStatus[leaveType][index] || "pending"
-      );
-    });
-
-    setApprovalStatus(newApprovalStatus);
-    alert("All approved!");
-  };
-
-
- 
 
   const handleRejectAll = () => {
     if (!employeeId) {
       alert("Employee ID is required!");
       return;
     }
-  
+
     let fromDate, toDate;
-  
+
     if (viewMode === "weekly") {
       const from = new Date(weekStart);
       const to = new Date(weekStart);
       to.setDate(weekStart.getDate() + 6);
       fromDate = from.toISOString().slice(0, 10);
       toDate = to.toISOString().slice(0, 10);
-  
+
       dispatch(Admin_Reject_Weekly_Attendance({ employeeId, from: fromDate, to: toDate }))
         .unwrap()
         .then((res) => {
@@ -600,22 +530,22 @@ const changeMonth = (delta) => {
           alert(message);
         })
         .catch((err) => console.error("❌ Weekly Reject Error:", err));
-  
-      }
-else if (viewMode === "monthly") {
-  // Always use 1st to last day of the current month view
-  const fromDate = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1).toISOString().slice(0, 10);
-  const toDate = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0).toISOString().slice(0, 10);
 
-  dispatch(Admin_Reject_Monthly_Attendance({ employeeId, from: fromDate, to: toDate }))
-    .unwrap()
-    .then((res) => {
-      const message = res?.message || `❌ Monthly Timesheet Rejected!\nRange: ${fromDate} → ${toDate}`;
-      alert(message);
-    })
-    .catch((err) => console.error("❌ Monthly Reject Error:", err));
-}
-  
+    }
+    else if (viewMode === "monthly") {
+      // Always use 1st to last day of the current month view
+      const fromDate = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1).toISOString().slice(0, 10);
+      const toDate = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0).toISOString().slice(0, 10);
+
+      dispatch(Admin_Reject_Monthly_Attendance({ employeeId, from: fromDate, to: toDate }))
+        .unwrap()
+        .then((res) => {
+          const message = res?.message || `❌ Monthly Timesheet Rejected!\nRange: ${fromDate} → ${toDate}`;
+          alert(message);
+        })
+        .catch((err) => console.error("❌ Monthly Reject Error:", err));
+    }
+
     // Update UI
     const newApprovalStatus = { ...approvalStatus };
     Object.keys(newApprovalStatus).forEach(leaveType => {
@@ -623,57 +553,7 @@ else if (viewMode === "monthly") {
     });
     setApprovalStatus(newApprovalStatus);
   };
-  
 
-  const handleEditAll = () => {
-    setIsEditMode(true);
-  };
-
-  // ✅ Approve Weekly button logic
-  const handleApprovedWeek = () => {
-    const newStatus = { ...approvalStatus };
-
-    days.forEach((day, i) => {
-      if (day.dayIndex !== 0 && day.dayIndex !== 6) { // skip weekends
-        // ✅ Worked Hours
-        if (!newStatus["Worked Hours"]) newStatus["Worked Hours"] = [];
-        newStatus["Worked Hours"][i] = "approved";
-
-        // ✅ Leave Rows
-        usedLeaveTypes.forEach((lt) => {
-          if (!newStatus[lt]) newStatus[lt] = [];
-          if (leaveRows[lt]?.[i] > 0) {
-            newStatus[lt][i] = "approved";
-          }
-        });
-      }
-    });
-
-    setApprovalStatus(newStatus);
-    alert("✅ Weekly timesheet approved successfully!");
-  };
-
-  // ❌ Reject Weekly button logic
-  const handleRejectWeek = () => {
-    const newStatus = { ...approvalStatus };
-
-    days.forEach((day, i) => {
-      if (day.dayIndex !== 0 && day.dayIndex !== 6) { // skip weekends
-        if (!newStatus["Worked Hours"]) newStatus["Worked Hours"] = [];
-        newStatus["Worked Hours"][i] = "rejected";
-
-        usedLeaveTypes.forEach((lt) => {
-          if (!newStatus[lt]) newStatus[lt] = [];
-          if (leaveRows[lt]?.[i] > 0) {
-            newStatus[lt][i] = "rejected";
-          }
-        });
-      }
-    });
-
-    setApprovalStatus(newStatus);
-    alert("❌ Weekly timesheet rejected!");
-  };
 
 
   // Handle individual cell approval
@@ -688,7 +568,7 @@ else if (viewMode === "monthly") {
     }
   };
 
- 
+
   // ✅ Updated version — keeps Sat/Sun as gray with no status color
   const getInputBackgroundColor = (leaveType, dayIndex, value) => {
     // For Saturday (6) and Sunday (0): always gray, no status logic
@@ -747,26 +627,40 @@ else if (viewMode === "monthly") {
         .then((res) => {
           console.log("✅ Weekly Approved:", res);
           alert(`✅ Weekly Timesheet Approved!\nRange: ${fromDate} → ${toDate}`);
+           setApprovalStatus((prev) => {
+          const updated = { ...prev };
+          Object.keys(updated).forEach((key) => {
+            updated[key] = updated[key].map(() => "approved");
+          });
+          return updated;
+        });
         })
         .catch((err) => console.error("❌ Weekly Approve Error:", err));
     }
-   
 
-  else if (viewMode === "monthly") {
-  // Always calculate from 1st to last day of the month
-  const fromDate = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1).toISOString().slice(0, 10);
-  const toDate = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0).toISOString().slice(0, 10);
 
-  console.log("📆 Monthly Fetch Range:", fromDate, "→", toDate);
+    else if (viewMode === "monthly") {
+      // Always calculate from 1st to last day of the month
+      const fromDate = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1).toISOString().slice(0, 10);
+      const toDate = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0).toISOString().slice(0, 10);
 
-  dispatch(Admin_Approve_monthly_Attendance({ employeeId: employeeId, from: fromDate, to: toDate }))
-    .unwrap()
-    .then((res) => {
-      console.log(" Monthly Approved:", res);
-      alert(` Monthly Timesheet Approved!\nRange: ${fromDate} → ${toDate}`);
-    })
-    .catch((err) => console.error(" Monthly Approve Error:", err));
-}
+      console.log("📆 Monthly Fetch Range:", fromDate, "→", toDate);
+
+      dispatch(Admin_Approve_monthly_Attendance({ employeeId: employeeId, from: fromDate, to: toDate }))
+        .unwrap()
+        .then((res) => {
+          console.log(" Monthly Approved:", res);
+          alert(` Monthly Timesheet Approved!\nRange: ${fromDate} → ${toDate}`);
+          setApprovalStatus((prev) => {
+          const updated = { ...prev };
+          Object.keys(updated).forEach((key) => {
+            updated[key] = updated[key].map(() => "approved");
+          });
+          return updated;
+        });
+        })
+        .catch((err) => console.error(" Monthly Approve Error:", err));
+    }
   };
 
   const getStatusBackgroundColor = (item, viewMode) => {
@@ -804,45 +698,41 @@ else if (viewMode === "monthly") {
   });
   const grandTotal = workedTotal + Object.values(rowTotals).reduce((a, b) => a + b, 0);
 
-  
 
-useEffect(() => {
-  if (!employeeId) return;
 
-  if (viewMode === "weekly") {
-    // 🔹 Compute weekly range (Monday → Sunday)
-    const fromDate = new Date(weekStart);
-    const toDate = new Date(weekStart);
-    toDate.setDate(weekStart.getDate() + 6);
+  useEffect(() => {
+    if (!employeeId) return;
 
-    const weeklyFrom = fromDate.toISOString().slice(0, 10);
-    const weeklyTo = toDate.toISOString().slice(0, 10);
+    if (viewMode === "weekly") {
+      // 🔹 Compute weekly range (Monday → Sunday)
+      const fromDate = new Date(weekStart);
+      const toDate = new Date(weekStart);
+      toDate.setDate(weekStart.getDate() + 6);
 
-    console.log("📅 Weekly Fetch Range:", weeklyFrom, "→", weeklyTo);
+      const weeklyFrom = fromDate.toISOString().slice(0, 10);
+      const weeklyTo = toDate.toISOString().slice(0, 10);
 
-    dispatch(AdminAttendancFetchWeeklyDataById({ employeeId, from: weeklyFrom, to: weeklyTo }))
-      .unwrap()
-      .then((res) => console.log("✅ Weekly Data:", res))
-      .catch((err) => console.error("❌ Weekly Error:", err));
-  }
-  else if (viewMode === "monthly") {
-    // 🔹 ALWAYS use 1st to last day of the current month view
-    const fromDate = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1);
-    const toDate = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
+      dispatch(AdminAttendancFetchWeeklyDataById({ employeeId, from: weeklyFrom, to: weeklyTo }))
+        .unwrap()
+        .then((res) => console.log("✅ Weekly Data:", res))
+        .catch((err) => console.error("❌ Weekly Error:", err));
+    }
+    else if (viewMode === "monthly") {
+      // 🔹 ALWAYS use 1st to last day of the current month view
+      const fromDate = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1);
+      const toDate = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
 
-    const monthlyFrom = fromDate.toISOString().slice(0, 10);
-    const monthlyTo = toDate.toISOString().slice(0, 10);
+      const monthlyFrom = fromDate.toISOString().slice(0, 10);
+      const monthlyTo = toDate.toISOString().slice(0, 10);
 
-    console.log("📆 Monthly Fetch Range:", monthlyFrom, "→", monthlyTo);
-
-    dispatch(AdminAttendancFetchMonthlyDataById({ employeeId, from: monthlyFrom, to: monthlyTo }))
-      .unwrap()
-      .then((res) => {
-        console.log("✅ Monthly Data:", res);
-      })
-      .catch((err) => console.error("❌ Monthly Error:", err));
-  }
-}, [dispatch, weekStart, monthStart, viewMode, employeeId]);
+      dispatch(AdminAttendancFetchMonthlyDataById({ employeeId, from: monthlyFrom, to: monthlyTo }))
+        .unwrap()
+        .then((res) => {
+          console.log("✅ Monthly Data:", res);
+        })
+        .catch((err) => console.error("❌ Monthly Error:", err));
+    }
+  }, [dispatch, weekStart, monthStart, viewMode, employeeId]);
 
   return (
     <Box p={2}>
@@ -867,10 +757,10 @@ useEffect(() => {
           >
             <Box p={2}>
               <Calendar
-               onChange={handleCalendarDateSelect}
+                onChange={handleCalendarDateSelect}
                 value={viewMode === "weekly" ? weekStart : monthStart}
-                  tileClassName={tileClassName}     // 🔥 Added
-  tileContent={tileContent} 
+                tileClassName={tileClassName}     // 🔥 Added
+                tileContent={tileContent}
               />
             </Box>
           </Popover>
@@ -975,7 +865,7 @@ useEffect(() => {
                         height: 22,
                         textAlign: "center",
                         // backgroundColor: isWeekend ? "#f0f0f0" : "#fff",
-                         backgroundColor: getInputBackgroundColor("Worked Hours", i, h),
+                        backgroundColor: getInputBackgroundColor("Worked Hours", i, h),
                         border: "1px solid #ccc",
                         borderRadius: 4,
                         boxSizing: "border-box",
@@ -1004,7 +894,7 @@ useEffect(() => {
                     />
                   </TableCell>
                 );
-              
+
               })}
 
               <TableCell align="center">{`${workedTotal}/45`}</TableCell>
@@ -1129,54 +1019,113 @@ useEffect(() => {
           </Button>
         </Box>
         <Box display="flex" gap={1}>
-        
-            <>
-              <Button 
-                variant="contained" 
-                color="success" 
-                onClick={handleApproveAll}
-              >
-                Approved
-              </Button>
-              <Button 
-                variant="contained" 
-                color="error" 
-                onClick={handleRejectAll}
-              >
-                Rejected
-              </Button>
-          
+
+          <>
+            <Button
+              variant="contained"
+              color="success"
+              onClick={handleApproved}
+            >
+              Approved
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={handleRejectAll}
+            >
+              Rejected
+            </Button>
+
           </>
 
         </Box>
       </Box>
 
-      {/* Leave Summary */}
+      {/* Enhanced Leave Summary */}
       <Box
         mt={3}
         p={2}
-        display="flex"
-        justifyContent="space-evenly"
-        alignItems="center"
         sx={{
           backgroundColor: "#f5f5f5",
           borderRadius: 2,
           boxShadow: 1,
         }}
       >
-        <Box>
-          <Typography variant="body1" fontWeight="bold" color="primary">
-            Used Leaves: {usedLeaves}
-          </Typography>
-          {Object.entries(usedLeavesDetails).map(([lt, val]) => (
-            <Typography key={lt} variant="body2">
-              {lt}: {val}
-            </Typography>
-          ))}
-        </Box>
-        <Typography variant="body1" fontWeight="bold" color="success.main">
-          Remaining Leaves: {remainingLeaves}
+        <Typography variant="h6" fontWeight="bold" gutterBottom color="primary">
+          Leave Summary
         </Typography>
+        
+        <Box display="flex" flexWrap="wrap" gap={3}>
+          {/* Total Summary */}
+          <Box>
+            <Typography variant="body1" fontWeight="bold">
+              Total Overview
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Used: <span style={{color: '#d32f2f', fontWeight: 'bold'}}>{usedLeaves} days</span>
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Remaining: <span style={{color: '#2e7d32', fontWeight: 'bold'}}>{remainingLeaves} days</span>
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Total Allocation: <span style={{fontWeight: 'bold'}}>12 days</span>
+            </Typography>
+          </Box>
+
+          {/* Leave Type Breakdown */}
+          <Box>
+            <Typography variant="body1" fontWeight="bold">
+              Leave Type Breakdown
+            </Typography>
+            {leaveTypes.map((leaveType) => {
+              const usedDays = usedLeavesDetails[leaveType] || 0;
+              const allocation = getLeaveAllocation(leaveType);
+              const remaining = allocation - usedDays;
+              
+              return (
+                <Box key={leaveType} display="flex" gap={1} alignItems="center">
+                  <Typography variant="body2" sx={{ minWidth: 120 }}>
+                    {leaveType}:
+                  </Typography>
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      minWidth: 60,
+                      color: usedDays > 0 ? '#d32f2f' : 'text.secondary',
+                      fontWeight: usedDays > 0 ? 'bold' : 'normal'
+                    }}
+                  >
+                    {usedDays}d used
+                  </Typography>
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      minWidth: 80,
+                      color: remaining > 0 ? '#2e7d32' : 'text.secondary',
+                      fontWeight: remaining > 0 ? 'bold' : 'normal'
+                    }}
+                  >
+                    {remaining}d left
+                  </Typography>
+                </Box>
+              );
+            })}
+          </Box>
+
+          {/* Used Leaves Details */}
+          {Object.keys(usedLeavesDetails).length > 0 && (
+            <Box>
+              <Typography variant="body1" fontWeight="bold">
+                Currently Used Leaves
+              </Typography>
+              {Object.entries(usedLeavesDetails).map(([leaveType, days]) => (
+                <Typography key={leaveType} variant="body2" color="error.main">
+                  {leaveType}: {days} day{days !== 1 ? 's' : ''}
+                </Typography>
+              ))}
+            </Box>
+          )}
+        </Box>
       </Box>
 
       {/* Menu */}
