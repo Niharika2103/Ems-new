@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button, Space, Popconfirm, message } from "antd";
 import { useDispatch } from "react-redux";
-import { deleteEmployee, fetchAllEmployees, updateEmployeebyAdmin } from "../../features/employeesDetails/employeesSlice";
+import { deleteEmployee, fetchAllEmployees, updateEmployeebyAdmin ,fetchEmployeeProfile} from "../../features/employeesDetails/employeesSlice";
 import EmployeeTable from "../../components/MyProfile/table";
 import { grantTempAdminApi, revokeTempAdminApi,promoteEmployeeApi } from "../../api/authApi";
 import ReusableModal from "../../components/MyProfile/ReusableModal";
@@ -20,6 +20,8 @@ import {
   Avatar,
   MenuItem,
 } from "@mui/material";
+
+import { decodeToken } from "../../api/decodeToekn";
 import { validateEmployeeEdit } from "../../utils/validation"; // adjust path as needed
 export default function AdminTable() {
   const dispatch = useDispatch();
@@ -84,18 +86,23 @@ export default function AdminTable() {
   //Edit Register Model
   const handleEdit = (record) => {
     setEditingRecord(record);
-    setFormData({
-      name: record.name || "",
-      email: record.email || "",
-      date_of_joining: record.date_of_joining || "",
-      phone: record.phone || "",
-      address: record.address || "",
-      permanent_address: record.permanent_address || "",
-      department: record.department || "",
-      gender: record.gender || "",
-      emergency_contact: record.emergency_contact || "",
-      dob: record.dob || "",
-    });
+   const formatDate = (isoString) => {
+  if (!isoString) return "";
+  return isoString.split("T")[0];
+};
+
+setFormData({
+  name: record.name || "",
+  email: record.email || "",
+  date_of_joining: formatDate(record.date_of_joining),
+  phone: record.phone || "",
+  address: record.address || "",
+  permanent_address: record.permanent_address || "",
+  department: record.department || "",
+  gender: record.gender || "",
+  emergency_contact: record.emergency_contact || "",
+  dob: formatDate(record.dob),
+});
     setIsModalOpen(true);
   };
 const handlePromote = async (record) => {
@@ -147,14 +154,11 @@ const handlePromote = async (record) => {
   //     setLoading(false);
   //   }
   // };
-
 const handleSubmit = async (e) => {
   e.preventDefault();
 
-  // ✅ Validate form data
   const errors = validateEmployeeEdit(formData);
   if (Object.keys(errors).length > 0) {
-    // Show first error or all errors
     const firstError = Object.values(errors)[0];
     toast.error(firstError);
     return;
@@ -167,8 +171,19 @@ const handleSubmit = async (e) => {
     ).unwrap();
 
     toast.success(res?.message || "Employee updated successfully");
+
+    // ✅ NEW: If the edited employee is the current user, refresh their profile
+    try {
+      const currentUser = await decodeToken();
+      if (editingRecord?.email === currentUser.email) {
+        dispatch(fetchEmployeeProfile(currentUser.email));
+      }
+    } catch (error) {
+      console.warn("Could not refresh user profile after edit:", error);
+    }
+
     setIsModalOpen(false);
-    await dispatch(fetchAllEmployees());
+    dispatch(fetchAllEmployees());
   } catch (err) {
     console.error("Update error:", err);
     toast.error(
@@ -181,7 +196,6 @@ const handleSubmit = async (e) => {
     setLoading(false);
   }
 };
-
 
 
   //employee table
