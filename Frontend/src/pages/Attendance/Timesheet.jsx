@@ -62,6 +62,19 @@ const getMonthDays = (date) => {
   return days;
 };
 
+// --- Leave Allocation Helper ---
+const getLeaveAllocation = (leaveType) => {
+  const allocations = {
+    "EL": 12,       // Earned Leave
+    "SL": 6,        // Sick Leave
+    "WFH": 0,       // Work From Home (usually not counted against leave balance)
+    "Extra Milar": 0,
+    "Paternity Leave": 15,
+    "Maternity Leave": 180
+  };
+  return allocations[leaveType] || 0;
+};
+
 export default function Timesheet() {
   const dispatch = useDispatch();
   const location = useLocation();
@@ -114,7 +127,7 @@ export default function Timesheet() {
   const gender = localStorage.getItem("gender");
 
   console.log(attendanceData, "attendanceData")
-  const leaveTypes = ["EL", "SL", "WFH", "Extra Milar","Paternity Leave", "Maternity Leave"];
+  const leaveTypes = ["EL", "SL",  "WFH", "Extra Milar","Paternity Leave", "Maternity Leave"];
 
   const [holidays, setHolidays] = useState([]);
   const holidaysCache = {};
@@ -279,7 +292,7 @@ useEffect(() => {
     const r = dataMap[date] || {};
     const leaveType = r.leave_type || "";
     const leaveValues = {
-      EL: 0, SL: 0, WFH: 0,
+      EL: 0, SL: 0,  WFH: 0,
       "Extra Milar": 0, "Paternity Leave": 0, "Maternity Leave": 0
     };
     if (leaveType && leaveValues[leaveType] !== undefined) leaveValues[leaveType] = 9;
@@ -295,7 +308,7 @@ useEffect(() => {
   setWorkedHours(weeklyData.map(d => +d.worked_hours || 0));
 
   const newLeaveRows = {}, newApprovalStatus = {};
-  const types = ["EL", "SL","WFH", "Extra Milar", "Paternity Leave", "Maternity Leave"];
+  const types = ["EL", "SL",  "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave"];
 
   const mapStatus = s => {
     s = s?.toLowerCase();
@@ -332,7 +345,7 @@ useEffect(() => {
     const r = dataMap[date] || {};
     const leaveType = r.leave_type || "";
     const leaveValues = {
-      EL: 0, SL: 0, WFH: 0,
+      EL: 0, SL: 0,  WFH: 0,
       "Extra Milar": 0, "Paternity Leave": 0, "Maternity Leave": 0
     };
     if (leaveType && leaveValues[leaveType] !== undefined) leaveValues[leaveType] = 9;
@@ -348,7 +361,7 @@ useEffect(() => {
   setMonthlyWorkedHours(monthlyData.map(d => +d.worked_hours || 0));
 
   const newLeaveRows = {}, newApprovalStatus = {};
-  const types = ["EL", "SL","WFH", "Extra Milar", "Paternity Leave", "Maternity Leave"];
+  const types = ["EL", "SL",  "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave"];
 
   const mapStatus = s => {
     s = s?.toLowerCase();
@@ -1028,32 +1041,91 @@ useEffect(() => {
         </Box>
       </Box>
 
-      {/* Leave Summary */}
+      {/* Enhanced Leave Summary */}
       <Box
         mt={3}
         p={2}
-        display="flex"
-        justifyContent="space-evenly"
-        alignItems="center"
         sx={{
           backgroundColor: "#f5f5f5",
           borderRadius: 2,
           boxShadow: 1,
         }}
       >
-        <Box>
-          <Typography variant="body1" fontWeight="bold" color="primary">
-            Used Leaves: {usedLeaves}
-          </Typography>
-          {Object.entries(usedLeavesDetails).map(([lt, val]) => (
-            <Typography key={lt} variant="body2">
-              {lt}: {val}
-            </Typography>
-          ))}
-        </Box>
-        <Typography variant="body1" fontWeight="bold" color="success.main">
-          Remaining Leaves: {remainingLeaves}
+        <Typography variant="h6" fontWeight="bold" gutterBottom color="primary">
+          Leave Summary
         </Typography>
+        
+        <Box display="flex" flexWrap="wrap" gap={3}>
+          {/* Total Summary */}
+          <Box>
+            <Typography variant="body1" fontWeight="bold">
+              Total Overview
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Used: <span style={{color: '#d32f2f', fontWeight: 'bold'}}>{usedLeaves} days</span>
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Remaining: <span style={{color: '#2e7d32', fontWeight: 'bold'}}>{remainingLeaves} days</span>
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Total Allocation: <span style={{fontWeight: 'bold'}}>12 days</span>
+            </Typography>
+          </Box>
+
+          {/* Leave Type Breakdown */}
+          <Box>
+            <Typography variant="body1" fontWeight="bold">
+              Leave Type Breakdown
+            </Typography>
+            {leaveTypes.map((leaveType) => {
+              const usedDays = usedLeavesDetails[leaveType] || 0;
+              const allocation = getLeaveAllocation(leaveType);
+              const remaining = allocation - usedDays;
+              
+              return (
+                <Box key={leaveType} display="flex" gap={1} alignItems="center">
+                  <Typography variant="body2" sx={{ minWidth: 120 }}>
+                    {leaveType}:
+                  </Typography>
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      minWidth: 60,
+                      color: usedDays > 0 ? '#d32f2f' : 'text.secondary',
+                      fontWeight: usedDays > 0 ? 'bold' : 'normal'
+                    }}
+                  >
+                    {usedDays}d used
+                  </Typography>
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      minWidth: 80,
+                      color: remaining > 0 ? '#2e7d32' : 'text.secondary',
+                      fontWeight: remaining > 0 ? 'bold' : 'normal'
+                    }}
+                  >
+                    {remaining}d left
+                  </Typography>
+                </Box>
+              );
+            })}
+          </Box>
+
+          {/* Used Leaves Details */}
+          {Object.keys(usedLeavesDetails).length > 0 && (
+            <Box>
+              <Typography variant="body1" fontWeight="bold">
+                Currently Used Leaves
+              </Typography>
+              {Object.entries(usedLeavesDetails).map(([leaveType, days]) => (
+                <Typography key={leaveType} variant="body2" color="error.main">
+                  {leaveType}: {days} day{days !== 1 ? 's' : ''}
+                </Typography>
+              ))}
+            </Box>
+          )}
+        </Box>
       </Box>
 
       {/* Menu */}
