@@ -1069,6 +1069,7 @@ export const getPendingWeeklyApprovals = async (req, res) => {
       });
     }
     
+    
     const query = `
       SELECT a.*, u.id AS user_id, u.name, u.email
       FROM attendance a
@@ -1080,12 +1081,18 @@ export const getPendingWeeklyApprovals = async (req, res) => {
 
     const result = await client.query(query, [employeeId, from, to]);
 
-    // ✅ Format the date to remove time (YYYY-MM-DD)
-    const formattedData = result.rows.map((row) => ({
-      ...row,
-      date: row.date ? row.date.toISOString().split("T")[0] : null, // only date part
-    }));
+    
 
+    // ✅ Format the date to remove time (YYYY-MM-DD)
+    const formattedData = result.rows.map(row => {
+  if (!row.date) return row;
+  const localDate = new Date(row.date);
+  const dateOnly = new Date(localDate.getTime() - localDate.getTimezoneOffset() * 60000)
+    .toISOString()
+    .split("T")[0];
+  return { ...row, date: dateOnly };
+});
+    
     res.status(200).json({
       message: "Pending weekly approvals fetched successfully",
       count: formattedData.length,
@@ -1159,7 +1166,7 @@ export const updateWeeklyApprovalStatus = async (req, res) => {
 
     const updatedBy = adminName.substring(0, 255);
 
-    // ✅ 1. Update weekly attendance status
+    // ✅ 1. Update weekly attendance status to "approved" in PostgreSQL
     const query = `
       UPDATE attendance
       SET weekly_status = $1,
@@ -1168,7 +1175,7 @@ export const updateWeeklyApprovalStatus = async (req, res) => {
       WHERE employee_id = $2
         AND "date" BETWEEN $3 AND $4
         AND weekly_status = 'Pending_approval'
-      RETURNING *, TO_CHAR(date, 'YYYY-MM-DD') AS formatted_date;
+      RETURNING *;
     `;
 
     const result = await client.query(query, [
@@ -1179,7 +1186,7 @@ export const updateWeeklyApprovalStatus = async (req, res) => {
       updatedBy,
     ]);
 
-    // ✅ 2. Handle if no records to approve
+    // ✅ 2. Handle if no pending records found
     if (result.rows.length === 0) {
       return res.status(200).json({
         message: "No pending approvals found for the given week.",
@@ -1189,36 +1196,27 @@ export const updateWeeklyApprovalStatus = async (req, res) => {
 
     console.log(`✅ Weekly records approved for employee: ${employeeId}`);
 
-
+    // ✅ 3. Call Java backend to handle:
+    // - Assign default leaves (first approval)
+    // - Reset leaves for new year if week crosses Jan 1
+    // - Deduct taken leaves (SL, EL, etc.)
     try {
-      await axios.post("http://localhost:9091/api/initialize-default-leaves", {
-        employeeId,
-        adminName: updatedBy,
-      });
-      console.log("✅ Default leaves initialized in Java service");
-    } catch (err) {
-      console.warn("⚠️ Default leaves may already exist or failed:", err.message);
-    }
-    //  Call Java API to deduct leaves for that week
-    try {
-      await axios.post("http://localhost:9091/api/attendance/deduct-leaves", {
+      await axios.post("http://localhost:9091/api/attendance/apply-default-leaves-on-approval", {
         employeeId,
         from,
         to,
+        adminName: updatedBy,
       });
-      console.log("✅ Leave balance updated in Java service");
+      console.log("✅ Leaves initialized, reset (if new year), and deducted successfully in Java service");
     } catch (err) {
-      console.error("⚠️ Failed to update leave balance in Java service:", err.message);
+      console.error("⚠️ Failed to apply default leaves on approval:", err.message);
     }
 
     // ✅ 4. Send success response to frontend
     res.status(200).json({
       message: `Weekly attendance ${status} successfully by ${updatedBy}`,
       updated_count: result.rows.length,
-      data: result.rows.map(r => ({
-        ...r,
-        date: r.formatted_date, // ✅ pure YYYY-MM-DD from DB
-      })),
+      data: result.rows,
     });
   } catch (err) {
     console.error("❌ Update Weekly Status Error:", err.message);
@@ -1231,41 +1229,6 @@ export const updateWeeklyApprovalStatus = async (req, res) => {
 /* -------------------------------------------------------------------------- */
 /*                      GET PENDING MONTHLY APPROVALS (ADMIN)                 */
 /* -------------------------------------------------------------------------- */
-// export const getPendingMonthlyApprovals = async (req, res) => {
-//   const client = await pool.connect();
-//   try {
-//     const { employeeId, from, to } = req.query;
-
-//     if (!employeeId || !from || !to) {
-//       return res.status(400).json({
-//         error: "Missing required query parameters (employeeId, from, to)",
-//       });
-//     }
-
-//     const query = `
-//       SELECT a.*, u.id AS user_id, u.name, u.email
-//       FROM attendance a
-//       JOIN user_employees_master u ON a.employee_id = u.id
-//       WHERE a.employee_id = $1
-//         AND a.monthly_status IN ('Pending_approval', 'approved')
-//         AND a.date BETWEEN $2 AND $3
-//     `;
-
-//     const result = await client.query(query, [employeeId, from, to]);
-
-//     res.status(200).json({
-//       message: "Pending monthly approvals fetched successfully",
-//       count: result.rows.length,
-//       data: result.rows,
-//     });
-//   } catch (err) {
-//     console.error("Get Pending Monthly Approvals Error:", err.message);
-//     res.status(500).json({ error: "Failed to fetch pending monthly approvals" });
-//   } finally {
-//     client.release();
-//   }
-// };
-
 export const getPendingMonthlyApprovals = async (req, res) => {
   const client = await pool.connect();
   try {
@@ -1288,22 +1251,10 @@ export const getPendingMonthlyApprovals = async (req, res) => {
 
     const result = await client.query(query, [employeeId, from, to]);
 
-    // ✅ Format date exactly like weekly approvals
-    const formattedData = result.rows.map(row => {
-      if (!row.date) return row;
-      const localDate = new Date(row.date);
-      const dateOnly = new Date(localDate.getTime() - localDate.getTimezoneOffset() * 60000)
-        .toISOString()
-        .split("T")[0];
-      return { ...row, date: dateOnly };
-    });
-    console.log("✅ Dates after formatting:");
-console.table(formattedData.map(r => ({ date: r.date, weekly_status: r.weekly_status })));
-
     res.status(200).json({
       message: "Pending monthly approvals fetched successfully",
-      count: formattedData.length,
-      data: formattedData,
+      count: result.rows.length,
+      data: result.rows,
     });
   } catch (err) {
     console.error("Get Pending Monthly Approvals Error:", err.message);
@@ -1312,6 +1263,7 @@ console.table(formattedData.map(r => ({ date: r.date, weekly_status: r.weekly_st
     client.release();
   }
 };
+
 /* -------------------------------------------------------------------------- */
 /*                       ADMIN APPROVES MONTHLY ATTENDANCE                    */
 /* -------------------------------------------------------------------------- */
@@ -1379,7 +1331,7 @@ export const updateMonthlyApprovalStatus = async (req, res) => {
       WHERE employee_id = $2
         AND "date" BETWEEN $3 AND $4
         AND monthly_status = 'Pending_approval'
-      RETURNING *, TO_CHAR(date, 'YYYY-MM-DD') AS formatted_date;
+      RETURNING *;
     `;
 
     const result = await client.query(query, [
@@ -1401,10 +1353,7 @@ export const updateMonthlyApprovalStatus = async (req, res) => {
     res.status(200).json({
       message: `Monthly attendance ${status} successfully by ${updatedBy}`,
       updated_count: result.rows.length,
-      data: result.rows.map(r => ({
-        ...r,
-        date: r.formatted_date, // ✅ Pure YYYY-MM-DD
-      })),
+      data: result.rows,
     });
   } catch (err) {
     console.error("Update Monthly Status Error:", err.message);
@@ -1477,21 +1426,26 @@ export const rejectWeeklyApproval = async (req, res) => {
     const status = "rejected";
 
     const query = `
-      UPDATE attendance
-      SET weekly_status = $1
-      WHERE employee_id = $2
-        AND date BETWEEN $3 AND $4
-        AND weekly_status = 'Pending_approval'
-      RETURNING *;
+     UPDATE attendance
+  SET weekly_status = $1
+  WHERE employee_id = $2
+    AND date BETWEEN $3 AND $4
+    AND weekly_status = 'Pending_approval'
+  RETURNING *, TO_CHAR(date, 'YYYY-MM-DD') AS formatted_date;
     `;
 
     const { rows } = await pool.query(query, [status, employeeId, from, to]);
 
+    
+
     res.status(200).json({
-      message: `Weekly attendance ${status} successfully`,
-      updated_count: rows.length,
-      data: rows,
-    });
+  message: `Weekly attendance ${status} successfully`,
+  updated_count: rows.length,
+  data: rows.map(r => ({
+    ...r,
+    date: r.formatted_date, // ✅ Pure YYYY-MM-DD from DB
+  })),
+});
   } catch (err) {
     console.error("Reject Weekly Status Error:", err.message);
     res.status(500).json({ error: "Failed to reject weekly attendance" });
@@ -1509,18 +1463,15 @@ export const rejectMonthlyApproval = async (req, res) => {
       WHERE employee_id = $2
         AND date BETWEEN $3 AND $4
         AND monthly_status = 'Pending_approval'
-      RETURNING *, TO_CHAR(date, 'YYYY-MM-DD') AS formatted_date;
+      RETURNING *;
     `;
 
     const { rows } = await pool.query(query, [status, employeeId, from, to]);
 
     res.status(200).json({
-       message: `Monthly attendance ${status} successfully`,
+      message: `Monthly attendance ${status} successfully`,
       updated_count: rows.length,
-      data: rows.map(r => ({
-        ...r,
-        date: r.formatted_date, // ✅ pure YYYY-MM-DD format (no timezone issue)
-      })),
+      data: rows,
     });
   } catch (err) {
     console.error("Reject Monthly Status Error:", err.message);
@@ -1648,6 +1599,7 @@ export const getPendingParentalLeaves = async (req, res) => {
   }
 };
 
+
 export const getAuditLogs = async (req, res) => {
   const client = await pool.connect();
 
@@ -1694,4 +1646,3 @@ export const getAuditLogs = async (req, res) => {
     client.release();
   }
 };
-//a
