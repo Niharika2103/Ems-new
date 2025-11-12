@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Collections;
 import java.util.stream.Collectors;
 import java.time.temporal.TemporalAdjusters;
@@ -344,49 +345,6 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 	    return (takenLeaves + requestedDays) <= allowed;
 	}
 	
-	@Transactional
-	public void deductLeaves(UUID employeeId, LocalDate from, LocalDate to) {
-	    // 1️⃣ Fetch all attendance entries in that range
-	    List<AttendanceEntity> weekRecords =
-	            attendanceRepository.findByEmployee_IdAndDateBetween(employeeId, from, to);
-
-	    if (weekRecords.isEmpty()) return;
-
-	    // 2️⃣ Fetch base (hardcoded) record — project = null
-	    AttendanceEntity baseRecord = attendanceRepository
-	            .findByEmployee_IdAndProjectIsNull(employeeId)
-	            .orElseThrow(() -> new RuntimeException("Base attendance record not found"));
-
-	    // 3️⃣ Count leave types in that week
-	    Map<String, Long> leaveCount = weekRecords.stream()
-	            .filter(a -> a.getLeaveType() != null && !a.getLeaveType().isBlank())
-	            .collect(Collectors.groupingBy(AttendanceEntity::getLeaveType, Collectors.counting()));
-
-	    // 4️⃣ Deduct the leaves
-	    leaveCount.forEach((type, count) -> {
-	        switch (type.trim()) {
-	            case "SL" -> baseRecord.setSl(Math.max(0, baseRecord.getSl() - count.intValue()));
-	            case "EL" -> baseRecord.setEl(Math.max(0, baseRecord.getEl() - count.intValue()));
-	            case "WFH" -> baseRecord.setWorkFromHome(Math.max(0, baseRecord.getWorkFromHome() - count.intValue()));
-	            case "Optional Holidays" ->
-	                    baseRecord.setOptionalHolidays(Math.max(0, baseRecord.getOptionalHolidays() - count.intValue()));
-	            case "Holidays" ->
-	                    baseRecord.setHolidays(Math.max(0, baseRecord.getHolidays() - count.intValue()));
-	            case "Maternity Leave" ->
-	                    baseRecord.setMaternityLeave(Math.max(0, baseRecord.getMaternityLeave() - count.intValue()));
-	            case "Paternity Leave" ->
-	                    baseRecord.setPaternityLeave(Math.max(0, baseRecord.getPaternityLeave() - count.intValue()));
-	            case "Extra Milar" -> 
-	                    baseRecord.setExtraMilar(Math.max(0, baseRecord.getExtraMilar() - count.intValue())); // ✅ Added this
-	            default -> System.out.println("⚠️ Unknown leave type: " + type);
-	        }
-	        baseRecord.setRemainingLeaves(Math.max(0, baseRecord.getRemainingLeaves() - count.intValue()));
-	    });
-
-	    // 5️⃣ Save updated leave counts
-	    attendanceRepository.save(baseRecord);
-	}
-	
 	
 //	private Map<String, Double> calculateProRatedLeaves(LocalDate joiningDate) {
 //	    int joiningMonth = joiningDate.getMonthValue();
@@ -433,70 +391,196 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 	    return finalLeaves;
 	}
 
+//	@Transactional
+//	public void initializeDefaultLeaves(UUID employeeId, String adminName) {
+//	    
+//	    boolean exists = attendanceRepository.existsByEmployee_IdAndProjectIsNull(employeeId);
+//	    if (exists) {
+//	        System.out.println("✅ Default leaves already exist for employee: " + employeeId);
+//	        return;
+//	    }
+//
+//	    //  Fetch employee info
+//	    UserEmployeeMasterEntity employee = userRepository.findById(employeeId)
+//	            .orElseThrow(() -> new RuntimeException("Employee not found"));
+//
+//	    LocalDate joiningDate = employee.getDateOfJoining();
+//	    if (joiningDate == null) {
+//	        throw new RuntimeException("Employee joining date is missing!");
+//	    }
+//
+//	    // Compute leaves dynamically using your helper
+//	    Map<String, Integer> leaveConfig = calculateLeavesBasedOnJoining(joiningDate);
+//
+//	    // Create base attendance record
+//	    AttendanceEntity base = new AttendanceEntity();
+//	    base.setEmployee(employee);
+//	    base.setProject(null); // indicates organization-level base record
+//	    base.setDate(joiningDate); 
+//	    base.setYear(joiningDate.getYear());
+//	    base.setGender(employee.getGender());
+//
+//	    //  Default approval states
+//	    base.setStatus("approved");
+//	    base.setWeeklyStatus("approved");
+//	    base.setMonthlyStatus("approved");
+//
+//	    //  Assign leaves based on calculation
+//	    base.setSl(leaveConfig.get("SL"));
+//	    base.setEl(leaveConfig.get("EL"));
+//	    base.setExtraMilar(leaveConfig.get("Extra Milar"));
+//	    base.setHolidays(leaveConfig.get("Holidays"));
+//	    base.setOptionalHolidays(leaveConfig.get("Optional Holidays"));
+//
+//	    int totalLeaves = leaveConfig.values().stream().mapToInt(Integer::intValue).sum();
+//	    base.setRemainingLeaves(totalLeaves);
+//
+//	    // Initialize other leave types
+//	    base.setWorkingDays(0);
+//	    base.setWorkFromHome(0);
+//	    base.setMaternityLeave(0);
+//	    base.setPaternityLeave(0);
+//
+//	    // Mandatory non-null columns
+//	    base.setWorkedHours(0.0);
+//	    base.setTotalWorkedHours(0.0);
+//	    base.setLeaveType("");
+//	    base.setUpdatedBy(adminName);
+//	    base.setUpdatedAt(LocalDateTime.now());
+//
+//	    // Save record
+//	    attendanceRepository.save(base);
+//
+//	    System.out.println(" Default leaves (pro-rated) created for employee ID: "
+//	            + employee.getId() + " | Joined: " + joiningDate);
+//	}
 	@Transactional
-	public void initializeDefaultLeaves(UUID employeeId, String adminName) {
-	    
-	    boolean exists = attendanceRepository.existsByEmployee_IdAndProjectIsNull(employeeId);
-	    if (exists) {
-	        System.out.println("✅ Default leaves already exist for employee: " + employeeId);
-	        return;
-	    }
+	public void updateApprovedRecordsWithDefaultLeaves(UUID employeeId, LocalDate from, LocalDate to, String adminName) {
+	    List<AttendanceEntity> records = attendanceRepository.findByEmployee_IdAndDateBetween(employeeId, from, to);
+	    if (records.isEmpty()) return;
 
-	    //  Fetch employee info
-	    UserEmployeeMasterEntity employee = userRepository.findById(employeeId)
-	            .orElseThrow(() -> new RuntimeException("Employee not found"));
+	    records.sort(Comparator.comparing(AttendanceEntity::getDate));
 
+	    UserEmployeeMasterEntity employee = records.get(0).getEmployee();
 	    LocalDate joiningDate = employee.getDateOfJoining();
 	    if (joiningDate == null) {
-	        throw new RuntimeException("Employee joining date is missing!");
+	        throw new RuntimeException("Employee joining date is missing for ID: " + employeeId);
 	    }
 
-	    // Compute leaves dynamically using your helper
-	    Map<String, Integer> leaveConfig = calculateLeavesBasedOnJoining(joiningDate);
+	    // ✅ Step 1: Get the last approved record before 'from'
+	    List<AttendanceEntity> approvedBeforeList = attendanceRepository.findLastApprovedBeforeDate(employeeId, from);
+	    AttendanceEntity lastRelevant = approvedBeforeList.isEmpty() ? null : approvedBeforeList.get(0);
 
-	    // Create base attendance record
-	    AttendanceEntity base = new AttendanceEntity();
-	    base.setEmployee(employee);
-	    base.setProject(null); // indicates organization-level base record
-	    base.setDate(joiningDate); 
-	    base.setYear(joiningDate.getYear());
-	    base.setGender(employee.getGender());
+	    // ✅ Step 2: Initialize current leave balances
+	    int currentSL = 0, currentEL = 0, currentExtraMilar = 0, currentHolidays = 0, currentOptionalHolidays = 0, currentRemaining = 0;
 
-	    //  Default approval states
-	    base.setStatus("approved");
-	    base.setWeeklyStatus("approved");
-	    base.setMonthlyStatus("approved");
+	    if (lastRelevant != null) {
+	        // Carry forward from last approved record
+	        currentSL = safeGet(lastRelevant.getSl(), 0);
+	        currentEL = safeGet(lastRelevant.getEl(), 0);
+	        currentExtraMilar = safeGet(lastRelevant.getExtraMilar(), 0);
+	        currentHolidays = safeGet(lastRelevant.getHolidays(), 0);
+	        currentOptionalHolidays = safeGet(lastRelevant.getOptionalHolidays(), 0);
+	        currentRemaining = safeGet(lastRelevant.getRemainingLeaves(), 0);
+	        System.out.println("🔁 Carrying forward leave balances from: " + lastRelevant.getDate());
+	    } else {
+	        // No approved record yet — first-time initialization
+	        Map<String, Integer> defaultLeaves = calculateLeavesBasedOnJoining(joiningDate);
+	        currentSL = defaultLeaves.get("SL");
+	        currentEL = defaultLeaves.get("EL");
+	        currentExtraMilar = defaultLeaves.get("Extra Milar");
+	        currentHolidays = defaultLeaves.get("Holidays");
+	        currentOptionalHolidays = defaultLeaves.get("Optional Holidays");
+	        currentRemaining = defaultLeaves.values().stream().mapToInt(Integer::intValue).sum();
+	        System.out.println("🆕 Initialized default leaves for first-time approval: " + employee.getEmployeeName());
+	    }
 
-	    //  Assign leaves based on calculation
-	    base.setSl(leaveConfig.get("SL"));
-	    base.setEl(leaveConfig.get("EL"));
-	    base.setExtraMilar(leaveConfig.get("Extra Milar"));
-	    base.setHolidays(leaveConfig.get("Holidays"));
-	    base.setOptionalHolidays(leaveConfig.get("Optional Holidays"));
+	    int lastProcessedYear = from.minusDays(1).getYear();
 
-	    int totalLeaves = leaveConfig.values().stream().mapToInt(Integer::intValue).sum();
-	    base.setRemainingLeaves(totalLeaves);
+	    // ✅ Step 3: Process each record in date order
+	    for (AttendanceEntity rec : records) {
+	        LocalDate recDate = rec.getDate();
+	        int recYear = recDate.getYear();
 
-	    // Initialize other leave types
-	    base.setWorkingDays(0);
-	    base.setWorkFromHome(0);
-	    base.setMaternityLeave(0);
-	    base.setPaternityLeave(0);
+	        // 🎯 Step 3A: Handle year transition
+	        if (recYear > lastProcessedYear) {
+	            System.out.println("🌍 New year detected for " + employee.getEmployeeName() + " → " + recYear);
 
-	    // Mandatory non-null columns
-	    base.setWorkedHours(0.0);
-	    base.setTotalWorkedHours(0.0);
-	    base.setLeaveType("");
-	    base.setUpdatedBy(adminName);
-	    base.setUpdatedAt(LocalDateTime.now());
+	            // 💾 Carry forward only EL (up to 10 days)
+	            int carryForwardEL = 0;
+	            if (currentEL >= 10) {
+	                carryForwardEL = Math.min(currentEL, 10);
+	                System.out.printf("🎯 %s → Carry forward %d EL days to %d%n",
+	                        employee.getEmployeeName(), carryForwardEL, recYear);
+	            } else {
+	                System.out.printf("🚫 %s → No EL carry forward (EL=%d) for year %d%n",
+	                        employee.getEmployeeName(), currentEL, recYear);
+	            }
 
-	    // Save record
-	    attendanceRepository.save(base);
 
-	    System.out.println(" Default leaves (pro-rated) created for employee ID: "
-	            + employee.getId() + " | Joined: " + joiningDate);
+	            // 🧮 Load new year default leaves
+	            Map<String, Integer> yearlyLeaves = calculateLeavesBasedOnJoining(LocalDate.of(recYear, 1, 1));
+
+	            currentSL = yearlyLeaves.get("SL"); // SL reset
+	            currentEL = yearlyLeaves.get("EL") + carryForwardEL; // EL + carry forward (max 10)
+	            currentExtraMilar = yearlyLeaves.get("Extra Milar"); // reset
+	            currentHolidays = yearlyLeaves.get("Holidays"); // reset
+	            currentOptionalHolidays = yearlyLeaves.get("Optional Holidays"); // reset
+	            currentRemaining = currentSL + currentEL + currentExtraMilar + currentHolidays + currentOptionalHolidays;
+
+	            System.out.printf("🎯 %s → Carry forward %d EL days to %d%n",
+	                    employee.getEmployeeName(), carryForwardEL, recYear);
+	        }
+
+	        // 📝 Apply balances to record
+	        rec.setSl(currentSL);
+	        rec.setEl(currentEL);
+	        rec.setExtraMilar(currentExtraMilar);
+	        rec.setHolidays(currentHolidays);
+	        rec.setOptionalHolidays(currentOptionalHolidays);
+	        rec.setRemainingLeaves(currentRemaining);
+
+	        // 🧩 Deduct leave if taken
+	        String leaveType = rec.getLeaveType();
+	        if (leaveType != null && !leaveType.trim().isEmpty()) {
+	            switch (leaveType.trim().toLowerCase()) {
+	                case "sl" -> {
+	                    currentSL = Math.max(0, currentSL - 1);
+	                    currentRemaining = Math.max(0, currentRemaining - 1);
+	                }
+	                case "el" -> {
+	                    currentEL = Math.max(0, currentEL - 1);
+	                    currentRemaining = Math.max(0, currentRemaining - 1);
+	                }
+	                case "optional holidays" -> {
+	                    currentOptionalHolidays = Math.max(0, currentOptionalHolidays - 1);
+	                    currentRemaining = Math.max(0, currentRemaining - 1);
+	                }
+	                case "holidays" -> {
+	                    currentHolidays = Math.max(0, currentHolidays - 1);
+	                    currentRemaining = Math.max(0, currentRemaining - 1);
+	                }
+	                case "extra milar" -> {
+	                    currentExtraMilar = Math.max(0, currentExtraMilar - 1);
+	                    currentRemaining = Math.max(0, currentRemaining - 1);
+	                }
+	                default -> { /* No deduction for WFH/Present */ }
+	            }
+	            System.out.println("➖ Deducted " + leaveType + " for " + employee.getEmployeeName() + " on " + recDate);
+	        }
+
+	        rec.setStatus("approved");
+	        rec.setUpdatedBy(adminName);
+	        rec.setUpdatedAt(LocalDateTime.now());
+	        lastProcessedYear = recYear;
+	        lastRelevant = rec;
+	    }
+
+	    attendanceRepository.saveAll(records);  
+	    System.out.println("✅ Successfully updated " + records.size() + " records with yearly EL carry-forward (max 10 days).");
 	}
 
-
-
+	private int safeGet(Integer value, int defaultValue) {
+	    return value != null ? value : defaultValue;
+	}
 }
