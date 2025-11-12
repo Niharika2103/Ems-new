@@ -114,7 +114,7 @@ export default function Timesheet() {
   const gender = localStorage.getItem("gender");
 
   console.log(attendanceData, "attendanceData")
-  const leaveTypes = ["EL", "SL", "PL", "WFH", "Extra Milar","Paternity Leave", "Maternity Leave"];
+  const leaveTypes = ["EL", "SL", "WFH", "Extra Milar","Paternity Leave", "Maternity Leave"];
 
   const [holidays, setHolidays] = useState([]);
   const holidaysCache = {};
@@ -279,7 +279,7 @@ useEffect(() => {
     const r = dataMap[date] || {};
     const leaveType = r.leave_type || "";
     const leaveValues = {
-      EL: 0, SL: 0, PL: 0, WFH: 0,
+      EL: 0, SL: 0, WFH: 0,
       "Extra Milar": 0, "Paternity Leave": 0, "Maternity Leave": 0
     };
     if (leaveType && leaveValues[leaveType] !== undefined) leaveValues[leaveType] = 9;
@@ -295,7 +295,7 @@ useEffect(() => {
   setWorkedHours(weeklyData.map(d => +d.worked_hours || 0));
 
   const newLeaveRows = {}, newApprovalStatus = {};
-  const types = ["EL", "SL", "PL", "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave"];
+  const types = ["EL", "SL","WFH", "Extra Milar", "Paternity Leave", "Maternity Leave"];
 
   const mapStatus = s => {
     s = s?.toLowerCase();
@@ -332,7 +332,7 @@ useEffect(() => {
     const r = dataMap[date] || {};
     const leaveType = r.leave_type || "";
     const leaveValues = {
-      EL: 0, SL: 0, PL: 0, WFH: 0,
+      EL: 0, SL: 0, WFH: 0,
       "Extra Milar": 0, "Paternity Leave": 0, "Maternity Leave": 0
     };
     if (leaveType && leaveValues[leaveType] !== undefined) leaveValues[leaveType] = 9;
@@ -348,7 +348,7 @@ useEffect(() => {
   setMonthlyWorkedHours(monthlyData.map(d => +d.worked_hours || 0));
 
   const newLeaveRows = {}, newApprovalStatus = {};
-  const types = ["EL", "SL", "PL", "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave"];
+  const types = ["EL", "SL","WFH", "Extra Milar", "Paternity Leave", "Maternity Leave"];
 
   const mapStatus = s => {
     s = s?.toLowerCase();
