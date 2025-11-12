@@ -1658,13 +1658,11 @@ export const getAuditLogs = async (req, res) => {
   const client = await pool.connect();
 
   try {
-    // Optional: support filtering by date range
-    const { from, to } = req.query;
-
-    let query = `
+    const query = `
       SELECT 
         a.id,
-        e.employee_name,
+        e.name AS employee_name,
+        a.employee_id,
         a.created_by,
         a.updated_by,
         a.created_at,
@@ -1672,24 +1670,19 @@ export const getAuditLogs = async (req, res) => {
         a.weekly_status,
         a.monthly_status
       FROM attendance a
-      LEFT JOIN user_employee_master e ON a.employee_id = e.id
-      WHERE (a.updated_by IS NOT NULL OR a.created_by IS NOT NULL)
+      LEFT JOIN user_employees_master e ON a.employee_id = e.id
+      WHERE 
+        (
+          a.weekly_status = 'Pending_approval' 
+          OR a.monthly_status = 'Pending_approval'
+        )
+      ORDER BY a.updated_at DESC
     `;
 
-    const params = [];
-
-    // optional filters
-    if (from && to) {
-      query += ` AND a.updated_at BETWEEN $1 AND $2`;
-      params.push(from, to);
-    }
-
-    query += ` ORDER BY a.updated_at DESC`;
-
-    const result = await client.query(query, params);
+    const result = await client.query(query);
 
     res.status(200).json({
-      message: "✅ Audit logs fetched successfully",
+      message: "✅ All audit logs fetched successfully",
       count: result.rows.length,
       data: result.rows,
     });
@@ -1700,4 +1693,3 @@ export const getAuditLogs = async (req, res) => {
     client.release();
   }
 };
-//a

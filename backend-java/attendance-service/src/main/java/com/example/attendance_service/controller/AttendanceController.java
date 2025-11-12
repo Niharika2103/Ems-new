@@ -159,9 +159,10 @@ System.out.println("@45::"+employeename);
     public ResponseEntity<String> releaseWeekly(
             @RequestParam UUID employeeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate weekStart,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate weekEnd
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate weekEnd,
+            @RequestParam String employeeName
     ) {
-        attendanceService.releaseWeeklyAttendance(employeeId, weekStart, weekEnd);
+        attendanceService.releaseWeeklyAttendance(employeeId, weekStart, weekEnd, employeeName);
         return ResponseEntity.ok("Weekly attendance released successfully.");
     }
     
@@ -170,7 +171,8 @@ System.out.println("@45::"+employeename);
             @RequestParam UUID employeeId,
             @RequestParam UUID projectId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate monthStart,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate monthEnd) {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate monthEnd,
+            @RequestParam String employeeName) {
 
         System.out.println(" release-monthly called with:");
         System.out.println("Employee ID: " + employeeId);
@@ -178,7 +180,7 @@ System.out.println("@45::"+employeename);
         System.out.println("Month Start: " + monthStart);
         System.out.println("Month End: " + monthEnd);
 
-        attendanceService.releaseMonthlyAttendance(employeeId, projectId, monthStart, monthEnd);
+        attendanceService.releaseMonthlyAttendance(employeeId, projectId, monthStart, monthEnd, employeeName);
 
         return ResponseEntity.ok("Monthly attendance released successfully.");
     }

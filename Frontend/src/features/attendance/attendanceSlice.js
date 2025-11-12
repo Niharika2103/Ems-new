@@ -4,7 +4,7 @@ import { AttendanceSaveallApi,AttendanceFetchAllApi ,AttendanceFetchExistingWeek
   AttendanceFetchByEmployeeProjectApi,AttendanceReleaseWeekApi,
 AdminAttendancFetchWeeklyDataByIdApi,Admin_Approve_Weekly_Attendance_Api,
 AdminAttendancFetchMonthlyDataByIdApi,AttendanceFetchAllbasedonMonthApi,
-Admin_Approve_monthly_Attendance_Api,applyParentalLeaveApi, approveParentalLeaveApi,fetchPendingParentalLeavesApi, AttendanceCheckLeaveEligibilityApi, Admin_Reject_Weekly_Attendance_Api, Admin_Reject_Monthly_Attendance_Api} from "../../api/authApi";
+Admin_Approve_monthly_Attendance_Api,applyParentalLeaveApi, approveParentalLeaveApi,fetchPendingParentalLeavesApi, AttendanceCheckLeaveEligibilityApi, Admin_Reject_Weekly_Attendance_Api, Admin_Reject_Monthly_Attendance_Api, fetchAuditLogsApi} from "../../api/authApi";
 
 
 //Employee
@@ -68,18 +68,18 @@ export const AttendanceFetchByEmployeeProject = createAsyncThunk(
 );
 
 
-export const AttendanceReleaseWeek= createAsyncThunk("attendance/release-week", async ({ employeeId, weekStart,weekEnd }, thunkAPI) => {
+export const AttendanceReleaseWeek= createAsyncThunk("attendance/release-week", async ({ employeeId, weekStart,weekEnd, employeeName  }, thunkAPI) => {
   try {
-    const res = await AttendanceReleaseWeekApi( employeeId, weekStart,weekEnd );
+    const res = await AttendanceReleaseWeekApi( employeeId, weekStart,weekEnd, employeeName  );
     return res.data;
   } catch (err) {
     return thunkAPI.rejectWithValue(err.response?.data || err.message);
   }
 })
 
-export const AttendanceReleaseMonth= createAsyncThunk("attendance/release-Month", async ({ employeeId,  projectId,monthStart,monthEnd }, thunkAPI) => {
+export const AttendanceReleaseMonth= createAsyncThunk("attendance/release-Month", async ({ employeeId,  projectId,monthStart,monthEnd, employeeName  }, thunkAPI) => {
   try {
-    const res = await AttendanceReleaseMonthApi( employeeId, projectId, monthStart,monthEnd );
+    const res = await AttendanceReleaseMonthApi( employeeId, projectId, monthStart,monthEnd, employeeName  );
     return res.data;
   } catch (err) {
     return thunkAPI.rejectWithValue(err.response?.data || err.message);
@@ -214,6 +214,18 @@ export const Admin_Reject_Monthly_Attendance = createAsyncThunk(
   }
 );
 
+// ✅ Fetch Audit Logs
+export const fetchAuditLogs = createAsyncThunk(
+  "attendance/fetchAuditLogs",
+  async (_, thunkAPI) => {
+    try {
+      const res = await fetchAuditLogsApi();
+      return res.data; // { message, count, data: [...] }
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data?.error || err.message);
+    }
+  }
+);
 const attendanceSlice = createSlice({
   name: "attendance",
   initialState: {
@@ -223,6 +235,10 @@ const attendanceSlice = createSlice({
       leaveEligibility: null, 
       loading: false,
     error: null,
+
+    auditLogs: [],
+  auditLoading: false,
+  auditError: null,
   },
   reducers: {
     logout: (state) => {
@@ -402,6 +418,18 @@ const attendanceSlice = createSlice({
 .addCase(Admin_Reject_Monthly_Attendance.rejected, (state, action) => {
   state.loading = false;
   state.error = action.payload;
+})
+.addCase(fetchAuditLogs.pending, (state) => {
+  state.auditLoading = true;
+  state.auditError = null;
+})
+.addCase(fetchAuditLogs.fulfilled, (state, action) => {
+  state.auditLoading = false;
+  state.auditLogs = action.payload.data || [];
+})
+.addCase(fetchAuditLogs.rejected, (state, action) => {
+  state.auditLoading = false;
+  state.auditError = action.payload;
 });
   },
 });

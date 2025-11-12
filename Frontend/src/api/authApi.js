@@ -235,23 +235,23 @@ export const AttendanceFetchByEmployeeProjectApi = (employeeId, projectId) => {
 };
 
 //fetch release-week
-    export const AttendanceReleaseWeekApi = (employeeId,weekStart,weekEnd ) => {
+    export const AttendanceReleaseWeekApi = (employeeId,weekStart,weekEnd, employeeName ) => {
   return AttendanceClient.post(
     `${AUTH_API.ATTENDANCE}/attendance/release-weekly`,
     null,
     {
-      params: { employeeId,weekStart,weekEnd }
+      params: { employeeId,weekStart,weekEnd, employeeName }
     }
   );
 };
 
 //fetch release-month
-    export const AttendanceReleaseMonthApi = (employeeId, projectId,monthStart,monthEnd) => {
+    export const AttendanceReleaseMonthApi = (employeeId, projectId,monthStart,monthEnd, employeeName) => {
   return AttendanceClient.post(
     `${AUTH_API.ATTENDANCE}/attendance/release-monthly`,
     null,
     {
-      params: { employeeId,projectId, monthStart,monthEnd }
+      params: { employeeId,projectId, monthStart,monthEnd, employeeName }
     }
   );
 };
@@ -326,5 +326,9 @@ export const Admin_Reject_Monthly_Attendance_Api = (employeeId, from, to) => {
     `${AUTH_API.ADMIN}/attendance/monthly/reject`,
     { employeeId, from, to }
   );
+};
+
+export const fetchAuditLogsApi = () => {
+  return AttendanceClient.get(`${AUTH_API.ADMIN}/audit-logs`);
 };
 

@@ -133,8 +133,8 @@ public List<AttendanceEntity> saveOrUpdateAttendance(
                 existing.setExtraMilar(0);
                 existing.setMaternityLeave(0);
                 existing.setPaternityLeave(0);
-                existing.setUpdatedBy(employeename);
-                existing.setUpdatedAt(LocalDateTime.now());
+//                existing.setUpdatedBy(employeename);
+//                existing.setUpdatedAt(LocalDateTime.now());
                 existing.setRemainingLeaves(0);
             }
 
@@ -193,9 +193,13 @@ public List<AttendanceEntity> getAttendanceForMonthRange(UUID employeeId, LocalD
 }
 
 @Transactional
-public void releaseWeeklyAttendance(UUID employeeId, LocalDate weekStart, LocalDate weekEnd) {
-    List<AttendanceEntity> attendanceList =
+public void releaseWeeklyAttendance(UUID employeeId, LocalDate weekStart, LocalDate weekEnd, String employeeName) {
+    
+	
+	List<AttendanceEntity> attendanceList =
             attendanceRepository.findByEmployee_IdAndDateBetween(employeeId, weekStart, weekEnd);
+	
+	
    // Fetch all attendance records for this week
 	List<AttendanceEntity> validRecords = attendanceList.stream()
             .filter(a -> a.getProject() != null)
@@ -203,6 +207,8 @@ public void releaseWeeklyAttendance(UUID employeeId, LocalDate weekStart, LocalD
 
     for (AttendanceEntity attendance : validRecords) {
         attendance.setStatus("Pending_approval");
+        attendance.setCreatedBy(employeeName);        // Who released
+        attendance.setCreatedAt(LocalDateTime.now());
     }
  
     
@@ -211,7 +217,7 @@ public void releaseWeeklyAttendance(UUID employeeId, LocalDate weekStart, LocalD
 }
 
 @Transactional
-public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate monthStart, LocalDate monthEnd) {
+public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate monthStart, LocalDate monthEnd, String employeeName) {
     // ✅ Fetch all attendance records for this employee + project + month
     List<AttendanceEntity> attendanceList =
             attendanceRepository.findByEmployee_IdAndProject_IdAndDateBetween(
@@ -223,6 +229,8 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
     // ✅ Update monthly status safely
     for (AttendanceEntity attendance : attendanceList) {
         attendance.setMonthlyStatus("Pending_approval");
+        attendance.setCreatedBy(employeeName);        // Who released
+        attendance.setCreatedAt(LocalDateTime.now());
     }
 
     // ✅ Save back
