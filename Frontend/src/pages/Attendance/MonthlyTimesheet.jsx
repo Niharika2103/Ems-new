@@ -289,6 +289,7 @@ useEffect(() => {
   const handleSaveMonth = async () => {
     const ProjectID = projectDetails?.projectID;
     const employeeId = projectDetails?.employeeId;
+    const employeeName = projectDetails?.username; 
     const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
 
     const formatDate = (date) =>
@@ -303,6 +304,8 @@ useEffect(() => {
           projectId: ProjectID,
           monthStart: formatDate(monthStart),
           monthEnd: formatDate(monthEnd),
+          employeeName,
+
         })
       );
 

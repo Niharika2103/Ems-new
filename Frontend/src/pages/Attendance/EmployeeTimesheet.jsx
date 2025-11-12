@@ -505,6 +505,7 @@ const handleEditRow = (row) => {
 
   const handleSaveWeek = async () => {
     const employeeId = projectDetails?.employeeId;
+    const employeeName = projectDetails?.username;
     const weekStartDate = getMonday(weekStart);
     const weekEnd = new Date(weekStartDate);
     weekEnd.setDate(weekStartDate.getDate() + 6); // Sunday
@@ -520,6 +521,7 @@ const handleEditRow = (row) => {
           employeeId: employeeId,
           weekStart: formattedStartEnd,
           weekEnd: formattedWeekEnd,
+           employeeName,
         })
       );
 
