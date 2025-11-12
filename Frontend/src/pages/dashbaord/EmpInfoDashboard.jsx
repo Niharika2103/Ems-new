@@ -17,14 +17,14 @@ const EmpInfoDashboard = () => {
   // Current page title
   const currentPage = pathnames[pathnames.length - 1] || "";
   const stats = [
-    {
-      title: "Profile",
-      message: "Check your daily attendance",
-      icon: AccountCircleIcon,
-      iconBg: "bg-sky-100",
-      iconColor: "text-sky-600",
-      onClick: () => navigate("/profile"),
-    },
+    // {
+    //   title: "Profile",
+    //   message: "Check your daily attendance",
+    //   icon: AccountCircleIcon,
+    //   iconBg: "bg-sky-100",
+    //   iconColor: "text-sky-600",
+    //   onClick: () => navigate("/profile"),
+    // },
     {
       title: "Document",
       message: "View HR announcements",

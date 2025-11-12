@@ -93,7 +93,12 @@ function AppRoutes() {
 
         {/* Dashboard & profile (accessible to all logged-in users) */}
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/profile" element={<Profile />} />
+        <Route path="/profile" 
+        element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <Profile />
+            </ProtectedRoute>
+          } />
 
         <Route
           path="/dashboard/employeeinfo/employeeprofile"
