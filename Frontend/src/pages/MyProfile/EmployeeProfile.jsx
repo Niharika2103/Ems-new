@@ -69,12 +69,29 @@ const EmployeeProfile = () => {
   }, [dispatch]);
 
   // Set profile data
-  useEffect(() => {
-    if (profile) {
-      setFormData((prev) => ({ ...prev, ...profile }));
-    }
-  }, [profile]);
+  // useEffect(() => {
+  //   if (profile) {
+  //     setFormData((prev) => ({ ...prev, ...profile }));
+  //   }
+  // }, [profile]);
 
+  
+// Set profile data
+useEffect(() => {
+  if (profile) {
+    const formatDate = (isoString) => {
+      if (!isoString) return "";
+      return isoString.split("T")[0]; // Extract "YYYY-MM-DD" from "YYYY-MM-DDTHH:mm:ss.sssZ"
+    };
+
+    setFormData((prev) => ({
+      ...prev,
+      ...profile,
+      dob: formatDate(profile.dob),
+      date_of_joining: formatDate(profile.date_of_joining),
+    }));
+  }
+}, [profile]);
   // Handle file upload
   const handleChange = (e) => {
     const { name, value, files } = e.target;

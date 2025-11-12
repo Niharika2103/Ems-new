@@ -54,11 +54,30 @@ export default function EmpTimesheet() {
   const [modalLeaveType, setModalLeaveType] = useState("");
   const [holidays, setHolidays] = useState([]);
   const [holidaysCache, setHolidaysCache] = useState({});
+  const [isWeekReleased, setIsWeekReleased] = useState(false);
+
   //  store leave periods for multi-week leaves
   const [leavePeriods, setLeavePeriods] = useState([]);
   const [approvalStatus, setApprovalStatus] = useState({}); // Track approval status for each day
   const leaveTypes = ["EL", "SL", "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave", "Optional Holidays", "Holidays"];
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+
+  useEffect(() => {
+  const savedReleasedWeek = localStorage.getItem("releasedWeek");
+  if (savedReleasedWeek && new Date(savedReleasedWeek).toDateString() === weekStart.toDateString()) {
+    setIsWeekReleased(true);
+  } else {
+    setIsWeekReleased(false);
+  }
+}, [weekStart]);
+// Clear editable rejected row when week changes
+useEffect(() => {
+  localStorage.removeItem("editableRejectedRow");
+  setEditableRejectedRow(null);
+}, [weekStart]);
+
+
 
   // Fetch from localStorage when page loads
   useEffect(() => {
@@ -152,22 +171,21 @@ export default function EmpTimesheet() {
     const statusKey = leaveType ? `${leaveType}_${dayIndex}` : `worked_${dayIndex}`;
     return approvalStatus[statusKey] !== 'approved'; // Editable if not approved
   };
+  // Determine if a cell should be editable based on its status color
+const canEditByColor = (color) => {
+  // Only red cells (rejected) are allowed to be edited
+  return color === "#d3323fff";
+};
 
-  //while changing date get all datas 
-  // useEffect(() => {
-  //   if (employeeId && ProjectID && weekStart) {
-  //     const mondayDate = selectDate.getFullYear() + '-' +
-  //       String(selectDate.getMonth() + 1).padStart(2, '0') + '-' +
-  //       String(selectDate.getDate()).padStart(2, '0');
-  //     dispatch(
-  //       AttendanceFetchExistingWeek({
-  //         employeeId,
-  //         projectId: ProjectID,
-  //         startDate: mondayDate
-  //       })
-  //     )
-  //       .then((res) => {
-  //         console.log("Existing week data:", res.payload);
+// Track which rejected row is currently in "edit mode"
+// Track which rejected row is editable and persist in localStorage
+const [editableRejectedRow, setEditableRejectedRow] = useState(
+  localStorage.getItem("editableRejectedRow") || null
+);
+
+
+
+  
   useEffect(() => {
     if (employeeId && ProjectID && weekStart) {
       const mondayDate = weekStart.getFullYear() + '-' +  // ← Change selectDate to weekStart
@@ -210,6 +228,25 @@ export default function EmpTimesheet() {
         .catch((err) => console.error(err));
     }
   }, [employeeId, ProjectID, weekStart, dispatch, selectDate]);
+
+  // 🧩 Save approvalStatus to localStorage whenever it changes
+useEffect(() => {
+  if (Object.keys(approvalStatus).length > 0) {
+    localStorage.setItem(
+      `approvalStatus_${weekStart.toISOString()}`,
+      JSON.stringify(approvalStatus)
+    );
+  }
+}, [approvalStatus, weekStart]);
+
+// 🧩 Restore approvalStatus when week changes
+useEffect(() => {
+  const savedStatus = localStorage.getItem(`approvalStatus_${weekStart.toISOString()}`);
+  if (savedStatus) {
+    setApprovalStatus(JSON.parse(savedStatus));
+  }
+}, [weekStart]);
+
 
   useEffect(() => {
     if (attendanceData?.length > 0) {
@@ -358,10 +395,17 @@ export default function EmpTimesheet() {
     handleMenuClose();
   };
 
-  const handleEditRow = (row) => {
-    setLockedRows((prev) => ({ ...prev, [row]: false }));
-    handleMenuClose();
-  };
+  // const handleEditRow = (row) => {
+  //   setLockedRows((prev) => ({ ...prev, [row]: false }));
+  //   handleMenuClose();
+  // };
+const handleEditRow = (row) => {
+  setEditableRejectedRow(row);
+  localStorage.setItem("editableRejectedRow", row);
+  toast.info(`Editing enabled for rejected ${row}`);
+  handleMenuClose();
+};
+
 
   const handleSaveAll = async () => {
     const employeename = projectDetails?.username;
@@ -450,6 +494,8 @@ export default function EmpTimesheet() {
       } else {
         toast.success("Saved successfully");
         dispatch(setAttendanceData(dataToSend));
+        localStorage.setItem("weeklySyncData", JSON.stringify(dataToSend));
+
       }
     } catch (err) {
       console.error("Unexpected error:", err);
@@ -479,6 +525,8 @@ export default function EmpTimesheet() {
 
       if (AttendanceReleaseWeek.fulfilled.match(resultAction)) {
         toast.success("Week released successfully!");
+        setIsWeekReleased(true);
+        localStorage.setItem("releasedWeek", weekStart.toISOString());
 
         //  Immediately update frontend data to show yellow
         const updatedData = attendanceData.map((item) => ({
@@ -543,6 +591,26 @@ export default function EmpTimesheet() {
         return "white";
     }
   };
+
+//   const getStatusColor = (dayIndex, leaveType = null) => {
+//   const isWeekend = dayIndex === 5 || dayIndex === 6;
+//   if (isWeekend) return "#E0E0E0";
+
+//   const key = leaveType ? `${leaveType}_${dayIndex}` : `worked_${dayIndex}`;
+//   const status = approvalStatus[key];
+
+//   switch (status) {
+//     case "Pending_approval":
+//     case "submitted":
+//       return "#FFF59D"; // yellow
+//     case "approved":
+//       return "#A5D6A7"; // green
+//     case "rejected":
+//       return "#d3323fff"; // red
+//     default:
+//       return "white";
+//   }
+// };
 
 
   const workedTotal = hours.reduce((s, v) => s + (Number(v) || 0), 0);
@@ -669,24 +737,41 @@ export default function EmpTimesheet() {
             }
 
             return (
-              <input
-                key={i}
-                type="number"
-                value={h}
-                min="0"
-                max="9"
-                disabled={!isEditable}
-                style={{ backgroundColor }}
-                className={`w-17 h-8 text-center border rounded-md ${!isEditable ? "cursor-not-allowed" : "bg-white"
-                  } ${isWeekend ? "text-gray-400" : ""}`}
-                onChange={(e) => {
-                  if (isEditable) {
-                    const newHours = [...hours];
-                    newHours[i] = e.target.value;
-                    setHours(newHours);
-                  }
-                }}
-              />
+             <input
+  key={i}
+  type="number"
+  value={h}
+  min="0"
+  max="9"
+  disabled={
+    // 🧠 Enable only if: user clicked "Edit" for Worked Hours & cell is red
+    !(
+      editableRejectedRow === "Worked Hours" &&
+      getStatusColor(i) === "#d3323fff"
+    )
+  }
+  style={{ backgroundColor: getStatusColor(i) }}
+  className={`w-17 h-8 text-center border rounded-md ${
+    !(
+      editableRejectedRow === "Worked Hours" &&
+      getStatusColor(i) === "#d3323fff"
+    )
+      ? "cursor-not-allowed"
+      : "bg-white"
+  } ${isWeekend ? "text-gray-400" : ""}`}
+  onChange={(e) => {
+    if (
+      editableRejectedRow === "Worked Hours" &&
+      getStatusColor(i) === "#d3323fff"
+    ) {
+      const newHours = [...hours];
+      newHours[i] = e.target.value;
+      setHours(newHours);
+    }
+  }}
+/>
+
+
             );
           })}
           <div className="text-center w-12">{workedTotal}/45</div>
@@ -695,7 +780,7 @@ export default function EmpTimesheet() {
       </div>
 
 
-      {/* LEAVES */}
+      {/* LEAVES
       {usedLeaveTypes.map((lt) => (
         <div key={lt} className="flex justify-between items-center py-1 text-sm">
           <div className="flex-1 font-semibold">{lt}</div>
@@ -735,7 +820,68 @@ export default function EmpTimesheet() {
             <IconButton onClick={(e) => handleMenuOpen(e, lt)}><MoreVert /></IconButton>
           </div>
         </div>
-      ))}
+      ))} */}
+      {/* LEAVES */}
+{usedLeaveTypes.map((lt) => (
+  <div key={lt} className="flex justify-between items-center py-1 text-sm">
+    <div className="flex-1 font-semibold">{lt}</div>
+    <div className="flex gap-5 justify-end flex-1">
+      {leaveRows[lt].map((v, i) => {
+        const isWeekend = isWeekendDay(i);
+        const currentDate = new Date(weekStart);
+        currentDate.setDate(currentDate.getDate() + i);
+
+        const period = leavePeriods.find((p) => p.type === lt);
+        const isInLeave =
+          period &&
+          currentDate >= period.startDate &&
+          currentDate <= period.endDate;
+
+        const displayValue = isInLeave
+          ? lt === "Maternity Leave"
+            ? "ML"
+            : lt === "Paternity Leave"
+            ? "PL"
+            : v
+          : v;
+
+        const isSpecialLeave =
+          displayValue === "ML" || displayValue === "PL";
+
+      const color = getStatusColor(i, lt);
+const isRed = color === "#d3323fff";
+const canEditNow = editableRejectedRow === lt && isRed;
+
+return (
+  <input
+    key={i}
+    type="text"
+    value={displayValue}
+    disabled={!canEditNow}
+    style={{ backgroundColor: color }}
+    className={`w-17 h-8 text-center border rounded-md ${
+      !canEditNow ? "cursor-not-allowed" : "bg-white"
+    } ${isWeekend ? "text-gray-400" : ""}`}
+    onChange={(e) => {
+      if (canEditNow) {
+        const updated = [...leaveRows[lt]];
+        updated[i] = e.target.value;
+        setLeaveRows((prev) => ({ ...prev, [lt]: updated }));
+      }
+    }}
+  />
+);
+
+
+      })}
+      <div className="text-center w-12">{rowTotals[lt]}</div>
+      <IconButton onClick={(e) => handleMenuOpen(e, lt)}>
+        <MoreVert />
+      </IconButton>
+    </div>
+  </div>
+))}
+
 
       {/* TARGET */}
       <div className="flex justify-between items-center py-1 font-bold border-t pt-2 text-sm">
@@ -805,9 +951,24 @@ export default function EmpTimesheet() {
 
       {/* MENU */}
       <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={handleMenuClose}>
-        <MenuItem onClick={() => handleEditRow(menuRow)} disabled={!lockedRows[menuRow]}>
+        {/* <MenuItem onClick={() => handleEditRow(menuRow)} disabled={!lockedRows[menuRow]}>
           Edit
-        </MenuItem>
+        </MenuItem> */}
+
+        <MenuItem
+  onClick={() => handleEditRow(menuRow)}
+  disabled={
+    (() => {
+      const statusColors = days.map((_, i) => getStatusColor(i));
+      // Disable edit for yellow/green; enable only if red
+      const hasRed = statusColors.some(c => c === "#d3323fff");
+      return !hasRed; // disable if not red
+    })()
+  }
+>
+  Edit
+</MenuItem>
+
         <MenuItem onClick={() => handleResetRow(menuRow)}>Reset</MenuItem>
         {menuRow !== "Worked Hours" && (
           <MenuItem onClick={() => handleDeleteRow(menuRow)}>Delete</MenuItem>

@@ -24,11 +24,11 @@ import { applyParentalLeave } from "../../features/attendance/attendanceSlice";
 export default function MonthlyTimesheet({ onBack }) {
   const { projects } = useSelector((state) => state.project);
   const dispatch = useDispatch();
-  const [leaveType, setLeaveType] = useState("CL");
+  const [leaveType, setLeaveType] = useState("EL");
   const [hours, setHours] = useState([]);
-  const [usedLeaveTypes, setUsedLeaveTypes] = useState(["CL"]);
-  const [leaveRows, setLeaveRows] = useState({ CL: [] });
-  const [lockedRows, setLockedRows] = useState({ CL: false });
+  const [usedLeaveTypes, setUsedLeaveTypes] = useState(["EL"]);
+  const [leaveRows, setLeaveRows] = useState({ EL: [] });
+  const [lockedRows, setLockedRows] = useState({ EL: false });
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [menuRow, setMenuRow] = useState(null);
   const [monthStart, setMonthStart] = useState(() => {
@@ -42,6 +42,19 @@ export default function MonthlyTimesheet({ onBack }) {
   const [monthDays, setMonthDays] = useState([]);
   const [isMonthReleased, setIsMonthReleased] = useState(false);
   const [holidays, setHolidays] = useState([]);
+
+
+  useEffect(() => {
+  const savedReleasedMonth = localStorage.getItem("releasedMonth");
+  const currentMonthKey = formatDate(monthStart);
+
+  if (savedReleasedMonth === currentMonthKey) {
+    setIsMonthReleased(true); // lock this month
+  } else {
+    setIsMonthReleased(false); // other months remain editable
+  }
+}, [monthStart]);
+
 
   //  UPDATED HOLIDAY FETCH LOGIC
   const holidaysCache = {};
@@ -89,7 +102,7 @@ export default function MonthlyTimesheet({ onBack }) {
   // Approval status state for monthly timesheet
   const [approvalStatus, setApprovalStatus] = useState({});
 
-  const leaveTypes = ["CL", "SL", "PL", "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave"];
+  const leaveTypes = ["EL", "SL", "PL", "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave"];
   const formatDate = (date) =>
     `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
 
@@ -127,32 +140,30 @@ export default function MonthlyTimesheet({ onBack }) {
   };
 
   // NEW: Get background color based on status
-  const getStatusColor = (dayIndex, leaveType = null) => {
-    const day = monthDays[dayIndex]; // get the actual day object
-    if (!day) return "white";
+const getStatusColor = (dayIndex, leaveType = null) => {
+  const day = monthDays[dayIndex];
+  if (!day) return "white";
 
-    const dateStr = formatDate(day.date);
+  const dateStr = formatDate(day.date);
+  if (day.isWeekend) return "#ccd5e6ff"; // grey for weekends
 
-    if (day.isWeekend) {
-      return "#ccd5e6ff"; // grey for weekends
-    }
+  const record = attendanceData?.find((a) => a.date === dateStr);
+  if (!record) return "white";
 
-    const statusKey = leaveType ? `${leaveType}_${dayIndex}` : `worked_${dayIndex}`;
-    const status = approvalStatus[statusKey];
-    const record = attendanceData?.find(a => a.date === dateStr);
-    if (!record) return "white";
+  // ✅ Convert to lowercase to handle inconsistent backend values like "Approved" / "approved"
+  const status = record.monthlyStatus?.toLowerCase();
 
-    switch (record.monthlyStatus) {
-      case "Pending_approval":
-        return "#FFF59D"; // light yellow
-      case "Approved":
-        return "#A5D6A7";
-      case "rejected":
-        return "#d3323fff"; // light green
-      default:
-        return "white";
-    }
-  };
+  switch (status) {
+    case "pending_approval":
+      return "#fff59d"; // yellow
+    case "approved":
+      return "#a5d6a7"; // green
+    case "rejected":
+      return "#ef9a9a"; // red
+    default:
+      return "white";
+  }
+};
 
   // Check if field is read-only based on status
   const isFieldReadOnly = (dayIndex, leaveType = null) => {
@@ -229,52 +240,51 @@ export default function MonthlyTimesheet({ onBack }) {
         .catch((err) => console.error(err));
     }
   }, [employeeId, monthStart, dispatch]);
+  // 🔄 Refresh color when new attendance data comes in (Approved / Pending)
 
   // include monthStart here
-  useEffect(() => {
-    if (attendanceData && monthDays.length > 0) {
-      // Worked hours row
-      const newHours = monthDays.map((day) => {
-        const record = attendanceData.find((a) => a.date === formatDate(day.date));
-        return record?.workedHours || 0;
-      });
-      setHours(newHours);
+useEffect(() => {
+  if (attendanceData && monthDays.length > 0) {
+    const newHours = monthDays.map((day) => {
+      const record = attendanceData.find((a) => a.date === formatDate(day.date));
+      return record?.workedHours || 0;
+    });
+    setHours(newHours);
 
-      // Leave rows
-      const newLeaveRows = {};
-      const newUsedLeaveTypes = [];
-      const newApprovalStatus = {};
+    const newLeaveRows = {};
+    const newUsedLeaveTypes = [];
+    const newApprovalStatus = {};
 
-      // Initialize approval status from attendance data
-      monthDays.forEach((day, dayIndex) => {
-        const record = attendanceData.find((a) => a.date === formatDate(day.date));
-        if (record) {
-          const statusKey = record.leaveType ? `${record.leaveType}_${dayIndex}` : `worked_${dayIndex}`;
-          newApprovalStatus[statusKey] = record.approvalStatus || 'not_submitted';
-        }
-      });
+    monthDays.forEach((day, dayIndex) => {
+      const record = attendanceData.find((a) => a.date === formatDate(day.date));
+      if (record) {
+        const statusKey = record.leaveType
+          ? `${record.leaveType}_${dayIndex}`
+          : `worked_${dayIndex}`;
+        newApprovalStatus[statusKey] = record.monthlyStatus || "";
+        
+      }
+    });
 
-      leaveTypes.forEach((lt) => {
-        const row = monthDays.map((day, dayIndex) => {
-          // Find a record for this date and leaveType
-          const record = attendanceData.find(
-            (a) => a.date === formatDate(day.date) && a.leaveType === lt
-          );
-          return record ? record.hours || 9 : 0; // if leave exists, show hours, else 0
-        });
-
-        // Include leaveType if it exists in any record
-        if (row.some((v) => v > 0)) {
-          newLeaveRows[lt] = row;
-          newUsedLeaveTypes.push(lt);
-        }
+    leaveTypes.forEach((lt) => {
+      const row = monthDays.map((day, dayIndex) => {
+        const record = attendanceData.find(
+          (a) => a.date === formatDate(day.date) && a.leaveType === lt
+        );
+        return record ? record.hours || 9 : 0;
       });
 
-      setLeaveRows(newLeaveRows);
-      setUsedLeaveTypes(newUsedLeaveTypes);
-      setApprovalStatus(newApprovalStatus);
-    }
-  }, [attendanceData, monthDays]);
+      if (row.some((v) => v > 0)) {
+        newLeaveRows[lt] = row;
+        newUsedLeaveTypes.push(lt);
+      }
+    });
+
+    setLeaveRows(newLeaveRows);
+    setUsedLeaveTypes(newUsedLeaveTypes);
+    setApprovalStatus(newApprovalStatus);
+  }
+}, [attendanceData, monthDays]);
 
   const handleSaveMonth = async () => {
     const ProjectID = projectDetails?.projectID;
@@ -299,6 +309,8 @@ export default function MonthlyTimesheet({ onBack }) {
       if (AttendanceReleaseMonth.fulfilled.match(resultAction)) {
         toast.success("Month released successfully!");
         setIsMonthReleased(true);
+        localStorage.setItem("releasedMonth", formatDate(monthStart)); // ✅ store released month start date
+
 
         //  Update attendanceData instantly to trigger yellow color
         const updatedData = attendanceData.map((item) => ({

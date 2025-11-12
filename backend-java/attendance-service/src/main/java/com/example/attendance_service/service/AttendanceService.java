@@ -476,10 +476,9 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 	    }
 
 	    // ✅ Step 1: Get the last approved record before 'from'
-	    
-
 	    List<AttendanceEntity> approvedBeforeList = attendanceRepository.findLastApprovedBeforeDate(employeeId, from);
 	    AttendanceEntity lastRelevant = approvedBeforeList.isEmpty() ? null : approvedBeforeList.get(0);
+
 	    // ✅ Step 2: Initialize current leave balances
 	    int currentSL = 0, currentEL = 0, currentExtraMilar = 0, currentHolidays = 0, currentOptionalHolidays = 0, currentRemaining = 0;
 
@@ -493,7 +492,7 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 	        currentRemaining = safeGet(lastRelevant.getRemainingLeaves(), 0);
 	        System.out.println("🔁 Carrying forward leave balances from: " + lastRelevant.getDate());
 	    } else {
-	        // No approved record yet — only first time
+	        // No approved record yet — first-time initialization
 	        Map<String, Integer> defaultLeaves = calculateLeavesBasedOnJoining(joiningDate);
 	        currentSL = defaultLeaves.get("SL");
 	        currentEL = defaultLeaves.get("EL");
@@ -506,21 +505,39 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 
 	    int lastProcessedYear = from.minusDays(1).getYear();
 
-	    // ✅ Step 3: Process each record in order
+	    // ✅ Step 3: Process each record in date order
 	    for (AttendanceEntity rec : records) {
 	        LocalDate recDate = rec.getDate();
 	        int recYear = recDate.getYear();
 
-	        // Yearly reset (only once per new year)
+	        // 🎯 Step 3A: Handle year transition
 	        if (recYear > lastProcessedYear) {
+	            System.out.println("🌍 New year detected for " + employee.getEmployeeName() + " → " + recYear);
+
+	            // 💾 Carry forward only EL (up to 10 days)
+	            int carryForwardEL = 0;
+	            if (currentEL >= 10) {
+	                carryForwardEL = Math.min(currentEL, 10);
+	                System.out.printf("🎯 %s → Carry forward %d EL days to %d%n",
+	                        employee.getEmployeeName(), carryForwardEL, recYear);
+	            } else {
+	                System.out.printf("🚫 %s → No EL carry forward (EL=%d) for year %d%n",
+	                        employee.getEmployeeName(), currentEL, recYear);
+	            }
+
+
+	            // 🧮 Load new year default leaves
 	            Map<String, Integer> yearlyLeaves = calculateLeavesBasedOnJoining(LocalDate.of(recYear, 1, 1));
-	            currentSL = yearlyLeaves.get("SL");
-	            currentEL = yearlyLeaves.get("EL");
-	            currentExtraMilar = yearlyLeaves.get("Extra Milar");
-	            currentHolidays = yearlyLeaves.get("Holidays");
-	            currentOptionalHolidays = yearlyLeaves.get("Optional Holidays");
-	            currentRemaining = yearlyLeaves.values().stream().mapToInt(Integer::intValue).sum();
-	            System.out.println("🎯 Yearly leave reset for " + employee.getEmployeeName() + " on " + recDate);
+
+	            currentSL = yearlyLeaves.get("SL"); // SL reset
+	            currentEL = yearlyLeaves.get("EL") + carryForwardEL; // EL + carry forward (max 10)
+	            currentExtraMilar = yearlyLeaves.get("Extra Milar"); // reset
+	            currentHolidays = yearlyLeaves.get("Holidays"); // reset
+	            currentOptionalHolidays = yearlyLeaves.get("Optional Holidays"); // reset
+	            currentRemaining = currentSL + currentEL + currentExtraMilar + currentHolidays + currentOptionalHolidays;
+
+	            System.out.printf("🎯 %s → Carry forward %d EL days to %d%n",
+	                    employee.getEmployeeName(), carryForwardEL, recYear);
 	        }
 
 	        // 📝 Apply balances to record
@@ -555,7 +572,7 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 	                    currentExtraMilar = Math.max(0, currentExtraMilar - 1);
 	                    currentRemaining = Math.max(0, currentRemaining - 1);
 	                }
-	                default -> {} // e.g., WFH, Present → no change
+	                default -> { /* No deduction for WFH/Present */ }
 	            }
 	            System.out.println("➖ Deducted " + leaveType + " for " + employee.getEmployeeName() + " on " + recDate);
 	        }
@@ -564,13 +581,11 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 	        rec.setUpdatedBy(adminName);
 	        rec.setUpdatedAt(LocalDateTime.now());
 	        lastProcessedYear = recYear;
-
-	        // ✅ Carry forward latest values for next record (next day or next week)
 	        lastRelevant = rec;
 	    }
 
-	    attendanceRepository.saveAll(records);
-	    System.out.println("✅ Successfully updated " + records.size() + " records with continuous leave carry forward.");
+	    attendanceRepository.saveAll(records);  
+	    System.out.println("✅ Successfully updated " + records.size() + " records with yearly EL carry-forward (max 10 days).");
 	}
 
 	private int safeGet(Integer value, int defaultValue) {
