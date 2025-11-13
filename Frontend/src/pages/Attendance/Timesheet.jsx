@@ -137,51 +137,105 @@ export default function Timesheet() {
   const holidaysCache = {};
 
   // Initialize annual leaves from localStorage
-  useEffect(() => {
-    const storedLeaves = localStorage.getItem(`annualLeaves_${currentYear}`);
-    if (storedLeaves) {
-      setAnnualLeavesUsed(JSON.parse(storedLeaves));
-    } else {
-      // Initialize with zeros for all leave types
-      const initialLeaves = {};
-      leaveTypes.forEach(lt => {
-        initialLeaves[lt] = 0;
-      });
-      setAnnualLeavesUsed(initialLeaves);
-      localStorage.setItem(`annualLeaves_${currentYear}`, JSON.stringify(initialLeaves));
-    }
-  }, [currentYear]);
-
-  // Update annual leaves when leaveRows change
-  useEffect(() => {
-    if (Object.keys(annualLeavesUsed).length === 0) return;
-
-    const newAnnualLeavesUsed = { ...annualLeavesUsed };
-    let hasChanges = false;
-
-    // Calculate total leaves used across all leave types
-    Object.entries(leaveRows).forEach(([leaveType, daysArray]) => {
-      const totalInView = daysArray.reduce((sum, hours) => {
-        // Convert hours to days (9 hours = 1 day)
-        return sum + (hours >= 9 ? 1 : hours / 9);
-      }, 0);
-
-      // Only add if we have positive hours and it increases the annual count
-      if (totalInView > 0) {
-        const currentAnnual = newAnnualLeavesUsed[leaveType] || 0;
-        if (totalInView > currentAnnual) {
-          newAnnualLeavesUsed[leaveType] = totalInView;
-          hasChanges = true;
-        }
-      }
+  // useEffect(() => {
+  //   const storedLeaves = localStorage.getItem(`annualLeaves_${currentYear}`);
+  //   if (storedLeaves) {
+  //     setAnnualLeavesUsed(JSON.parse(storedLeaves));
+  //   } else {
+  //     // Initialize with zeros for all leave types
+  //     const initialLeaves = {};
+  //     leaveTypes.forEach(lt => {
+  //       initialLeaves[lt] = 0;
+  //     });
+  //     setAnnualLeavesUsed(initialLeaves);
+  //     localStorage.setItem(`annualLeaves_${currentYear}`, JSON.stringify(initialLeaves));
+  //   }
+  // }, [currentYear]);
+  
+// Initialize annual leaves from localStorage with year cycle support
+useEffect(() => {
+  const year = viewMode === "weekly" 
+    ? weekStart.getFullYear() 
+    : monthStart.getFullYear();
+  
+  // Update current year when view changes to different year
+  if (year !== currentYear) {
+    setCurrentYear(year);
+  }
+  
+  const storedLeaves = localStorage.getItem(`annualLeaves_${year}`);
+  if (storedLeaves) {
+    setAnnualLeavesUsed(JSON.parse(storedLeaves));
+  } else {
+    // Initialize with zeros for all leave types for this year
+    const initialLeaves = {};
+    leaveTypes.forEach(lt => {
+      initialLeaves[lt] = 0;
     });
+    setAnnualLeavesUsed(initialLeaves);
+    localStorage.setItem(`annualLeaves_${year}`, JSON.stringify(initialLeaves));
+  }
+}, [weekStart, monthStart, viewMode, currentYear]);
+  // Update annual leaves when leaveRows change
+  // useEffect(() => {
+  //   if (Object.keys(annualLeavesUsed).length === 0) return;
 
-    if (hasChanges) {
-      setAnnualLeavesUsed(newAnnualLeavesUsed);
-      localStorage.setItem(`annualLeaves_${currentYear}`, JSON.stringify(newAnnualLeavesUsed));
+  //   const newAnnualLeavesUsed = { ...annualLeavesUsed };
+  //   let hasChanges = false;
+
+  //   // Calculate total leaves used across all leave types
+  //   Object.entries(leaveRows).forEach(([leaveType, daysArray]) => {
+  //     const totalInView = daysArray.reduce((sum, hours) => {
+  //       // Convert hours to days (9 hours = 1 day)
+  //       return sum + (hours >= 9 ? 1 : hours / 9);
+  //     }, 0);
+
+  //     // Only add if we have positive hours and it increases the annual count
+  //     if (totalInView > 0) {
+  //       const currentAnnual = newAnnualLeavesUsed[leaveType] || 0;
+  //       if (totalInView > currentAnnual) {
+  //         newAnnualLeavesUsed[leaveType] = totalInView;
+  //         hasChanges = true;
+  //       }
+  //     }
+  //   });
+
+  //   if (hasChanges) {
+  //     setAnnualLeavesUsed(newAnnualLeavesUsed);
+  //     localStorage.setItem(`annualLeaves_${currentYear}`, JSON.stringify(newAnnualLeavesUsed));
+  //   }
+  // }, [leaveRows, currentYear]);
+
+// Update annual leaves when leaveRows change - WITH YEAR CYCLE SUPPORT
+useEffect(() => {
+  if (Object.keys(annualLeavesUsed).length === 0) return;
+
+  const year = currentYear;
+  const newAnnualLeavesUsed = { ...annualLeavesUsed };
+  let hasChanges = false;
+
+  // Calculate total leaves used across all leave types for current year
+  Object.entries(leaveRows).forEach(([leaveType, daysArray]) => {
+    const totalInView = daysArray.reduce((sum, hours) => {
+      // Convert hours to days (9 hours = 1 day)
+      return sum + (hours >= 9 ? 1 : hours / 9);
+    }, 0);
+
+    // Only update if we have positive hours in current view
+    if (totalInView > 0) {
+      const currentAnnual = newAnnualLeavesUsed[leaveType] || 0;
+      
+      // For leave cycle: always use the calculated value for the specific year
+      newAnnualLeavesUsed[leaveType] = Math.max(currentAnnual, totalInView);
+      hasChanges = true;
     }
-  }, [leaveRows, currentYear]);
+  });
 
+  if (hasChanges) {
+    setAnnualLeavesUsed(newAnnualLeavesUsed);
+    localStorage.setItem(`annualLeaves_${year}`, JSON.stringify(newAnnualLeavesUsed));
+  }
+}, [leaveRows, currentYear]);
   useEffect(() => {
     const fetchHolidays = async () => {
       try {
@@ -640,15 +694,30 @@ useEffect(() => {
   };
 
   // Handle calendar date selection
-  const handleCalendarDateSelect = (date) => {
-    if (viewMode === "weekly") {
-      setWeekStart(getMonday(date));
-    } else {
-      setMonthStart(new Date(date.getFullYear(), date.getMonth(), 1));
-    }
-    setCalendarAnchor(null);
-  };
+  // const handleCalendarDateSelect = (date) => {
+  //   if (viewMode === "weekly") {
+  //     setWeekStart(getMonday(date));
+  //   } else {
+  //     setMonthStart(new Date(date.getFullYear(), date.getMonth(), 1));
+  //   }
+  //   setCalendarAnchor(null);
+  // };
 
+  // Handle calendar date selection - UPDATED FOR YEAR CYCLE
+const handleCalendarDateSelect = (date) => {
+  const selectedYear = date.getFullYear();
+  
+  if (selectedYear !== currentYear) {
+    setCurrentYear(selectedYear);
+  }
+  
+  if (viewMode === "weekly") {
+    setWeekStart(getMonday(date));
+  } else {
+    setMonthStart(new Date(date.getFullYear(), date.getMonth(), 1));
+  }
+  setCalendarAnchor(null);
+};
   const handleApproved = () => {
     let fromDate = "";
     let toDate = "";
@@ -756,10 +825,14 @@ useEffect(() => {
         .then((res) => console.log("✅ Weekly Data:", res))
         .catch((err) => console.error("❌ Weekly Error:", err));
     }
+    // else if (viewMode === "monthly") {
+    //   // 🔹 ALWAYS use 1st to last day of the current month view
+    //   const fromDate = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1);
+    //   const toDate = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
     else if (viewMode === "monthly") {
-      // 🔹 ALWAYS use 1st to last day of the current month view
-      const fromDate = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1);
-      const toDate = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
+  // 🔹 ALWAYS use 1st to last day of the current month view - WITH YEAR CYCLE
+  const fromDate = new Date(currentYear, monthStart.getMonth(), 1);
+  const toDate = new Date(currentYear, monthStart.getMonth() + 1, 0);
 
       const monthlyFrom = fromDate.toISOString().slice(0, 10);
       const monthlyTo = toDate.toISOString().slice(0, 10);
@@ -771,14 +844,14 @@ useEffect(() => {
         })
         .catch((err) => console.error("❌ Monthly Error:", err));
     }
-  }, [dispatch, weekStart, monthStart, viewMode, employeeId]);
+  }, [dispatch, weekStart, monthStart, viewMode, employeeId, currentYear]);
 
   return (
     <Box p={2}>
       {/* Header */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
         <Box display="flex" alignItems="center" gap={1}>
-          <IconButton onClick={() => (viewMode === "weekly" ? changeWeek(-1) : changeMonth(-1))}>
+       <IconButton onClick={() => (viewMode === "weekly" ? changeWeek(-1) : changeMonth(-1))}>
             <ChevronLeft />
           </IconButton>
           <Typography fontWeight="bold">{formatDateRange()}</Typography>
