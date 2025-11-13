@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { AttendanceSaveallApi,AttendanceFetchAllApi ,AttendanceFetchExistingWeekApi,
   AttendanceReleaseMonthApi,AttendanceFetchExistingMonthApi,
-  AttendanceFetchByEmployeeProjectApi,AttendanceReleaseWeekApi,
+  AttendanceFetchByEmployeeProjectApi,fetchEmployeeLeavesApi,AttendanceReleaseWeekApi,
 AdminAttendancFetchWeeklyDataByIdApi,Admin_Approve_Weekly_Attendance_Api,
 AdminAttendancFetchMonthlyDataByIdApi,AttendanceFetchAllbasedonMonthApi,
 Admin_Approve_monthly_Attendance_Api,applyParentalLeaveApi, approveParentalLeaveApi,fetchPendingParentalLeavesApi, AttendanceCheckLeaveEligibilityApi, Admin_Reject_Weekly_Attendance_Api, Admin_Reject_Monthly_Attendance_Api, fetchAuditLogsApi} from "../../api/authApi";
@@ -66,6 +66,21 @@ export const AttendanceFetchByEmployeeProject = createAsyncThunk(
     }
   }
 );
+
+//fetch employeeId
+
+export const fetchEmployeeLeaves = createAsyncThunk(
+  "attendance/fetchEmployeeLeaves",
+  async (employeeId, thunkAPI) => {
+    try {
+      const res = await fetchEmployeeLeavesApi(employeeId);
+      return res.data;   // Map<String, Integer>
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+
 
 
 export const AttendanceReleaseWeek= createAsyncThunk("attendance/release-week", async ({ employeeId, weekStart,weekEnd, employeeName  }, thunkAPI) => {
@@ -231,14 +246,13 @@ const attendanceSlice = createSlice({
   initialState: {
     attendance:[],
      attendanceData: [], 
+      leaves: {},
       pendingLeaves: [],
       leaveEligibility: null, 
       loading: false,
     error: null,
-
     auditLogs: [],
   auditLoading: false,
-  auditError: null,
   },
   reducers: {
     logout: (state) => {
@@ -334,6 +348,21 @@ const attendanceSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+
+      //employee/fetchLeaves
+      .addCase(fetchEmployeeLeaves.pending, (state) => {
+  state.loading = true;
+})
+.addCase(fetchEmployeeLeaves.fulfilled, (state, action) => {
+  state.loading = false;
+  state.leaves = action.payload;   // store leaves here
+})
+.addCase(fetchEmployeeLeaves.rejected, (state, action) => {
+  state.loading = false;
+  state.error = action.payload;
+})
+
+
        // --- Admin Thunks ---
     .addCase(AdminAttendancFetchWeeklyDataById.pending, (state) => { state.loading = true; })
     .addCase(AdminAttendancFetchWeeklyDataById.fulfilled, (state, action) => { state.loading = false; state.attendanceData = action.payload; })
@@ -436,3 +465,9 @@ const attendanceSlice = createSlice({
 
 export const { logout, setAttendanceData} = attendanceSlice.actions;
 export default attendanceSlice.reducer;
+
+
+
+
+
+

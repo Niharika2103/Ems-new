@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchEmployeeProfile } from "../../features/employeesDetails/employeesSlice";
+import { fetchEmployeeLeaves } from "../../features/attendance/attendanceSlice";
 import { decodeToken } from "../../api/decodeToekn";
 import {
   Box,
@@ -15,21 +16,39 @@ import {
 const EmployeeLeave = () => {
   const dispatch = useDispatch();
   const theme = useTheme();
+
+
+   // ⬅ Profile comes from employeeDetails slice
   const { profile } = useSelector((state) => state.employeeDetails);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const decoded = await decodeToken();
-        dispatch(fetchEmployeeProfile(decoded?.email));
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchProfile();
-  }, [dispatch]);
+  // ⬅ Leaves come from attendance slice
+  const leaves = useSelector((state) => state.attendance.leaves);
 
-  const leaves = profile?.leaves || {};
+useEffect(() => {
+  const fetchProfile = async () => {
+    try {
+      const decoded = await decodeToken();
+
+      // Fetch Profile by Email
+      dispatch(fetchEmployeeProfile(decoded?.email));
+
+      // Fetch Leaves by EmployeeID
+      dispatch(fetchEmployeeLeaves(decoded?.id))
+        .then((res) => {
+          console.log("employeeLeave:", res.payload);
+        })
+        .catch((err) => console.error(err));
+
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  fetchProfile();
+}, [dispatch]);
+
+
+  //const leaves = profile?.leaves || {};
   const gender = profile?.gender || "male";
   const name = profile?.name || "Employee Name";
   const department = profile?.department || "Department";
@@ -202,3 +221,8 @@ const EmployeeLeave = () => {
 };
 
 export default EmployeeLeave;
+
+
+
+
+

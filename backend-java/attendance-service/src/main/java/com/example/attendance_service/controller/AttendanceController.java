@@ -266,5 +266,11 @@ System.out.println("@45::"+employeename);
          attendanceService.updateApprovedRecordsWithDefaultLeaves(employeeId, from, to, adminName);
          return ResponseEntity.ok("Default leaves added, reset if new year, and deducted on approved records");
      }
+     
+     @GetMapping("/employee/{employeeId}/leaves")
+     public ResponseEntity<Map<String, Integer>> getEmployeeLeaves(@PathVariable UUID employeeId) {
+         Map<String, Integer> leaves = attendanceService.getEmployeeLeaves(employeeId);
+         return ResponseEntity.ok(leaves);
+     }
 
 }

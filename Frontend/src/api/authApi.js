@@ -234,6 +234,8 @@ export const AttendanceFetchByEmployeeProjectApi = (employeeId, projectId) => {
   return AttendanceClient.get(`${AUTH_API.ATTENDANCE}/attendance/employee/${employeeId}/project/${projectId}`);
 };
 
+
+
 //fetch release-week
     export const AttendanceReleaseWeekApi = (employeeId,weekStart,weekEnd, employeeName ) => {
   return AttendanceClient.post(
@@ -298,6 +300,8 @@ export const AttendanceFetchAllbasedonMonthApi = (periodType, from, to) => {
 export const applyParentalLeaveApi = (data) =>
   AttendanceClient.post(`${AUTH_API.EMPLOYEE}/attendance/apply-parental`, data);
 
+
+
 // Approve/reject parental leave (admin)
 export const approveParentalLeaveApi = (data) =>
   AttendanceClient.put(`${AUTH_API.ADMIN}/attendance/approve-parental`, data);
@@ -320,6 +324,11 @@ export const Admin_Reject_Weekly_Attendance_Api = (employeeId, from, to) => {
   );
 };
 
+// === Fetch Leaves of Employee ===
+export const fetchEmployeeLeavesApi = (employeeId) => {
+  return AttendanceClient.get(`${AUTH_API.ATTENDANCE}/employee/${employeeId}/leaves`);
+};
+
 //  Reject Monthly Attendance
 export const Admin_Reject_Monthly_Attendance_Api = (employeeId, from, to) => {
   return AttendanceClient.post(
@@ -331,4 +340,12 @@ export const Admin_Reject_Monthly_Attendance_Api = (employeeId, from, to) => {
 export const fetchAuditLogsApi = () => {
   return AttendanceClient.get(`${AUTH_API.ADMIN}/audit-logs`);
 };
+
+
+
+
+
+
+
+
 

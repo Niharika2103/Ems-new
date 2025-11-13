@@ -591,4 +591,37 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 	private int safeGet(Integer value, int defaultValue) {
 	    return value != null ? value : defaultValue;
 	}
+	@Transactional
+	public Map<String, Integer> getEmployeeLeaves(UUID employeeId) {
+	    if (employeeId == null) return Collections.emptyMap();
+
+	    // Fetch all attendance records for the employee
+	    List<AttendanceEntity> records = attendanceRepository.findByEmployee_IdOrderByDateAsc(employeeId);
+
+	    if (records.isEmpty()) {
+	        return Collections.emptyMap();
+	    }
+
+	    // Take the latest record (or you can filter for organization-level base record)
+	    records.sort((a, b) -> b.getDate().compareTo(a.getDate()));
+	    AttendanceEntity latest = records.get(0);
+
+	    // Prepare the leave map
+	    Map<String, Integer> leaves = Map.of(
+	        //"holidays", safeGet(latest.getHolidays(), 0),
+	        //"optional_holidays", safeGet(latest.getOptionalHolidays(), 0),
+	        "el", safeGet(latest.getEl(), 0),
+	        "sl", safeGet(latest.getSl(), 0),
+	        "extra_milar", safeGet(latest.getExtraMilar(), 0),
+	        "maternity_leave", safeGet(latest.getMaternityLeave(), 0),
+	        "paternity_leave", safeGet(latest.getPaternityLeave(), 0)
+	    );
+
+	    return leaves;
+	}
+
+	// Helper for null-safe values
+	private int safeGet1(Integer value, int defaultValue) {
+	    return value != null ? value : defaultValue;
+	}
 }
