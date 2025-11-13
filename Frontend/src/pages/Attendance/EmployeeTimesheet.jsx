@@ -159,18 +159,28 @@ useEffect(() => {
     if (isWeekendDay(dayIndex)) {
       return true;
     }
+    // 🔥 ONLY read-only when week is released
+  if (isWeekReleased) {
+    return true;
+  }
     const statusKey = leaveType ? `${leaveType}_${dayIndex}` : `worked_${dayIndex}`;
     return approvalStatus[statusKey] === 'approved'; // Read-only only when approved
   };
 
   // Check if field is editable (not weekend and not approved)
   const isFieldEditable = (dayIndex, leaveType = null) => {
-    if (isWeekendDay(dayIndex)) {
-      return false; // Never editable for weekends
-    }
-    const statusKey = leaveType ? `${leaveType}_${dayIndex}` : `worked_${dayIndex}`;
-    return approvalStatus[statusKey] !== 'approved'; // Editable if not approved
-  };
+  if (isWeekendDay(dayIndex)) {
+    return false; // Never editable for weekends
+  }
+  
+  // 🔥 ONLY disable if week is released
+  if (isWeekReleased) {
+    return false;
+  }
+  
+  const statusKey = leaveType ? `${leaveType}_${dayIndex}` : `worked_${dayIndex}`;
+  return approvalStatus[statusKey] !== 'approved'; // Editable if not approved
+};
   // Determine if a cell should be editable based on its status color
 const canEditByColor = (color) => {
   // Only red cells (rejected) are allowed to be edited
@@ -745,32 +755,36 @@ const handleEditRow = (row) => {
   value={h}
   min="0"
   max="9"
-  disabled={
-    // 🧠 Enable only if: user clicked "Edit" for Worked Hours & cell is red
-    !(
-      editableRejectedRow === "Worked Hours" &&
-      getStatusColor(i) === "#d3323fff"
-    )
-  }
+  // disabled={
+  //   // 🧠 Enable only if: user clicked "Edit" for Worked Hours & cell is red
+  //   !(
+  //     editableRejectedRow === "Worked Hours" &&
+  //     getStatusColor(i) === "#d3323fff"
+  //   )
+  // }
+  disabled={isWeekReleased}
   style={{ backgroundColor: getStatusColor(i) }}
-  className={`w-17 h-8 text-center border rounded-md ${
-    !(
-      editableRejectedRow === "Worked Hours" &&
-      getStatusColor(i) === "#d3323fff"
-    )
-      ? "cursor-not-allowed"
-      : "bg-white"
-  } ${isWeekend ? "text-gray-400" : ""}`}
+ className={`w-17 h-8 text-center border rounded-md ${
+  isWeekReleased ? "cursor-not-allowed bg-gray-100" : "bg-white"
+} ${isWeekend ? "text-gray-400" : ""}`}
+  // onChange={(e) => {
+  //   if (
+  //     editableRejectedRow === "Worked Hours" &&
+  //     getStatusColor(i) === "#d3323fff"
+  //   ) {
+  //     const newHours = [...hours];
+  //     newHours[i] = e.target.value;
+  //     setHours(newHours);
+  //   }
+  // }}
+
   onChange={(e) => {
-    if (
-      editableRejectedRow === "Worked Hours" &&
-      getStatusColor(i) === "#d3323fff"
-    ) {
-      const newHours = [...hours];
-      newHours[i] = e.target.value;
-      setHours(newHours);
-    }
-  }}
+  if (!isWeekReleased) {
+    const newHours = [...hours];
+    newHours[i] = e.target.value;
+    setHours(newHours);
+  }
+}}
 />
 
 
@@ -850,22 +864,30 @@ const handleEditRow = (row) => {
         const isSpecialLeave =
           displayValue === "ML" || displayValue === "PL";
 
-      const color = getStatusColor(i, lt);
-const isRed = color === "#d3323fff";
-const canEditNow = editableRejectedRow === lt && isRed;
+//       const color = getStatusColor(i, lt);
+// const isRed = color === "#d3323fff";
+// const canEditNow = editableRejectedRow === lt && isRed;
+
+// return (
+//   <input
+//     key={i}
+//     type="text"
+//     value={displayValue}
+//     disabled={!canEditNow}
+const color = getStatusColor(i, lt);
 
 return (
   <input
     key={i}
     type="text"
     value={displayValue}
-    disabled={!canEditNow}
+    disabled={isWeekReleased}
     style={{ backgroundColor: color }}
     className={`w-17 h-8 text-center border rounded-md ${
-      !canEditNow ? "cursor-not-allowed" : "bg-white"
+      isWeekReleased ? "cursor-not-allowed bg-gray-100" : "bg-white"
     } ${isWeekend ? "text-gray-400" : ""}`}
     onChange={(e) => {
-      if (canEditNow) {
+      if (!isWeekReleased) {
         const updated = [...leaveRows[lt]];
         updated[i] = e.target.value;
         setLeaveRows((prev) => ({ ...prev, [lt]: updated }));
@@ -959,18 +981,10 @@ return (
 
         <MenuItem
   onClick={() => handleEditRow(menuRow)}
-  disabled={
-    (() => {
-      const statusColors = days.map((_, i) => getStatusColor(i));
-      // Disable edit for yellow/green; enable only if red
-      const hasRed = statusColors.some(c => c === "#d3323fff");
-      return !hasRed; // disable if not red
-    })()
-  }
+  disabled={isWeekReleased} // 🔥 Disable edit when week is released
 >
   Edit
 </MenuItem>
-
         <MenuItem onClick={() => handleResetRow(menuRow)}>Reset</MenuItem>
         {menuRow !== "Worked Hours" && (
           <MenuItem onClick={() => handleDeleteRow(menuRow)}>Delete</MenuItem>
