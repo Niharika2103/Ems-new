@@ -137,51 +137,105 @@ export default function Timesheet() {
   const holidaysCache = {};
 
   // Initialize annual leaves from localStorage
-  useEffect(() => {
-    const storedLeaves = localStorage.getItem(`annualLeaves_${currentYear}`);
-    if (storedLeaves) {
-      setAnnualLeavesUsed(JSON.parse(storedLeaves));
-    } else {
-      // Initialize with zeros for all leave types
-      const initialLeaves = {};
-      leaveTypes.forEach(lt => {
-        initialLeaves[lt] = 0;
-      });
-      setAnnualLeavesUsed(initialLeaves);
-      localStorage.setItem(`annualLeaves_${currentYear}`, JSON.stringify(initialLeaves));
-    }
-  }, [currentYear]);
-
-  // Update annual leaves when leaveRows change
-  useEffect(() => {
-    if (Object.keys(annualLeavesUsed).length === 0) return;
-
-    const newAnnualLeavesUsed = { ...annualLeavesUsed };
-    let hasChanges = false;
-
-    // Calculate total leaves used across all leave types
-    Object.entries(leaveRows).forEach(([leaveType, daysArray]) => {
-      const totalInView = daysArray.reduce((sum, hours) => {
-        // Convert hours to days (9 hours = 1 day)
-        return sum + (hours >= 9 ? 1 : hours / 9);
-      }, 0);
-
-      // Only add if we have positive hours and it increases the annual count
-      if (totalInView > 0) {
-        const currentAnnual = newAnnualLeavesUsed[leaveType] || 0;
-        if (totalInView > currentAnnual) {
-          newAnnualLeavesUsed[leaveType] = totalInView;
-          hasChanges = true;
-        }
-      }
+  // useEffect(() => {
+  //   const storedLeaves = localStorage.getItem(`annualLeaves_${currentYear}`);
+  //   if (storedLeaves) {
+  //     setAnnualLeavesUsed(JSON.parse(storedLeaves));
+  //   } else {
+  //     // Initialize with zeros for all leave types
+  //     const initialLeaves = {};
+  //     leaveTypes.forEach(lt => {
+  //       initialLeaves[lt] = 0;
+  //     });
+  //     setAnnualLeavesUsed(initialLeaves);
+  //     localStorage.setItem(`annualLeaves_${currentYear}`, JSON.stringify(initialLeaves));
+  //   }
+  // }, [currentYear]);
+  
+// Initialize annual leaves from localStorage with year cycle support
+useEffect(() => {
+  const year = viewMode === "weekly" 
+    ? weekStart.getFullYear() 
+    : monthStart.getFullYear();
+  
+  // Update current year when view changes to different year
+  if (year !== currentYear) {
+    setCurrentYear(year);
+  }
+  
+  const storedLeaves = localStorage.getItem(`annualLeaves_${year}`);
+  if (storedLeaves) {
+    setAnnualLeavesUsed(JSON.parse(storedLeaves));
+  } else {
+    // Initialize with zeros for all leave types for this year
+    const initialLeaves = {};
+    leaveTypes.forEach(lt => {
+      initialLeaves[lt] = 0;
     });
+    setAnnualLeavesUsed(initialLeaves);
+    localStorage.setItem(`annualLeaves_${year}`, JSON.stringify(initialLeaves));
+  }
+}, [weekStart, monthStart, viewMode, currentYear]);
+  // Update annual leaves when leaveRows change
+  // useEffect(() => {
+  //   if (Object.keys(annualLeavesUsed).length === 0) return;
 
-    if (hasChanges) {
-      setAnnualLeavesUsed(newAnnualLeavesUsed);
-      localStorage.setItem(`annualLeaves_${currentYear}`, JSON.stringify(newAnnualLeavesUsed));
+  //   const newAnnualLeavesUsed = { ...annualLeavesUsed };
+  //   let hasChanges = false;
+
+  //   // Calculate total leaves used across all leave types
+  //   Object.entries(leaveRows).forEach(([leaveType, daysArray]) => {
+  //     const totalInView = daysArray.reduce((sum, hours) => {
+  //       // Convert hours to days (9 hours = 1 day)
+  //       return sum + (hours >= 9 ? 1 : hours / 9);
+  //     }, 0);
+
+  //     // Only add if we have positive hours and it increases the annual count
+  //     if (totalInView > 0) {
+  //       const currentAnnual = newAnnualLeavesUsed[leaveType] || 0;
+  //       if (totalInView > currentAnnual) {
+  //         newAnnualLeavesUsed[leaveType] = totalInView;
+  //         hasChanges = true;
+  //       }
+  //     }
+  //   });
+
+  //   if (hasChanges) {
+  //     setAnnualLeavesUsed(newAnnualLeavesUsed);
+  //     localStorage.setItem(`annualLeaves_${currentYear}`, JSON.stringify(newAnnualLeavesUsed));
+  //   }
+  // }, [leaveRows, currentYear]);
+
+// Update annual leaves when leaveRows change - WITH YEAR CYCLE SUPPORT
+useEffect(() => {
+  if (Object.keys(annualLeavesUsed).length === 0) return;
+
+  const year = currentYear;
+  const newAnnualLeavesUsed = { ...annualLeavesUsed };
+  let hasChanges = false;
+
+  // Calculate total leaves used across all leave types for current year
+  Object.entries(leaveRows).forEach(([leaveType, daysArray]) => {
+    const totalInView = daysArray.reduce((sum, hours) => {
+      // Convert hours to days (9 hours = 1 day)
+      return sum + (hours >= 9 ? 1 : hours / 9);
+    }, 0);
+
+    // Only update if we have positive hours in current view
+    if (totalInView > 0) {
+      const currentAnnual = newAnnualLeavesUsed[leaveType] || 0;
+      
+      // For leave cycle: always use the calculated value for the specific year
+      newAnnualLeavesUsed[leaveType] = Math.max(currentAnnual, totalInView);
+      hasChanges = true;
     }
-  }, [leaveRows, currentYear]);
+  });
 
+  if (hasChanges) {
+    setAnnualLeavesUsed(newAnnualLeavesUsed);
+    localStorage.setItem(`annualLeaves_${year}`, JSON.stringify(newAnnualLeavesUsed));
+  }
+}, [leaveRows, currentYear]);
   useEffect(() => {
     const fetchHolidays = async () => {
       try {
@@ -640,15 +694,30 @@ useEffect(() => {
   };
 
   // Handle calendar date selection
-  const handleCalendarDateSelect = (date) => {
-    if (viewMode === "weekly") {
-      setWeekStart(getMonday(date));
-    } else {
-      setMonthStart(new Date(date.getFullYear(), date.getMonth(), 1));
-    }
-    setCalendarAnchor(null);
-  };
+  // const handleCalendarDateSelect = (date) => {
+  //   if (viewMode === "weekly") {
+  //     setWeekStart(getMonday(date));
+  //   } else {
+  //     setMonthStart(new Date(date.getFullYear(), date.getMonth(), 1));
+  //   }
+  //   setCalendarAnchor(null);
+  // };
 
+  // Handle calendar date selection - UPDATED FOR YEAR CYCLE
+const handleCalendarDateSelect = (date) => {
+  const selectedYear = date.getFullYear();
+  
+  if (selectedYear !== currentYear) {
+    setCurrentYear(selectedYear);
+  }
+  
+  if (viewMode === "weekly") {
+    setWeekStart(getMonday(date));
+  } else {
+    setMonthStart(new Date(date.getFullYear(), date.getMonth(), 1));
+  }
+  setCalendarAnchor(null);
+};
   const handleApproved = () => {
     let fromDate = "";
     let toDate = "";
@@ -756,10 +825,14 @@ useEffect(() => {
         .then((res) => console.log("✅ Weekly Data:", res))
         .catch((err) => console.error("❌ Weekly Error:", err));
     }
+    // else if (viewMode === "monthly") {
+    //   // 🔹 ALWAYS use 1st to last day of the current month view
+    //   const fromDate = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1);
+    //   const toDate = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
     else if (viewMode === "monthly") {
-      // 🔹 ALWAYS use 1st to last day of the current month view
-      const fromDate = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1);
-      const toDate = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
+  // 🔹 ALWAYS use 1st to last day of the current month view - WITH YEAR CYCLE
+  const fromDate = new Date(currentYear, monthStart.getMonth(), 1);
+  const toDate = new Date(currentYear, monthStart.getMonth() + 1, 0);
 
       const monthlyFrom = fromDate.toISOString().slice(0, 10);
       const monthlyTo = toDate.toISOString().slice(0, 10);
@@ -771,14 +844,14 @@ useEffect(() => {
         })
         .catch((err) => console.error("❌ Monthly Error:", err));
     }
-  }, [dispatch, weekStart, monthStart, viewMode, employeeId]);
+  }, [dispatch, weekStart, monthStart, viewMode, employeeId, currentYear]);
 
   return (
     <Box p={2}>
       {/* Header */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
         <Box display="flex" alignItems="center" gap={1}>
-          <IconButton onClick={() => (viewMode === "weekly" ? changeWeek(-1) : changeMonth(-1))}>
+       <IconButton onClick={() => (viewMode === "weekly" ? changeWeek(-1) : changeMonth(-1))}>
             <ChevronLeft />
           </IconButton>
           <Typography fontWeight="bold">{formatDateRange()}</Typography>
@@ -1092,108 +1165,280 @@ useEffect(() => {
         </Box>
       </Box>
 
+     
       {/* Enhanced Annual Leave Summary */}
-      <Box
-        mt={3}
-        p={2}
-        sx={{
-          backgroundColor: "#f5f5f5",
-          borderRadius: 2,
-          boxShadow: 1,
-        }}
-      >
-        <Typography variant="h6" fontWeight="bold" gutterBottom color="primary">
-          Annual Leave Summary ({currentYear})
+<Box
+  mt={3}
+  p={2}
+  sx={{
+    backgroundColor: "#f8f9fa",
+    borderRadius: 2,
+    boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+    border: "1px solid #e0e0e0",
+  }}
+>
+  <Typography variant="h6" fontWeight="bold" gutterBottom color="primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+    📊 Annual Leave Summary ({currentYear})
+  </Typography>
+  
+  {/* Main Content Grid */}
+  <Box display="flex" flexWrap="wrap" gap={3} alignItems="flex-start">
+    {/* Overall Progress - Compact */}
+    <Box flex={1} minWidth={200}>
+      <Typography variant="subtitle2" fontWeight="bold" gutterBottom color="#2c3e50" sx={{ fontSize: '0.9rem' }}>
+        📈 Overall Progress
+      </Typography>
+      
+      {/* Compact Progress Bar */}
+      <Box sx={{ position: 'relative', height: 20, backgroundColor: '#ecf0f1', borderRadius: 10, overflow: 'hidden', mb: 1.5 }}>
+        <Box 
+          sx={{ 
+            height: '100%', 
+            backgroundColor: usedLeaves >= 12 ? '#e74c3c' : '#2ecc71',
+            width: `${Math.min(100, (usedLeaves / 12) * 100)}%`,
+            transition: 'all 0.3s ease',
+            borderRadius: 10,
+          }} 
+        />
+        <Typography 
+          variant="caption" 
+          sx={{ 
+            position: 'absolute', 
+            top: '50%', 
+            left: '50%', 
+            transform: 'translate(-50%, -50%)', 
+            fontWeight: 'bold',
+            fontSize: '0.7rem',
+            color: usedLeaves >= 6 ? '#fff' : '#2c3e50',
+          }}
+        >
+          {usedLeaves.toFixed(1)} / 12 days
         </Typography>
-        
-        <Box display="flex" flexWrap="wrap" gap={3}>
-          {/* Total Summary */}
-          <Box>
-            <Typography variant="body1" fontWeight="bold">
-              Annual Overview
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Used: <span style={{color: '#d32f2f', fontWeight: 'bold'}}>{usedLeaves.toFixed(1)} days</span>
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Remaining: <span style={{color: '#2e7d32', fontWeight: 'bold'}}>{remainingLeaves.toFixed(1)} days</span>
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Total Annual Allocation: <span style={{fontWeight: 'bold'}}>12 days</span>
-            </Typography>
-          </Box>
-
-          {/* Leave Type Breakdown */}
-          <Box>
-            <Typography variant="body1" fontWeight="bold">
-              Leave Type Breakdown
-            </Typography>
-            {leaveTypes.map((leaveType) => {
-              const usedDays = annualLeavesUsed[leaveType] || 0;
-              const allocation = getLeaveAllocation(leaveType);
-              const remaining = Math.max(0, allocation - usedDays);
-              
-              return (
-                <Box key={leaveType} display="flex" gap={1} alignItems="center">
-                  <Typography variant="body2" sx={{ minWidth: 120 }}>
-                    {leaveType}:
-                  </Typography>
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      minWidth: 80,
-                      color: usedDays > 0 ? '#d32f2f' : 'text.secondary',
-                      fontWeight: usedDays > 0 ? 'bold' : 'normal'
-                    }}
-                  >
-                    {usedDays.toFixed(1)}d used
-                  </Typography>
-                  <Typography 
-                    variant="body2" 
-                    sx={{ 
-                      minWidth: 80,
-                      color: remaining > 0 ? '#2e7d32' : '#d32f2f',
-                      fontWeight: 'bold'
-                    }}
-                  >
-                    {remaining.toFixed(1)}d left
-                  </Typography>
-                  {remaining < 0 && (
-                    <Typography variant="caption" color="error">
-                      (Exceeded by {Math.abs(remaining).toFixed(1)} days)
-                    </Typography>
-                  )}
-                </Box>
-              );
-            })}
-          </Box>
-
-          {/* Current Week/Month Usage */}
-          <Box>
-            <Typography variant="body1" fontWeight="bold">
-              Current {viewMode === 'weekly' ? 'Week' : 'Month'} Usage
-            </Typography>
-            {usedLeaveTypes.map((leaveType) => {
-              const currentUsage = (leaveRows[leaveType] || []).reduce((sum, hours) => 
-                sum + (hours >= 9 ? 1 : hours / 9), 0
-              );
-              if (currentUsage > 0) {
-                return (
-                  <Typography key={leaveType} variant="body2" color="info.main">
-                    {leaveType}: {currentUsage.toFixed(1)} day{currentUsage !== 1 ? 's' : ''}
-                  </Typography>
-                );
-              }
-              return null;
-            }).filter(Boolean)}
-            {usedLeaveTypes.filter(lt => (leaveRows[lt] || []).some(h => h > 0)).length === 0 && (
-              <Typography variant="body2" color="text.secondary">
-                No leaves applied this period
-              </Typography>
-            )}
-          </Box>
+      </Box>
+      
+      {/* Compact Stats */}
+      <Box display="flex" justifyContent="space-between" gap={1}>
+        <Box textAlign="center" p={0.8} sx={{ backgroundColor: '#2ecc71', borderRadius: 1.5, flex: 1 }}>
+          <Typography variant="caption" fontWeight="bold" color="white" sx={{ fontSize: '0.7rem' }}>
+            Remaining
+          </Typography>
+          <Typography variant="body2" fontWeight="bold" color="white" sx={{ fontSize: '0.9rem' }}>
+            {remainingLeaves.toFixed(1)}
+          </Typography>
+        </Box>
+        <Box textAlign="center" p={0.8} sx={{ backgroundColor: usedLeaves >= 12 ? '#e74c3c' : '#f39c12', borderRadius: 1.5, flex: 1 }}>
+          <Typography variant="caption" fontWeight="bold" color="white" sx={{ fontSize: '0.7rem' }}>
+            Used
+          </Typography>
+          <Typography variant="body2" fontWeight="bold" color="white" sx={{ fontSize: '0.9rem' }}>
+            {usedLeaves.toFixed(1)}
+          </Typography>
         </Box>
       </Box>
+    </Box>
+
+    {/* Leave Type Breakdown - Compact Grid */}
+    <Box flex={2} minWidth={300}>
+      <Typography variant="subtitle2" fontWeight="bold" gutterBottom color="#2c3e50" sx={{ fontSize: '0.9rem' }}>
+        🎯 Leave Types
+      </Typography>
+      <Box 
+        display="grid" 
+        gridTemplateColumns="repeat(auto-fit, minmax(180px, 1fr))" 
+        gap={1.5}
+        sx={{ maxHeight: 200, overflowY: 'auto', pr: 0.5,
+          '&::-webkit-scrollbar': { width: 4 },
+          '&::-webkit-scrollbar-track': { background: '#f1f1f1', borderRadius: 2 },
+          '&::-webkit-scrollbar-thumb': { background: '#c1c1c1', borderRadius: 2 },
+        }}
+      >
+        {leaveTypes.map((leaveType) => {
+          const usedDays = annualLeavesUsed[leaveType] || 0;
+          const allocation = getLeaveAllocation(leaveType);
+          const remaining = Math.max(0, allocation - usedDays);
+          const usagePercentage = allocation > 0 ? (usedDays / allocation) * 100 : 0;
+          
+          const getUsageColor = (percentage) => {
+            if (percentage >= 100) return '#e74c3c';
+            if (percentage >= 80) return '#e67e22';
+            if (percentage >= 50) return '#f1c40f';
+            return '#2ecc71';
+          };
+
+          return (
+            <Box 
+              key={leaveType} 
+              sx={{ 
+                p: 1.2, 
+                backgroundColor: '#fff', 
+                borderRadius: 1.5, 
+                border: '1px solid #e0e0e0',
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                }
+              }}
+            >
+              {/* Leave Type Header */}
+              <Typography variant="body2" fontWeight="bold" sx={{ fontSize: '0.8rem', mb: 0.5 }}>
+                {leaveType}
+              </Typography>
+              
+              {/* Compact Progress Bar */}
+              {allocation > 0 && (
+                <Box sx={{ position: 'relative', height: 6, backgroundColor: '#ecf0f1', borderRadius: 3, overflow: 'hidden', mb: 0.5 }}>
+                  <Box 
+                    sx={{ 
+                      height: '100%', 
+                      backgroundColor: getUsageColor(usagePercentage),
+                      width: `${Math.min(100, usagePercentage)}%`,
+                      borderRadius: 3,
+                    }} 
+                  />
+                </Box>
+              )}
+              
+              {/* Compact Stats */}
+              <Box display="flex" justifyContent="space-between" alignItems="center">
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
+                  Used:
+                </Typography>
+                <Typography 
+                  variant="caption" 
+                  fontWeight="bold"
+                  sx={{ 
+                    color: getUsageColor(usagePercentage),
+                    fontSize: '0.7rem'
+                  }}
+                >
+                  {usedDays.toFixed(1)}d
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
+                  Left:
+                </Typography>
+                <Typography 
+                  variant="caption" 
+                  fontWeight="bold"
+                  sx={{ 
+                    color: remaining <= 0 ? '#e74c3c' : '#27ae60',
+                    fontSize: '0.7rem'
+                  }}
+                >
+                  {remaining.toFixed(1)}d
+                </Typography>
+              </Box>
+            </Box>
+          );
+        })}
+      </Box>
+    </Box>
+
+    {/* Current Period Usage - Compact */}
+    <Box flex={1} minWidth={150}>
+      <Typography variant="subtitle2" fontWeight="bold" gutterBottom color="#2c3e50" sx={{ fontSize: '0.9rem' }}>
+        {viewMode === 'weekly' ? '📅 This Week' : '📅 This Month'}
+      </Typography>
+      <Box display="flex" flexDirection="column" gap={1}>
+        {usedLeaveTypes.map((leaveType) => {
+          const currentUsage = (leaveRows[leaveType] || []).reduce((sum, hours) => 
+            sum + (hours >= 9 ? 1 : hours / 9), 0
+          );
+          
+          if (currentUsage > 0) {
+            return (
+              <Box 
+                key={leaveType} 
+                sx={{ 
+                  p: 0.8, 
+                  backgroundColor: '#e8f4fd', 
+                  borderRadius: 1.5, 
+                  border: '1px solid #3498db',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}
+              >
+                <Typography variant="caption" fontWeight="bold" color="#2980b9" sx={{ fontSize: '0.7rem' }}>
+                  {leaveType}
+                </Typography>
+                <Typography variant="caption" fontWeight="bold" color="#2c3e50" sx={{ fontSize: '0.7rem' }}>
+                  {currentUsage.toFixed(1)}d
+                </Typography>
+              </Box>
+            );
+          }
+          return null;
+        }).filter(Boolean)}
+        
+        {usedLeaveTypes.filter(lt => (leaveRows[lt] || []).some(h => h > 0)).length === 0 && (
+          <Box 
+            sx={{ 
+              p: 1.5, 
+              backgroundColor: '#f8f9fa', 
+              borderRadius: 1.5, 
+              border: '1px dashed #bdc3c7',
+              textAlign: 'center'
+            }}
+          >
+            <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+              No leaves this period
+            </Typography>
+          </Box>
+        )}
+      </Box>
+    </Box>
+  </Box>
+
+  {/* Compact Quick Stats */}
+  <Box 
+    mt={2} 
+    p={1.5} 
+    sx={{ 
+      backgroundColor: '#fff', 
+      borderRadius: 1.5, 
+      border: '1px solid #e0e0e0',
+      display: 'flex',
+      justifyContent: 'space-around',
+      flexWrap: 'wrap',
+      gap: 1
+    }}
+  >
+    <Box textAlign="center">
+      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', display: 'block' }}>
+        Most Used
+      </Typography>
+      <Typography variant="caption" fontWeight="bold" color="#e74c3c" sx={{ fontSize: '0.7rem' }}>
+        {Object.entries(annualLeavesUsed).reduce((max, [type, days]) => 
+          days > (max.days || 0) ? { type, days } : max, { type: 'None', days: 0 }
+        ).type}
+      </Typography>
+    </Box>
+    <Box textAlign="center">
+      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', display: 'block' }}>
+        Balance
+      </Typography>
+      <Typography variant="caption" fontWeight="bold" color="#27ae60" sx={{ fontSize: '0.7rem' }}>
+        {remainingLeaves.toFixed(1)} days
+      </Typography>
+    </Box>
+    <Box textAlign="center">
+      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', display: 'block' }}>
+        Utilization
+      </Typography>
+      <Typography variant="caption" fontWeight="bold" color="#f39c12" sx={{ fontSize: '0.7rem' }}>
+        {((usedLeaves / 12) * 100).toFixed(1)}%
+      </Typography>
+    </Box>
+    <Box textAlign="center">
+      <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem', display: 'block' }}>
+        Period
+      </Typography>
+      <Typography variant="caption" fontWeight="bold" color="#9b59b6" sx={{ fontSize: '0.7rem' }}>
+        {viewMode === 'weekly' ? 'Weekly' : 'Monthly'}
+      </Typography>
+    </Box>
+  </Box>
+</Box>
 
       {/* Menu */}
       <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={handleMenuClose}>

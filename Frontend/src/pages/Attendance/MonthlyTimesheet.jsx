@@ -140,21 +140,43 @@ export default function MonthlyTimesheet({ onBack }) {
   };
 
   // NEW: Get background color based on status
+// const getStatusColor = (dayIndex, leaveType = null) => {
+//   const day = monthDays[dayIndex];
+//   if (!day) return "white";
+
+//   const dateStr = formatDate(day.date);
+//   if (day.isWeekend) return "#ccd5e6ff"; // grey for weekends
+
+//   const record = attendanceData?.find((a) => a.date === dateStr);
+//   if (!record) return "white";
+
+//   // ✅ Convert to lowercase to handle inconsistent backend values like "Approved" / "approved"
+//   const status = record.monthlyStatus?.toLowerCase();
+
+//   switch (status) {
+//     case "pending_approval":
+//       return "#fff59d"; // yellow
+//     case "approved":
+//       return "#a5d6a7"; // green
+//     case "rejected":
+//       return "#ef9a9a"; // red
+//     default:
+//       return "white";
+//   }
+// };
+
 const getStatusColor = (dayIndex, leaveType = null) => {
   const day = monthDays[dayIndex];
   if (!day) return "white";
 
-  const dateStr = formatDate(day.date);
   if (day.isWeekend) return "#ccd5e6ff"; // grey for weekends
 
-  const record = attendanceData?.find((a) => a.date === dateStr);
-  if (!record) return "white";
-
-  // ✅ Convert to lowercase to handle inconsistent backend values like "Approved" / "approved"
-  const status = record.monthlyStatus?.toLowerCase();
+  const statusKey = leaveType ? `${leaveType}_${dayIndex}` : `worked_${dayIndex}`;
+  const status = approvalStatus[statusKey]?.toLowerCase();
 
   switch (status) {
     case "pending_approval":
+    case "submitted": // Add this to handle your submitted state
       return "#fff59d"; // yellow
     case "approved":
       return "#a5d6a7"; // green
@@ -164,25 +186,58 @@ const getStatusColor = (dayIndex, leaveType = null) => {
       return "white";
   }
 };
+  // Check if field is read-only based on status
+  // const isFieldReadOnly = (dayIndex, leaveType = null) => {
+  //   if (monthDays[dayIndex]?.isWeekend) {
+  //     return true; // Always read-only for weekends
+  //   }
+  //   const statusKey = leaveType ? `${leaveType}_${dayIndex}` : `worked_${dayIndex}`;
+  //   return approvalStatus[statusKey] === 'approved'; // Read-only only when approved
+  // };
 
   // Check if field is read-only based on status
-  const isFieldReadOnly = (dayIndex, leaveType = null) => {
-    if (monthDays[dayIndex]?.isWeekend) {
-      return true; // Always read-only for weekends
-    }
-    const statusKey = leaveType ? `${leaveType}_${dayIndex}` : `worked_${dayIndex}`;
-    return approvalStatus[statusKey] === 'approved'; // Read-only only when approved
-  };
+const isFieldReadOnly = (dayIndex, leaveType = null) => {
+  if (monthDays[dayIndex]?.isWeekend) {
+    return true; // Always read-only for weekends
+  }
+  
+  const statusKey = leaveType ? `${leaveType}_${dayIndex}` : `worked_${dayIndex}`;
+  const status = approvalStatus[statusKey]?.toLowerCase();
+  
+  // Read-only only when approved, NOT when rejected
+  return status === 'approved';
+};
 
   // NEW: Check if field is editable
-  const isFieldEditable = (dayIndex, leaveType = null) => {
-    if (monthDays[dayIndex]?.isWeekend) {
-      return false; // Never editable for weekends
-    }
-    const statusKey = leaveType ? `${leaveType}_${dayIndex}` : `worked_${dayIndex}`;
-    return approvalStatus[statusKey] !== 'approved'; // Editable if not approved
-  };
+  // const isFieldEditable = (dayIndex, leaveType = null) => {
+  //   if (monthDays[dayIndex]?.isWeekend) {
+  //     return false; // Never editable for weekends
+  //   }
+  //   const statusKey = leaveType ? `${leaveType}_${dayIndex}` : `worked_${dayIndex}`;
+  //   return approvalStatus[statusKey] !== 'approved'; // Editable if not approved
+  // };
 
+  // NEW: Check if field is editable
+const isFieldEditable = (dayIndex, leaveType = null) => {
+  if (monthDays[dayIndex]?.isWeekend) {
+    return false; // Never editable for weekends
+  }
+  
+  const statusKey = leaveType ? `${leaveType}_${dayIndex}` : `worked_${dayIndex}`;
+  const status = approvalStatus[statusKey]?.toLowerCase();
+  
+  // Editable if: not approved OR if rejected (so user can fix and resubmit)
+  return status !== 'approved' || status === 'rejected';
+};
+
+// Helper to check if any field in a row is rejected
+const isRowRejected = (row) => {
+  return monthDays.some((day, dayIndex) => {
+    if (day.isWeekend) return false;
+    const statusKey = row === "Worked Hours" ? `worked_${dayIndex}` : `${row}_${dayIndex}`;
+    return approvalStatus[statusKey]?.toLowerCase() === 'rejected';
+  });
+};
   // Sync monthDays, hours, leaveRows whenever monthStart changes
   useEffect(() => {
     const days = getMonthDays(monthStart);
@@ -400,10 +455,50 @@ useEffect(() => {
     handleMenuClose();
   };
 
+  // const handleEditRow = (row) => {
+  //   setLockedRows((prev) => ({ ...prev, [row]: false }));
+  //   handleMenuClose();
+  // };
+
   const handleEditRow = (row) => {
-    setLockedRows((prev) => ({ ...prev, [row]: false }));
-    handleMenuClose();
-  };
+  console.log('Editing rejected row:', row);
+  // Clear the month released lock when editing rejected rows
+    setIsMonthReleased(false);
+  localStorage.removeItem("releasedMonth");
+  
+  // When editing a rejected row, change its status back to empty/editable
+  const newApprovalStatus = { ...approvalStatus };
+  
+  monthDays.forEach((day, dayIndex) => {
+    if (!day.isWeekend) {
+      const statusKey = row === "Worked Hours" ? `worked_${dayIndex}` : `${row}_${dayIndex}`;
+      
+      // If this field was rejected, clear its status to make it editable
+      if (newApprovalStatus[statusKey]?.toLowerCase() === 'rejected') {
+        console.log('Clearing rejected status for:', statusKey);
+        newApprovalStatus[statusKey] = '';
+        
+        // Reset the data values to 0 for clean editing
+        if (row === "Worked Hours") {
+          const newHours = [...hours];
+          newHours[dayIndex] = 0;
+          setHours(newHours);
+          console.log('Reset worked hours for day', dayIndex, 'to 0');
+        } else if (leaveRows[row]) {
+          setLeaveRows(prev => ({
+            ...prev,
+            [row]: prev[row].map((val, idx) => idx === dayIndex ? 0 : val)
+          }));
+          console.log('Reset leave row', row, 'for day', dayIndex, 'to 0');
+        }
+      }
+    }
+  });
+  
+  setApprovalStatus(newApprovalStatus);
+  setLockedRows((prev) => ({ ...prev, [row]: false })); // Ensure row is unlocked
+  handleMenuClose();
+};
 
   const changeMonth = (offset) => {
     const newDate = new Date(monthStart);
@@ -530,7 +625,8 @@ useEffect(() => {
             {leaveRows[lt]?.map((v, i) => {
               const isWeekend = monthDays[i]?.isWeekend;
               const backgroundColor = getStatusColor(i, lt);
-              const isEditable = isFieldEditable(i, lt) && !lockedRows[lt];
+              // const isEditable = isFieldEditable(i, lt) && !lockedRows[lt];
+              const isEditable = isFieldEditable(i, lt);
 
               return (
                 <input
@@ -603,15 +699,25 @@ useEffect(() => {
       </div>
 
       {/* MENU */}
-      <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={handleMenuClose}>
+      {/* <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={handleMenuClose}>
         <MenuItem onClick={() => handleEditRow(menuRow)} disabled={!lockedRows[menuRow]}>
           Edit
         </MenuItem>
         <MenuItem onClick={() => handleResetRow(menuRow)}>Reset</MenuItem>
         {menuRow !== "Worked Hours" && <MenuItem onClick={() => handleDeleteRow(menuRow)}>Delete</MenuItem>}
-      </Menu>
+      </Menu> */}
 
-      {/* LEAVE MODAL */}
+<Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={handleMenuClose}>
+  <MenuItem 
+    onClick={() => handleEditRow(menuRow)} 
+    disabled={!isRowRejected(menuRow)} // Only enable when row IS rejected
+  >
+    Edit
+  </MenuItem>
+  <MenuItem onClick={() => handleResetRow(menuRow)}>Reset</MenuItem>
+  {menuRow !== "Worked Hours" && <MenuItem onClick={() => handleDeleteRow(menuRow)}>Delete</MenuItem>}
+</Menu>
+   {/* LEAVE MODAL */}
       <LeaveApplicationModal
         open={leaveModalOpen}
         onClose={() => setLeaveModalOpen(false)}
