@@ -95,7 +95,7 @@ export default function Timesheet() {
   const [workedHours, setWorkedHours] = useState(Array(7).fill(0));
   const [monthlyWorkedHours, setMonthlyWorkedHours] = useState([]);
 
-  // Initialize dates from navigation or use defaults
+  // Date states
   const [weekStart, setWeekStart] = useState(() => {
     if (currentStartDate && viewType === "weekly") {
       return getMonday(new Date(currentStartDate));
@@ -111,6 +111,10 @@ export default function Timesheet() {
     const today = new Date();
     return new Date(today.getFullYear(), today.getMonth(), 1);
   });
+
+  // Annual leave tracking states
+  const [annualLeavesUsed, setAnnualLeavesUsed] = useState({});
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
 
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [menuRow, setMenuRow] = useState(null);
@@ -131,6 +135,52 @@ export default function Timesheet() {
 
   const [holidays, setHolidays] = useState([]);
   const holidaysCache = {};
+
+  // Initialize annual leaves from localStorage
+  useEffect(() => {
+    const storedLeaves = localStorage.getItem(`annualLeaves_${currentYear}`);
+    if (storedLeaves) {
+      setAnnualLeavesUsed(JSON.parse(storedLeaves));
+    } else {
+      // Initialize with zeros for all leave types
+      const initialLeaves = {};
+      leaveTypes.forEach(lt => {
+        initialLeaves[lt] = 0;
+      });
+      setAnnualLeavesUsed(initialLeaves);
+      localStorage.setItem(`annualLeaves_${currentYear}`, JSON.stringify(initialLeaves));
+    }
+  }, [currentYear]);
+
+  // Update annual leaves when leaveRows change
+  useEffect(() => {
+    if (Object.keys(annualLeavesUsed).length === 0) return;
+
+    const newAnnualLeavesUsed = { ...annualLeavesUsed };
+    let hasChanges = false;
+
+    // Calculate total leaves used across all leave types
+    Object.entries(leaveRows).forEach(([leaveType, daysArray]) => {
+      const totalInView = daysArray.reduce((sum, hours) => {
+        // Convert hours to days (9 hours = 1 day)
+        return sum + (hours >= 9 ? 1 : hours / 9);
+      }, 0);
+
+      // Only add if we have positive hours and it increases the annual count
+      if (totalInView > 0) {
+        const currentAnnual = newAnnualLeavesUsed[leaveType] || 0;
+        if (totalInView > currentAnnual) {
+          newAnnualLeavesUsed[leaveType] = totalInView;
+          hasChanges = true;
+        }
+      }
+    });
+
+    if (hasChanges) {
+      setAnnualLeavesUsed(newAnnualLeavesUsed);
+      localStorage.setItem(`annualLeaves_${currentYear}`, JSON.stringify(newAnnualLeavesUsed));
+    }
+  }, [leaveRows, currentYear]);
 
   useEffect(() => {
     const fetchHolidays = async () => {
@@ -199,7 +249,6 @@ export default function Timesheet() {
   };
 
   //  Add a small dot or emoji for holidays
-
   const tileContent = ({ date, view }) => {
     if (view === "month") {
       const dateStr = date.toISOString().slice(0, 10);
@@ -231,8 +280,6 @@ export default function Timesheet() {
     }
     return null;
   };
-
-
 
   const parseHour = (v) => {
     const n = Number(v);
@@ -269,6 +316,7 @@ export default function Timesheet() {
       setApprovalStatus(newApprovalStatus);
     }
   };
+
 //weekly data
   useEffect(() => {
     initializeTable();
@@ -383,21 +431,24 @@ useEffect(() => {
   setStatusColor(monthlyData.map(i => getStatusBackgroundColor(i, "monthly")));
 }, [attendanceData, monthStart, viewMode]);
 
-  // --- Calculate leave summary ---
+  // Calculate leave summary using annual data
   useEffect(() => {
-    let used = 0;
+    let totalUsed = 0;
     const details = {};
-    Object.entries(leaveRows).forEach(([lt, row]) => {
-      const total = (row || []).reduce((a, b) => a + Number(b || 0), 0);
-      used += total;
-      if (total > 0) details[lt] = total;
+
+    // Use annual leaves data instead of current view data
+    Object.entries(annualLeavesUsed).forEach(([lt, days]) => {
+      totalUsed += days;
+      if (days > 0) details[lt] = days;
     });
-    const totalLeaves = 12;
-    const remaining = totalLeaves - used;
-    setUsedLeaves(used);
-    setRemainingLeaves(remaining >= 0 ? remaining : 0);
+
+    const totalLeaves = 12; // Default annual allocation for EL
+    const remaining = Math.max(0, totalLeaves - totalUsed);
+    
+    setUsedLeaves(totalUsed);
+    setRemainingLeaves(remaining);
     setUsedLeavesDetails(details);
-  }, [leaveRows]);
+  }, [annualLeavesUsed]);
 
   // --- Format header range ---
   const formatDateRange = () => {
@@ -426,8 +477,6 @@ useEffect(() => {
     newWeek.setDate(weekStart.getDate() + delta * 7);
     setWeekStart(getMonday(newWeek));
   };
-
-
 
   const changeMonth = (delta) => {
     const newMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() + delta, 1);
@@ -505,9 +554,6 @@ useEffect(() => {
     handleMenuClose();
   };
 
- 
-
-
   const handleRejectAll = () => {
     if (!employeeId) {
       alert("Employee ID is required!");
@@ -554,8 +600,6 @@ useEffect(() => {
     setApprovalStatus(newApprovalStatus);
   };
 
-
-
   // Handle individual cell approval
   const handleCellApproval = (leaveType, dayIndex) => {
     if (!isEditMode) {
@@ -568,8 +612,7 @@ useEffect(() => {
     }
   };
 
-
-  // ✅ Updated version — keeps Sat/Sun as gray with no status color
+  // Updated version — keeps Sat/Sun as gray with no status color
   const getInputBackgroundColor = (leaveType, dayIndex, value) => {
     // For Saturday (6) and Sunday (0): always gray, no status logic
     if (days[dayIndex].dayIndex === 0 || days[dayIndex].dayIndex === 6) {
@@ -595,8 +638,6 @@ useEffect(() => {
 
     return "#fff"; // normal weekdays
   };
-
-
 
   // Handle calendar date selection
   const handleCalendarDateSelect = (date) => {
@@ -697,8 +738,6 @@ useEffect(() => {
     rowTotals[lt] = (leaveRows[lt] || Array(days.length).fill(0)).reduce((a, b) => a + Number(b || 0), 0);
   });
   const grandTotal = workedTotal + Object.values(rowTotals).reduce((a, b) => a + b, 0);
-
-
 
   useEffect(() => {
     if (!employeeId) return;
@@ -813,7 +852,6 @@ useEffect(() => {
           </TableHead>
           <TableBody>
             {/* Worked Hours */}
-
             <TableRow>
               <TableCell sx={{ fontWeight: "bold" }}>Worked Hours</TableCell>
               {(currentWorkedHours || Array(days.length).fill(0)).map((h, i) => {
@@ -864,7 +902,6 @@ useEffect(() => {
                         width: 50,
                         height: 22,
                         textAlign: "center",
-                        // backgroundColor: isWeekend ? "#f0f0f0" : "#fff",
                         backgroundColor: getInputBackgroundColor("Worked Hours", i, h),
                         border: "1px solid #ccc",
                         borderRadius: 4,
@@ -905,7 +942,6 @@ useEffect(() => {
               </TableCell>
             </TableRow>
 
-
             {/* Leave Rows */}
             {usedLeaveTypes.map((lt) => (
               <TableRow key={lt}>
@@ -941,6 +977,28 @@ useEffect(() => {
                           return { ...prev, [lt]: arr };
                         });
 
+                        // Update annual leaves
+                        setTimeout(() => {
+                          const newAnnualLeavesUsed = { ...annualLeavesUsed };
+                          let totalForThisType = 0;
+                          
+                          // Recalculate total for this leave type including the new value
+                          const currentRow = [...(leaveRows[lt] || Array(days.length).fill(0))];
+                          currentRow[i] = val; // Include the new value
+                          
+                          totalForThisType = currentRow.reduce((sum, hours) => {
+                            // Convert hours to days (9 hours = 1 day)
+                            return sum + (hours >= 9 ? 1 : hours / 9);
+                          }, 0);
+
+                          // Update annual count if this is higher than current
+                          if (totalForThisType > (newAnnualLeavesUsed[lt] || 0)) {
+                            newAnnualLeavesUsed[lt] = totalForThisType;
+                            setAnnualLeavesUsed(newAnnualLeavesUsed);
+                            localStorage.setItem(`annualLeaves_${currentYear}`, JSON.stringify(newAnnualLeavesUsed));
+                          }
+                        }, 0);
+
                         const newApprovalStatus = { ...approvalStatus };
                         if (newApprovalStatus[lt]) {
                           newApprovalStatus[lt][i] = "pending";
@@ -948,8 +1006,8 @@ useEffect(() => {
                         }
                       }}
                     />
-                    {/* ✅ Hide status text for Saturday and Sunday */}
-                    {/* ✅ Show status only for cells with data (v > 0) and weekdays */}
+                    {/* Hide status text for Saturday and Sunday */}
+                    {/* Show status only for cells with data (v > 0) and weekdays */}
                     {!isEditMode && v > 0 && days[i].dayIndex !== 0 && days[i].dayIndex !== 6 && (
                       <Typography variant="caption" display="block" color="text.secondary">
                         {approvalStatus[lt]?.[i] === "approved"
@@ -959,8 +1017,6 @@ useEffect(() => {
                             : "Pending"}
                       </Typography>
                     )}
-
-
                   </TableCell>
                 ))}
                 <TableCell align="center">{rowTotals[lt]}</TableCell>
@@ -1019,29 +1075,24 @@ useEffect(() => {
           </Button>
         </Box>
         <Box display="flex" gap={1}>
-
-          <>
-            <Button
-              variant="contained"
-              color="success"
-              onClick={handleApproved}
-            >
-              Approved
-            </Button>
-            <Button
-              variant="contained"
-              color="error"
-              onClick={handleRejectAll}
-            >
-              Rejected
-            </Button>
-
-          </>
-
+          <Button
+            variant="contained"
+            color="success"
+            onClick={handleApproved}
+          >
+            Approved
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={handleRejectAll}
+          >
+            Rejected
+          </Button>
         </Box>
       </Box>
 
-      {/* Enhanced Leave Summary */}
+      {/* Enhanced Annual Leave Summary */}
       <Box
         mt={3}
         p={2}
@@ -1052,23 +1103,23 @@ useEffect(() => {
         }}
       >
         <Typography variant="h6" fontWeight="bold" gutterBottom color="primary">
-          Leave Summary
+          Annual Leave Summary ({currentYear})
         </Typography>
         
         <Box display="flex" flexWrap="wrap" gap={3}>
           {/* Total Summary */}
           <Box>
             <Typography variant="body1" fontWeight="bold">
-              Total Overview
+              Annual Overview
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Used: <span style={{color: '#d32f2f', fontWeight: 'bold'}}>{usedLeaves} days</span>
+              Used: <span style={{color: '#d32f2f', fontWeight: 'bold'}}>{usedLeaves.toFixed(1)} days</span>
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Remaining: <span style={{color: '#2e7d32', fontWeight: 'bold'}}>{remainingLeaves} days</span>
+              Remaining: <span style={{color: '#2e7d32', fontWeight: 'bold'}}>{remainingLeaves.toFixed(1)} days</span>
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Total Allocation: <span style={{fontWeight: 'bold'}}>12 days</span>
+              Total Annual Allocation: <span style={{fontWeight: 'bold'}}>12 days</span>
             </Typography>
           </Box>
 
@@ -1078,9 +1129,9 @@ useEffect(() => {
               Leave Type Breakdown
             </Typography>
             {leaveTypes.map((leaveType) => {
-              const usedDays = usedLeavesDetails[leaveType] || 0;
+              const usedDays = annualLeavesUsed[leaveType] || 0;
               const allocation = getLeaveAllocation(leaveType);
-              const remaining = allocation - usedDays;
+              const remaining = Math.max(0, allocation - usedDays);
               
               return (
                 <Box key={leaveType} display="flex" gap={1} alignItems="center">
@@ -1090,41 +1141,57 @@ useEffect(() => {
                   <Typography 
                     variant="body2" 
                     sx={{ 
-                      minWidth: 60,
+                      minWidth: 80,
                       color: usedDays > 0 ? '#d32f2f' : 'text.secondary',
                       fontWeight: usedDays > 0 ? 'bold' : 'normal'
                     }}
                   >
-                    {usedDays}d used
+                    {usedDays.toFixed(1)}d used
                   </Typography>
                   <Typography 
                     variant="body2" 
                     sx={{ 
                       minWidth: 80,
-                      color: remaining > 0 ? '#2e7d32' : 'text.secondary',
-                      fontWeight: remaining > 0 ? 'bold' : 'normal'
+                      color: remaining > 0 ? '#2e7d32' : '#d32f2f',
+                      fontWeight: 'bold'
                     }}
                   >
-                    {remaining}d left
+                    {remaining.toFixed(1)}d left
                   </Typography>
+                  {remaining < 0 && (
+                    <Typography variant="caption" color="error">
+                      (Exceeded by {Math.abs(remaining).toFixed(1)} days)
+                    </Typography>
+                  )}
                 </Box>
               );
             })}
           </Box>
 
-          {/* Used Leaves Details */}
-          {Object.keys(usedLeavesDetails).length > 0 && (
-            <Box>
-              <Typography variant="body1" fontWeight="bold">
-                Currently Used Leaves
+          {/* Current Week/Month Usage */}
+          <Box>
+            <Typography variant="body1" fontWeight="bold">
+              Current {viewMode === 'weekly' ? 'Week' : 'Month'} Usage
+            </Typography>
+            {usedLeaveTypes.map((leaveType) => {
+              const currentUsage = (leaveRows[leaveType] || []).reduce((sum, hours) => 
+                sum + (hours >= 9 ? 1 : hours / 9), 0
+              );
+              if (currentUsage > 0) {
+                return (
+                  <Typography key={leaveType} variant="body2" color="info.main">
+                    {leaveType}: {currentUsage.toFixed(1)} day{currentUsage !== 1 ? 's' : ''}
+                  </Typography>
+                );
+              }
+              return null;
+            }).filter(Boolean)}
+            {usedLeaveTypes.filter(lt => (leaveRows[lt] || []).some(h => h > 0)).length === 0 && (
+              <Typography variant="body2" color="text.secondary">
+                No leaves applied this period
               </Typography>
-              {Object.entries(usedLeavesDetails).map(([leaveType, days]) => (
-                <Typography key={leaveType} variant="body2" color="error.main">
-                  {leaveType}: {days} day{days !== 1 ? 's' : ''}
-                </Typography>
-              ))}
-            </Box>
-          )}
+            )}
+          </Box>
         </Box>
       </Box>
 
