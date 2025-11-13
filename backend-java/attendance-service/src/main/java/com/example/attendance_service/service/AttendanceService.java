@@ -64,7 +64,15 @@ public class AttendanceService {
 
 						// Project details
 						a.getProject() != null ? a.getProject().getId() : null,
-						a.getProject() != null ? a.getProject().getProjectName() : null))
+						a.getProject() != null ? a.getProject().getProjectName() : null,
+								 a.getEl(),
+							        a.getSl(),
+							        a.getExtraMilar(),
+							        a.getWorkFromHome(),
+							        a.getPaternityLeave(),
+							        a.getMaternityLeave(),
+							        a.getRemainingLeaves()		
+						))
 				.collect(Collectors.toList());
 	}
 
@@ -253,23 +261,16 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 	public List<AttendanceEntity> getAttendanceByEmployeeAndProject(UUID employeeId, UUID projectId) {
 		return attendanceRepository.findByEmployee_IdAndProject_IdOrderByDateAsc(employeeId, projectId);
 	}
-
 	@Transactional
 	public List<AttendanceResponseDTO> getApprovalSummary(LocalDate startDate, LocalDate endDate, String periodType) {
 	    List<AttendanceEntity> allRecords = attendanceRepository.findAllByOrderByDateAsc();
 	    if (allRecords == null) allRecords = Collections.emptyList();
 
-	    // ✅ Filter by date range
 	    List<AttendanceEntity> recordsInRange = allRecords.stream()
 	        .filter(a -> a.getDate() != null && !a.getDate().isBefore(startDate) && !a.getDate().isAfter(endDate))
-	        .collect(Collectors.toList());
-
-	    // ✅ Consider only records with a project
-	    recordsInRange = recordsInRange.stream()
 	        .filter(a -> a.getEmployee() != null && a.getEmployee().getId() != null && a.getProject() != null)
 	        .collect(Collectors.toList());
 
-	    // ✅ Determine grouping key based on period type
 	    Map<String, List<AttendanceEntity>> grouped;
 	    if ("weekly".equalsIgnoreCase(periodType)) {
 	        grouped = recordsInRange.stream()
@@ -280,7 +281,6 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 	                return empId + "_" + projectId + "_" + weekStart;
 	            }));
 	    } else {
-	        // ✅ Monthly grouping (cross-month range = one period)
 	        grouped = recordsInRange.stream()
 	            .collect(Collectors.groupingBy(a -> {
 	                UUID empId = a.getEmployee().getId();
@@ -289,7 +289,6 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 	            }));
 	    }
 
-	    // ✅ Map grouped records to DTO
 	    return grouped.entrySet().stream().map(entry -> {
 	        List<AttendanceEntity> records = entry.getValue();
 	        AttendanceEntity first = records.get(0);
@@ -298,6 +297,11 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 	            .mapToDouble(r -> r.getWorkedHours() != null ? r.getWorkedHours() : 0.0)
 	            .sum();
 
+	        // ✅ Use the LATEST record for leave balances (most accurate)
+	        AttendanceEntity latest = records.stream()
+	            .max(Comparator.comparing(AttendanceEntity::getDate))
+	            .orElse(first);
+
 	        UUID employeeId = first.getEmployee().getId();
 	        String employeeName = first.getEmployee().getEmployeeName();
 	        String gender = first.getEmployee().getGender();
@@ -305,10 +309,9 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 	        UUID projectId = first.getProject().getId();
 	        String projectName = first.getProject().getProjectName();
 
-	        // ✅ Unified period start date
 	        LocalDate periodStartDate = "weekly".equalsIgnoreCase(periodType)
 	                ? first.getDate().with(java.time.DayOfWeek.MONDAY)
-	                : startDate; // <-- FIXED: use the actual requested startDate
+	                : startDate;
 
 	        return new AttendanceResponseDTO(
 	            null,
@@ -323,14 +326,21 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 	            employeeName,
 	            null,
 	            projectId,
-	            projectName
+	            projectName,
+	            // ➕ ADD LEAVE BALANCES FROM latest record
+	            latest.getEl(),
+	            latest.getSl(),
+	            latest.getExtraMilar(),
+	            latest.getWorkFromHome(),
+	            latest.getPaternityLeave(),
+	            latest.getMaternityLeave(),
+	            latest.getRemainingLeaves()
 	        );
 	    })
 	    .sorted(Comparator.comparing(AttendanceResponseDTO::getEmployeeName,
 	            Comparator.nullsLast(String::compareToIgnoreCase)))
 	    .collect(Collectors.toList());
 	}
-	
 	@Transactional
 	public boolean canApplyLeave(UUID employeeId, String leaveType, int requestedDays) {
 	    // ✅ Count how many leaves of this type the employee has already taken
@@ -591,37 +601,6 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 	private int safeGet(Integer value, int defaultValue) {
 	    return value != null ? value : defaultValue;
 	}
-	@Transactional
-	public Map<String, Integer> getEmployeeLeaves(UUID employeeId) {
-	    if (employeeId == null) return Collections.emptyMap();
-
-	    // Fetch all attendance records for the employee
-	    List<AttendanceEntity> records = attendanceRepository.findByEmployee_IdOrderByDateAsc(employeeId);
-
-	    if (records.isEmpty()) {
-	        return Collections.emptyMap();
-	    }
-
-	    // Take the latest record (or you can filter for organization-level base record)
-	    records.sort((a, b) -> b.getDate().compareTo(a.getDate()));
-	    AttendanceEntity latest = records.get(0);
-
-	    // Prepare the leave map
-	    Map<String, Integer> leaves = Map.of(
-	        //"holidays", safeGet(latest.getHolidays(), 0),
-	        //"optional_holidays", safeGet(latest.getOptionalHolidays(), 0),
-	        "el", safeGet(latest.getEl(), 0),
-	        "sl", safeGet(latest.getSl(), 0),
-	        "extra_milar", safeGet(latest.getExtraMilar(), 0),
-	        "maternity_leave", safeGet(latest.getMaternityLeave(), 0),
-	        "paternity_leave", safeGet(latest.getPaternityLeave(), 0)
-	    );
-
-	    return leaves;
-	}
-
-	// Helper for null-safe values
-	private int safeGet1(Integer value, int defaultValue) {
-	    return value != null ? value : defaultValue;
-	}
+	
+	
 }
