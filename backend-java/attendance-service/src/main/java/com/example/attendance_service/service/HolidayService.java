@@ -11,7 +11,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class HolidayService {
@@ -75,4 +77,31 @@ public class HolidayService {
     public List<Holiday> getByYear(int year) {
         return repo.findByYearOrderByDateAsc(year);
     }
+
+    //add holidays
+    public Holiday addHoliday(Holiday holiday) {
+        return repo.save(holiday);
+    }
+    //delete holiday
+    public void deleteHoliday(UUID id) {
+        repo.deleteById(id);
+    }
+   //update holidays
+   public Holiday updateHoliday(UUID id, Holiday updated) {
+       Holiday db = repo.findById(id)
+               .orElseThrow(() -> new RuntimeException("Holiday not found"));
+
+       db.setName(updated.getName());
+       db.setDate(updated.getDate());
+       db.setYear(updated.getYear());
+       db.setDescription(updated.getDescription());
+       db.setHolidayType(updated.getHolidayType());
+       db.setOptional(updated.isOptional());
+       db.setUpdatedAt(LocalDateTime.now());
+
+       return repo.save(db);
+   }
+
+
 }
+

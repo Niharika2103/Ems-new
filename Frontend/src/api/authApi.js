@@ -332,3 +332,17 @@ export const fetchAuditLogsApi = () => {
   return AttendanceClient.get(`${AUTH_API.ADMIN}/audit-logs`);
 };
 
+
+// Public ADD Holidays 
+export const saveHolidayApi = (formData) =>{
+ return AttendanceClient.post(`${AUTH_API.ATTENDANCE}/holidays`, formData);
+
+}
+//update holidays 
+export const updateHolidayApi = (id,formData) =>{
+ return AttendanceClient.put(`${AUTH_API.ATTENDANCE}/holidays/${id}`,formData);
+}
+//delete
+export const deleteHolidayApi =(id)=>{
+  return AttendanceClient.delete(`${AUTH_API.ATTENDANCE}/holidays/${id}`);
+}
