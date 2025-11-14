@@ -18,7 +18,7 @@ const FreelancerDashboard = () => {
       icon: GroupIcon,
       iconBg: "bg-sky-100",
       iconColor: "text-sky-600",
-    //   onClick: () => navigate("/dashboard/freelancer/emp_requestTable"),
+      onClick: () => navigate("/dashboard/freelancer/info"),
     },
     {
     title: "Employee Info",

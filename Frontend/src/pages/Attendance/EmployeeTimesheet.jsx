@@ -699,7 +699,7 @@ export default function EmpTimesheet() {
 
       {/* TABLE HEADER */}
       <div className="flex justify-between font-semibold border-b pb-2 text-sm">
-        <div className="flex-1">{projectName}</div>
+        <div className="flex-1">{projectName} <span>(Shift1)</span></div>
         <div className="flex gap-2 justify-end flex-1">
           {days.map((day, i) => {
             const currentDate = new Date(getMonday(weekStart));
@@ -843,13 +843,13 @@ export default function EmpTimesheet() {
                 //   }
                 // }}
 
-                onChange={(e) => {
-                  if (!isWeekReleased) {
-                    const newHours = [...hours];
-                    newHours[i] = e.target.value;
-                    setHours(newHours);
-                  }
-                }}
+                // onChange={(e) => {
+                //   if (!isWeekReleased) {
+                //     const newHours = [...hours];
+                //     newHours[i] = e.target.value;
+                //     setHours(newHours);
+                //   }
+                // }}
               />
 
 
@@ -912,13 +912,13 @@ export default function EmpTimesheet() {
                 //   }
                 // }}
 
-                onChange={(e) => {
-                  if (!isWeekReleased) {
-                    const newHours = [...hours];
-                    newHours[i] = e.target.value;
-                    setHours(newHours);
-                  }
-                }}
+                // onChange={(e) => {
+                //   if (!isWeekReleased) {
+                //     const newHours = [...hours];
+                //     newHours[i] = e.target.value;
+                //     setHours(newHours);
+                //   }
+                // }}
               />
 
 
@@ -981,13 +981,13 @@ export default function EmpTimesheet() {
                 //   }
                 // }}
 
-                onChange={(e) => {
-                  if (!isWeekReleased) {
-                    const newHours = [...hours];
-                    newHours[i] = e.target.value;
-                    setHours(newHours);
-                  }
-                }}
+                // onChange={(e) => {
+                //   if (!isWeekReleased) {
+                //     const newHours = [...hours];
+                //     newHours[i] = e.target.value;
+                //     setHours(newHours);
+                //   }
+                // }}
               />
 
 
