@@ -97,7 +97,7 @@ export default function SuperAdminRegister() {
             setStep("mfa-setup");
             setQrCodeUrl(response.qrCodeUrl);
             toast.info(response.message);
-            
+
             setErrors({});
           } else {
             toast.warning("Please complete MFA setup first.");
@@ -130,12 +130,12 @@ export default function SuperAdminRegister() {
         localStorage.removeItem("qrCodeUrl");
         localStorage.removeItem("email");
         setFormData({
-              fullName: "",
-              email: "",
-              password: "",
-              confirmPassword: "",
-              role: "superadmin",
-            });
+          fullName: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+          role: "superadmin",
+        });
         navigate("/superadmin/login");
       })
       .catch((err) => {

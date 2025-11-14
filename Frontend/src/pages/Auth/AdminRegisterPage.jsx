@@ -23,7 +23,7 @@ export default function AdminRegisterPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(true);
-const [showconpassword, setShowConPassword] = useState(true);
+  const [showconpassword, setShowConPassword] = useState(true);
   const { loading, error } = useSelector((state) => state.admin);
 
   const [formData, setFormData] = useState({
@@ -37,7 +37,7 @@ const [showconpassword, setShowConPassword] = useState(true);
   const [otp, setOtp] = useState("");
   const [step, setStep] = useState("register");
   const [qrCodeUrl, setQrCodeUrl] = useState("");
-  
+
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -192,16 +192,14 @@ const [showconpassword, setShowConPassword] = useState(true);
                   }}
                 />
                 <TextField
-  label="Role"
-  name="role"
-  value={formData.role}      // controlled input value
-  onChange={handleChange}    // update state
-  fullWidth
-  size="small"
-  required
-/>
-
-
+                  label="Role"
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  fullWidth
+                  size="small"
+                  required
+                />
                 <Typography variant="body2" align="center" sx={{ mt: 2 }}>
                   Already have an account?{" "}
                   <a href="/#/admin/login" className="register-link">
@@ -250,7 +248,7 @@ const [showconpassword, setShowConPassword] = useState(true);
                 >
                   {loading ? "Verifying..." : "Verify OTP"}
                 </Button>
-                
+
               </Box>
             </Box>
           )}

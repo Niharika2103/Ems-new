@@ -13,20 +13,6 @@ export default function SuperAadminTable() {
   const dispatch = useDispatch();
   const [loadingId, setLoadingId] = useState(null);
 
-  
-
-  // const handleDelete = (id) => {
-  //   dispatch(deleteAdmin(id))
-  //     .unwrap()
-  //     .then(() => {
-  //       toast.success("Admin deleted successfully");
-  //       dispatch(fetchallAdmin());
-  //     })
-  //     .catch(() => {
-  //       toast.error("Failed to delete admin");
-  //     });
-  // };
-
   // Approved by superAdmin
   const handleApproveToggle = (admin, status) => {
     setLoadingId(admin.id);
@@ -40,20 +26,20 @@ export default function SuperAadminTable() {
       .catch((err) => toast.error(err.error || "Failed to update approval"))
       .finally(() => setLoadingId(null));
   };
-const handlePromoteToSuperadmin = async (admin) => {
-  if (!window.confirm(`Are you sure you want to promote ${admin.name} to SuperAdmin?`)) {
-    return;
-  }
+  const handlePromoteToSuperadmin = async (admin) => {
+    if (!window.confirm(`Are you sure you want to promote ${admin.name} to SuperAdmin?`)) {
+      return;
+    }
 
-  try {
-    await promoteAdminToSuperadminApi(admin.id);
-    toast.success(`${admin.name} has been promoted to SuperAdmin!`);
-    dispatch(fetchallAdmin()); // Refresh the list
-  } catch (err) {
-    console.error("Promotion error:", err);
-    toast.error(err.response?.data?.error || "Failed to promote admin");
-  }
-};
+    try {
+      await promoteAdminToSuperadminApi(admin.id);
+      toast.success(`${admin.name} has been promoted to SuperAdmin!`);
+      dispatch(fetchallAdmin()); // Refresh the list
+    } catch (err) {
+      console.error("Promotion error:", err);
+      toast.error(err.response?.data?.error || "Failed to promote admin");
+    }
+  };
   //superAdminTable
 
 
@@ -119,17 +105,17 @@ const handlePromoteToSuperadmin = async (admin) => {
                   Rejected
                 </Button>
                 <Button
-  type={record.role === "superadmin" ? "default" : "primary"}
-  style={{
-    backgroundColor: record.role === "superadmin" ? "#52c41a" : "",
-    color: record.role === "superadmin" ? "white" : "",
-    borderColor: record.role === "superadmin" ? "#52c41a" : "",
-  }}
-  disabled={record.role === "superadmin"}
-  onClick={() => handlePromoteToSuperadmin(record)}
->
-  {record.role === "superadmin" ? "Promoted to SuperAdmin" : "Promote to SuperAdmin"}
-</Button>
+                  type={record.role === "superadmin" ? "default" : "primary"}
+                  style={{
+                    backgroundColor: record.role === "superadmin" ? "#52c41a" : "",
+                    color: record.role === "superadmin" ? "white" : "",
+                    borderColor: record.role === "superadmin" ? "#52c41a" : "",
+                  }}
+                  disabled={record.role === "superadmin"}
+                  onClick={() => handlePromoteToSuperadmin(record)}
+                >
+                  {record.role === "superadmin" ? "Promoted to SuperAdmin" : "Promote to SuperAdmin"}
+                </Button>
 
               </>
             ) : (

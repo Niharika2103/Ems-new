@@ -6,13 +6,13 @@ import { useNavigate } from "react-router-dom";
 
 export default function EmployeeAssignedProjectPage() {
   const dispatch = useDispatch();
-  const [data, setData] = useState(null);
+  const navigate = useNavigate();
   const { projects, loading, error } = useSelector((state) => state.project);
-  console.log(data, "data")
+
+  const [data, setData] = useState(null);
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
 
-  const navigate = useNavigate();
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
@@ -22,8 +22,6 @@ export default function EmployeeAssignedProjectPage() {
 
     }
   }, []);
-
-
 
 
   useEffect(() => {
@@ -45,21 +43,21 @@ export default function EmployeeAssignedProjectPage() {
       dispatch(ProjectFetchAssign(data.id));
     }
   }, [data, dispatch]);
- const handleNavigate = () => {
-  if (projects.length > 0) {
-    const projectName = projects[0]?.project?.name;
-    const projectID = projects[0]?.project?.id;
-    const employeeId = projects[0]?.employeeId;
-    
-    const ProjectDetails = { projectName, projectID, employeeId, username, email };
-    localStorage.setItem("ProjectDetails", JSON.stringify(ProjectDetails));
+  const handleNavigate = () => {
+    if (projects.length > 0) {
+      const projectName = projects[0]?.project?.name;
+      const projectID = projects[0]?.project?.id;
+      const employeeId = projects[0]?.employeeId;
+
+      const ProjectDetails = { projectName, projectID, employeeId, username, email };
+      localStorage.setItem("ProjectDetails", JSON.stringify(ProjectDetails));
 
 
-    navigate("/attendance/emptimesheet");
-  } else {
-    console.log("No projects found to save");
-  }
-};
+      navigate("/attendance/emptimesheet");
+    } else {
+      console.log("No projects found to save");
+    }
+  };
   if (loading) return <p>Loading...</p>;
   if (error) return <p className="text-red-500">Error: {error}</p>;
 
@@ -112,7 +110,6 @@ export default function EmployeeAssignedProjectPage() {
             />
           )}
         </div>
-
 
         <div className="flex items-center">
           <button

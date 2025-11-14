@@ -34,7 +34,7 @@ export const deleteAdmin = createAsyncThunk(
   async ({ id, status }, thunkAPI) => {
     try {
       const response = await DeleteAdminApi(id, status);
-      return id; // return deleted id to remove from list
+      return id; 
     } catch (err) {
       return thunkAPI.rejectWithValue(err.response?.data || err.message);
     }

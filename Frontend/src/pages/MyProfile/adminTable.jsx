@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { Button, Space, Popconfirm, message } from "antd";
 import { useDispatch } from "react-redux";
-import { deleteEmployee, fetchAllEmployees, updateEmployeebyAdmin ,fetchEmployeeProfile} from "../../features/employeesDetails/employeesSlice";
+import { deleteEmployee, fetchAllEmployees, updateEmployeebyAdmin, fetchEmployeeProfile } from "../../features/employeesDetails/employeesSlice";
 import EmployeeTable from "../../components/MyProfile/table";
-import { grantTempAdminApi, revokeTempAdminApi,promoteEmployeeApi } from "../../api/authApi";
+import { grantTempAdminApi, revokeTempAdminApi, promoteEmployeeApi } from "../../api/authApi";
 import ReusableModal from "../../components/MyProfile/ReusableModal";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {
- Typography,
+  Typography,
   TextField,
   Box,
   Grid,
@@ -22,7 +22,7 @@ import {
 } from "@mui/material";
 
 import { decodeToken } from "../../api/decodeToekn";
-import { validateEmployeeEdit } from "../../utils/validation"; // adjust path as needed
+import { validateEmployeeEdit } from "../../utils/validation";
 export default function AdminTable() {
   const dispatch = useDispatch();
 
@@ -42,37 +42,24 @@ export default function AdminTable() {
   });
   const [loading, setLoading] = useState(false);
 
-  // const handleDelete = (id) => {
-  //   dispatch(deleteEmployee(id))
-  //     .unwrap()
-  //     .then(() => {
-  //       message.success("Employee deleted successfully");
-  //       dispatch(fetchAllEmployees());
-  //     })
-  //     .catch(() => {
-  //       message.error("Failed to delete employee");
-  //     });
-  // };
-
   const handleGrant = async (email) => {
-  const duration = prompt("Enter duration in hours:");
-  if (!duration) return;
+    const duration = prompt("Enter duration in hours:");
+    if (!duration) return;
 
-  try {
-    const res = await grantTempAdminApi(email, Number(duration));
-    toast.success(res?.message || "Temporary Admin granted");
-    dispatch(fetchAllEmployees());
-  } catch (err) {
-    // ✅ Extract backend error message
-    const msg =
-      err?.response?.data?.error ||  // if using Axios
-      err?.data?.error ||            // if using fetch wrapper
-      err?.error ||                  // fallback
-      "Failed to grant access";
+    try {
+      const res = await grantTempAdminApi(email, Number(duration));
+      toast.success(res?.message || "Temporary Admin granted");
+      dispatch(fetchAllEmployees());
+    } catch (err) {
+      const msg =
+        err?.response?.data?.error ||
+        err?.data?.error ||
+        err?.error ||
+        "Failed to grant access";
 
-    toast.error(msg); // Show the actual message from backend
-  }
-};
+      toast.error(msg);
+    }
+  };
 
   const handleRevoke = async (email) => {
     try {
@@ -86,116 +73,92 @@ export default function AdminTable() {
   //Edit Register Model
   const handleEdit = (record) => {
     setEditingRecord(record);
-   const formatDate = (isoString) => {
-  if (!isoString) return "";
-  return isoString.split("T")[0];
-};
+    const formatDate = (isoString) => {
+      if (!isoString) return "";
+      return isoString.split("T")[0];
+    };
 
-setFormData({
-  name: record.name || "",
-  email: record.email || "",
-  date_of_joining: formatDate(record.date_of_joining),
-  phone: record.phone || "",
-  address: record.address || "",
-  permanent_address: record.permanent_address || "",
-  department: record.department || "",
-  gender: record.gender || "",
-  emergency_contact: record.emergency_contact || "",
-  dob: formatDate(record.dob),
-});
+    setFormData({
+      name: record.name || "",
+      email: record.email || "",
+      date_of_joining: formatDate(record.date_of_joining),
+      phone: record.phone || "",
+      address: record.address || "",
+      permanent_address: record.permanent_address || "",
+      department: record.department || "",
+      gender: record.gender || "",
+      emergency_contact: record.emergency_contact || "",
+      dob: formatDate(record.dob),
+    });
     setIsModalOpen(true);
   };
-const handlePromote = async (record) => {
-  if (!window.confirm(`Promote ${record.name} to Admin?`)) return;
+  const handlePromote = async (record) => {
+    if (!window.confirm(`Promote ${record.name} to Admin?`)) return;
 
-  try {
-    await promoteEmployeeApi(record.id);
-    toast.success(`${record.name} promoted successfully!`);
-    dispatch(fetchAllEmployees()); // optional: refresh list
-  } catch (err) {
-    console.error("Promote error:", err);
-    toast.error("Failed to promote employee");
-  }
-};
+    try {
+      await promoteEmployeeApi(record.id);
+      toast.success(`${record.name} promoted successfully!`);
+      dispatch(fetchAllEmployees()); // optional: refresh list
+    } catch (err) {
+      console.error("Promote error:", err);
+      toast.error("Failed to promote employee");
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === "date_of_joining") {
-    // Optional: reject values that aren't YYYY-MM-DD
-    if (value && !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-      // Don't update if invalid format
-      return;
+      // Optional: reject values that aren't YYYY-MM-DD
+      if (value && !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+        // Don't update if invalid format
+        return;
+      }
     }
-  }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   setLoading(true);
-  //   try {
-  //     const res = await dispatch(
-  //       updateEmployeebyAdmin({ id: editingRecord?.id, data: formData })
-  //     ).unwrap();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  //     toast.success(res?.message || "Employee updated successfully");
-
-  //     setIsModalOpen(false);
-  //     await dispatch(fetchAllEmployees());
-  //   } catch (err) {
-  //     console.error("Update error:", err);
-  //     toast.error(
-  //       err?.message ||
-  //       err?.error ||
-  //       err?.data?.message ||
-  //       "Failed to update employee"
-  //     );
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-const handleSubmit = async (e) => {
-  e.preventDefault();
-
-  const errors = validateEmployeeEdit(formData);
-  if (Object.keys(errors).length > 0) {
-    const firstError = Object.values(errors)[0];
-    toast.error(firstError);
-    return;
-  }
-
-  setLoading(true);
-  try {
-    const res = await dispatch(
-      updateEmployeebyAdmin({ id: editingRecord?.id, data: formData })
-    ).unwrap();
-
-    toast.success(res?.message || "Employee updated successfully");
-
-    // ✅ NEW: If the edited employee is the current user, refresh their profile
-    try {
-      const currentUser = await decodeToken();
-      if (editingRecord?.email === currentUser.email) {
-        dispatch(fetchEmployeeProfile(currentUser.email));
-      }
-    } catch (error) {
-      console.warn("Could not refresh user profile after edit:", error);
+    const errors = validateEmployeeEdit(formData);
+    if (Object.keys(errors).length > 0) {
+      const firstError = Object.values(errors)[0];
+      toast.error(firstError);
+      return;
     }
 
-    setIsModalOpen(false);
-    dispatch(fetchAllEmployees());
-  } catch (err) {
-    console.error("Update error:", err);
-    toast.error(
-      err?.message ||
-      err?.error ||
-      err?.data?.message ||
-      "Failed to update employee"
-    );
-  } finally {
-    setLoading(false);
-  }
-};
+    setLoading(true);
+    try {
+      const res = await dispatch(
+        updateEmployeebyAdmin({ id: editingRecord?.id, data: formData })
+      ).unwrap();
+
+      toast.success(res?.message || "Employee updated successfully");
+
+      //If the edited employee is the current user, refresh their profile
+      try {
+        const currentUser = await decodeToken();
+        if (editingRecord?.email === currentUser.email) {
+          dispatch(fetchEmployeeProfile(currentUser.email));
+        }
+      } catch (error) {
+        console.warn("Could not refresh user profile after edit:", error);
+      }
+
+      setIsModalOpen(false);
+      dispatch(fetchAllEmployees());
+    } catch (err) {
+      console.error("Update error:", err);
+      toast.error(
+        err?.message ||
+        err?.error ||
+        err?.data?.message ||
+        "Failed to update employee"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
   //employee table
@@ -286,18 +249,18 @@ const handleSubmit = async (e) => {
           >
             Revoke
           </Button>
-           <Button
-  type={record.is_promoted ? "default" : "primary"}
-  style={{
-    backgroundColor: record.is_promoted ? "#52c41a" : "",
-    color: record.is_promoted ? "white" : "",
-    borderColor: record.is_promoted ? "#52c41a" : "",
-  }}
-  disabled={record.is_promoted}
-  onClick={() => handlePromote(record)}
->
-  {record.is_promoted ? "Promoted" : "Promote"}
-</Button>
+          <Button
+            type={record.is_promoted ? "default" : "primary"}
+            style={{
+              backgroundColor: record.is_promoted ? "#52c41a" : "",
+              color: record.is_promoted ? "white" : "",
+              borderColor: record.is_promoted ? "#52c41a" : "",
+            }}
+            disabled={record.is_promoted}
+            onClick={() => handlePromote(record)}
+          >
+            {record.is_promoted ? "Promoted" : "Promote"}
+          </Button>
 
         </Space>
       ),
@@ -338,19 +301,19 @@ const handleSubmit = async (e) => {
                   size="small"
                 />
               </Grid>
-               <Grid item xs={12}>
-    <FormLabel component="legend">Gender</FormLabel>
-    <RadioGroup
-      row
-      name="gender"
-      value={formData.gender}
-      onChange={handleChange}
-    >
-      <FormControlLabel value="Male" control={<Radio />} label="Male" />
-      <FormControlLabel value="Female" control={<Radio />} label="Female" />
-    </RadioGroup>
-  </Grid>
-              
+              <Grid item xs={12}>
+                <FormLabel component="legend">Gender</FormLabel>
+                <RadioGroup
+                  row
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleChange}
+                >
+                  <FormControlLabel value="Male" control={<Radio />} label="Male" />
+                  <FormControlLabel value="Female" control={<Radio />} label="Female" />
+                </RadioGroup>
+              </Grid>
+
               <Grid item xs={12} sm={6}>
                 <TextField
                   type="date"
@@ -374,28 +337,28 @@ const handleSubmit = async (e) => {
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
-  <TextField
-    type="date"
-    label="Date of Birth"
-    name="dob"
-    value={formData.dob}
-    onChange={handleChange}
-    fullWidth
-    size="small"
-    InputLabelProps={{ shrink: true }}
-  />
-</Grid>
+                <TextField
+                  type="date"
+                  label="Date of Birth"
+                  name="dob"
+                  value={formData.dob}
+                  onChange={handleChange}
+                  fullWidth
+                  size="small"
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
 
-<Grid item xs={12}>
-  <TextField
-    label="Permanent Address"
-    name="permanent_address"
-    value={formData.permanent_address}
-    onChange={handleChange}
-    fullWidth
-    size="small"
-  />
-</Grid>
+              <Grid item xs={12}>
+                <TextField
+                  label="Permanent Address"
+                  name="permanent_address"
+                  value={formData.permanent_address}
+                  onChange={handleChange}
+                  fullWidth
+                  size="small"
+                />
+              </Grid>
 
               <Grid item xs={12} sm={6}>
                 <TextField
@@ -426,13 +389,13 @@ const handleSubmit = async (e) => {
                   onChange={handleChange}
                   fullWidth
                   size="small"
-                   sx={{
-      minWidth: 200, // 👈 makes input box longer
-      "& .MuiSelect-select": {
-        paddingY: 1.2,
-      },
-    }}
-                  
+                  sx={{
+                    minWidth: 200, //  makes input box longer
+                    "& .MuiSelect-select": {
+                      paddingY: 1.2,
+                    },
+                  }}
+
                 >
                   <MenuItem value="HR">HR</MenuItem>
                   <MenuItem value="Finance">Finance</MenuItem>

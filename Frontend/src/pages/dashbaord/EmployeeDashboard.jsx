@@ -22,7 +22,6 @@ const EmployeeDashboard = () => {
 
     {
       title: "Attendance",
-      // value: "18",
       message: "Check your daily attendance",
       icon: AccessTimeIcon,
       iconBg: "bg-sky-100",
@@ -32,7 +31,6 @@ const EmployeeDashboard = () => {
 
     {
       title: "HR",
-      // value: "5",
       message: "View HR announcements",
       icon: PeopleIcon,
       iconBg: "bg-purple-100",
@@ -41,7 +39,6 @@ const EmployeeDashboard = () => {
     },
     {
       title: "Payslip",
-      // value: "10",
       message: "Download your salary slips",
       icon: ReceiptIcon,
       iconBg: "bg-pink-100",
@@ -50,7 +47,6 @@ const EmployeeDashboard = () => {
     },
     {
       title: "Accounts",
-      // value: "3",
       message: "Manage accounts and transactions",
       icon: AccountBalanceIcon,
       iconBg: "bg-yellow-100",

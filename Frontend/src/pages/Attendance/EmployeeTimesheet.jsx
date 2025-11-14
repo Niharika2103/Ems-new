@@ -198,11 +198,9 @@ const [editableRejectedRow, setEditableRejectedRow] = useState(
   
   useEffect(() => {
     if (employeeId && ProjectID && weekStart) {
-      const mondayDate = weekStart.getFullYear() + '-' +  // ← Change selectDate to weekStart
+      const mondayDate = weekStart.getFullYear() + '-' +  
         String(weekStart.getMonth() + 1).padStart(2, '0') + '-' +
         String(weekStart.getDate()).padStart(2, '0');
-
-      console.log("🔄 Fetching data for week:", mondayDate);
 
       dispatch(
         AttendanceFetchExistingWeek({
@@ -212,8 +210,6 @@ const [editableRejectedRow, setEditableRejectedRow] = useState(
         })
       )
         .then((res) => {
-          console.log("Existing week data:", res.payload);
-          // ... keep the rest of your existing code
           // Initialize approval status based on fetched data
           if (res.payload && res.payload.length > 0) {
             const newApprovalStatus = {};
@@ -420,10 +416,8 @@ const handleEditRow = (row) => {
   const handleSaveAll = async () => {
     const employeename = projectDetails?.username;
     const employeeId = projectDetails?.employeeId;
-    console.log(employeeId, "employeeId")
     const projectId = projectDetails?.projectID;
     const monday = getMonday(weekStart);
-    console.log(monday, "monday")
     const dataToSend = days.map((_, i) => {
       const currentDate = new Date(monday);
       currentDate.setDate(monday.getDate() + i);
@@ -499,7 +493,6 @@ const handleEditRow = (row) => {
 
       // Check for error in payload
       if (resultAction.error) {
-        console.error("Save error:", resultAction.error);
         toast.error("Error saving attendance!");
       } else {
         toast.success("Saved successfully");
@@ -508,7 +501,6 @@ const handleEditRow = (row) => {
 
       }
     } catch (err) {
-      console.error("Unexpected error:", err);
       toast.error("Error saving attendance!");
     }
   };

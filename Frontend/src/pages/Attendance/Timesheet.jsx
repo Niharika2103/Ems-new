@@ -32,7 +32,7 @@ import {
 } from "../../features/attendance/attendanceSlice";
 import { useLocation } from "react-router-dom";
 
-// --- Utility: get Monday of a week ---
+//  get Monday of a week 
 function getMonday(date) {
   const d = new Date(date);
   const day = d.getDay();
@@ -40,7 +40,7 @@ function getMonday(date) {
   return new Date(d.setDate(diff));
 }
 
-// --- Utility: month cycle (1st → end of the month) ---
+//  month cycle (1st → end of the month)
 const getMonthDays = (date) => {
   const start = new Date(date.getFullYear(), date.getMonth(), 1);
   const end = new Date(date.getFullYear(), date.getMonth() + 1, 0);
@@ -73,6 +73,7 @@ const getLeaveAllocation = (leaveType) => {
 };
 
 export default function Timesheet() {
+  //state started here
   const dispatch = useDispatch();
   const location = useLocation();
   const {
@@ -117,7 +118,7 @@ export default function Timesheet() {
   const [holidays, setHolidays] = useState([]);
   const holidaysCache = {};
 
-  // ✅ Backend balances (snake_case)
+  //  Backend balances
   const [backendBalances, setBackendBalances] = useState({
     el: 0,
     sl: 0,
@@ -552,11 +553,11 @@ export default function Timesheet() {
   // --- Days list ---
   const days = viewMode === "weekly"
     ? Array.from({ length: 7 }, (_, i) => {
-        const date = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + i);
-        const dayName = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][date.getDay()];
-        const month = (date.getMonth() + 1).toString().padStart(2, "0");
-        return { dayIndex: date.getDay(), label: `${dayName} / ${date.getDate().toString().padStart(2, "0")}/${month}`, date };
-      })
+      const date = new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() + i);
+      const dayName = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][date.getDay()];
+      const month = (date.getMonth() + 1).toString().padStart(2, "0");
+      return { dayIndex: date.getDay(), label: `${dayName} / ${date.getDate().toString().padStart(2, "0")}/${month}`, date };
+    })
     : getMonthDays(monthStart);
 
   const currentWorkedHours = viewMode === "weekly" ? workedHours : monthlyWorkedHours;
@@ -574,11 +575,11 @@ export default function Timesheet() {
       const from = new Date(weekStart);
       const to = new Date(weekStart);
       to.setDate(weekStart.getDate() + 6);
-      dispatch(AdminAttendancFetchWeeklyDataById({ employeeId, from: from.toISOString().slice(0,10), to: to.toISOString().slice(0,10) }));
+      dispatch(AdminAttendancFetchWeeklyDataById({ employeeId, from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) }));
     } else {
       const from = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1);
       const to = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
-      dispatch(AdminAttendancFetchMonthlyDataById({ employeeId, from: from.toISOString().slice(0,10), to: to.toISOString().slice(0,10) }));
+      dispatch(AdminAttendancFetchMonthlyDataById({ employeeId, from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) }));
     }
   }, [dispatch, weekStart, monthStart, viewMode, employeeId]);
 
@@ -778,8 +779,8 @@ export default function Timesheet() {
                         {approvalStatus[lt]?.[i] === "approved"
                           ? "✓ Approved"
                           : approvalStatus[lt]?.[i] === "rejected"
-                          ? "✗ Rejected"
-                          : "Pending"}
+                            ? "✗ Rejected"
+                            : "Pending"}
                       </Typography>
                     )}
                   </TableCell>
@@ -854,22 +855,22 @@ export default function Timesheet() {
               📈 EL Utilization
             </Typography>
             <Box sx={{ position: 'relative', height: 20, backgroundColor: '#ecf0f1', borderRadius: 10, overflow: 'hidden', mb: 1.5 }}>
-              <Box 
-                sx={{ 
-                  height: '100%', 
+              <Box
+                sx={{
+                  height: '100%',
                   backgroundColor: backendBalances.el >= 12 ? '#e74c3c' : '#2ecc71',
                   width: `${Math.min(100, (backendBalances.el / 12) * 100)}%`,
                   transition: 'all 0.3s ease',
                   borderRadius: 10,
-                }} 
+                }}
               />
-              <Typography 
-                variant="caption" 
-                sx={{ 
-                  position: 'absolute', 
-                  top: '50%', 
-                  left: '50%', 
-                  transform: 'translate(-50%, -50%)', 
+              <Typography
+                variant="caption"
+                sx={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
                   fontWeight: 'bold',
                   fontSize: '0.7rem',
                   color: backendBalances.el >= 6 ? '#fff' : '#2c3e50',

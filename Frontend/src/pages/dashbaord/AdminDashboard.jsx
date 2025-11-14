@@ -48,12 +48,12 @@ const AdminDashboard = () => {
     onClick: () => navigate("/dashboard/fetch_project"),
   },
     {
-      title: "Reports",
-      message: "View performance reports",
+      title: "Freelancer",
+      message: "3rd party Employees reports",
       icon: BarChartIcon,
       iconBg: "bg-purple-100",
       iconColor: "text-purple-600",
-      onClick: () => navigate("/reports"),
+      onClick: () => navigate("/dashboard/freelancer"),
     },
     {
       title: "Settings",

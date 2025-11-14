@@ -68,30 +68,24 @@ const EmployeeProfile = () => {
     getDecoded();
   }, [dispatch]);
 
+
+
   // Set profile data
-  // useEffect(() => {
-  //   if (profile) {
-  //     setFormData((prev) => ({ ...prev, ...profile }));
-  //   }
-  // }, [profile]);
+  useEffect(() => {
+    if (profile) {
+      const formatDate = (isoString) => {
+        if (!isoString) return "";
+        return isoString.split("T")[0];
+      };
 
-  
-// Set profile data
-useEffect(() => {
-  if (profile) {
-    const formatDate = (isoString) => {
-      if (!isoString) return "";
-      return isoString.split("T")[0]; // Extract "YYYY-MM-DD" from "YYYY-MM-DDTHH:mm:ss.sssZ"
-    };
-
-    setFormData((prev) => ({
-      ...prev,
-      ...profile,
-      dob: formatDate(profile.dob),
-      date_of_joining: formatDate(profile.date_of_joining),
-    }));
-  }
-}, [profile]);
+      setFormData((prev) => ({
+        ...prev,
+        ...profile,
+        dob: formatDate(profile.dob),
+        date_of_joining: formatDate(profile.date_of_joining),
+      }));
+    }
+  }, [profile]);
   // Handle file upload
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -405,10 +399,10 @@ useEffect(() => {
                       Resume
                     </Typography>
                     <Box display="flex" alignItems="center" gap={2}>
-                      <Typography 
-                        variant="body2" 
-                        sx={{ 
-                          color: "#666", 
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: "#666",
                           flex: 1,
                           fontStyle: formData.resume || profile?.resume ? "normal" : "italic"
                         }}
@@ -416,8 +410,8 @@ useEffect(() => {
                         {formData.resume instanceof File
                           ? formData.resume.name
                           : profile?.resume
-                          ? profile.resume.split("/").pop()
-                          : "No resume uploaded"}
+                            ? profile.resume.split("/").pop()
+                            : "No resume uploaded"}
                       </Typography>
                       <input
                         type="file"

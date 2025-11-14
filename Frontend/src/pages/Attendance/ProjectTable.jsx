@@ -170,16 +170,16 @@ const ProjectTable = () => {
           </div>
 
           {/* Search Input - CENTERED */}
-          <div style={{ 
-            marginBottom: 16, 
-            display: 'flex', 
+          <div style={{
+            marginBottom: 16,
+            display: 'flex',
             justifyContent: 'center'  // Changed to center
           }}>
             <Input.Search
               placeholder="Search by name, role, description, or date..."
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              style={{ 
+              style={{
                 width: screens.xs ? '100%' : '500px',  // Slightly wider for center alignment
                 maxWidth: '100%'
               }}
@@ -233,16 +233,16 @@ const ProjectTable = () => {
         </div>
 
         {/* Search Input - CENTERED */}
-        <div style={{ 
-          marginBottom: 24, 
-          display: 'flex', 
+        <div style={{
+          marginBottom: 24,
+          display: 'flex',
           justifyContent: 'center'  // Changed to center
         }}>
           <Input.Search
             placeholder="Search by employee name, role, project, description, or date..."
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            style={{ 
+            style={{
               width: screens.xs ? '100%' : '500px',  // Slightly wider for center alignment
               maxWidth: '100%'
             }}

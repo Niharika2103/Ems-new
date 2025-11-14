@@ -71,7 +71,7 @@ const emailSlice = createSlice({
       .addCase(verifyEmailOtp.fulfilled, (state) => {
         state.loading = false;
         state.emailVerified = true;
-        state.emailSent = false; // ✅ hide OTP box after success
+        state.emailSent = false; 
       })
       .addCase(verifyEmailOtp.rejected, (state, action) => {
         state.loading = false;

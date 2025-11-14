@@ -34,6 +34,7 @@ import MaternityPaternityLeaveTable from "../pages/Attendance/MaternityPaternity
 import EmpAttendanceDashboard from "../pages/dashbaord/EmpAttendanceDashboard";
 import AuditLogsTable from "../pages/Attendance/AuditLogs";
 import EmployeeHolidayList from "../pages/Attendance/EmployeeHolidayList";
+import FreelancerDashboard from  "../pages/dashbaord/FreelancerDashboard";
 function AppRoutes() {
   return (
     <Routes>
@@ -81,6 +82,14 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route 
+      path="/dashboard/freelancer"
+      element={
+        <ProtectedRoute allowedRoles={["admin"]}>
+          <FreelancerDashboard/>
+        </ProtectedRoute>
+      }
+      />
 
         <Route
           path="/attendance/projects"
@@ -225,6 +234,7 @@ function AppRoutes() {
           }
         />
       </Route>
+      
     </Routes>
 
 

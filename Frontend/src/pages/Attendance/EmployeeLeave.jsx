@@ -17,35 +17,34 @@ const EmployeeLeave = () => {
   const dispatch = useDispatch();
   const theme = useTheme();
 
-
-   // ⬅ Profile comes from employeeDetails slice
+  //  Profile comes from employeeDetails slice
   const { profile } = useSelector((state) => state.employeeDetails);
 
-  // ⬅ Leaves come from attendance slice
+  //  Leaves come from attendance slice
   const leaves = useSelector((state) => state.attendance.leaves);
 
-useEffect(() => {
-  const fetchProfile = async () => {
-    try {
-      const decoded = await decodeToken();
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const decoded = await decodeToken();
 
-      // Fetch Profile by Email
-      dispatch(fetchEmployeeProfile(decoded?.email));
+        // Fetch Profile by Email
+        dispatch(fetchEmployeeProfile(decoded?.email));
 
-      // Fetch Leaves by EmployeeID
-      dispatch(fetchEmployeeLeaves(decoded?.id))
-        .then((res) => {
-          console.log("employeeLeave:", res.payload);
-        })
-        .catch((err) => console.error(err));
+        // Fetch Leaves by EmployeeID
+        dispatch(fetchEmployeeLeaves(decoded?.id))
+          .then((res) => {
+            console.log("employeeLeave:", res.payload);
+          })
+          .catch((err) => console.error(err));
 
-    } catch (err) {
-      console.error(err);
-    }
-  };
+      } catch (err) {
+        console.error(err);
+      }
+    };
 
-  fetchProfile();
-}, [dispatch]);
+    fetchProfile();
+  }, [dispatch]);
 
 
   //const leaves = profile?.leaves || {};
@@ -64,7 +63,7 @@ useEffect(() => {
     paternity_leave: 7,
   };
 
-  // 🎨 Soft pastel colors – MNC look
+  //  Soft pastel colors – MNC look
   const colorPalette = {
     holidays: "#5B8DEF",
     optional_holidays: "#9C6ADE",

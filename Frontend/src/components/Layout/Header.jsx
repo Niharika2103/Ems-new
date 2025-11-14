@@ -63,7 +63,7 @@ const Header = ({ isOpen, setIsOpen }) => {
     handleClose();
   };
   const handlePassword = () => {
-    handleLoginSubmit(); // just call
+    handleLoginSubmit(); 
     navigate("/login/reset-password");
     localStorage.removeItem("token");
     localStorage.removeItem("role");
@@ -91,14 +91,14 @@ const Header = ({ isOpen, setIsOpen }) => {
   } else if (role === "employee") {
     window.location.replace("/#/login");
   } else {
-    // ✅ If no role exists → go to main landing page
+    //  If no role exists → go to main landing page
     window.location.href("/#/");
   }
    
     setTimeout(() => {
       window.history.pushState(null, "", window.location.href);
       window.onpopstate = () => {
-        window.history.go(1); // Force forward navigation
+        window.history.go(1); 
       };
     }, 0);
      handleClose();

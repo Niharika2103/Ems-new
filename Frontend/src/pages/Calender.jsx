@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Calendar from "react-calendar";
-import "react-calendar/dist/Calendar.css"; // default calendar styles
+import "react-calendar/dist/Calendar.css"; 
 
 export default function LeaveCalendar() {
   const [selectedDate, setSelectedDate] = useState(new Date());
