@@ -818,7 +818,7 @@ export default function EmpTimesheet() {
               <input
                 key={i}
                 type="number"
-                value={h}
+                // value={h}
                 min="0"
                 max="9"
                 // disabled={
@@ -829,7 +829,7 @@ export default function EmpTimesheet() {
                 //   )
                 // }
                 disabled={isWeekReleased}
-                style={{ backgroundColor: getStatusColor(i) }}
+                // style={{ backgroundColor: getStatusColor(i) }}
                 className={`w-17 h-8 text-center border rounded-md ${isWeekReleased ? "cursor-not-allowed bg-gray-100" : "bg-white"
                   } ${isWeekend ? "text-gray-400" : ""}`}
                 // onChange={(e) => {
@@ -887,7 +887,7 @@ export default function EmpTimesheet() {
               <input
                 key={i}
                 type="number"
-                value={h}
+                // value={h}
                 min="0"
                 max="9"
                 // disabled={
@@ -898,7 +898,7 @@ export default function EmpTimesheet() {
                 //   )
                 // }
                 disabled={isWeekReleased}
-                style={{ backgroundColor: getStatusColor(i) }}
+                // style={{ backgroundColor: getStatusColor(i) }}
                 className={`w-17 h-8 text-center border rounded-md ${isWeekReleased ? "cursor-not-allowed bg-gray-100" : "bg-white"
                   } ${isWeekend ? "text-gray-400" : ""}`}
                 // onChange={(e) => {
@@ -956,7 +956,7 @@ export default function EmpTimesheet() {
               <input
                 key={i}
                 type="number"
-                value={h}
+                // value={h}
                 min="0"
                 max="9"
                 // disabled={
@@ -967,7 +967,7 @@ export default function EmpTimesheet() {
                 //   )
                 // }
                 disabled={isWeekReleased}
-                style={{ backgroundColor: getStatusColor(i) }}
+                // style={{ backgroundColor: getStatusColor(i) }}
                 className={`w-17 h-8 text-center border rounded-md ${isWeekReleased ? "cursor-not-allowed bg-gray-100" : "bg-white"
                   } ${isWeekend ? "text-gray-400" : ""}`}
                 // onChange={(e) => {
