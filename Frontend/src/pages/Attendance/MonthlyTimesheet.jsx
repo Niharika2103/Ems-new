@@ -455,13 +455,7 @@ useEffect(() => {
     handleMenuClose();
   };
 
-  // const handleEditRow = (row) => {
-  //   setLockedRows((prev) => ({ ...prev, [row]: false }));
-  //   handleMenuClose();
-  // };
-
   const handleEditRow = (row) => {
-  console.log('Editing rejected row:', row);
   // Clear the month released lock when editing rejected rows
     setIsMonthReleased(false);
   localStorage.removeItem("releasedMonth");
