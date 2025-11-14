@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.DayOfWeek;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import java.util.ArrayList;
@@ -602,5 +603,83 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 	    return value != null ? value : defaultValue;
 	}
 	
+	@Transactional
+	public Map<String, Integer> getEmployeeLeaves(UUID employeeId) {
+
+	    if (employeeId == null)
+	        return Collections.emptyMap();
+
+	    // Fetch all records
+	    List<AttendanceEntity> records =
+	            attendanceRepository.findByEmployee_IdOrderByDateAsc(employeeId);
+
+	    if (records.isEmpty())
+	        return Collections.emptyMap();
+
+	    // Latest entry
+	    AttendanceEntity latest = records.get(records.size() - 1);
+
+	    // Default company totals
+	    final int TOTAL_EL = 25;
+	    final int TOTAL_SL = 10;
+	    final int TOTAL_HOLIDAYS = 10;
+	    final int TOTAL_OPTIONAL = 2;
+	    final int TOTAL_EXTRA_MILAR = 2;
+	    final int TOTAL_MATERNITY = 180;
+	    final int TOTAL_PATERNITY = 7;
+
+	    // "Used" values taken directly from existing AttendanceEntity columns
+	    int usedEL = safe(latest.getEl());
+	    int usedSL = safe(latest.getSl());
+	    int usedHolidays = safe(latest.getHolidays());
+	    int usedOptional = safe(latest.getOptionalHolidays());
+	    int usedExtra = safe(latest.getExtraMilar());
+	    int usedMat = safe(latest.getMaternityLeave());
+	    int usedPat = safe(latest.getPaternityLeave());
+
+	    Map<String, Integer> map = new HashMap<>();
+
+	    // Holidays
+	    map.put("holidays", TOTAL_HOLIDAYS);
+	    map.put("holidays_used", usedHolidays);
+	    map.put("holidays_remaining", TOTAL_HOLIDAYS - usedHolidays);
+
+	    // Optional
+	    map.put("optional_holidays", TOTAL_OPTIONAL);
+	    map.put("optional_holidays_used", usedOptional);
+	    map.put("optional_holidays_remaining", TOTAL_OPTIONAL - usedOptional);
+
+	    // EL
+	    map.put("el", TOTAL_EL);
+	    map.put("el_used", usedEL);
+	    map.put("el_remaining", TOTAL_EL - usedEL);
+
+	    // SL
+	    map.put("sl", TOTAL_SL);
+	    map.put("sl_used", usedSL);
+	    map.put("sl_remaining", TOTAL_SL - usedSL);
+
+	    // Extra Milar
+	    map.put("extra_milar", TOTAL_EXTRA_MILAR);
+	    map.put("extra_milar_used", usedExtra);
+	    map.put("extra_milar_remaining", TOTAL_EXTRA_MILAR - usedExtra);
+
+	    // Maternity
+	    map.put("maternity_leave", TOTAL_MATERNITY);
+	    map.put("maternity_leave_used", usedMat);
+	    map.put("maternity_leave_remaining", TOTAL_MATERNITY - usedMat);
+
+	    // Paternity
+	    map.put("paternity_leave", TOTAL_PATERNITY);
+	    map.put("paternity_leave_used", usedPat);
+	    map.put("paternity_leave_remaining", TOTAL_PATERNITY - usedPat);
+
+	    return map;
+	}
+
+	private int safe(Integer v) {
+	    return v != null ? v : 0;
+	}
+
 	
 }

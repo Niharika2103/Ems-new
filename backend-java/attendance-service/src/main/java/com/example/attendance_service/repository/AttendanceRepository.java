@@ -25,7 +25,7 @@ public interface AttendanceRepository extends JpaRepository<AttendanceEntity, UU
 	List<AttendanceEntity> findByEmployee_IdOrderByDateAsc(UUID employeeId);
 
 	List<AttendanceEntity> findByProject_IdOrderByDateAsc(UUID projectId);
-	Optional<AttendanceEntity> findTopByEmployee_IdOrderByDateDesc(UUID employeeId);
+	AttendanceEntity findTopByEmployee_IdOrderByDateDesc(UUID employeeId);
 
 	
 
