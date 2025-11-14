@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import {
-  getProfileApi, editProfileApi, employeeFetchApi, FetchFreelancerApi,
+  getProfileApi, editProfileApi, employeeFetchApi,
   employeeDeleteApi, getAdminProfileApi, getSuperadminProfileApi,
   updateAdminProfileApi, updateSuperAdminProfileApi, adminUpdateEmployeeApi,
 } from "../../api/authApi";
@@ -119,18 +119,6 @@ export const updateEmployeebyAdmin = createAsyncThunk(
   }
 );
 
-//fetch all freelancer
-export const fetchAllFreelancer = createAsyncThunk(
-  "employee/fetchAll",
-  async (_, thunkAPI) => {
-    try {
-      const response = await FetchFreelancerApi();
-      return response.data;
-    } catch (err) {
-      return thunkAPI.rejectWithValue(err.response?.data || err.message);
-    }
-  }
-);
 
 
 const empDetailsSlice = createSlice({
@@ -280,19 +268,7 @@ const empDetailsSlice = createSlice({
         state.success = true;
         state.error = null;
       })
-    //freelancer
-      // .addCase(fetchAllFreelancer.pending, (state) => {
-      //   state.loading = true;
-      //   state.error = null;
-      // })
-      // .addCase(fetchAllFreelancer.fulfilled, (state, action) => {
-      //   state.loading = false;
-      //   state.freelancerlist = action.payload;
-      // })
-      // .addCase(fetchAllFreelancer.rejected, (state, action) => {
-      //   state.loading = false;
-      //   state.error = action.payload;
-      // })
+   
   },
 });
 
