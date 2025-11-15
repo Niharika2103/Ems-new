@@ -66,30 +66,30 @@ export default function ResetPassword() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-  setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
 
-  if (name === "confirmPassword") {
-    if (value !== formData.newPassword) {
-      setFormError("Passwords do not match");
-    } else {
-      setFormError("");
+    if (name === "confirmPassword") {
+      if (value !== formData.newPassword) {
+        setFormError("Passwords do not match");
+      } else {
+        setFormError("");
+      }
     }
-  }
   };
 
-  const handleLoginSubmit =async (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validateResetPassword({
-    password: formData.newPassword,
-    confirmPassword: formData.confirmPassword,
-  });
+      password: formData.newPassword,
+      confirmPassword: formData.confirmPassword,
+    });
 
-  if (Object.keys(validationErrors).length > 0) {
-    setFormError(validationErrors.password || validationErrors.confirmPassword);
-    return;
-  }
+    if (Object.keys(validationErrors).length > 0) {
+      setFormError(validationErrors.password || validationErrors.confirmPassword);
+      return;
+    }
 
-  try {
+    try {
       await dispatch(
         employeeResetPassword({ token: formData.token, newPassword: formData.newPassword })
       ).unwrap();
@@ -165,11 +165,6 @@ export default function ResetPassword() {
               </Box>
 
               <Divider sx={{ mb: 2 }} />
-              {/* {error && (
-                <Typography color="error" align="center" sx={{ mb: 2 }}>
-                  {error}
-                </Typography>
-              )} */}
 
               <Box component="form" onSubmit={handleLoginSubmit} noValidate>
                 <TextField

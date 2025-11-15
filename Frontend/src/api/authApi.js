@@ -120,6 +120,9 @@ export const employeeResetPasswordApi = (data) =>
 export const employeeFetchApi = () =>
   employeeClient.get(`${AUTH_API.EMPLOYEE}/get` );
 
+export const FetchFreelancerApi = () =>
+  employeeClient.get(`${AUTH_API.EMPLOYEE}/get/freelancers` );
+
 //Delete All Employee
 export const employeeDeleteApi = (id,status) =>
   employeeClient.put(`${AUTH_API.EMPLOYEE}/status/${id}`, { status } );

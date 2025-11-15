@@ -1,5 +1,3 @@
-// import VideoCallIcon from '@mui/icons-material/VideoCall';
-
 const ReminderCard = () => {
   const meetingTime = "02:00 PM";
 

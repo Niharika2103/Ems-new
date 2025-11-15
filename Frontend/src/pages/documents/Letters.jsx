@@ -130,7 +130,7 @@ const Letters = () => {
 
                 {/* Upload Aadhaar */}
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                  <Typography variant="subtitle1"sx={{ fontSize: "1.1rem", fontWeight: 500 }}>Upload Aadhaar Card</Typography>
+                  <Typography variant="subtitle1" sx={{ fontSize: "1.1rem", fontWeight: 500 }}>Upload Aadhaar Card</Typography>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                     <Button variant="outlined" component="label">
                       Choose File
@@ -231,22 +231,22 @@ const Letters = () => {
                 </Typography>
 
                 <Typography variant="body2" color="text.secondary">
-                  🏦 Bank Account: {formData.bankAccountNumber || "Not entered"}
+                  Bank Account: {formData.bankAccountNumber || "Not entered"}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  🏦 IFSC Code: {formData.ifscCode || "Not entered"}
+                  IFSC Code: {formData.ifscCode || "Not entered"}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  🏦 Bank Name: {formData.bankName || "Not entered"}
+                  Bank Name: {formData.bankName || "Not entered"}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  🏦 Account Holder: {formData.accountHolderName || "Not entered"}
+                  Account Holder: {formData.accountHolderName || "Not entered"}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  ✅ Aadhaar: {formData.aadhaarCard?.name || "No file chosen"}
+                  Aadhaar: {formData.aadhaarCard?.name || "No file chosen"}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  ✅ PAN: {formData.panCard?.name || "No file chosen"}
+                  PAN: {formData.panCard?.name || "No file chosen"}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   🎓 Education Files:{" "}
@@ -257,7 +257,7 @@ const Letters = () => {
                     : "No file chosen"}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  🏢 Company Docs:{" "}
+                  Company Docs:{" "}
                   {formData.previousDocs
                     ? Array.isArray(formData.previousDocs)
                       ? formData.previousDocs.map((f) => f.name).join(", ")

@@ -13,7 +13,7 @@ const Dashboard = () => {
     useSelector((state) => state.employeeSlice?.role);
     
 
-     // ✅ ADD THIS LINE — check if user is temp admin
+     //  ADD THIS LINE — check if user is temp admin
   const is_temp_admin =
     useSelector((state) => state.employeeSlice?.is_temp_admin) ??
     (localStorage.getItem("is_temp_admin") === "true");

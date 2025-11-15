@@ -30,7 +30,7 @@ const LandingPage = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const navigate = useNavigate();
 
-  // 👉 Separate handlers
+  //  Separate handlers
   const handleGetStarted = () => {
     navigate("/admin/register");
   };
@@ -107,7 +107,7 @@ const LandingPage = () => {
             <MenuIcon />
           </IconButton>
 
-          {/* 👉 Login button goes to /admin/login */}
+          {/*  Login button goes to /admin/login */}
           <Button
             variant="contained"
             sx={{ bgcolor: "#51b4f2", display: { xs: "none", md: "block" } }}
@@ -131,7 +131,7 @@ const LandingPage = () => {
           <Button
             variant="contained"
             sx={{ bgcolor: "#51b4f2", mt: 2, width: "100%" }}
-            onClick={handleGetStarted} // 👉 Get Started → /admin/register
+            onClick={handleGetStarted} //  Get Started → /admin/register
           >
             Get Started
           </Button>
@@ -184,7 +184,7 @@ const LandingPage = () => {
                   boxShadow: "0px 8px 25px rgba(10, 16, 126, 0.6)",
                 },
               }}
-              onClick={handleGetStarted} // 👉 Get Started → /admin/register
+              onClick={handleGetStarted} //  Get Started → /admin/register
             >
               Get Started
             </Button>

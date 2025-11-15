@@ -1137,3 +1137,26 @@ export const applyParentalLeave = async (req, res) => {
     client.release();
   }
 };
+
+export const getFreelancers = async (req, res) => {
+  console.log("@1149", req.body);
+  const client = await pool.connect();
+  try {
+    const query = `
+      SELECT *
+      FROM ${USERS_TABLE}
+      WHERE employment_type = 'freelancer';
+      
+    `;
+
+    const { rows } = await client.query(query);
+    return res.status(200).json(rows);
+
+  } catch (err) {
+    console.error("Get Freelancers Error:", err.message);
+    return res.status(500).json({ message: err.message });
+  } finally {
+    client.release();
+  }
+};
+

@@ -91,6 +91,8 @@ export const fetchAllEmployees = createAsyncThunk(
   }
 );
 
+
+
 //Delete Employee
 export const deleteEmployee = createAsyncThunk(
   "employee/status",
@@ -117,11 +119,14 @@ export const updateEmployeebyAdmin = createAsyncThunk(
   }
 );
 
+
+
 const empDetailsSlice = createSlice({
   name: "employeeDetails",
   initialState: {
     profile: null,
     list: [],
+    freelancerlist:[],
     loading: false,
     error: null,
     success: false,
@@ -263,6 +268,7 @@ const empDetailsSlice = createSlice({
         state.success = true;
         state.error = null;
       })
+   
   },
 });
 

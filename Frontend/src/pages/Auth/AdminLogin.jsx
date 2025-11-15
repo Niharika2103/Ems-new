@@ -1,4 +1,4 @@
-import React, { useState ,useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Box,
@@ -43,64 +43,54 @@ export default function AdminLogin() {
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(true);
 
-  // ✅ handle input changes
+  // handle input changes
   const handleChange = (e) => {
-  const { name, value } = e.target;
-
-  // ✅ Prevent password longer than 16 chars
-  if (name === "password" && value.length > 16) {
-    setErrors((prev) => ({
-      ...prev,
-      password: "Password cannot exceed 16 characters",
-    }));
-    return; // stop updating state
-  } else {
-    setErrors((prev) => ({ ...prev, [name]: "" }));
-  }
-
-  setFormData({ ...formData, [name]: value });
-};
+    const { name, value } = e.target;
+    //  Prevent password longer than 16 chars
+    if (name === "password" && value.length > 16) {
+      setErrors((prev) => ({
+        ...prev,
+        password: "Password cannot exceed 16 characters",
+      }));
+      return;
+    } else {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+    setFormData({ ...formData, [name]: value });
+  };
 
 
-  // ✅ form validation on submit
+  //  form validation on submit
   const handleLoginSubmit = (e) => {
     e.preventDefault();
 
     const validationErrors = validateLogin(formData);
 
-    // ✅ OTP validation added
+    // OTP validation added
     if (!formData.otp.trim()) {
       validationErrors.otp = "Please enter the OTP";
     }
     if (formData.password.length > 16) {
-  toast.error("Password cannot exceed 16 characters");
-  return;
-}
-
-
+      toast.error("Password cannot exceed 16 characters");
+      return;
+    }
     if (Object.keys(validationErrors).length === 0) {
       dispatch(adminLogin(formData))
         .unwrap()
         .then((response) => {
           toast.success(response.message);
-          setTimeout(() => navigate("/dashboard",{ replace: true }), 2000);
+          setTimeout(() => navigate("/dashboard", { replace: true }), 2000);
           window.onpopstate = null;
         })
         .catch((err) => toast.error(err.error || "Login failed"));
-      //    .catch((err) => {
-      //   const message =
-      //     (err.response && err.response.data && err.response.data.error) ||
-      //     "Login failed";
-      //   setErrors({ email: message }); // shows error under the email field
-      // });
       setErrors({});
     } else {
       setErrors(validationErrors);
     }
-    
+
   };
 
-  // ✅ disable button until all inputs are filled
+  //disable button until all inputs are filled
   const isButtonDisabled =
     !formData.email.trim() || !formData.password.trim() || !formData.otp.trim();
 
@@ -108,7 +98,7 @@ export default function AdminLogin() {
     <div className="admin-page">
       <ToastContainer position="top-right" autoClose={3000} />
 
-      {/* ✅ Image Carousel */}
+      {/*  Image Carousel */}
       <div className="top-carousel">
         <Swiper
           modules={[Autoplay, EffectCoverflow]}
@@ -131,7 +121,7 @@ export default function AdminLogin() {
 
       <div className="bottom-area" />
 
-      {/* ✅ Login Card */}
+      {/* Login Card */}
       <div className="login-card">
         <div className="login-inner">
           <Card sx={{ borderRadius: 3, boxShadow: 6, width: "100%" }}>
@@ -154,7 +144,7 @@ export default function AdminLogin() {
               <Divider sx={{ mb: 2 }} />
 
               <Box component="form" onSubmit={handleLoginSubmit} noValidate>
-                {/* ✅ Email */}
+                {/* Email */}
                 <TextField
                   label="Email"
                   name="email"
@@ -170,7 +160,7 @@ export default function AdminLogin() {
                   required
                 />
 
-                {/* ✅ Password */}
+                {/*  Password */}
                 <TextField
                   label="Password"
                   name="password"
@@ -185,7 +175,7 @@ export default function AdminLogin() {
                   helperText={errors.password}
                   required
                   inputProps={{ maxLength: 16 }}
- 
+
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
@@ -207,7 +197,7 @@ export default function AdminLogin() {
                   }}
                 />
 
-                {/* ✅ OTP Field with proper error message display */}
+                {/*OTP Field with proper error message display */}
                 <TextField
                   label="Enter OTP"
                   name="otp"
@@ -228,7 +218,7 @@ export default function AdminLogin() {
                   </a>
                 </Typography>
 
-                {/* ✅ Login button enable/disable logic */}
+                {/*  Login button enable/disable logic */}
                 <Button
                   fullWidth
                   variant="contained"

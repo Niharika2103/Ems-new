@@ -25,7 +25,6 @@ import { useDispatch, useSelector } from "react-redux";
 import axios from "axios"; // Don't forget to import axios
 import {
   AttendanceFetchAllbasedonMonth,
-  // AttendanceFetchByEmployeeProject,
 } from "../../features/attendance/attendanceSlice";
 
 const TimesheetTable = () => {
@@ -59,15 +58,15 @@ const TimesheetTable = () => {
     fetchHolidays(currentYear);
   }, []);
 
-  // 🗓️ Get current week (Monday to Sunday)
+  // Get current week (Monday to Sunday)
   const getCurrentWeek = () => {
     const today = dayjs();
     const dayOfWeek = today.day(); // 0 = Sunday, 1 = Monday, etc.
-    
+
     // Calculate Monday (if today is Sunday, go back 6 days)
     const start = today.subtract(dayOfWeek === 0 ? 6 : dayOfWeek - 1, 'day');
     const end = start.add(6, 'day');
-    
+
     return { start, end };
   };
 
@@ -86,12 +85,12 @@ const TimesheetTable = () => {
 
   const defaultRange = getDefaultDateRange(viewType);
   const [dateRange, setDateRange] = useState([defaultRange.start, defaultRange.end]);
-  
+
   // Limits
   const MAX_PAST_WEEKS = 4;
   const MAX_PAST_MONTHS = 3;
 
-  // 🧩 Fetch data when component mounts or date range changes
+  //  Fetch data when component mounts or date range changes
   useEffect(() => {
     const periodType = viewType === "weekly" ? "weekly" : "monthly";
     const startDate = dateRange[0].format("YYYY-MM-DD");
@@ -100,7 +99,7 @@ const TimesheetTable = () => {
     dispatch(AttendanceFetchAllbasedonMonth({ periodType, startDate, endDate }));
   }, [dispatch, dateRange, viewType]);
 
-  // 🔤 Normalize API data
+  //  Normalize API data
   useEffect(() => {
     if (attendance && Array.isArray(attendance)) {
       const mapped = attendance.map((item) => {
@@ -132,7 +131,7 @@ const TimesheetTable = () => {
     }
   }, [attendance, holidays]);
 
-  // ⏪ Previous period
+  //  Previous period
   const handlePrevPeriod = () => {
     if (viewType === "weekly") {
       const newStart = dateRange[0].subtract(1, "week");
@@ -145,7 +144,7 @@ const TimesheetTable = () => {
     }
   };
 
-  // ⏩ Next period
+  //  Next period
   const handleNextPeriod = () => {
     if (viewType === "weekly") {
       const newStart = dateRange[0].add(1, "week");
@@ -179,7 +178,7 @@ const TimesheetTable = () => {
   // Disable logic for navigation buttons
   const now = dayjs();
   const currentWeek = getCurrentWeek();
-  
+
   const nextDisabled = () => {
     if (viewType === "weekly") {
       const nextWeekStart = dateRange[0].add(1, "week");
@@ -202,16 +201,16 @@ const TimesheetTable = () => {
 
   // Handle View Button Click
   const handleViewTimesheet = (timesheet) => {
-    // 🧠 Store gender in localStorage
+    //  Store gender in localStorage
     if (timesheet.employeeGender) {
       localStorage.setItem("gender", timesheet.employeeGender);
     }
 
-    // 🗓️ Prepare date range
+    //  Prepare date range
     const from = dateRange[0].format("YYYY-MM-DD");
     const to = dateRange[1].format("YYYY-MM-DD");
 
-    // 🧭 Navigate with required data including viewType
+    // Navigate with required data including viewType
     navigate("/attendance/timesheet", {
       state: {
         employeeId: timesheet.employeeId,
@@ -245,11 +244,11 @@ const TimesheetTable = () => {
               <MenuItem value="monthly">Monthly</MenuItem>
             </Select>
           </FormControl>
-          
+
           <Tooltip title={prevDisabled() ? "No more history" : "Previous"}>
             <span>
-              <IconButton 
-                onClick={handlePrevPeriod} 
+              <IconButton
+                onClick={handlePrevPeriod}
                 disabled={prevDisabled()}
               >
                 <ChevronLeft />
@@ -263,8 +262,8 @@ const TimesheetTable = () => {
 
           <Tooltip title={nextDisabled() ? "No future data" : "Next"}>
             <span>
-              <IconButton 
-                onClick={handleNextPeriod} 
+              <IconButton
+                onClick={handleNextPeriod}
                 disabled={nextDisabled()}
               >
                 <ChevronRight />
@@ -289,9 +288,9 @@ const TimesheetTable = () => {
             {localTimesheets
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((t) => (
-                <TableRow 
-                  key={t.id} 
-                  hover 
+                <TableRow
+                  key={t.id}
+                  hover
                   sx={{
                     backgroundColor: t.isHoliday ? "#f0f8ff" : "inherit",
                   }}

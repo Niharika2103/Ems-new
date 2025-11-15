@@ -9,10 +9,10 @@ import GroupAddIcon from "@mui/icons-material/GroupAdd";
 
 const EmpInfoDashboard = () => {
   const navigate = useNavigate();
- const location = useLocation();
+  const location = useLocation();
   const pathnames = location.pathname.split("/").filter((x) => x);
   // Second-level title
-  const secondLevel = "Employee Info"; 
+  const secondLevel = "Employee Info";
 
   // Current page title
   const currentPage = pathnames[pathnames.length - 1] || "";
@@ -62,36 +62,30 @@ const EmpInfoDashboard = () => {
   return (
     <>
       <nav className="text-gray-600 text-sm mb-4" aria-label="breadcrumb">
-      <ol className="list-reset flex">
-        {/* First breadcrumb */}
-        <li>
-          <Link to="/dashboard" className="text-sky-600 hover:underline">
-            Dashboard
-          </Link>
-        </li>
-
-        {/* Second breadcrumb */}
-        {pathnames.length > 0 && (
-          <li className="flex items-center">
-            <span className="mx-2">/</span>
-            <span className="text-gray-400">{secondLevel}</span>
+        <ol className="list-reset flex">
+          {/* First breadcrumb */}
+          <li>
+            <Link to="/dashboard" className="text-sky-600 hover:underline">
+              Dashboard
+            </Link>
           </li>
-        )}
 
-       
-      </ol>
-    </nav>
- 
+          {/* Second breadcrumb */}
+          {pathnames.length > 0 && (
+            <li className="flex items-center">
+              <span className="mx-2">/</span>
+              <span className="text-gray-400">{secondLevel}</span>
+            </li>
+          )}
+        </ol>
+      </nav>
 
-  
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-       
-
-      {stats.map((stat) => (
-        <StatCard key={stat.title} {...stat} />
-      ))}
-    </div>
-      </>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {stats.map((stat) => (
+          <StatCard key={stat.title} {...stat} />
+        ))}
+      </div>
+    </>
   );
 };
 

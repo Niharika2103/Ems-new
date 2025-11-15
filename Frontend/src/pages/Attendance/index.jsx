@@ -20,10 +20,10 @@ export default function AssignProjectPage() {
     const emp = employees.find((e) => e.email === selectedEmail);
     if (emp) {
       setEmployeeName(emp.name);
-      setUser(emp.id); // <-- store employee ID for API
+      setUser(emp.id);
     } else {
-      setEmployeeName(""); // reset name
-      setUser("");         // reset ID
+      setEmployeeName("");
+      setUser("");
     }
   }, [selectedEmail, employees]);
 
@@ -65,9 +65,7 @@ export default function AssignProjectPage() {
   };
 
   return (
-    // <div className="flex h-screen items-center justify-center bg-gray-50">
     <>
-
       <button
         onClick={handleClick}
         className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -96,22 +94,6 @@ export default function AssignProjectPage() {
           </select>
         </div>
 
-        {/* Right Side - User Select */}
-        {/* <div className="flex-1">
-          <label className="block mb-2 font-semibold">Assign Employee</label>
-          <select
-            value={user}
-            onChange={(e) => setUser(e.target.value)}
-            className="w-full border rounded-lg p-2"
-          >
-            <option value="">-- Select Employee --</option>
-            {employees.map((emp) => (
-              <option key={emp.id} value={emp.id}>
-                {emp.name}
-              </option>
-            ))}
-          </select>
-        </div> */}
         <div>
           <label className="block mb-2 font-semibold">Select Employee Email</label>
           <select
@@ -137,8 +119,6 @@ export default function AssignProjectPage() {
             className="w-full border rounded-lg p-2 bg-gray-100"
           />
         </div>
-
-
         {/* Submit Button */}
         <div className="flex items-end">
           <button
@@ -150,7 +130,6 @@ export default function AssignProjectPage() {
         </div>
       </form>
     </>
-    // </div>
   );
 }
 

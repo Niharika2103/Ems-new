@@ -188,9 +188,6 @@ const Profile = () => {
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    // InputProps={{
-                    //   startAdornment: <Avatar sx={{ bgcolor: "#2196f3", width: 28, height: 28 }}></Avatar>,
-                    // }}
                   />
                 </Grid>
 
@@ -256,22 +253,6 @@ const Profile = () => {
                     }}
                   />
                 </Grid>
-                {/* <Grid item xs={12} sm={6}>
-                  {!emailVerified ? (
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={handleSendEmailOtp}
-                      sx={{ mt: 1 }}
-                    >
-                      {emailSent ? "Resend OTP" : "Send Email OTP"}
-                    </Button>
-                  ) : (
-                    <Typography color="success.main" sx={{ mt: 2 }}>
-                      ✔ Email Verified
-                    </Typography>
-                  )}
-                </Grid> */}
 
                 <Grid item xs={12} sm={6}>
                   <TextField
@@ -286,22 +267,6 @@ const Profile = () => {
                   />
                 </Grid>
 
-                {/* <Grid item xs={12} sm={6}>
-                  {!phoneVerified ? (
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={handleSendOtp}
-                      sx={{ mt: 1 }}
-                    >
-                      {otpSent ? "Resend OTP" : "Send Phone OTP"}
-                    </Button>
-                  ) : (
-                    <Typography color="success.main" sx={{ mt: 2 }}>
-                      ✔ Phone Verified
-                    </Typography>
-                  )}
-                </Grid> */}
 
                 <Grid item xs={12} sm={6}>
                   <TextField

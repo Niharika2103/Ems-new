@@ -50,16 +50,16 @@ export default function EmployeeRegisterForm() {
   const [rowErrors, setRowErrors] = useState([]);
 
   // -------------------- Helper --------------------
-const normalizeEmail = (email) => {
-  if (!email) return "";
-  if (typeof email === "object") {
-    if (email.text) return email.text.trim();
-    if (email.result) return email.result.trim();
-    if (email.richText) return email.richText.map(rt => rt.text).join("").trim();
+  const normalizeEmail = (email) => {
+    if (!email) return "";
+    if (typeof email === "object") {
+      if (email.text) return email.text.trim();
+      if (email.result) return email.result.trim();
+      if (email.richText) return email.richText.map(rt => rt.text).join("").trim();
+      return String(email).trim();
+    }
     return String(email).trim();
-  }
-  return String(email).trim();
-};
+  };
   const validateEmployee = (emp) => {
     const errors = {};
     const validDepartments = ["HR", "Finance", "IT", "Sales"];
@@ -106,7 +106,7 @@ if (!emp.employmentType || !validTypes.includes(emp.employmentType.toLowerCase()
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     const validationErrors = validateEmployeeRegistration(formData);
 
     if (Object.keys(validationErrors).length === 0) {
@@ -137,16 +137,16 @@ if (!emp.employmentType || !validTypes.includes(emp.employmentType.toLowerCase()
     }
   };
 
-// Format date to YYYY-MM-DD for date input
-const formatDate = (date) => {
-  if (!date) return "";
-  const d = new Date(date);
-  if (isNaN(d)) return "";
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  const year = d.getFullYear();
-  return `${year}-${month}-${day}`;
-};
+  // Format date to YYYY-MM-DD for date input
+  const formatDate = (date) => {
+    if (!date) return "";
+    const d = new Date(date);
+    if (isNaN(d)) return "";
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const year = d.getFullYear();
+    return `${year}-${month}-${day}`;
+  };
 
 const handleEdit = (index, row) => {
   setEditIndex(index);
@@ -157,8 +157,6 @@ const handleEdit = (index, row) => {
     phone: row.phone || "",
     address: row.address || "",
     department: row.department || "",
-    designation: row.designation || "",           
-    employmentType: row.employmentType || "",
     dateOfJoining: formatDate(row.dateOfJoining), // format for date input
   });
 };
@@ -168,18 +166,18 @@ const handleEdit = (index, row) => {
     setEditRow({ ...editRow, [key]: value });
   };
 
- const handleSave = (index) => {
-  // Normalize email and date before saving
-  const updatedRow = {
-    ...editRow,
-    email: normalizeEmail(editRow.email),
-    dateOfJoining: editRow.dateOfJoining ? formatDate(editRow.dateOfJoining) : null,
-  };
+  const handleSave = (index) => {
+    // Normalize email and date before saving
+    const updatedRow = {
+      ...editRow,
+      email: normalizeEmail(editRow.email),
+      dateOfJoining: editRow.dateOfJoining ? formatDate(editRow.dateOfJoining) : null,
+    };
 
-  dispatch(updatePreviewRow({ index, updatedRow })); // save to redux preview
-  setEditIndex(null);
-  setEditRow({});
-};
+    dispatch(updatePreviewRow({ index, updatedRow })); // save to redux preview
+    setEditIndex(null);
+    setEditRow({});
+  };
 
 
   const handleDelete = (index) => {
@@ -296,9 +294,9 @@ const handleEdit = (index, row) => {
           </Button>
         </Box>
 
-        
+
         {/* Single employee form */}
-<Box>
+        <Box>
           <Grid container spacing={3}>
             {/* Row 1: 4 fields */}
             <Grid item xs={12} sm={3}>
@@ -385,15 +383,15 @@ const handleEdit = (index, row) => {
                 helperText={errors.department}
                 required
                 sx={{
-                    minWidth: 200,
-                    maxWidth: 400,
-                    '& .MuiInputBase-root': {
-                      height: 40,
-                    },
-                    '& .MuiOutlinedInput-input': {
-                      padding: '10px 14px',
-                    },
-                  }}
+                  minWidth: 200,
+                  maxWidth: 400,
+                  '& .MuiInputBase-root': {
+                    height: 40,
+                  },
+                  '& .MuiOutlinedInput-input': {
+                    padding: '10px 14px',
+                  },
+                }}
               >
                 <MenuItem value="">Select Department</MenuItem>
                 <MenuItem value="HR">HR</MenuItem>
@@ -445,18 +443,18 @@ const handleEdit = (index, row) => {
 
 
             <Grid item xs={12} textAlign="center">
-  <Button
-    variant="contained"
-    sx={{ px: 8, py: 1.2 }}
-    disabled={loading}
-    onClick={handleSubmit}   // 🔥 call directly
-  >
-    {loading ? "Registering..." : "Register"}
-  </Button>
-</Grid>
+              <Button
+                variant="contained"
+                sx={{ px: 8, py: 1.2 }}
+                disabled={loading}
+                onClick={handleSubmit}   //  call directly
+              >
+                {loading ? "Registering..." : "Register"}
+              </Button>
+            </Grid>
 
-  </Grid>
-</Box>
+          </Grid>
+        </Box>
 
 
         {preview.length > 0 && (

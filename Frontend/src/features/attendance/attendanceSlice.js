@@ -2,12 +2,12 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import {
   AttendanceSaveallApi, AttendanceFetchAllApi, AttendanceFetchExistingWeekApi,
   AttendanceReleaseMonthApi, AttendanceFetchExistingMonthApi,
-  AttendanceFetchByEmployeeProjectApi, AttendanceReleaseWeekApi,fetchEmployeeLeavesApi,
+  AttendanceFetchByEmployeeProjectApi, AttendanceReleaseWeekApi, fetchEmployeeLeavesApi,
   AdminAttendancFetchWeeklyDataByIdApi, Admin_Approve_Weekly_Attendance_Api,
   AdminAttendancFetchMonthlyDataByIdApi, AttendanceFetchAllbasedonMonthApi,
   Admin_Approve_monthly_Attendance_Api, applyParentalLeaveApi, approveParentalLeaveApi,
   fetchPendingParentalLeavesApi, AttendanceCheckLeaveEligibilityApi, Admin_Reject_Weekly_Attendance_Api,
-  Admin_Reject_Monthly_Attendance_Api, fetchAuditLogsApi, saveHolidayApi,deleteHolidayApi,updateHolidayApi
+  Admin_Reject_Monthly_Attendance_Api, fetchAuditLogsApi, saveHolidayApi, deleteHolidayApi, updateHolidayApi
 } from "../../api/authApi";
 
 
@@ -63,7 +63,6 @@ export const AttendanceFetchByEmployeeProject = createAsyncThunk(
   async ({ employeeId, projectId }, thunkAPI) => {
     try {
       const res = await AttendanceFetchByEmployeeProjectApi(employeeId, projectId);
-      console.log("✅ Response received:", res.data);
       return res.data;
     } catch (err) {
       return thunkAPI.rejectWithValue(err.response?.data || err.message);
@@ -78,7 +77,7 @@ export const fetchEmployeeLeaves = createAsyncThunk(
   async (employeeId, thunkAPI) => {
     try {
       const res = await fetchEmployeeLeavesApi(employeeId);
-      return res.data;   // Map<String, Integer>
+      return res.data;
     } catch (err) {
       return thunkAPI.rejectWithValue(err.response?.data || err.message);
     }
@@ -150,7 +149,6 @@ export const AttendanceFetchAllbasedonMonth = createAsyncThunk(
       const res = await AttendanceFetchAllbasedonMonthApi(periodType, startDate, endDate);
       return res.data;
     } catch (err) {
-      console.error("API error:", err); // Log error
       return rejectWithValue(err.response?.data || "Failed to fetch monthly data");
     }
   }
@@ -194,7 +192,7 @@ export const fetchPendingParentalLeaves = createAsyncThunk(
   }
 );
 
-// ✅ Check Leave Eligibility (by attendanceId)
+// Check Leave Eligibility (by attendanceId)
 export const checkLeaveEligibility = createAsyncThunk(
   "attendance/checkLeaveEligibility",
   async ({ employeeId, leaveType, requestedDays = 1 }, thunkAPI) => {
@@ -233,13 +231,13 @@ export const Admin_Reject_Monthly_Attendance = createAsyncThunk(
   }
 );
 
-// ✅ Fetch Audit Logs
+// Fetch Audit Logs
 export const fetchAuditLogs = createAsyncThunk(
   "attendance/fetchAuditLogs",
   async (_, thunkAPI) => {
     try {
       const res = await fetchAuditLogsApi();
-      return res.data; // { message, count, data: [...] }
+      return res.data;
     } catch (err) {
       return thunkAPI.rejectWithValue(err.response?.data?.error || err.message);
     }
@@ -263,12 +261,12 @@ export const saveHoliday = createAsyncThunk(
 //holidays delete
 export const deleteHolidays = createAsyncThunk(
   "attendance/deleteHolidays",
-  async (id,thunkAPI)=>{
-    try{
+  async (id, thunkAPI) => {
+    try {
       const res = await deleteHolidayApi(id);
       return id;
     }
-    catch(err){
+    catch (err) {
       return thunkAPI.rejectWithValue(err.response?.data || err.message)
     }
   }
@@ -291,18 +289,18 @@ export const updateHoliday = createAsyncThunk(
 const attendanceSlice = createSlice({
   name: "attendance",
   initialState: {
-    attendance:[],
-     attendanceData: [], 
-      leaves: {},
-      pendingLeaves: [],
-      leaveEligibility: null, 
-      loading: false,
+    attendance: [],
+    attendanceData: [],
+    leaves: {},
+    pendingLeaves: [],
+    leaveEligibility: null,
+    loading: false,
     error: null,
     auditLogs: [],
     auditLoading: false,
     auditError: null,
     holidaySaved: null,
-    holidays:[],
+    holidays: [],
   },
   reducers: {
     logout: (state) => {
@@ -390,22 +388,22 @@ const attendanceSlice = createSlice({
 
       //employee/fetchLeaves
       .addCase(fetchEmployeeLeaves.pending, (state) => {
-  state.loading = true;
-})
-.addCase(fetchEmployeeLeaves.fulfilled, (state, action) => {
-  state.loading = false;
-  state.leaves = action.payload;   // store leaves here
-})
-.addCase(fetchEmployeeLeaves.rejected, (state, action) => {
-  state.loading = false;
-  state.error = action.payload;
-})
+        state.loading = true;
+      })
+      .addCase(fetchEmployeeLeaves.fulfilled, (state, action) => {
+        state.loading = false;
+        state.leaves = action.payload;
+      })
+      .addCase(fetchEmployeeLeaves.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
 
 
-       // --- Admin Thunks ---
-    .addCase(AdminAttendancFetchWeeklyDataById.pending, (state) => { state.loading = true; })
-    .addCase(AdminAttendancFetchWeeklyDataById.fulfilled, (state, action) => { state.loading = false; state.attendanceData = action.payload; })
-    .addCase(AdminAttendancFetchWeeklyDataById.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
+      // --- Admin Thunks ---
+      .addCase(AdminAttendancFetchWeeklyDataById.pending, (state) => { state.loading = true; })
+      .addCase(AdminAttendancFetchWeeklyDataById.fulfilled, (state, action) => { state.loading = false; state.attendanceData = action.payload; })
+      .addCase(AdminAttendancFetchWeeklyDataById.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
 
       .addCase(AdminAttendancFetchMonthlyDataById.pending, (state) => { state.loading = true; })
       .addCase(AdminAttendancFetchMonthlyDataById.fulfilled, (state, action) => { state.loading = false; state.attendanceData = action.payload; })
@@ -425,13 +423,13 @@ const attendanceSlice = createSlice({
       })
       .addCase(checkLeaveEligibility.fulfilled, (state, action) => {
         state.loading = false;
-        state.leaveEligibility = action.payload; // ✅ store backend response
+        state.leaveEligibility = action.payload;
       })
       .addCase(checkLeaveEligibility.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
-    
+
       .addCase(Admin_Reject_Weekly_Attendance.pending, (state) => {
         state.loading = true;
       })
@@ -482,7 +480,7 @@ const attendanceSlice = createSlice({
       })
       .addCase(saveHoliday.fulfilled, (state, action) => {
         state.loading = false;
-        state.holidaySaved = action.payload; 
+        state.holidaySaved = action.payload;
       })
       .addCase(saveHoliday.rejected, (state, action) => {
         state.loading = false;

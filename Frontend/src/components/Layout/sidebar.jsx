@@ -1,10 +1,8 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { Home, Users, Calendar, Settings, LogOut, CheckSquare } from "lucide-react";
 import { useSelector } from "react-redux";
 
 const Sidebar = ({ isOpen }) => {
-  const navigate = useNavigate();
-
   const role =
     useSelector((state) => state.adminSlice?.role) ||
     useSelector((state) => state.authSlice?.role) ||
@@ -23,7 +21,7 @@ const Sidebar = ({ isOpen }) => {
       { name: "Dashboard", icon: <Home size={20} />, path: "/dashboard" },
       { name: "Manage Employees", icon: <Users size={20} />, path: "/dashboard/emp_requestTable" },
       { name: "Attendance", icon: <Calendar size={20} />, path: "/dashboard/attendance" },
-      { name: "Reports", icon: <CheckSquare size={20} />, path: "/reports" },
+      { name: "Freelancer", icon: <CheckSquare size={20} />, path: "/dashboard/freelancer" },
       { name: "Accounts", icon: <Calendar size={20} />, path: "/accounts" },
       { name: "Settings", icon: <Settings size={20} />, path: "/settings" },
     ],

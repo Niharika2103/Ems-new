@@ -1,4 +1,4 @@
-import React, { useState ,useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import { replace, useNavigate } from "react-router-dom";
 import {
   Box,
@@ -42,7 +42,7 @@ export default function Login() {
   const [step, setStep] = useState(1);
   const [showPassword, setShowPassword] = useState(true);
 
-  // ✅ Handle input changes and password validation
+  //  Handle input changes and password validation
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -65,7 +65,7 @@ export default function Login() {
         return;
       }
 
-      // ✅ Prevent login if password exceeds 16
+      //  Prevent login if password exceeds 16
       if (formData.password.length > 16) {
         toast.error("Password cannot exceed 16 characters");
         return;
@@ -82,8 +82,8 @@ export default function Login() {
             setOtp("");
             toast.info(response.message);
           } else {
-            navigate("/dashboard",{ replace: true });
-    window.onpopstate = null;
+            navigate("/dashboard", { replace: true });
+            window.onpopstate = null;
 
           }
         })
@@ -98,8 +98,8 @@ export default function Login() {
         .unwrap()
         .then((response) => {
           toast.success(response.message);
-          navigate("/dashboard" ,{ replace: true });
-    window.onpopstate = null;
+          navigate("/dashboard", { replace: true });
+          window.onpopstate = null;
 
         })
         .catch((err) => toast.error(err.error || "OTP verification failed"));
@@ -184,7 +184,7 @@ export default function Login() {
                     endAdornment: (
                       <InputAdornment position="end">
                         <IconButton edge="end" onClick={() => setShowPassword((prev) => !prev)}
-                         aria-label={showPassword ? "Hide password" : "Show password"} >
+                          aria-label={showPassword ? "Hide password" : "Show password"} >
                           {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
                         </IconButton>
                       </InputAdornment>
@@ -212,7 +212,7 @@ export default function Login() {
                   className="!px-1 !py-1 !text-md admin-button"
                   sx={{ mt: 2, fontSize: { xs: "0.9rem", sm: "1rem" } }}
                   type="submit"
-                  disabled={isButtonDisabled} // ✅ disabled if invalid
+                  disabled={isButtonDisabled}
                 >
                   {loading ? "Logging in..." : "Log In"}
                 </Button>

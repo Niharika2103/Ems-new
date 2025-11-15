@@ -23,7 +23,7 @@ import {
 
 import { decodeToken } from "../../api/decodeToekn";
 import { validateEmployeeEdit } from "../../utils/validation";
-export default function AdminTable() {
+export default function FreelancerTable() {
   const dispatch = useDispatch();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -39,8 +39,6 @@ export default function AdminTable() {
     department: "",
     gender: "",
     emergency_contact: "",
-    designation: "",        
-    employment_type: "",
   });
   const [loading, setLoading] = useState(false);
 
@@ -80,18 +78,18 @@ export default function AdminTable() {
       return isoString.split("T")[0];
     };
 
-setFormData({
-  name: record.name || "",
-  email: record.email || "",
-  date_of_joining: formatDate(record.date_of_joining),
-  phone: record.phone || "",
-  address: record.address || "",
-  permanent_address: record.permanent_address || "",
-  department: record.department || "",
-  gender: record.gender || "",
-  emergency_contact: record.emergency_contact || "",
-  dob: formatDate(record.dob),
-});
+    setFormData({
+      name: record.name || "",
+      email: record.email || "",
+      date_of_joining: formatDate(record.date_of_joining),
+      phone: record.phone || "",
+      address: record.address || "",
+      permanent_address: record.permanent_address || "",
+      department: record.department || "",
+      gender: record.gender || "",
+      emergency_contact: record.emergency_contact || "",
+      dob: formatDate(record.dob),
+    });
     setIsModalOpen(true);
   };
   const handlePromote = async (record) => {
@@ -405,34 +403,6 @@ setFormData({
                   <MenuItem value="Sales">Sales</MenuItem>
                 </TextField>
               </Grid>
-
-              <Grid item xs={12} sm={6}>
-  <TextField
-    label="Designation"
-    name="designation"
-    value={formData.designation}
-    onChange={handleChange}
-    fullWidth
-    size="small"
-  />
-</Grid>
-
-<Grid item xs={12} sm={6}>
-  <TextField
-    select
-    label="Employment Type"
-    name="employment_type"
-    value={formData.employment_type}
-    onChange={handleChange}
-    fullWidth
-    size="small"
-  >
-    <MenuItem value="fulltime">Full Time</MenuItem>
-    <MenuItem value="contract">Contract</MenuItem>
-    <MenuItem value="freelancer">Freelancer</MenuItem>
-  </TextField>
-</Grid>
-
               <Grid item xs={12}>
                 <Button
                   htmlType="submit"
