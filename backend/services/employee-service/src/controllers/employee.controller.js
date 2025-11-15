@@ -173,7 +173,7 @@ dotenv.config();
 export const registerEmployee = async (req, res) => {
   const client = await pool.connect();
   try {
-    const { fullName, email, phone, address, department, dateOfJoining } = req.body;
+    const { fullName, email, phone, address, department,  designation,employmentType,dateOfJoining } = req.body;
 
     const validationError = validateEmployeeData({ fullName, email, phone, address });
     if (validationError) {
@@ -201,10 +201,10 @@ export const registerEmployee = async (req, res) => {
     // Insert employee
     const insertUser = await client.query(
       `INSERT INTO ${USERS_TABLE} 
-        (employee_id, name, email, password, phone, address, department, date_of_joining, role, access_flag)
+        (employee_id, name, email, password, phone, address, department,  designation,employment_Type,date_of_joining, role, access_flag)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'employee','y')
        RETURNING id`,
-      [employeeId, fullName, email, hashedPassword, phone, address, department, dateOfJoining]
+      [employeeId, fullName, email, hashedPassword, phone, address, department, designation,employmentType,dateOfJoining]
     );
 
     const newUserId = insertUser.rows[0].id;
@@ -217,14 +217,7 @@ export const registerEmployee = async (req, res) => {
       [newUserId, resetToken, resetExpiry]
     );
 
-    // Insert default attendance record
-    // const currentYear = new Date().getFullYear();
-    // await client.query(
-    //   `INSERT INTO attendance
-    //     (employee_id, year, working_days, work_from_home, holidays, optional_holidays, el, sl, extra_milar, maternity_leave, paternity_leave, project_id, date, weekly_status, monthly_status, total_hours, worked_hours)
-    //    VALUES ($1,$2,0,315,10,2,25,10,2,0,0,NULL,CURRENT_DATE,'draft','draft',0,0)`,
-    //   [newUserId, currentYear]
-    // );
+ 
 
     // Send email
     const loginUrl = `${process.env.FRONTEND_URL}/login`;

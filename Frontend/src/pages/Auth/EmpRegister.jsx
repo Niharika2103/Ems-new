@@ -37,6 +37,9 @@ export default function EmployeeRegisterForm() {
     address: "",
     phone: "",
     department: "",
+    designation: "",
+    employmentType: "",
+
     // countryCode: "+91",
   });
   const [errors, setErrors] = useState({});
@@ -78,6 +81,14 @@ const normalizeEmail = (email) => {
     if (!emp.department || !validDepartments.includes(emp.department))
       errors.department = "Department must be one of HR, Finance, IT, Sales";
 
+    if (!emp.designation || emp.designation.length < 2)
+  errors.designation = "Designation must be at least 2 characters";
+
+const validTypes = ["freelancer", "contract", "fulltime"];
+if (!emp.employmentType || !validTypes.includes(emp.employmentType.toLowerCase()))
+  errors.employmentType = "Invalid employment type";
+
+
     if (
       emp.dateOfJoining &&
       (isNaN(Date.parse(emp.dateOfJoining)) ||
@@ -111,6 +122,9 @@ const normalizeEmail = (email) => {
             address: "",
             phone: "",
             department: "",
+            designation: "",
+            employmentType: "",
+
             // countryCode: "+91",
           });
           navigate("/dashboard/emp_requestTable");
@@ -143,6 +157,8 @@ const handleEdit = (index, row) => {
     phone: row.phone || "",
     address: row.address || "",
     department: row.department || "",
+    designation: row.designation || "",           
+    employmentType: row.employmentType || "",
     dateOfJoining: formatDate(row.dateOfJoining), // format for date input
   });
 };
@@ -189,6 +205,8 @@ const handleEdit = (index, row) => {
           phone: String(validatedEmp.phone).trim(),
           address: validatedEmp.address.trim(),
           department: validatedEmp.department.trim(),
+          designation: validatedEmp.designation.trim(),         
+          employmentType: validatedEmp.employmentType.trim(),
           dateOfJoining: validatedEmp.dateOfJoining
             ? String(validatedEmp.dateOfJoining).trim()
             : null,
@@ -384,6 +402,47 @@ const handleEdit = (index, row) => {
                 <MenuItem value="Sales">Sales</MenuItem>
               </TextField>
             </Grid>
+
+            <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Designation"
+                  name="designation"
+                  value={formData.designation}
+                  onChange={handleChange}
+                  fullWidth
+                  size="small"
+                  error={!!errors.designation}
+                  helperText={errors.designation}
+                  required
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  select
+                  fullWidth
+                  size="small"
+                  name="employmentType"
+                  label="Employment Type"
+                  value={formData.employmentType || ""}
+                  onChange={handleChange}
+                  error={!!errors.employmentType}
+                  helperText={errors.employmentType}
+                  required
+                  sx={{
+                    minWidth: 200,
+                    maxWidth: 400,
+                    "& .MuiInputBase-root": { height: 40 },
+                    "& .MuiOutlinedInput-input": { padding: "10px 14px" },
+                  }}
+                >
+                  <MenuItem value="">Select Type</MenuItem>
+                  <MenuItem value="fulltime">Full Time</MenuItem>
+                  <MenuItem value="contract">Contract</MenuItem>
+                  <MenuItem value="freelancer">Freelancer</MenuItem>
+                </TextField>
+              </Grid>
+
 
             <Grid item xs={12} textAlign="center">
   <Button

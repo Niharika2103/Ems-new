@@ -88,7 +88,18 @@ export const validateEmployeeRegistration = (formData) => {
   if (!formData.department) {
     errors.department = "Department is required";
   }
+if (!formData.designation || formData.designation.trim().length < 2) {
+    errors.designation = "Designation must be at least 2 characters";
+  }
 
+  
+  const validTypes = ["freelancer", "contract", "fulltime"];
+  if (!formData.employmentType) {
+    errors.employmentType = "Employment type is required";
+  } else if (!validTypes.includes(formData.employmentType)) {
+    errors.employmentType =
+      "Employment type must be fulltime, contract, or freelancer";
+  }
   return errors;
 };
 
@@ -284,6 +295,18 @@ export const validateEmployeeEdit = (formData) => {
   // Department
   if (!formData.department) {
     errors.department = "Department is required";
+  }
+
+   if (!formData.designation || formData.designation.trim().length < 2) {
+    errors.designation = "Designation must be at least 2 characters";
+  }
+
+  const validTypes = ["freelancer", "contract", "fulltime"];
+  if (!formData.employmentType) {
+    errors.employmentType = "Employment Type is required";
+  } else if (!validTypes.includes(formData.employmentType)) {
+    errors.employmentType =
+      "Employment Type must be fulltime, contract, or freelancer";
   }
 
   return errors;

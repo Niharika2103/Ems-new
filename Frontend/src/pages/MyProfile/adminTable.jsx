@@ -39,6 +39,8 @@ export default function AdminTable() {
     department: "",
     gender: "",
     emergency_contact: "",
+    designation: "",        
+    employment_type: "",
   });
   const [loading, setLoading] = useState(false);
 
@@ -102,6 +104,9 @@ setFormData({
   gender: record.gender || "",
   emergency_contact: record.emergency_contact || "",
   dob: formatDate(record.dob),
+
+  designation: record.designation || "",       
+  employment_type: record.employment_type || "",
 });
     setIsModalOpen(true);
   };
@@ -440,6 +445,34 @@ const handleSubmit = async (e) => {
                   <MenuItem value="Sales">Sales</MenuItem>
                 </TextField>
               </Grid>
+
+              <Grid item xs={12} sm={6}>
+  <TextField
+    label="Designation"
+    name="designation"
+    value={formData.designation}
+    onChange={handleChange}
+    fullWidth
+    size="small"
+  />
+</Grid>
+
+<Grid item xs={12} sm={6}>
+  <TextField
+    select
+    label="Employment Type"
+    name="employment_type"
+    value={formData.employment_type}
+    onChange={handleChange}
+    fullWidth
+    size="small"
+  >
+    <MenuItem value="fulltime">Full Time</MenuItem>
+    <MenuItem value="contract">Contract</MenuItem>
+    <MenuItem value="freelancer">Freelancer</MenuItem>
+  </TextField>
+</Grid>
+
               <Grid item xs={12}>
                 <Button
                   htmlType="submit"
