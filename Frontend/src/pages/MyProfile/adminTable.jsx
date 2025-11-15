@@ -91,6 +91,9 @@ setFormData({
   gender: record.gender || "",
   emergency_contact: record.emergency_contact || "",
   dob: formatDate(record.dob),
+
+  designation: record.designation || "",       
+  employment_type: record.employment_type || "", 
 });
     setIsModalOpen(true);
   };
