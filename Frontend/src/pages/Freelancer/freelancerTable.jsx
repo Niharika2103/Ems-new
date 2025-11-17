@@ -42,34 +42,9 @@ export default function FreelancerTable() {
   });
   const [loading, setLoading] = useState(false);
 
-  const handleGrant = async (email) => {
-    const duration = prompt("Enter duration in hours:");
-    if (!duration) return;
+ 
 
-    try {
-      const res = await grantTempAdminApi(email, Number(duration));
-      toast.success(res?.message || "Temporary Admin granted");
-      dispatch(fetchAllEmployees());
-    } catch (err) {
-      const msg =
-        err?.response?.data?.error ||
-        err?.data?.error ||
-        err?.error ||
-        "Failed to grant access";
-
-      toast.error(msg);
-    }
-  };
-
-  const handleRevoke = async (email) => {
-    try {
-      await revokeTempAdminApi(email);
-      toast.success("Temporary Admin revoked");
-      dispatch(fetchAllEmployees());
-    } catch (err) {
-      toast.error("Failed to revoke access");
-    }
-  };
+ 
   //Edit Register Model
   const handleEdit = (record) => {
     setEditingRecord(record);
@@ -233,35 +208,7 @@ export default function FreelancerTable() {
             )}
           </Popconfirm>
 
-          {/* Grant Button */}
-          <Button
-            type="dashed"
-            onClick={() => handleGrant(record.email)}
-          >
-            Grant
-          </Button>
-
-          {/* Revoke Button */}
-          <Button
-            type="dashed"
-            danger
-            onClick={() => handleRevoke(record.email)}
-          >
-            Revoke
-          </Button>
-          <Button
-            type={record.is_promoted ? "default" : "primary"}
-            style={{
-              backgroundColor: record.is_promoted ? "#52c41a" : "",
-              color: record.is_promoted ? "white" : "",
-              borderColor: record.is_promoted ? "#52c41a" : "",
-            }}
-            disabled={record.is_promoted}
-            onClick={() => handlePromote(record)}
-          >
-            {record.is_promoted ? "Promoted" : "Promote"}
-          </Button>
-
+         
         </Space>
       ),
     }

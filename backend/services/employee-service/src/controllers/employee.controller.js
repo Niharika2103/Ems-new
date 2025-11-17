@@ -171,6 +171,7 @@ function validateEmployeeData(data) {
 dotenv.config();
 
 export const registerEmployee = async (req, res) => {
+  console.log("@174",req.body)
   const client = await pool.connect();
   try {
     const { fullName, email, phone, address, department,  designation,employmentType,dateOfJoining } = req.body;
@@ -202,7 +203,7 @@ export const registerEmployee = async (req, res) => {
     const insertUser = await client.query(
       `INSERT INTO ${USERS_TABLE} 
         (employee_id, name, email, password, phone, address, department,  designation,employment_Type,date_of_joining, role, access_flag)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'employee','y')
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'employee','y')
        RETURNING id`,
       [employeeId, fullName, email, hashedPassword, phone, address, department, designation,employmentType,dateOfJoining]
     );
@@ -1145,8 +1146,8 @@ export const getFreelancers = async (req, res) => {
     const query = `
       SELECT *
       FROM ${USERS_TABLE}
-      WHERE employment_type = 'freelancer';
-      
+    WHERE role= 'employee'
+and employment_type = 'freelancer';
     `;
 
     const { rows } = await client.query(query);

@@ -21,4 +21,7 @@ export interface UserEmployeeMaster {
   rcre_id?: string;
   rcre_date?: Date;
   access_flag: 'y' | 'n';
+  designation?: string;
+  employmen_type?:string;
+
 }

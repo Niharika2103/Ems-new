@@ -121,7 +121,7 @@ export const employeeFetchApi = () =>
   employeeClient.get(`${AUTH_API.EMPLOYEE}/get` );
 
 export const FetchFreelancerApi = () =>
-  employeeClient.get(`${AUTH_API.EMPLOYEE}/get/freelancers` );
+  employeeClient.get(`${AUTH_API.EMPLOYEE}/freelancers` );
 
 //Delete All Employee
 export const employeeDeleteApi = (id,status) =>

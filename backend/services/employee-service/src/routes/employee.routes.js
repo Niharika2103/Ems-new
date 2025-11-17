@@ -66,7 +66,7 @@ router.put(
 // router.get("/profile", viewOwnProfile);
 router.post("/attendance/apply-parental", applyParentalLeave);
 
-router.get("/get/freelancers", getFreelancers);
+router.get("/freelancers", getFreelancers);
 
 export default router;
 

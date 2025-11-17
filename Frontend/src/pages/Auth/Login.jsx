@@ -10,6 +10,10 @@ import {
   Divider,
   IconButton,
   InputAdornment,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import { employeeLogin } from "../../features/auth/employeeSlice";
@@ -36,6 +40,7 @@ export default function Login() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
+    employmentType: "",
   });
   const [otp, setOtp] = useState("");
   const [errors, setErrors] = useState({});
@@ -71,6 +76,12 @@ export default function Login() {
         return;
       }
 
+      if (formData.employmentType === "fulltime") {
+        if (!formData.email.endsWith("@zigmaneural.com")) {
+          toast.error("Full-time employees must use @zigmaneural.com email");
+          return;
+        }
+      }
       dispatch(employeeLogin({ email: formData.email, password: formData.password }))
         .unwrap()
         .then((response) => {
@@ -107,7 +118,8 @@ export default function Login() {
   };
 
   // Enable Login button only if fields are valid
-  const isStep1Valid = formData.email.trim() !== "" && formData.password.trim() !== "";
+  const isStep1Valid = formData.email.trim() !== "" && formData.password.trim() !== "" &&
+    formData.employmentType.trim() !== "";
   const isStep2Valid = otp.trim() !== "";
   const isButtonDisabled = loading || (step === 1 ? !isStep1Valid : !isStep2Valid);
 
@@ -191,6 +203,29 @@ export default function Login() {
                     ),
                   }}
                 />
+
+                <TextField
+  select
+  fullWidth
+  size="small"
+  margin="normal"
+  name="employmentType"
+  label="Employee Type"
+  value={formData.employmentType}
+  onChange={(e) =>
+    setFormData({ ...formData, employmentType: e.target.value })
+  }
+  SelectProps={{
+    MenuProps: {
+      disablePortal: true,
+    },
+  }}
+>
+  <MenuItem value="">Select</MenuItem>
+  <MenuItem value="fulltime">Full-time Employee</MenuItem>
+  <MenuItem value="contract">Contract Employee</MenuItem>
+</TextField>
+
 
                 {step === 2 && (
                   <TextField
