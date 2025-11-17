@@ -40,7 +40,7 @@ export default function Login() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    employmentType: "",
+    // employmentType: "",
   });
   const [otp, setOtp] = useState("");
   const [errors, setErrors] = useState({});
@@ -76,12 +76,12 @@ export default function Login() {
         return;
       }
 
-      if (formData.employmentType === "fulltime") {
-        if (!formData.email.endsWith("@zigmaneural.com")) {
-          toast.error("Full-time employees must use @zigmaneural.com email");
-          return;
-        }
-      }
+      // if (formData.employmentType === "fulltime") {
+      //   if (!formData.email.endsWith("@zigmaneural.com")) {
+      //     toast.error("Full-time employees must use @zigmaneural.com email");
+      //     return;
+      //   }
+      // }
       dispatch(employeeLogin({ email: formData.email, password: formData.password }))
         .unwrap()
         .then((response) => {
@@ -204,7 +204,7 @@ export default function Login() {
                   }}
                 />
 
-                <TextField
+                {/* <TextField
   select
   fullWidth
   size="small"
@@ -224,7 +224,7 @@ export default function Login() {
   <MenuItem value="">Select</MenuItem>
   <MenuItem value="fulltime">Full-time Employee</MenuItem>
   <MenuItem value="contract">Contract Employee</MenuItem>
-</TextField>
+</TextField> */}
 
 
                 {step === 2 && (

@@ -5,7 +5,6 @@ import * as XLSX from "xlsx";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllEmployees } from "../../features/employeesDetails/employeesSlice";
 import { fetchallAdmin } from "../../features/auth/authSlice";
-import {fetchAllFreelancer} from "../../features/freelancer/freelancerSlice";
 
 const EmployeeTable = ({ columns }) => {
   const dispatch = useDispatch();
@@ -35,7 +34,6 @@ const EmployeeTable = ({ columns }) => {
       dispatch(fetchallAdmin());
     } else {
       dispatch(fetchAllEmployees());
-      dispatch(fetchAllFreelancer());
     }
   }, [dispatch, role]);
 

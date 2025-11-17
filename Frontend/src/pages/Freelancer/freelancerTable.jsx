@@ -1,28 +1,26 @@
-import { useState } from "react";
-import { Button, Space, Popconfirm, message } from "antd";
+import { useState,useEffect  } from "react";
+import {Table, Button, Space, Popconfirm } from "antd";
 import { useDispatch } from "react-redux";
 import { deleteEmployee, fetchAllEmployees, updateEmployeebyAdmin, fetchEmployeeProfile } from "../../features/employeesDetails/employeesSlice";
 import EmployeeTable from "../../components/MyProfile/table";
-import { grantTempAdminApi, revokeTempAdminApi, promoteEmployeeApi } from "../../api/authApi";
+import {  promoteEmployeeApi } from "../../api/authApi";
 import ReusableModal from "../../components/MyProfile/ReusableModal";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {
-  Typography,
   TextField,
   Box,
   Grid,
-  Paper,
   Radio,
   RadioGroup,
   FormControlLabel,
   FormLabel,
-  Avatar,
   MenuItem,
 } from "@mui/material";
-
+import {fetchAllFreelancer} from "../../features/freelancer/freelancerSlice";
 import { decodeToken } from "../../api/decodeToekn";
 import { validateEmployeeEdit } from "../../utils/validation";
+import { useSelector } from "react-redux";
 export default function FreelancerTable() {
   const dispatch = useDispatch();
 
@@ -41,10 +39,11 @@ export default function FreelancerTable() {
     emergency_contact: "",
   });
   const [loading, setLoading] = useState(false);
+ const freelancers = useSelector((state) => state.freelancerInfo.freelancerlist);
+  useEffect(() => {
+  dispatch(fetchAllFreelancer());
+}, [dispatch]);
 
- 
-
- 
   //Edit Register Model
   const handleEdit = (record) => {
     setEditingRecord(record);
@@ -207,8 +206,6 @@ export default function FreelancerTable() {
               </Button>
             )}
           </Popconfirm>
-
-         
         </Space>
       ),
     }
@@ -219,7 +216,12 @@ export default function FreelancerTable() {
     <>
       <ToastContainer position="top-right" autoClose={2000} />
       <h1 className="text-xl font-bold mb-4">Employee List</h1>
-      <EmployeeTable columns={columns} />
+ <Table
+        columns={columns}
+        dataSource={freelancers}
+        rowKey="id"
+        pagination={{ pageSize: 8 }}
+      />
       <ReusableModal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -337,7 +339,7 @@ export default function FreelancerTable() {
                   fullWidth
                   size="small"
                   sx={{
-                    minWidth: 200, //  makes input box longer
+                    minWidth: 200, 
                     "& .MuiSelect-select": {
                       paddingY: 1.2,
                     },
