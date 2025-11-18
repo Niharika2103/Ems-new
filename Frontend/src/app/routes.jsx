@@ -27,6 +27,7 @@ import EmployeeAssignedProjectPage from "../pages/Attendance/EmployeeAssignedPro
 import ProjectTable from "../pages/Attendance/ProjectTable";
 import TimesheetTable from "../pages/Attendance/Timesheettable";
 import AuditLogs from "../pages/Attendance/AuditLogs";
+import FinancialYearSetup from '../pages/Attendance/FinancialYearSetup';
 import ProjectDashboard from "../pages/dashbaord/ProjectDashboard";
 import Letters from "../pages/documents/Letters";
 import MonthlyTimesheet from "../pages/Attendance/MonthlyTimesheet";
@@ -109,6 +110,8 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
+        <Route path="/financial-year-setup" element={<FinancialYearSetup />} />
 
         {/* Dashboard & profile (accessible to all logged-in users) */}
         <Route path="/dashboard" element={<Dashboard />} />
