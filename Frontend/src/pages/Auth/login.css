@@ -2,29 +2,30 @@
 * {
   box-sizing: border-box;
 }
-
+ 
 html, body, #root {
   height: 100%;
   margin: 0;
   padding: 0;
 }
-
-
-
+ 
 /* ====== Common Container ====== */
 .admin-container,
 .admin-page,
-.super-admin-container {
+.super-admin-container,
+.login-page {
   position: relative;
   height: 100vh;
   width: 100%;
   margin: 0;
+  overflow: hidden; /* Prevent page scroll */
 }
-
+ 
 /* ====== Top Carousel (50vh default, 40-36vh on mobile) ====== */
 .top-carousel,
 .admin-top,
-.super-admin-top {
+.super-admin-top,
+.login-top {
   height: 50vh;
   width: 100%;
   position: relative;
@@ -34,7 +35,7 @@ html, body, #root {
   background: transparent;
   z-index: 1;
 }
-
+ 
 /* Header text inside top carousel */
 .admin-top .admin-title,
 .super-admin-top .super-admin-title {
@@ -50,15 +51,16 @@ html, body, #root {
   font-size: 1.4rem;
   text-align: center;
 }
-
+ 
 /* ====== Swiper / Carousel ====== */
 .strip-swiper,
 .swiper,
-.super-strip-swiper {
+.super-strip-swiper,
+.login-strip-swiper {
   width: 100%;
   height: 100%;
 }
-
+ 
 .strip-img,
 .super-strip-swiper img {
   width: 100%;
@@ -69,35 +71,37 @@ html, body, #root {
   filter: blur(6px);
   border-radius: 6px;
 }
-
+ 
 .strip-swiper .swiper-slide-active .strip-img,
 .swiper .swiper-slide-active img,
-.super-strip-swiper .swiper-slide-active img {
+.super-strip-swiper .swiper-slide-active img,
+.login-strip-swiper .swiper-slide-active img {
   filter: blur(0) !important;
   transform: scale(1.03) !important;
   z-index: 2;
 }
-
+ 
 /* ====== Bottom Area (50vh default, 60-64vh on mobile) ====== */
 .bottom-area,
 .admin-bottom,
-.super-admin-bottom {
+.super-admin-bottom,
+.login-bottom {
   height: 50vh;
   width: 100%;
   background: #ffffff;
-  overflow: hidden;
+  position: relative;
   z-index: 0;
 }
-
-/* ====== Login Card (no scroll) ====== */
+ 
+/* ====== Login Card (fixed positioning to prevent movement) ====== */
 .admin-card-container,
 .login-card,
 .super-admin-card {
-  position: absolute;
-  top: 50%;                           
+  position: fixed; /* Changed from absolute to fixed */
+  top: 70%;                          
   left: 50%;
-  transform: translate(-50%, -10%); 
-  z-index: 9999;
+  transform: translate(-50%, -50%); /* Centered properly */
+  z-index: 100; /* Increased z-index */
   width: 360px;
   max-width: 70vw;
   display: flex;
@@ -106,15 +110,37 @@ html, body, #root {
   pointer-events: auto;
   padding: 8px;
   box-sizing: border-box;
-  overflow: hidden; /* hide scroll */
 }
-
-/* Inner container */
+ 
+/* Inner container with controlled overflow */
 .login-inner {
   width: 100%;
   box-sizing: border-box;
+  position: relative;
 }
-
+ 
+/* Ensure card content doesn't overflow */
+.login-inner .MuiCard-root {
+  max-height: 85vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+ 
+/* Custom scrollbar for card if needed */
+.login-inner .MuiCard-root::-webkit-scrollbar {
+  width: 6px;
+}
+ 
+.login-inner .MuiCard-root::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+ 
+.login-inner .MuiCard-root::-webkit-scrollbar-thumb {
+  background: #51b4f2;
+  border-radius: 10px;
+}
+ 
 /* Card Header */
 .login-inner .admin-title,
 .admin-card-container .admin-title {
@@ -125,64 +151,94 @@ html, body, #root {
   text-align: center;
   font-size: 1.1rem;
 }
-
+ 
 .admin-icon {
   color: #51b4f2;
 }
-
+ 
 .admin-register-link {
   text-decoration: none;
   color: #51b4f2;
   font-weight: bold;
 }
-
+ 
 .admin-button {
   background-color: #51b4f2 !important;
   color: #fff !important;
 }
-
+ 
 .admin-button:hover {
   background-color: #389ad6 !important;
 }
-
+ 
 /* Reduce vertical gap between form fields */
 .MuiTextField-root {
   margin-top: 4px !important;
   margin-bottom: 4px !important;
 }
-
+ 
+/* Fix for MUI Select dropdown positioning */
+.MuiPopover-root {
+  z-index: 9999 !important; /* Ensure dropdown appears above everything */
+}
+ 
+.MuiModal-root {
+  z-index: 9999 !important;
+}
+ 
+/* Prevent body scroll when dropdown is open */
+body.MuiModal-open {
+  overflow: hidden !important;
+}
+ 
 /* ====== Responsive ====== */
 @media (max-width: 900px) {
   .top-carousel,
   .admin-top,
-  .super-admin-top {
+  .super-admin-top,
+  .login-top {
     height: 40vh;
   }
-
+ 
   .bottom-area,
   .admin-bottom,
-  .super-admin-bottom {
+  .super-admin-bottom,
+  .login-bottom {
     height: 60vh;
   }
-
+ 
   .admin-card-container,
   .login-card,
   .super-admin-card {
     width: 92vw;
-    top: calc(50% - 6vh);
+    max-width: 92vw;
   }
 }
-
+ 
 @media (max-width: 480px) {
   .top-carousel,
   .admin-top,
-  .super-admin-top {
+  .super-admin-top,
+  .login-top {
     height: 36vh;
   }
-
+ 
   .bottom-area,
   .admin-bottom,
-  .super-admin-bottom {
+  .super-admin-bottom,
+  .login-bottom {
     height: 64vh;
+  }
+ 
+  .login-card,
+  .admin-card-container,
+  .super-admin-card {
+    width: 95vw;
+    max-width: 95vw;
+  }
+ 
+  /* Adjust card content padding on small screens */
+  .login-inner .MuiCardContent-root {
+    padding: 12px !important;
   }
 }
