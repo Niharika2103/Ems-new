@@ -40,7 +40,7 @@ export default function Login() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    // employmentType: "",
+    employmentType: "",
   });
   const [otp, setOtp] = useState("");
   const [errors, setErrors] = useState({});
@@ -76,12 +76,12 @@ export default function Login() {
         return;
       }
 
-      // if (formData.employmentType === "fulltime") {
-      //   if (!formData.email.endsWith("@zigmaneural.com")) {
-      //     toast.error("Full-time employees must use @zigmaneural.com email");
-      //     return;
-      //   }
-      // }
+      if (formData.employmentType === "fulltime") {
+        if (!formData.email.endsWith("@zigmaneural.com")) {
+          toast.error("Full-time employees must use @zigmaneural.com email");
+          return;
+        }
+      }
       dispatch(employeeLogin({ email: formData.email, password: formData.password }))
         .unwrap()
         .then((response) => {
@@ -203,28 +203,42 @@ export default function Login() {
                     ),
                   }}
                 />
+                <TextField
+                  select
+                  fullWidth
+                  size="small"
+                  margin="normal"
+                  name="employmentType"
+                  label="Employee Type"
+                  value={formData.employmentType}
+                  onChange={(e) =>
+                    setFormData({ ...formData, employmentType: e.target.value })
+                  }
+                  SelectProps={{
+                    MenuProps: {
+                      disablePortal: false, // Changed to false
+                      anchorOrigin: {
+                        vertical: 'bottom',
+                        horizontal: 'left',
+                      },
+                      transformOrigin: {
+                        vertical: 'top',
+                        horizontal: 'left',
+                      },
+                      PaperProps: {
+                        style: {
+                          maxHeight: 300,
+                          marginTop: 4,
+                        },
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem value="">Select</MenuItem>
+                  <MenuItem value="fulltime">Full-time</MenuItem>
+                  <MenuItem value="contract">Contract</MenuItem>
+                </TextField>
 
-                {/* <TextField
-  select
-  fullWidth
-  size="small"
-  margin="normal"
-  name="employmentType"
-  label="Employee Type"
-  value={formData.employmentType}
-  onChange={(e) =>
-    setFormData({ ...formData, employmentType: e.target.value })
-  }
-  SelectProps={{
-    MenuProps: {
-      disablePortal: true,
-    },
-  }}
->
-  <MenuItem value="">Select</MenuItem>
-  <MenuItem value="fulltime">Full-time Employee</MenuItem>
-  <MenuItem value="contract">Contract Employee</MenuItem>
-</TextField> */}
 
 
                 {step === 2 && (
