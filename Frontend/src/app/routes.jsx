@@ -10,6 +10,7 @@ import AdminRegisterPage from "../pages/Auth/AdminRegisterPage";
 import SuperAdminLogin from "../pages/Auth/SuperAdminLogin";
 import SuperAdminRegister from "../pages/Auth/SuperAdminRegister";
 import EmployeeRegisterForm from "../pages/Auth/EmpRegister";
+import EmpPayslip from "../pages/Auth/EmpPayslip";
 import Dashboard from "../pages/dashbaord/Dashboard";
 import Profile from "../pages/MyProfile/Profile";
 import EmployeeProfile from "../pages/MyProfile/EmployeeProfile";
@@ -36,6 +37,7 @@ import AuditLogsTable from "../pages/Attendance/AuditLogs";
 import EmployeeHolidayList from "../pages/Attendance/EmployeeHolidayList";
 import FreelancerDashboard from  "../pages/dashbaord/FreelancerDashboard";
 import FreelancerTable from  "../pages/Freelancer/freelancerTable";
+
 function AppRoutes() {
   return (
     <Routes>
@@ -69,7 +71,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-
+        <Route path="/payslip" element={<EmpPayslip />} />
         <Route path="dashboard/employee/leave" element={
           <ProtectedRoute allowedRoles={["employee"]}>
             <EmployeeLeave />
