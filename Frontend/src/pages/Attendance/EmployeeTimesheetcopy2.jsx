@@ -227,15 +227,8 @@ export default function EmpTimesheet() {
               const dayIndex = dayDiff(entryDate, weekStart);
 
               if (dayIndex >= 0 && dayIndex < 7) {
-                // const statusKey = entry.leaveType ? `${entry.leaveType}_${dayIndex}` : `worked_${dayIndex}`;
+                const statusKey = entry.leaveType ? `${entry.leaveType}_${dayIndex}` : `worked_${dayIndex}`;
                 // Assuming you have an approval status field in your data
-                let statusKey = `worked_${dayIndex}`;
-
-if (entry.shift1 && entry.shift1 > 0) statusKey = `shift1_${dayIndex}`;
-if (entry.shift2 && entry.shift2 > 0) statusKey = `shift2_${dayIndex}`;
-if (entry.shift3 && entry.shift3 > 0) statusKey = `shift3_${dayIndex}`;
-if (entry.leaveType) statusKey = `${entry.leaveType}_${dayIndex}`;
-
                 newApprovalStatus[statusKey] = entry.approvalStatus || 'not_submitted';
               }
             });
@@ -458,10 +451,6 @@ if (entry.leaveType) statusKey = `${entry.leaveType}_${dayIndex}`;
         )
           ? 0 // 👈 backend accepts only numbers
           : Number(hours[i]) || 0,
-          shift1: Number(shift1[i]) || 0,
-          shift2: Number(shift2[i]) || 0,
-          shift3: Number(shift3[i]) || 0,
-
 
         //  Leave type is 'holiday' if that date is a holiday
         leaveType: holidays.includes(
@@ -485,54 +474,26 @@ if (entry.leaveType) statusKey = `${entry.leaveType}_${dayIndex}`;
 
       // Update approval status for all fields (only weekdays)
       const newApprovalStatus = { ...approvalStatus };
-      // days.forEach((_, i) => {
-      //   if (!isWeekendDay(i)) { // Only update status for weekdays
-      //     // const statusKey = `worked_${i}`;
-      //     // // Only update to 'submitted' if not already 'approved'
-      //     // if (newApprovalStatus[statusKey] !== 'approved') {
-      //     //   newApprovalStatus[statusKey] = 'submitted';
-      //     // }
       days.forEach((_, i) => {
-  if (!isWeekendDay(i)) {
+        if (!isWeekendDay(i)) { // Only update status for weekdays
+          const statusKey = `worked_${i}`;
+          // Only update to 'submitted' if not already 'approved'
+          if (newApprovalStatus[statusKey] !== 'approved') {
+            newApprovalStatus[statusKey] = 'submitted';
+          }
 
-    // if (Number(hours[i]) > 0) {
-    //   newApprovalStatus[`worked_${i}`] = "submitted";
-    // }
-
-    if (Number(shift1[i]) > 0) {
-      newApprovalStatus[`shift1_${i}`] = "submitted";
-    }
-
-    if (Number(shift2[i]) > 0) {
-      newApprovalStatus[`shift2_${i}`] = "submitted";
-    }
-
-    if (Number(shift3[i]) > 0) {
-      newApprovalStatus[`shift3_${i}`] = "submitted";
-    }
-
-    usedLeaveTypes.forEach((lt) => {
-      if (leaveRows[lt][i] && leaveRows[lt][i] !== 0 && leaveRows[lt][i] !== "") {
-        newApprovalStatus[`${lt}_${i}`] = "submitted";
-      }
-    });
-
-  }
-});
-setApprovalStatus(newApprovalStatus);
-
-      //     usedLeaveTypes.forEach(lt => {
-      //       const leaveStatusKey = `${lt}_${i}`;
-      //       if (leaveRows[lt][i] && leaveRows[lt][i] !== 0 && leaveRows[lt][i] !== "") {
-      //         // Only update to 'submitted' if not already 'approved'
-      //         if (newApprovalStatus[leaveStatusKey] !== 'approved') {
-      //           newApprovalStatus[leaveStatusKey] = 'submitted';
-      //         }
-      //       }
-      //     });
-      //   }
-      // });
-      // setApprovalStatus(newApprovalStatus);
+          usedLeaveTypes.forEach(lt => {
+            const leaveStatusKey = `${lt}_${i}`;
+            if (leaveRows[lt][i] && leaveRows[lt][i] !== 0 && leaveRows[lt][i] !== "") {
+              // Only update to 'submitted' if not already 'approved'
+              if (newApprovalStatus[leaveStatusKey] !== 'approved') {
+                newApprovalStatus[leaveStatusKey] = 'submitted';
+              }
+            }
+          });
+        }
+      });
+      setApprovalStatus(newApprovalStatus);
 
       // Check for error in payload
       if (resultAction.error) {
@@ -576,32 +537,19 @@ setApprovalStatus(newApprovalStatus);
         localStorage.setItem("releasedWeek", weekStart.toISOString());
 
         //  Immediately update frontend data to show yellow
-        // const updatedData = attendanceData.map((item) => ({
-        //   ...item,
-        //   status: "Pending_approval", // triggers yellow in getStatusColor()
-        // }));
+        const updatedData = attendanceData.map((item) => ({
+          ...item,
+          status: "Pending_approval", // triggers yellow in getStatusColor()
+        }));
 
-        // dispatch(setAttendanceData(updatedData)); // updates Redux instantly
+        dispatch(setAttendanceData(updatedData)); // updates Redux instantly
 
         // Also update local approval state (optional, for lock behavior)
         const newApprovalStatus = { ...approvalStatus };
         days.forEach((_, i) => {
-          // if (!isWeekendDay(i)) {
-          //   newApprovalStatus[`worked_${i}`] = "submitted"; // mark as submitted (yellow)
-          
-       if (Number(hours[i]) > 0) {
-  newApprovalStatus[`worked_${i}`] = "submitted";
-}
-if (Number(shift1[i]) > 0) {
-  newApprovalStatus[`shift1_${i}`] = "submitted";
-}
-if (Number(shift2[i]) > 0) {
-  newApprovalStatus[`shift2_${i}`] = "submitted";
-}
-if (Number(shift3[i]) > 0) {
-  newApprovalStatus[`shift3_${i}`] = "submitted";
-}
-
+          if (!isWeekendDay(i)) {
+            newApprovalStatus[`worked_${i}`] = "submitted"; // mark as submitted (yellow)
+          }
         });
         setApprovalStatus(newApprovalStatus);
 
@@ -629,49 +577,28 @@ if (Number(shift3[i]) > 0) {
       setIsSaveAllEnabled(false); // disable for other weeks
     }
   };
-  // const getStatusColor = (dayIndex) => {
-  //   // Check if this index is a weekend (e.g., Saturday = 5, Sunday = 6)
-  //   const isWeekend = dayIndex === 5 || dayIndex === 6; // adjust if your week starts on Monday
+  const getStatusColor = (dayIndex) => {
+    // Check if this index is a weekend (e.g., Saturday = 5, Sunday = 6)
+    const isWeekend = dayIndex === 5 || dayIndex === 6; // adjust if your week starts on Monday
 
-  //   if (isWeekend) {
-  //     return "#E0E0E0"; // always gray for weekends
-  //   }
+    if (isWeekend) {
+      return "#E0E0E0"; // always gray for weekends
+    }
 
-  //   const record = attendanceData?.[dayIndex];
-  //   if (!record) return "white";
+    const record = attendanceData?.[dayIndex];
+    if (!record) return "white";
 
-  //   switch (record.status) {
-  //     case "Pending_approval":
-  //       return "#FFF59D"; // light yellow
-  //     case "approved":
-  //       return "#A5D6A7";
-  //     case "rejected":
-  //       return "#d3323fff";
-  //     default:
-  //       return "white";
-  //   }
-  // };
-
-
-  const getStatusColor = (dayIndex, row = "worked") => {
-  // 🔥 Make weekends always grey
-  if (dayIndex === 5 || dayIndex === 6) return "#E0E0E0";
-
-  const key = `${row}_${dayIndex}`;
-  const status = approvalStatus[key];
-
-  switch (status) {
-    case "submitted":
-    case "Pending_approval":
-      return "#FFF59D";  // yellow
-    case "approved":
-      return "#A5D6A7";  // green
-    case "rejected":
-      return "#d3323fff"; // red
-    default:
-      return "white"; // empty remains white
-  }
-};
+    switch (record.status) {
+      case "Pending_approval":
+        return "#FFF59D"; // light yellow
+      case "approved":
+        return "#A5D6A7";
+      case "rejected":
+        return "#d3323fff";
+      default:
+        return "white";
+    }
+  };
 
   //   const getStatusColor = (dayIndex, leaveType = null) => {
   //   const isWeekend = dayIndex === 5 || dayIndex === 6;
@@ -832,8 +759,7 @@ if (Number(shift3[i]) > 0) {
                 //   )
                 // }
                 disabled={isWeekReleased}
-                // style={{ backgroundColor: getStatusColor(i) }}
-                style={{ backgroundColor: getStatusColor(i, "worked") }}
+                style={{ backgroundColor: getStatusColor(i) }}
                 className={`w-17 h-8 text-center border rounded-md ${isWeekReleased ? "cursor-not-allowed bg-gray-100" : "bg-white"
                   } ${isWeekend ? "text-gray-400" : ""}`}
                 // onChange={(e) => {
@@ -866,8 +792,7 @@ if (Number(shift3[i]) > 0) {
  <div className="flex justify-between items-center py-1 text-sm">
         <div className="flex-1 font-semibold">Shift1</div>
         <div className="flex gap-5 justify-end flex-1">
-          {/* {hours.map((h, i) => { */}
-          {shift1.map((h, i) => {
+          {hours.map((h, i) => {
             const isWeekend = isWeekendDay(i);
             const backgroundColor = getStatusColor(i);
             const isReadOnly = isFieldReadOnly(i);
@@ -905,7 +830,6 @@ if (Number(shift3[i]) > 0) {
                 // }
                 disabled={isWeekReleased}
                 // style={{ backgroundColor: getStatusColor(i) }}
-                style={{ backgroundColor: getStatusColor(i, "shift1") }}
                 className={`w-17 h-8 text-center border rounded-md ${isWeekReleased ? "cursor-not-allowed bg-gray-100" : "bg-white"
                   } ${isWeekend ? "text-gray-400" : ""}`}
                 // onChange={(e) => {
@@ -919,17 +843,13 @@ if (Number(shift3[i]) > 0) {
                 //   }
                 // }}
 
-                onChange={(e) => {
-                  if (!isWeekReleased) {
-                    // const newHours = [...hours];
-                    // newHours[i] = e.target.value;
-                    // setHours(newHours);
-                    const newShift1 = [...shift1];
-                    newShift1[i] = e.target.value;
-                    setShift1(newShift1);
-  
-                  }
-                }}
+                // onChange={(e) => {
+                //   if (!isWeekReleased) {
+                //     const newHours = [...hours];
+                //     newHours[i] = e.target.value;
+                //     setHours(newHours);
+                //   }
+                // }}
               />
 
 
@@ -941,8 +861,7 @@ if (Number(shift3[i]) > 0) {
       </div> <div className="flex justify-between items-center py-1 text-sm">
         <div className="flex-1 font-semibold">Shift 2</div>
         <div className="flex gap-5 justify-end flex-1">
-          {/* {hours.map((h, i) => { */}
-          {shift2.map((h, i) => {
+          {hours.map((h, i) => {
             const isWeekend = isWeekendDay(i);
             const backgroundColor = getStatusColor(i);
             const isReadOnly = isFieldReadOnly(i);
@@ -980,8 +899,6 @@ if (Number(shift3[i]) > 0) {
                 // }
                 disabled={isWeekReleased}
                 // style={{ backgroundColor: getStatusColor(i) }}
-                style={{ backgroundColor: getStatusColor(i, "shift2") }}
-
                 className={`w-17 h-8 text-center border rounded-md ${isWeekReleased ? "cursor-not-allowed bg-gray-100" : "bg-white"
                   } ${isWeekend ? "text-gray-400" : ""}`}
                 // onChange={(e) => {
@@ -995,17 +912,13 @@ if (Number(shift3[i]) > 0) {
                 //   }
                 // }}
 
-                onChange={(e) => {
-                  if (!isWeekReleased) {
-                    // const newHours = [...hours];
-                    // newHours[i] = e.target.value;
-                    // setHours(newHours);
-                    const newShift2 = [...shift2];
-                    newShift2[i] = e.target.value;
-                    setShift2(newShift2);
-
-                  }
-                }}
+                // onChange={(e) => {
+                //   if (!isWeekReleased) {
+                //     const newHours = [...hours];
+                //     newHours[i] = e.target.value;
+                //     setHours(newHours);
+                //   }
+                // }}
               />
 
 
@@ -1017,8 +930,7 @@ if (Number(shift3[i]) > 0) {
       </div> <div className="flex justify-between items-center py-1 text-sm">
         <div className="flex-1 font-semibold">Shift3</div>
         <div className="flex gap-5 justify-end flex-1">
-          {/* {hours.map((h, i) => { */}
-             {shift3.map((h, i) => {
+          {hours.map((h, i) => {
             const isWeekend = isWeekendDay(i);
             const backgroundColor = getStatusColor(i);
             const isReadOnly = isFieldReadOnly(i);
@@ -1056,8 +968,6 @@ if (Number(shift3[i]) > 0) {
                 // }
                 disabled={isWeekReleased}
                 // style={{ backgroundColor: getStatusColor(i) }}
-                style={{ backgroundColor: getStatusColor(i, "shift3") }}
-
                 className={`w-17 h-8 text-center border rounded-md ${isWeekReleased ? "cursor-not-allowed bg-gray-100" : "bg-white"
                   } ${isWeekend ? "text-gray-400" : ""}`}
                 // onChange={(e) => {
@@ -1071,17 +981,13 @@ if (Number(shift3[i]) > 0) {
                 //   }
                 // }}
 
-                onChange={(e) => {
-                  if (!isWeekReleased) {
-                    // const newHours = [...hours];
-                    // newHours[i] = e.target.value;
-                    // setHours(newHours);
-                    const newShift3 = [...shift3];
-                    newShift3[i] = e.target.value;
-                    setShift3(newShift3);
-
-                  }
-                }}
+                // onChange={(e) => {
+                //   if (!isWeekReleased) {
+                //     const newHours = [...hours];
+                //     newHours[i] = e.target.value;
+                //     setHours(newHours);
+                //   }
+                // }}
               />
 
 
@@ -1208,11 +1114,7 @@ if (Number(shift3[i]) > 0) {
         <div className="flex justify-end flex-1">
           {days.map((_, i) => {
             const dayTotal =
-              // (Number(hours[i]) || 0) 
               (Number(hours[i]) || 0) +
-              (Number(shift1[i]) || 0) +
-              (Number(shift2[i]) || 0) +
-              (Number(shift3[i]) || 0) +
               usedLeaveTypes.reduce((sum, lt) => {
                 const val = leaveRows[lt][i];
                 return sum + (Number(val) || 0);

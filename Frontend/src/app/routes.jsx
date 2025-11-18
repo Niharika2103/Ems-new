@@ -71,7 +71,14 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-        <Route path="/payslip" element={<EmpPayslip />} />
+        <Route path="/payslip" element={
+           <ProtectedRoute allowedRoles={["employee"]}>
+            <EmpPayslip />
+          </ProtectedRoute>
+        } />
+          
+        
+        
         <Route path="dashboard/employee/leave" element={
           <ProtectedRoute allowedRoles={["employee"]}>
             <EmployeeLeave />
