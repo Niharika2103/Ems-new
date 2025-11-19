@@ -43,12 +43,21 @@ import {
 const SalaryStructure = () => {
   const [activeStep, setActiveStep] = useState(0);
 
+  const getCurrentDate = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+
   const [formData, setFormData] = useState({
     employeeName: '',
     employeeId: '',
     designation: '',
-    dateOfJoining: '',
-    dateOfBirth: '',
+    dateOfJoining: getCurrentDate(),
+    dateOfBirth: getCurrentDate(),
 
     panNumber: '',
     aadharNumber: '',
@@ -78,8 +87,8 @@ const SalaryStructure = () => {
     loanDeductions: '',
 
     // Attendance
-    effectiveFrom: '',
-    effectiveTo: '',
+    effectiveFrom: getCurrentDate(),
+    effectiveTo: getCurrentDate(),
     payableDays: '',
     lossofDaysDays: '',
     lossofpayreversalDays: '',
