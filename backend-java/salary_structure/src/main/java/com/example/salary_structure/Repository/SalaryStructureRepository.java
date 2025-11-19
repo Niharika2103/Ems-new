@@ -8,5 +8,6 @@ import java.util.UUID;
 
 @Repository
 public interface SalaryStructureRepository extends JpaRepository<SalaryStructure, UUID> {
+    SalaryStructure findTopByEmployeeIdOrderByEffectiveFromDesc(UUID employeeId);
 
 }

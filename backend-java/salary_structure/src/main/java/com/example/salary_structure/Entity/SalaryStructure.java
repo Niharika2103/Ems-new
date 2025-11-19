@@ -6,7 +6,7 @@ import org.hibernate.annotations.UuidGenerator;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.ZonedDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
@@ -22,62 +22,129 @@ public class SalaryStructure {
     @UuidGenerator
     private UUID id;
 
+    @Column(name = "employee_id")
     private UUID employeeId;
+
     private String location;
+
+    @Column(name = "pan_number")
     private String panNumber;
 
-    private String aadharLinkStatus = "Pending";
+    // DB DEFAULT = 'Pending'
+    @Column(name = "aadhar_link_status", insertable = false, updatable = false)
+    private String aadharLinkStatus;
+
+    @Column(name = "pf_number")
     private String pfNumber;
+
+    @Column(name = "uan_number")
     private String uanNumber;
+
+    @Column(name = "tax_regime")
     private String taxRegime;
+
+    @Column(name = "pay_group")
     private String payGroup;
+
     private String ocm;
 
+    @Column(name = "account_number")
     private String accountNumber;
+
+    @Column(name = "ifsc_code")
     private String ifscCode;
 
-    @UuidGenerator
+    // DB generates UUID
+    @Column(name = "acc_holder_id", insertable = false, updatable = false)
     private UUID accHolderId;
 
+    @Column(name = "bank_name")
     private String bankName;
-    private String paymentMethod = "Bank Transfer";
 
+    @Column(name = "payment_method")
+    private String paymentMethod;
+
+    @Column(name = "effective_from")
     private LocalDate effectiveFrom;
+
+    @Column(name = "effective_to")
     private LocalDate effectiveTo;
 
-    private String status = "Active";
+    private String status;
 
+    @Column(name = "basic_pay")
     private BigDecimal basicPay;
-    private BigDecimal hra = BigDecimal.ZERO;
-    private BigDecimal da = BigDecimal.ZERO;
-    private BigDecimal conveyanceAllowance = BigDecimal.ZERO;
-    private BigDecimal medicalAllowance = BigDecimal.ZERO;
-    private BigDecimal specialAllowance = BigDecimal.ZERO;
-    private BigDecimal otherAllowances = BigDecimal.ZERO;
 
-    private BigDecimal pfEmployee = BigDecimal.ZERO;
-    private BigDecimal pfEmployer = BigDecimal.ZERO;
-    private BigDecimal esi = BigDecimal.ZERO;
-    private BigDecimal professionalTax = BigDecimal.ZERO;
-    private BigDecimal incomeTax = BigDecimal.ZERO;
-    private BigDecimal loanDeduction = BigDecimal.ZERO;
-    private BigDecimal otherDeductions = BigDecimal.ZERO;
+    private BigDecimal hra;
 
-    private BigDecimal standardDays = BigDecimal.ZERO;
-    private BigDecimal daysWorked = BigDecimal.ZERO;
-    private BigDecimal lossOfDays = BigDecimal.ZERO;
-    private BigDecimal lossOfPayReversalDays = BigDecimal.ZERO;
+    private BigDecimal da;
 
+    @Column(name = "conveyance_allowance")
+    private BigDecimal conveyanceAllowance;
+
+    @Column(name = "medical_allowance")
+    private BigDecimal medicalAllowance;
+
+    @Column(name = "special_allowance")
+    private BigDecimal specialAllowance;
+
+    @Column(name = "other_allowances")
+    private BigDecimal otherAllowances;
+
+    @Column(name = "pf_employee")
+    private BigDecimal pfEmployee;
+
+    @Column(name = "pf_employer")
+    private BigDecimal pfEmployer;
+
+    private BigDecimal esi;
+
+    @Column(name = "professional_tax")
+    private BigDecimal professionalTax;
+
+    @Column(name = "income_tax")
+    private BigDecimal incomeTax;
+
+    @Column(name = "loan_deduction")
+    private BigDecimal loanDeduction;
+
+    @Column(name = "other_deductions")
+    private BigDecimal otherDeductions;
+
+    @Column(name = "standard_days")
+    private BigDecimal standardDays;
+
+    @Column(name = "days_worked")
+    private BigDecimal daysWorked;
+
+    @Column(name = "loss_of_days")
+    private BigDecimal lossOfDays;
+
+    @Column(name = "loss_of_pay_reversal_days")
+    private BigDecimal lossOfPayReversalDays;
+
+    @Column(name = "payable_days")
     private BigDecimal payableDays;
+
+    @Column(name = "gross_salary")
     private BigDecimal grossSalary;
+
+    @Column(name = "total_deductions")
     private BigDecimal totalDeductions;
+
+    @Column(name = "net_salary")
     private BigDecimal netSalary;
 
-    private ZonedDateTime createdAt = ZonedDateTime.now();
-    private ZonedDateTime updatedAt = ZonedDateTime.now();
+    // MUST BE OffsetDateTime for timestamptz
+    @Column(name = "created_at", insertable = false, updatable = false)
+    private OffsetDateTime createdAt;
+
+    @Column(name = "updated_at", insertable = false, updatable = false)
+    private OffsetDateTime updatedAt;
 
     private Integer year;
     private String month;
 
+    @Column(name = "joining_date")
     private LocalDate joiningDate;
 }
