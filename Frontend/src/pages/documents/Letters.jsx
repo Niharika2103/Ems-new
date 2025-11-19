@@ -8,11 +8,10 @@ import {
   Typography,
   Card,
   CardContent,
-  TextField,
 } from "@mui/material";
 
 const steps = [
-  "Bank Details",
+  "Bank Passbook Upload",
   "Aadhaar & PAN Upload",
   "Educational Certificates",
   "Previous Company Docs",
@@ -23,10 +22,7 @@ const Letters = () => {
   const [activeStep, setActiveStep] = useState(0);
 
   const [formData, setFormData] = useState({
-    bankAccountNumber: "",
-    ifscCode: "",
-    bankName: "",
-    accountHolderName: "",
+    bankPassbook: null,
     panCard: null,
     aadhaarCard: null,
     educationFiles: null,
@@ -39,11 +35,6 @@ const Letters = () => {
 
   const handleBack = () => {
     if (activeStep > 0) setActiveStep((prev) => prev - 1);
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
   };
 
   const handleFileChange = (e, key) => {
@@ -80,44 +71,72 @@ const Letters = () => {
           </Stepper>
 
           <Box sx={{ mt: 5 }}>
-            {/* Step 1: Bank Details */}
+            {/* Step 1: Bank Passbook Upload */}
             {activeStep === 0 && (
-              <Box textAlign="center" sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <Typography variant="h6" fontWeight="bold">
-                  Step 1: Bank Details
+              <Box textAlign="center" sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                <Typography variant="h5" fontWeight="bold">
+                  Step 1: Upload Bank Passbook
                 </Typography>
-                <TextField
-                  label="Bank Account Number"
-                  name="bankAccountNumber"
-                  value={formData.bankAccountNumber}
-                  onChange={handleChange}
-                  fullWidth
-                  variant="outlined"
-                />
-                <TextField
-                  label="IFSC Code"
-                  name="ifscCode"
-                  value={formData.ifscCode}
-                  onChange={handleChange}
-                  fullWidth
-                  variant="outlined"
-                />
-                <TextField
-                  label="Bank Name"
-                  name="bankName"
-                  value={formData.bankName}
-                  onChange={handleChange}
-                  fullWidth
-                  variant="outlined"
-                />
-                <TextField
-                  label="Account Holder Name"
-                  name="accountHolderName"
-                  value={formData.accountHolderName}
-                  onChange={handleChange}
-                  fullWidth
-                  variant="outlined"
-                />
+                
+                <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+                  Please upload a clear image or PDF of your bank passbook showing your account details
+                </Typography>
+
+                {/* Upload Bank Passbook */}
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "center" }}>
+                  <Button 
+                    variant="contained" 
+                    component="label"
+                    sx={{ px: 4, py: 1 }}
+                  >
+                    Upload Bank Passbook
+                    <input
+                      hidden
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.pdf"
+                      onChange={(e) => handleFileChange(e, "bankPassbook")}
+                    />
+                  </Button>
+                  
+                  {formData.bankPassbook && (
+                    <Box sx={{ mt: 2, p: 2, border: "1px dashed #ccc", borderRadius: 1, width: "100%" }}>
+                      <Typography variant="subtitle1" fontWeight="bold" color="primary">
+                        Selected File:
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {formData.bankPassbook.name}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
+                        Size: {(formData.bankPassbook.size / 1024 / 1024).toFixed(2)} MB
+                      </Typography>
+                    </Box>
+                  )}
+                  
+                  {!formData.bankPassbook && (
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                      No file chosen
+                    </Typography>
+                  )}
+                </Box>
+
+                {/* File requirements */}
+                <Box sx={{ mt: 3, p: 2, backgroundColor: "#f8f9fa", borderRadius: 1 }}>
+                  <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1 }}>
+                    File Requirements:
+                  </Typography>
+                  <Typography variant="caption" display="block">
+                    • Supported formats: JPG, PNG, PDF
+                  </Typography>
+                  <Typography variant="caption" display="block">
+                    • Maximum file size: 5MB
+                  </Typography>
+                  <Typography variant="caption" display="block">
+                    • Ensure all details are clearly visible
+                  </Typography>
+                  <Typography variant="caption" display="block">
+                    • File should show account holder name, account number, and IFSC code
+                  </Typography>
+                </Box>
               </Box>
             )}
 
@@ -230,40 +249,33 @@ const Letters = () => {
                   Please review your uploads before submission.
                 </Typography>
 
-                <Typography variant="body2" color="text.secondary">
-                  Bank Account: {formData.bankAccountNumber || "Not entered"}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  IFSC Code: {formData.ifscCode || "Not entered"}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Bank Name: {formData.bankName || "Not entered"}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Account Holder: {formData.accountHolderName || "Not entered"}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Aadhaar: {formData.aadhaarCard?.name || "No file chosen"}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  PAN: {formData.panCard?.name || "No file chosen"}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  🎓 Education Files:{" "}
-                  {formData.educationFiles
-                    ? Array.isArray(formData.educationFiles)
-                      ? formData.educationFiles.map((f) => f.name).join(", ")
-                      : formData.educationFiles.name
-                    : "No file chosen"}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Company Docs:{" "}
-                  {formData.previousDocs
-                    ? Array.isArray(formData.previousDocs)
-                      ? formData.previousDocs.map((f) => f.name).join(", ")
-                      : formData.previousDocs.name
-                    : "No file chosen"}
-                </Typography>
+                <Box sx={{ textAlign: "left", p: 2, backgroundColor: "#f8f9fa", borderRadius: 1 }}>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    📘 Bank Passbook: {formData.bankPassbook?.name || "No file chosen"}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    🆔 Aadhaar: {formData.aadhaarCard?.name || "No file chosen"}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    💳 PAN: {formData.panCard?.name || "No file chosen"}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    🎓 Education Files:{" "}
+                    {formData.educationFiles
+                      ? Array.isArray(formData.educationFiles)
+                        ? formData.educationFiles.map((f) => f.name).join(", ")
+                        : formData.educationFiles.name
+                      : "No file chosen"}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    💼 Company Docs:{" "}
+                    {formData.previousDocs
+                      ? Array.isArray(formData.previousDocs)
+                        ? formData.previousDocs.map((f) => f.name).join(", ")
+                        : formData.previousDocs.name
+                      : "No file chosen"}
+                  </Typography>
+                </Box>
               </Box>
             )}
           </Box>
