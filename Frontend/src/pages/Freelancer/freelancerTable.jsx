@@ -215,7 +215,7 @@ export default function FreelancerTable() {
   return (
     <>
       <ToastContainer position="top-right" autoClose={2000} />
-      <h1 className="text-xl font-bold mb-4">Employee List</h1>
+      <h1 className="text-xl font-bold mb-4">Freelancer List</h1>
  <Table
         columns={columns}
         dataSource={freelancers}
