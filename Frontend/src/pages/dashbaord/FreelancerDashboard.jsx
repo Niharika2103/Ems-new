@@ -34,7 +34,7 @@ const FreelancerDashboard = () => {
     icon: AccessTimeIcon,
     iconBg: "bg-orange-100",
     iconColor: "text-orange-600",
-    // onClick: () => navigate("/dashboard/freelancer/attendance"),
+    onClick: () => navigate("/dashboard/freelancer/freelancerattendance"),
   },
   {
     title: " Freelancer Projects",

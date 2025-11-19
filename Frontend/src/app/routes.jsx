@@ -39,6 +39,7 @@ import EmployeeHolidayList from "../pages/Attendance/EmployeeHolidayList";
 import FreelancerDashboard from  "../pages/dashbaord/FreelancerDashboard";
 import FreelancerInfo from  "../pages/Freelancer/FreelancerInfo";
 import FreelancerTable from  "../pages/Freelancer/freelancerTable";
+import FreelancerAttendance from  "../pages/Freelancer/FreelancerAttendance";
 import SalaryStructure from '../pages/Accounts/SalaryStructure';
 
 function AppRoutes() {
@@ -195,6 +196,16 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+         <Route
+          path="/dashboard/freelancer/freelancerattendance"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <FreelancerAttendance />
+            </ProtectedRoute>
+          }
+        />
+
+        
         <Route
           path="/dashboard/emp_info"
           element={
