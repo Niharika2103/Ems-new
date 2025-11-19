@@ -37,81 +37,62 @@ import {
   RestartAlt,
   Fingerprint,
   AccountBalance,
-  CorporateFare
+  CalendarMonth
 } from '@mui/icons-material';
 
 const SalaryStructure = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [formData, setFormData] = useState({
-    // Employee Personal Information
+    // Employee Information
     employeeName: '',
     employeeId: '',
     designation: '',
-    department: '',
-    email: '',
-    phoneNumber: '',
     dateOfJoining: '',
+    dateOfBirth: '',
     
     // Government IDs
     panNumber: '',
     aadharNumber: '',
     uanNumber: '',
     pfNumber: '',
-    esicNumber: '',
+    esiNumber: '',
     
     // Bank Details
     bankName: '',
     accountNumber: '',
     ifscCode: '',
-    bankBranch: '',
-    
-    // Company Information
-    companyName: '',
-    companyAddress: '',
-    companyPAN: '',
-    companyTAN: '',
     
     // Salary Structure - Earnings
-    basicSalary: '',
+    basicPay: '',
     houseRentAllowance: '',
     medicalAllowance: '',
     conveyanceAllowance: '',
     specialAllowance: '',
-    bonus: '',
-    overtime: '',
-    incentives: '',
-    shiftAllowance: '',
-    projectAllowance: '',
+    otherAllowance: '',
     
     // Salary Structure - Deductions
     providentFund: '',
     professionalTax: '',
     incomeTax: '',
-    otherDeductions: '',
-    loanRecovery: '',
-    insurancePremium: '',
+    TotalDeductions: '',
+    loanDeductions: '',
+   
+    // Payment Details
+    payableDays: '',
+    paymentMethod: '',
+    standardDays: '',
+    lossofDaysDays: '',
+    lossofpayreversalDays: '',
     
-    // Pay Period
-    payPeriod: '',
-    payDate: '',
-    workingDays: '',
-    
-    // Leave Information
-    paidLeaves: '',
-    unpaidLeaves: '',
-    sickLeaves: '',
-    casualLeaves: '',
-    
-    // Additional MNC Fields
-    costCenter: '',
-    projectCode: '',
+    // Additional Fields
     location: '',
     employmentType: 'Permanent'
   });
 
-  const steps = ['Employee Details', 'Government IDs & Bank', 'Salary Structure', 'Deductions', 'Review & Generate'];
+  const steps = ['Employee Details', 'Bank & IDs', 'Salary Components', 'Review & Generate'];
 
   const employmentTypes = ['Permanent', 'Contract', 'Intern', 'Trainee', 'Consultant'];
+  const paymentMethods = ['Bank Transfer', 'Cash', 'Cheque'];
   const locations = ['Bangalore', 'Hyderabad', 'Pune', 'Gurgaon', 'Mumbai', 'Chennai', 'Remote'];
 
   const handleChange = (e) => {
@@ -125,27 +106,21 @@ const SalaryStructure = () => {
   // Calculate totals
   const calculateTotals = () => {
     // Earnings
-    const basic = parseFloat(formData.basicSalary) || 0;
+    const basic = parseFloat(formData.basicPay) || 0;
     const hra = parseFloat(formData.houseRentAllowance) || 0;
     const medical = parseFloat(formData.medicalAllowance) || 0;
     const conveyance = parseFloat(formData.conveyanceAllowance) || 0;
     const special = parseFloat(formData.specialAllowance) || 0;
-    const bonus = parseFloat(formData.bonus) || 0;
-    const overtime = parseFloat(formData.overtime) || 0;
-    const incentives = parseFloat(formData.incentives) || 0;
-    const shiftAllowance = parseFloat(formData.shiftAllowance) || 0;
-    const projectAllowance = parseFloat(formData.projectAllowance) || 0;
+    const other = parseFloat(formData.otherAllowance) || 0;
 
     // Deductions
     const pf = parseFloat(formData.providentFund) || 0;
     const pt = parseFloat(formData.professionalTax) || 0;
     const tax = parseFloat(formData.incomeTax) || 0;
-    const other = parseFloat(formData.otherDeductions) || 0;
-    const loan = parseFloat(formData.loanRecovery) || 0;
-    const insurance = parseFloat(formData.insurancePremium) || 0;
+    const loan = parseFloat(formData.loanDeductions) || 0;
+    const totalDeductions = parseFloat(formData.TotalDeductions) || (pf + pt + tax + loan);
 
-    const grossSalary = basic + hra + medical + conveyance + special + bonus + overtime + incentives + shiftAllowance + projectAllowance;
-    const totalDeductions = pf + pt + tax + other + loan + insurance;
+    const grossSalary = basic + hra + medical + conveyance + special + other;
     const netSalary = grossSalary - totalDeductions;
 
     return {
@@ -153,8 +128,7 @@ const SalaryStructure = () => {
       totalDeductions,
       netSalary,
       totalEarnings: grossSalary,
-      totalAllowances: hra + medical + conveyance + special + shiftAllowance + projectAllowance,
-      totalBonusIncentives: bonus + overtime + incentives
+      totalAllowances: hra + medical + conveyance + special + other
     };
   };
 
@@ -177,48 +151,32 @@ const SalaryStructure = () => {
       employeeName: '',
       employeeId: '',
       designation: '',
-      department: '',
-      email: '',
-      phoneNumber: '',
       dateOfJoining: '',
+      dateOfBirth: '',
       panNumber: '',
       aadharNumber: '',
       uanNumber: '',
       pfNumber: '',
-      esicNumber: '',
+      esiNumber: '',
       bankName: '',
       accountNumber: '',
       ifscCode: '',
-      bankBranch: '',
-      companyName: '',
-      companyAddress: '',
-      companyPAN: '',
-      companyTAN: '',
-      basicSalary: '',
+      basicPay: '',
       houseRentAllowance: '',
       medicalAllowance: '',
       conveyanceAllowance: '',
       specialAllowance: '',
-      bonus: '',
-      overtime: '',
-      incentives: '',
-      shiftAllowance: '',
-      projectAllowance: '',
+      otherAllowance: '',
       providentFund: '',
       professionalTax: '',
       incomeTax: '',
-      otherDeductions: '',
-      loanRecovery: '',
-      insurancePremium: '',
-      payPeriod: '',
-      payDate: '',
-      workingDays: '',
-      paidLeaves: '',
-      unpaidLeaves: '',
-      sickLeaves: '',
-      casualLeaves: '',
-      costCenter: '',
-      projectCode: '',
+      TotalDeductions: '',
+      loanDeductions: '',
+      payableDays: '',
+      paymentMethod: '',
+      standardDays: '',
+      lossofDaysDays: '',
+      lossofpayreversalDays: '',
       location: '',
       employmentType: 'Permanent'
     });
@@ -233,7 +191,7 @@ const SalaryStructure = () => {
         return (
           <Box sx={{ mt: 3 }}>
             <Typography variant="h6" gutterBottom color="primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <AccountCircle /> Employee Personal Information
+              <AccountCircle /> Employee Information
             </Typography>
             <Grid container spacing={3}>
               <Grid item xs={12} sm={6}>
@@ -270,38 +228,19 @@ const SalaryStructure = () => {
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
-                <TextField
-                  required
-                  fullWidth
-                  label="Department"
-                  name="department"
-                  value={formData.department}
-                  onChange={handleChange}
-                  variant="outlined"
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  required
-                  fullWidth
-                  label="Email"
-                  name="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  variant="outlined"
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  required
-                  fullWidth
-                  label="Phone Number"
-                  name="phoneNumber"
-                  value={formData.phoneNumber}
-                  onChange={handleChange}
-                  variant="outlined"
-                />
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel>Employment Type</InputLabel>
+                  <Select
+                    name="employmentType"
+                    value={formData.employmentType}
+                    onChange={handleChange}
+                    label="Employment Type"
+                  >
+                    {employmentTypes.map(type => (
+                      <MenuItem key={type} value={type}>{type}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
@@ -317,19 +256,17 @@ const SalaryStructure = () => {
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
-                <FormControl fullWidth variant="outlined">
-                  <InputLabel>Employment Type</InputLabel>
-                  <Select
-                    name="employmentType"
-                    value={formData.employmentType}
-                    onChange={handleChange}
-                    label="Employment Type"
-                  >
-                    {employmentTypes.map(type => (
-                      <MenuItem key={type} value={type}>{type}</MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                <TextField
+                  required
+                  fullWidth
+                  label="Date of Birth"
+                  name="dateOfBirth"
+                  type="date"
+                  value={formData.dateOfBirth}
+                  onChange={handleChange}
+                  InputLabelProps={{ shrink: true }}
+                  variant="outlined"
+                />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth variant="outlined">
@@ -354,7 +291,7 @@ const SalaryStructure = () => {
         return (
           <Box sx={{ mt: 3 }}>
             <Typography variant="h6" gutterBottom color="primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Fingerprint /> Government IDs & Bank Details
+              <Fingerprint /> Bank & Government IDs
             </Typography>
             <Grid container spacing={3}>
               <Grid item xs={12} sm={6}>
@@ -402,9 +339,9 @@ const SalaryStructure = () => {
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label="ESIC Number"
-                  name="esicNumber"
-                  value={formData.esicNumber}
+                  label="ESI Number"
+                  name="esiNumber"
+                  value={formData.esiNumber}
                   onChange={handleChange}
                   variant="outlined"
                 />
@@ -413,7 +350,7 @@ const SalaryStructure = () => {
               <Grid item xs={12}>
                 <Divider sx={{ my: 2 }} />
                 <Typography variant="h6" gutterBottom color="primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <AccountBalance /> Bank Account Details
+                  <AccountBalance /> Bank Details
                 </Typography>
               </Grid>
               
@@ -448,14 +385,19 @@ const SalaryStructure = () => {
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Bank Branch"
-                  name="bankBranch"
-                  value={formData.bankBranch}
-                  onChange={handleChange}
-                  variant="outlined"
-                />
+                <FormControl fullWidth variant="outlined">
+                  <InputLabel>Payment Method</InputLabel>
+                  <Select
+                    name="paymentMethod"
+                    value={formData.paymentMethod}
+                    onChange={handleChange}
+                    label="Payment Method"
+                  >
+                    {paymentMethods.map(method => (
+                      <MenuItem key={method} value={method}>{method}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
               </Grid>
             </Grid>
           </Box>
@@ -465,17 +407,20 @@ const SalaryStructure = () => {
         return (
           <Box sx={{ mt: 3 }}>
             <Typography variant="h6" gutterBottom color="primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <AttachMoney /> Earnings & Allowances
+              <AttachMoney /> Salary Components
             </Typography>
             <Grid container spacing={3}>
+              <Grid item xs={12}>
+            
+              </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
                   required
                   fullWidth
-                  label="Basic Salary"
-                  name="basicSalary"
+                  label="Basic Pay"
+                  name="basicPay"
                   type="number"
-                  value={formData.basicSalary}
+                  value={formData.basicPay}
                   onChange={handleChange}
                   variant="outlined"
                   InputProps={{ inputProps: { min: 0, step: 0.01 } }}
@@ -532,74 +477,23 @@ const SalaryStructure = () => {
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label="Bonus"
-                  name="bonus"
+                  label="Other Allowance"
+                  name="otherAllowance"
                   type="number"
-                  value={formData.bonus}
+                  value={formData.otherAllowance}
                   onChange={handleChange}
                   variant="outlined"
                   InputProps={{ inputProps: { min: 0, step: 0.01 } }}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Overtime"
-                  name="overtime"
-                  type="number"
-                  value={formData.overtime}
-                  onChange={handleChange}
-                  variant="outlined"
-                  InputProps={{ inputProps: { min: 0, step: 0.01 } }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Incentives"
-                  name="incentives"
-                  type="number"
-                  value={formData.incentives}
-                  onChange={handleChange}
-                  variant="outlined"
-                  InputProps={{ inputProps: { min: 0, step: 0.01 } }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Shift Allowance"
-                  name="shiftAllowance"
-                  type="number"
-                  value={formData.shiftAllowance}
-                  onChange={handleChange}
-                  variant="outlined"
-                  InputProps={{ inputProps: { min: 0, step: 0.01 } }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Project Allowance"
-                  name="projectAllowance"
-                  type="number"
-                  value={formData.projectAllowance}
-                  onChange={handleChange}
-                  variant="outlined"
-                  InputProps={{ inputProps: { min: 0, step: 0.01 } }}
-                />
-              </Grid>
-            </Grid>
-          </Box>
-        );
 
-      case 3:
-        return (
-          <Box sx={{ mt: 3 }}>
-            <Typography variant="h6" gutterBottom color="primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Receipt /> Deductions & Company Information
-            </Typography>
-            <Grid container spacing={3}>
+              <Grid item xs={12}>
+                <Divider sx={{ my: 2 }} />
+                <Typography variant="subtitle1" gutterBottom color="primary">
+                  Deductions
+                </Typography>
+              </Grid>
+
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
@@ -639,10 +533,10 @@ const SalaryStructure = () => {
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label="Other Deductions"
-                  name="otherDeductions"
+                  label="Loan Deductions"
+                  name="loanDeductions"
                   type="number"
-                  value={formData.otherDeductions}
+                  value={formData.loanDeductions}
                   onChange={handleChange}
                   variant="outlined"
                   InputProps={{ inputProps: { min: 0, step: 0.01 } }}
@@ -651,22 +545,10 @@ const SalaryStructure = () => {
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label="Loan Recovery"
-                  name="loanRecovery"
+                  label="Total Deductions"
+                  name="TotalDeductions"
                   type="number"
-                  value={formData.loanRecovery}
-                  onChange={handleChange}
-                  variant="outlined"
-                  InputProps={{ inputProps: { min: 0, step: 0.01 } }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Insurance Premium"
-                  name="insurancePremium"
-                  type="number"
-                  value={formData.insurancePremium}
+                  value={formData.TotalDeductions}
                   onChange={handleChange}
                   variant="outlined"
                   InputProps={{ inputProps: { min: 0, step: 0.01 } }}
@@ -675,86 +557,72 @@ const SalaryStructure = () => {
 
               <Grid item xs={12}>
                 <Divider sx={{ my: 2 }} />
-                <Typography variant="h6" gutterBottom color="primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <CorporateFare /> Company Information
+                <Typography variant="subtitle1" gutterBottom color="primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CalendarMonth /> Attendance & Days
                 </Typography>
               </Grid>
 
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label="Company Name"
-                  name="companyName"
-                  value={formData.companyName}
+                  label="Payable Days"
+                  name="payableDays"
+                  type="number"
+                  value={formData.payableDays}
                   onChange={handleChange}
                   variant="outlined"
+                  InputProps={{ inputProps: { min: 0, max: 31 } }}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label="Company PAN"
-                  name="companyPAN"
-                  value={formData.companyPAN}
+                  label="Standard Days"
+                  name="standardDays"
+                  type="number"
+                  value={formData.standardDays}
                   onChange={handleChange}
                   variant="outlined"
+                  InputProps={{ inputProps: { min: 0, max: 31 } }}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label="Company TAN"
-                  name="companyTAN"
-                  value={formData.companyTAN}
+                  label="Loss of Pay Days"
+                  name="lossofDaysDays"
+                  type="number"
+                  value={formData.lossofDaysDays}
                   onChange={handleChange}
                   variant="outlined"
+                  InputProps={{ inputProps: { min: 0, max: 31 } }}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
                   fullWidth
-                  label="Cost Center"
-                  name="costCenter"
-                  value={formData.costCenter}
+                  label="Loss of Pay Reversal Days"
+                  name="lossofpayreversalDays"
+                  type="number"
+                  value={formData.lossofpayreversalDays}
                   onChange={handleChange}
                   variant="outlined"
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Project Code"
-                  name="projectCode"
-                  value={formData.projectCode}
-                  onChange={handleChange}
-                  variant="outlined"
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Company Address"
-                  name="companyAddress"
-                  value={formData.companyAddress}
-                  onChange={handleChange}
-                  variant="outlined"
-                  multiline
-                  rows={2}
+                  InputProps={{ inputProps: { min: 0, max: 31 } }}
                 />
               </Grid>
             </Grid>
           </Box>
         );
 
-      case 4:
+      case 3:
         return (
           <Box sx={{ mt: 3 }}>
             <Typography variant="h6" gutterBottom color="primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              <Calculate /> Review & Generate Salary Structure
+              <Calculate /> Review Salary Structure
             </Typography>
             
             <Alert severity="info" sx={{ mb: 3 }}>
-              Review all information before saving the salary structure. This will create an official record.
+              Review all information before saving the salary structure.
             </Alert>
 
             <Grid container spacing={3}>
@@ -770,9 +638,8 @@ const SalaryStructure = () => {
                           <TableRow><TableCell><strong>Name</strong></TableCell><TableCell>{formData.employeeName}</TableCell></TableRow>
                           <TableRow><TableCell><strong>Employee ID</strong></TableCell><TableCell>{formData.employeeId}</TableCell></TableRow>
                           <TableRow><TableCell><strong>Designation</strong></TableCell><TableCell>{formData.designation}</TableCell></TableRow>
-                          <TableRow><TableCell><strong>Department</strong></TableCell><TableCell>{formData.department}</TableCell></TableRow>
-                          <TableRow><TableCell><strong>Email</strong></TableCell><TableCell>{formData.email}</TableCell></TableRow>
-                          <TableRow><TableCell><strong>Phone</strong></TableCell><TableCell>{formData.phoneNumber}</TableCell></TableRow>
+                          <TableRow><TableCell><strong>DOJ</strong></TableCell><TableCell>{formData.dateOfJoining}</TableCell></TableRow>
+                          <TableRow><TableCell><strong>DOB</strong></TableCell><TableCell>{formData.dateOfBirth}</TableCell></TableRow>
                           <TableRow><TableCell><strong>Location</strong></TableCell><TableCell>{formData.location}</TableCell></TableRow>
                           <TableRow><TableCell><strong>Employment Type</strong></TableCell><TableCell>{formData.employmentType}</TableCell></TableRow>
                         </TableBody>
@@ -784,7 +651,7 @@ const SalaryStructure = () => {
                 <Card variant="outlined">
                   <CardContent>
                     <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Fingerprint /> Government IDs
+                      <Fingerprint /> IDs & Bank
                     </Typography>
                     <TableContainer>
                       <Table size="small">
@@ -792,7 +659,9 @@ const SalaryStructure = () => {
                           <TableRow><TableCell><strong>PAN</strong></TableCell><TableCell>{formData.panNumber}</TableCell></TableRow>
                           <TableRow><TableCell><strong>Aadhar</strong></TableCell><TableCell>{formData.aadharNumber}</TableCell></TableRow>
                           <TableRow><TableCell><strong>UAN</strong></TableCell><TableCell>{formData.uanNumber}</TableCell></TableRow>
-                          <TableRow><TableCell><strong>PF Number</strong></TableCell><TableCell>{formData.pfNumber}</TableCell></TableRow>
+                          <TableRow><TableCell><strong>Bank</strong></TableCell><TableCell>{formData.bankName}</TableCell></TableRow>
+                          <TableRow><TableCell><strong>Account No.</strong></TableCell><TableCell>{formData.accountNumber}</TableCell></TableRow>
+                          <TableRow><TableCell><strong>Payment Method</strong></TableCell><TableCell>{formData.paymentMethod}</TableCell></TableRow>
                         </TableBody>
                       </Table>
                     </TableContainer>
@@ -813,12 +682,12 @@ const SalaryStructure = () => {
                           </TableRow>
                         </TableHead>
                         <TableBody>
-                          <TableRow><TableCell>Basic Salary</TableCell><TableCell align="right">{parseFloat(formData.basicSalary || 0).toFixed(2)}</TableCell></TableRow>
+                          <TableRow><TableCell>Basic Pay</TableCell><TableCell align="right">{parseFloat(formData.basicPay || 0).toFixed(2)}</TableCell></TableRow>
                           <TableRow><TableCell>HRA</TableCell><TableCell align="right">{parseFloat(formData.houseRentAllowance || 0).toFixed(2)}</TableCell></TableRow>
                           <TableRow><TableCell>Medical Allowance</TableCell><TableCell align="right">{parseFloat(formData.medicalAllowance || 0).toFixed(2)}</TableCell></TableRow>
                           <TableRow><TableCell>Conveyance</TableCell><TableCell align="right">{parseFloat(formData.conveyanceAllowance || 0).toFixed(2)}</TableCell></TableRow>
                           <TableRow><TableCell>Special Allowance</TableCell><TableCell align="right">{parseFloat(formData.specialAllowance || 0).toFixed(2)}</TableCell></TableRow>
-                          <TableRow><TableCell>Bonus & Incentives</TableCell><TableCell align="right">{totals.totalBonusIncentives.toFixed(2)}</TableCell></TableRow>
+                          <TableRow><TableCell>Other Allowance</TableCell><TableCell align="right">{parseFloat(formData.otherAllowance || 0).toFixed(2)}</TableCell></TableRow>
                           <TableRow sx={{ bgcolor: 'action.hover' }}><TableCell><strong>Gross Salary</strong></TableCell><TableCell align="right"><strong>{totals.grossSalary.toFixed(2)}</strong></TableCell></TableRow>
                         </TableBody>
                       </Table>
@@ -836,7 +705,7 @@ const SalaryStructure = () => {
                           <TableRow><TableCell>Provident Fund</TableCell><TableCell align="right">{parseFloat(formData.providentFund || 0).toFixed(2)}</TableCell></TableRow>
                           <TableRow><TableCell>Professional Tax</TableCell><TableCell align="right">{parseFloat(formData.professionalTax || 0).toFixed(2)}</TableCell></TableRow>
                           <TableRow><TableCell>Income Tax</TableCell><TableCell align="right">{parseFloat(formData.incomeTax || 0).toFixed(2)}</TableCell></TableRow>
-                          <TableRow><TableCell>Other Deductions</TableCell><TableCell align="right">{parseFloat(formData.otherDeductions || 0).toFixed(2)}</TableCell></TableRow>
+                          <TableRow><TableCell>Loan Deductions</TableCell><TableCell align="right">{parseFloat(formData.loanDeductions || 0).toFixed(2)}</TableCell></TableRow>
                           <TableRow sx={{ bgcolor: 'action.hover' }}><TableCell><strong>Total Deductions</strong></TableCell><TableCell align="right"><strong>{totals.totalDeductions.toFixed(2)}</strong></TableCell></TableRow>
                         </TableBody>
                       </Table>
@@ -846,6 +715,14 @@ const SalaryStructure = () => {
                       <Typography variant="h6" align="center">
                         Net Salary: ₹{totals.netSalary.toFixed(2)}
                       </Typography>
+                    </Box>
+
+                    <Box sx={{ mt: 2 }}>
+                      <Typography variant="subtitle2" gutterBottom>Days Information:</Typography>
+                      <Typography>Payable Days: {formData.payableDays}</Typography>
+                      <Typography>Standard Days: {formData.standardDays}</Typography>
+                      <Typography>Loss of Pay Days: {formData.lossofDaysDays}</Typography>
+                      <Typography>LOP Reversal Days: {formData.lossofpayreversalDays}</Typography>
                     </Box>
                   </CardContent>
                 </Card>
@@ -865,9 +742,9 @@ const SalaryStructure = () => {
         <Toolbar>
           <AttachMoney sx={{ mr: 2 }} />
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Salary Structure Management System
+            Salary Structure Management
           </Typography>
-        
+          <Chip label="Payroll System" color="secondary" />
         </Toolbar>
       </AppBar>
 
@@ -877,7 +754,7 @@ const SalaryStructure = () => {
             Employee Salary Structure
           </Typography>
           <Typography variant="subtitle1" gutterBottom align="center" color="text.secondary">
-            Define and manage comprehensive employee salary components
+            Define and manage employee salary components
           </Typography>
 
           <Stepper activeStep={activeStep} sx={{ mt: 4, mb: 4 }}>
