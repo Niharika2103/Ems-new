@@ -42,7 +42,7 @@ const FreelancerDashboard = () => {
     icon: AssignmentIcon,
     iconBg: "bg-green-100",
     iconColor: "text-green-600",
-    // onClick: () => navigate("/dashboard/freelancer/fetch_project"),
+    onClick: () => navigate("/dashboard//freelancer/projects"),
   },];
 
   return (
