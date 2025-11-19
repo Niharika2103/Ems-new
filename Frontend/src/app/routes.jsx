@@ -37,7 +37,10 @@ import EmpAttendanceDashboard from "../pages/dashbaord/EmpAttendanceDashboard";
 import AuditLogsTable from "../pages/Attendance/AuditLogs";
 import EmployeeHolidayList from "../pages/Attendance/EmployeeHolidayList";
 import FreelancerDashboard from  "../pages/dashbaord/FreelancerDashboard";
+import FreelancerInfo from  "../pages/Freelancer/FreelancerInfo";
 import FreelancerTable from  "../pages/Freelancer/freelancerTable";
+import FreelancerAttendance from  "../pages/Freelancer/FreelancerAttendance";
+import FreelancerProjectTable from  "../pages/Freelancer/FreelancerProjectTable";
 import SalaryStructure from '../pages/Accounts/SalaryStructure';
 
 function AppRoutes() {
@@ -103,7 +106,7 @@ function AppRoutes() {
       }
       />
         <Route 
-      path="/dashboard//accounts/salary-structure"
+      path="/accounts/salary-structure"
       element={
         <ProtectedRoute allowedRoles={["admin"]}>
           <SalaryStructure/>
@@ -111,7 +114,6 @@ function AppRoutes() {
       }
       />
 
-       <Route path="/accounts/salary-structure" element={<SalaryStructure />} />
 
         <Route
           path="/attendance/projects"
@@ -186,6 +188,36 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/dashboard/freelancer/freelancerinfo"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <FreelancerInfo />
+            </ProtectedRoute>
+          }
+        />
+         <Route
+          path="/dashboard/freelancer/freelancerattendance"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <FreelancerAttendance />
+            </ProtectedRoute>
+          }
+        />
+
+          <Route
+          path="/dashboard//freelancer/projects"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <FreelancerProjectTable />
+            </ProtectedRoute>
+          }
+        />
+
+
+{/* <Route path="/freelancer/projects" element={<FreelancerProjectTable />} /> */}
+        
         <Route
           path="/dashboard/emp_info"
           element={
@@ -194,6 +226,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+         
         <Route
           path="/dashboard/add_project"
           element={

@@ -28,10 +28,10 @@ import {
   Select,
   MenuItem
 } from '@mui/material';
+
 import {
   AccountCircle,
   AttachMoney,
-  Receipt,
   Calculate,
   Download,
   RestartAlt,
@@ -42,55 +42,62 @@ import {
 
 const SalaryStructure = () => {
   const [activeStep, setActiveStep] = useState(0);
+
+  const getCurrentDate = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+
   const [formData, setFormData] = useState({
-    // Employee Information
     employeeName: '',
     employeeId: '',
     designation: '',
-    dateOfJoining: '',
-    dateOfBirth: '',
-    
-    // Government IDs
+    dateOfJoining: getCurrentDate(),
+    dateOfBirth: getCurrentDate(),
+
     panNumber: '',
     aadharNumber: '',
     uanNumber: '',
     pfNumber: '',
     esiNumber: '',
-    
-    // Bank Details
+
     bankName: '',
     accountNumber: '',
     ifscCode: '',
-    
-    // Salary Structure - Earnings
+    paymentMethod: '',
+
+    // Salary components
     basicPay: '',
     houseRentAllowance: '',
     medicalAllowance: '',
     conveyanceAllowance: '',
     specialAllowance: '',
     otherAllowance: '',
-    
-    // Salary Structure - Deductions
+    driftAllowance: '',   // NEW
+
+    // Deductions
     providentFund: '',
     professionalTax: '',
     incomeTax: '',
     TotalDeductions: '',
     loanDeductions: '',
-   
-    // Payment Details
+
+    // Attendance
+    effectiveFrom: getCurrentDate(),
+    effectiveTo: getCurrentDate(),
     payableDays: '',
-    paymentMethod: '',
-    standardDays: '',
     lossofDaysDays: '',
     lossofpayreversalDays: '',
-    
-    // Additional Fields
+
     location: '',
     employmentType: 'Permanent'
   });
 
   const steps = ['Employee Details', 'Bank & IDs', 'Salary Components', 'Review & Generate'];
-
   const employmentTypes = ['Permanent', 'Contract', 'Intern', 'Trainee', 'Consultant'];
   const paymentMethods = ['Bank Transfer', 'Cash', 'Cheque'];
   const locations = ['Bangalore', 'Hyderabad', 'Pune', 'Gurgaon', 'Mumbai', 'Chennai', 'Remote'];
@@ -103,669 +110,389 @@ const SalaryStructure = () => {
     }));
   };
 
-  // Calculate totals
+  // TOTAL CALCULATION
   const calculateTotals = () => {
-    // Earnings
     const basic = parseFloat(formData.basicPay) || 0;
     const hra = parseFloat(formData.houseRentAllowance) || 0;
     const medical = parseFloat(formData.medicalAllowance) || 0;
     const conveyance = parseFloat(formData.conveyanceAllowance) || 0;
     const special = parseFloat(formData.specialAllowance) || 0;
     const other = parseFloat(formData.otherAllowance) || 0;
+    const drift = parseFloat(formData.driftAllowance) || 0;
 
-    // Deductions
     const pf = parseFloat(formData.providentFund) || 0;
     const pt = parseFloat(formData.professionalTax) || 0;
     const tax = parseFloat(formData.incomeTax) || 0;
     const loan = parseFloat(formData.loanDeductions) || 0;
+
     const totalDeductions = parseFloat(formData.TotalDeductions) || (pf + pt + tax + loan);
 
-    const grossSalary = basic + hra + medical + conveyance + special + other;
+    const grossSalary = basic + hra + medical + conveyance + special + other + drift;
+
     const netSalary = grossSalary - totalDeductions;
 
-    return {
-      grossSalary,
-      totalDeductions,
-      netSalary,
-      totalEarnings: grossSalary,
-      totalAllowances: hra + medical + conveyance + special + other
-    };
-  };
-
-  const handleNext = () => {
-    setActiveStep((prevStep) => prevStep + 1);
-  };
-
-  const handleBack = () => {
-    setActiveStep((prevStep) => prevStep - 1);
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log('Salary Structure Data:', formData);
-    alert('Salary Structure saved successfully!');
-  };
-
-  const handleReset = () => {
-    setFormData({
-      employeeName: '',
-      employeeId: '',
-      designation: '',
-      dateOfJoining: '',
-      dateOfBirth: '',
-      panNumber: '',
-      aadharNumber: '',
-      uanNumber: '',
-      pfNumber: '',
-      esiNumber: '',
-      bankName: '',
-      accountNumber: '',
-      ifscCode: '',
-      basicPay: '',
-      houseRentAllowance: '',
-      medicalAllowance: '',
-      conveyanceAllowance: '',
-      specialAllowance: '',
-      otherAllowance: '',
-      providentFund: '',
-      professionalTax: '',
-      incomeTax: '',
-      TotalDeductions: '',
-      loanDeductions: '',
-      payableDays: '',
-      paymentMethod: '',
-      standardDays: '',
-      lossofDaysDays: '',
-      lossofpayreversalDays: '',
-      location: '',
-      employmentType: 'Permanent'
-    });
-    setActiveStep(0);
+    return { grossSalary, totalDeductions, netSalary };
   };
 
   const totals = calculateTotals();
 
+  const handleNext = () => setActiveStep(prev => prev + 1);
+  const handleBack = () => setActiveStep(prev => prev - 1);
+  const handleReset = () => window.location.reload();
+
+  // STEP CONTENT
   const renderStepContent = (step) => {
     switch (step) {
+
+      // ========== STEP 1 ==========
       case 0:
         return (
           <Box sx={{ mt: 3 }}>
-            <Typography variant="h6" gutterBottom color="primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="h6" color="primary" sx={{ display: "flex", gap: 1 }}>
               <AccountCircle /> Employee Information
             </Typography>
+
             <Grid container spacing={3}>
+
               <Grid item xs={12} sm={6}>
-                <TextField
-                  required
-                  fullWidth
-                  label="Employee Name"
-                  name="employeeName"
-                  value={formData.employeeName}
-                  onChange={handleChange}
-                  variant="outlined"
-                />
+                <TextField fullWidth label="Employee Name"
+                  name="employeeName" value={formData.employeeName} onChange={handleChange} />
               </Grid>
+
               <Grid item xs={12} sm={6}>
-                <TextField
-                  required
-                  fullWidth
-                  label="Employee ID"
-                  name="employeeId"
-                  value={formData.employeeId}
-                  onChange={handleChange}
-                  variant="outlined"
-                />
+                <TextField fullWidth label="Employee ID"
+                  name="employeeId" value={formData.employeeId} onChange={handleChange} />
               </Grid>
+
               <Grid item xs={12} sm={6}>
-                <TextField
-                  required
-                  fullWidth
-                  label="Designation"
-                  name="designation"
-                  value={formData.designation}
-                  onChange={handleChange}
-                  variant="outlined"
-                />
+                <TextField fullWidth label="Designation"
+                  name="designation" value={formData.designation} onChange={handleChange} />
               </Grid>
+
+              {/* Employment Type */}
               <Grid item xs={12} sm={6}>
-                <FormControl fullWidth variant="outlined">
+                <FormControl fullWidth
+                  sx={{ "& .MuiInputBase-root": { height: 60, borderRadius: "10px" } }}
+                >
                   <InputLabel>Employment Type</InputLabel>
-                  <Select
-                    name="employmentType"
-                    value={formData.employmentType}
-                    onChange={handleChange}
-                    label="Employment Type"
-                  >
-                    {employmentTypes.map(type => (
-                      <MenuItem key={type} value={type}>{type}</MenuItem>
-                    ))}
+                  <Select name="employmentType" label="Employment Type"
+                    value={formData.employmentType} onChange={handleChange}>
+                    {employmentTypes.map(t => <MenuItem key={t} value={t}>{t}</MenuItem>)}
                   </Select>
                 </FormControl>
               </Grid>
+
+              {/* Dates */}
               <Grid item xs={12} sm={6}>
-                <TextField
-                  required
-                  fullWidth
-                  label="Date of Joining"
-                  name="dateOfJoining"
-                  type="date"
-                  value={formData.dateOfJoining}
-                  onChange={handleChange}
-                  InputLabelProps={{ shrink: true }}
-                  variant="outlined"
-                />
+                <TextField fullWidth type="date" label="Date of Joining"
+                  name="dateOfJoining" InputLabelProps={{ shrink: true }}
+                  value={formData.dateOfJoining} onChange={handleChange} />
               </Grid>
+
               <Grid item xs={12} sm={6}>
-                <TextField
-                  required
-                  fullWidth
-                  label="Date of Birth"
-                  name="dateOfBirth"
-                  type="date"
-                  value={formData.dateOfBirth}
-                  onChange={handleChange}
-                  InputLabelProps={{ shrink: true }}
-                  variant="outlined"
-                />
+                <TextField fullWidth type="date" label="Date of Birth"
+                  name="dateOfBirth" InputLabelProps={{ shrink: true }}
+                  value={formData.dateOfBirth} onChange={handleChange} />
               </Grid>
+
+              {/* Location */}
               <Grid item xs={12} sm={6}>
-                <FormControl fullWidth variant="outlined">
+                <FormControl fullWidth
+                  sx={{ "& .MuiInputBase-root": { height: 60, borderRadius: "10px" } }}
+                >
                   <InputLabel>Location</InputLabel>
-                  <Select
-                    name="location"
-                    value={formData.location}
-                    onChange={handleChange}
-                    label="Location"
-                  >
-                    {locations.map(loc => (
-                      <MenuItem key={loc} value={loc}>{loc}</MenuItem>
-                    ))}
+                  <Select name="location" label="Location"
+                    value={formData.location} onChange={handleChange}>
+                    {locations.map(l => <MenuItem key={l} value={l}>{l}</MenuItem>)}
                   </Select>
                 </FormControl>
               </Grid>
+
             </Grid>
           </Box>
         );
 
+      // ========== STEP 2 ==========
       case 1:
         return (
           <Box sx={{ mt: 3 }}>
-            <Typography variant="h6" gutterBottom color="primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="h6" color="primary" sx={{ display: "flex", gap: 1 }}>
               <Fingerprint /> Bank & Government IDs
             </Typography>
+
             <Grid container spacing={3}>
+
+              <Grid item xs={12} sm={6}><TextField fullWidth label="PAN Number" name="panNumber" value={formData.panNumber} onChange={handleChange} /></Grid>
+              <Grid item xs={12} sm={6}><TextField fullWidth label="Aadhar Number" name="aadharNumber" value={formData.aadharNumber} onChange={handleChange} /></Grid>
+              <Grid item xs={12} sm={6}><TextField fullWidth label="UAN Number" name="uanNumber" value={formData.uanNumber} onChange={handleChange} /></Grid>
+              <Grid item xs={12} sm={6}><TextField fullWidth label="PF Number" name="pfNumber" value={formData.pfNumber} onChange={handleChange} /></Grid>
+              <Grid item xs={12} sm={6}><TextField fullWidth label="ESI Number" name="esiNumber" value={formData.esiNumber} onChange={handleChange} /></Grid>
+
+              <Grid item xs={12}><Divider /><Typography variant="h6" sx={{ mt: 2, display: "flex", gap: 1 }}><AccountBalance /> Bank Details</Typography></Grid>
+
+              <Grid item xs={12} sm={6}><TextField fullWidth label="Bank Name" name="bankName" value={formData.bankName} onChange={handleChange} /></Grid>
+              <Grid item xs={12} sm={6}><TextField fullWidth label="Account Number" name="accountNumber" value={formData.accountNumber} onChange={handleChange} /></Grid>
+              <Grid item xs={12} sm={6}><TextField fullWidth label="IFSC Code" name="ifscCode" value={formData.ifscCode} onChange={handleChange} /></Grid>
+
+              {/* Payment Method */}
               <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="PAN Number"
-                  name="panNumber"
-                  value={formData.panNumber}
-                  onChange={handleChange}
-                  variant="outlined"
-                  inputProps={{ maxLength: 10 }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Aadhar Number"
-                  name="aadharNumber"
-                  value={formData.aadharNumber}
-                  onChange={handleChange}
-                  variant="outlined"
-                  inputProps={{ maxLength: 12 }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="UAN Number"
-                  name="uanNumber"
-                  value={formData.uanNumber}
-                  onChange={handleChange}
-                  variant="outlined"
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="PF Number"
-                  name="pfNumber"
-                  value={formData.pfNumber}
-                  onChange={handleChange}
-                  variant="outlined"
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="ESI Number"
-                  name="esiNumber"
-                  value={formData.esiNumber}
-                  onChange={handleChange}
-                  variant="outlined"
-                />
-              </Grid>
-              
-              <Grid item xs={12}>
-                <Divider sx={{ my: 2 }} />
-                <Typography variant="h6" gutterBottom color="primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <AccountBalance /> Bank Details
-                </Typography>
-              </Grid>
-              
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Bank Name"
-                  name="bankName"
-                  value={formData.bankName}
-                  onChange={handleChange}
-                  variant="outlined"
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Account Number"
-                  name="accountNumber"
-                  value={formData.accountNumber}
-                  onChange={handleChange}
-                  variant="outlined"
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="IFSC Code"
-                  name="ifscCode"
-                  value={formData.ifscCode}
-                  onChange={handleChange}
-                  variant="outlined"
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth variant="outlined">
+                <FormControl fullWidth
+                  sx={{ "& .MuiInputBase-root": { height: 60, borderRadius: "10px" } }}
+                >
                   <InputLabel>Payment Method</InputLabel>
-                  <Select
-                    name="paymentMethod"
-                    value={formData.paymentMethod}
-                    onChange={handleChange}
-                    label="Payment Method"
-                  >
-                    {paymentMethods.map(method => (
-                      <MenuItem key={method} value={method}>{method}</MenuItem>
-                    ))}
+                  <Select name="paymentMethod" label="Payment Method"
+                    value={formData.paymentMethod} onChange={handleChange}>
+                    {paymentMethods.map(m => <MenuItem key={m} value={m}>{m}</MenuItem>)}
                   </Select>
                 </FormControl>
               </Grid>
+
             </Grid>
           </Box>
         );
 
+      // ========== STEP 3 ==========
       case 2:
         return (
           <Box sx={{ mt: 3 }}>
-            <Typography variant="h6" gutterBottom color="primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="h6" color="primary" sx={{ display: "flex", gap: 1 }}>
               <AttachMoney /> Salary Components
             </Typography>
+
             <Grid container spacing={3}>
-              <Grid item xs={12}>
-            
-              </Grid>
+
+              {/* Earnings */}
+              <Grid item xs={12} sm={6}><TextField fullWidth label="Basic Pay" type="number" name="basicPay" value={formData.basicPay} onChange={handleChange} /></Grid>
+              <Grid item xs={12} sm={6}><TextField fullWidth label="HRA" type="number" name="houseRentAllowance" value={formData.houseRentAllowance} onChange={handleChange} /></Grid>
+              <Grid item xs={12} sm={6}><TextField fullWidth label="Medical Allowance" type="number" name="medicalAllowance" value={formData.medicalAllowance} onChange={handleChange} /></Grid>
+              <Grid item xs={12} sm={6}><TextField fullWidth label="Conveyance Allowance" type="number" name="conveyanceAllowance" value={formData.conveyanceAllowance} onChange={handleChange} /></Grid>
+              <Grid item xs={12} sm={6}><TextField fullWidth label="Special Allowance" type="number" name="specialAllowance" value={formData.specialAllowance} onChange={handleChange} /></Grid>
+              <Grid item xs={12} sm={6}><TextField fullWidth label="Other Allowance" type="number" name="otherAllowance" value={formData.otherAllowance} onChange={handleChange} /></Grid>
+
+              {/* NEW — Drift Allowance */}
+              <Grid item xs={12} sm={6}><TextField fullWidth label="Drift Allowance" type="number" name="driftAllowance" value={formData.driftAllowance} onChange={handleChange} /></Grid>
+
+              <Grid item xs={12}><Divider /><Typography variant="subtitle1" color="primary">Deductions</Typography></Grid>
+
+              <Grid item xs={12} sm={6}><TextField fullWidth label="Provident Fund" type="number" name="providentFund" value={formData.providentFund} onChange={handleChange} /></Grid>
+              <Grid item xs={12} sm={6}><TextField fullWidth label="Professional Tax" type="number" name="professionalTax" value={formData.professionalTax} onChange={handleChange} /></Grid>
+              <Grid item xs={12} sm={6}><TextField fullWidth label="Income Tax (TDS)" type="number" name="incomeTax" value={formData.incomeTax} onChange={handleChange} /></Grid>
+              <Grid item xs={12} sm={6}><TextField fullWidth label="Loan Deductions" type="number" name="loanDeductions" value={formData.loanDeductions} onChange={handleChange} /></Grid>
+              <Grid item xs={12} sm={6}><TextField fullWidth label="Total Deductions" type="number" name="TotalDeductions" value={formData.TotalDeductions} onChange={handleChange} /></Grid>
+
+              {/* Attendance Section */}
+              <Grid item xs={12}><Divider /><Typography variant="subtitle1" color="primary" sx={{ display: "flex", gap: 1 }}><CalendarMonth /> Attendance & Days</Typography></Grid>
+
+              {/* Effective From */}
               <Grid item xs={12} sm={6}>
-                <TextField
-                  required
-                  fullWidth
-                  label="Basic Pay"
-                  name="basicPay"
-                  type="number"
-                  value={formData.basicPay}
-                  onChange={handleChange}
-                  variant="outlined"
-                  InputProps={{ inputProps: { min: 0, step: 0.01 } }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="House Rent Allowance (HRA)"
-                  name="houseRentAllowance"
-                  type="number"
-                  value={formData.houseRentAllowance}
-                  onChange={handleChange}
-                  variant="outlined"
-                  InputProps={{ inputProps: { min: 0, step: 0.01 } }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Medical Allowance"
-                  name="medicalAllowance"
-                  type="number"
-                  value={formData.medicalAllowance}
-                  onChange={handleChange}
-                  variant="outlined"
-                  InputProps={{ inputProps: { min: 0, step: 0.01 } }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Conveyance Allowance"
-                  name="conveyanceAllowance"
-                  type="number"
-                  value={formData.conveyanceAllowance}
-                  onChange={handleChange}
-                  variant="outlined"
-                  InputProps={{ inputProps: { min: 0, step: 0.01 } }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Special Allowance"
-                  name="specialAllowance"
-                  type="number"
-                  value={formData.specialAllowance}
-                  onChange={handleChange}
-                  variant="outlined"
-                  InputProps={{ inputProps: { min: 0, step: 0.01 } }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Other Allowance"
-                  name="otherAllowance"
-                  type="number"
-                  value={formData.otherAllowance}
-                  onChange={handleChange}
-                  variant="outlined"
-                  InputProps={{ inputProps: { min: 0, step: 0.01 } }}
-                />
+                <TextField fullWidth type="date" label="Effective From"
+                  name="effectiveFrom" InputLabelProps={{ shrink: true }}
+                  value={formData.effectiveFrom} onChange={handleChange}
+                  sx={{ "& .MuiInputBase-root": { height: 55 } }} />
               </Grid>
 
-              <Grid item xs={12}>
-                <Divider sx={{ my: 2 }} />
-                <Typography variant="subtitle1" gutterBottom color="primary">
-                  Deductions
-                </Typography>
+              {/* Effective To */}
+              <Grid item xs={12} sm={6}>
+                <TextField fullWidth type="date" label="Effective To"
+                  name="effectiveTo" InputLabelProps={{ shrink: true }}
+                  value={formData.effectiveTo} onChange={handleChange}
+                  sx={{ "& .MuiInputBase-root": { height: 55 } }} />
               </Grid>
 
               <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Provident Fund (PF)"
-                  name="providentFund"
-                  type="number"
-                  value={formData.providentFund}
-                  onChange={handleChange}
-                  variant="outlined"
-                  InputProps={{ inputProps: { min: 0, step: 0.01 } }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Professional Tax"
-                  name="professionalTax"
-                  type="number"
-                  value={formData.professionalTax}
-                  onChange={handleChange}
-                  variant="outlined"
-                  InputProps={{ inputProps: { min: 0, step: 0.01 } }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Income Tax (TDS)"
-                  name="incomeTax"
-                  type="number"
-                  value={formData.incomeTax}
-                  onChange={handleChange}
-                  variant="outlined"
-                  InputProps={{ inputProps: { min: 0, step: 0.01 } }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Loan Deductions"
-                  name="loanDeductions"
-                  type="number"
-                  value={formData.loanDeductions}
-                  onChange={handleChange}
-                  variant="outlined"
-                  InputProps={{ inputProps: { min: 0, step: 0.01 } }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Total Deductions"
-                  name="TotalDeductions"
-                  type="number"
-                  value={formData.TotalDeductions}
-                  onChange={handleChange}
-                  variant="outlined"
-                  InputProps={{ inputProps: { min: 0, step: 0.01 } }}
-                />
-              </Grid>
-
-              <Grid item xs={12}>
-                <Divider sx={{ my: 2 }} />
-                <Typography variant="subtitle1" gutterBottom color="primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <CalendarMonth /> Attendance & Days
-                </Typography>
+                <TextField fullWidth label="Payable Days" type="number"
+                  name="payableDays" value={formData.payableDays} onChange={handleChange}
+                  sx={{ "& .MuiInputBase-root": { height: 55 } }} />
               </Grid>
 
               <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Payable Days"
-                  name="payableDays"
-                  type="number"
-                  value={formData.payableDays}
-                  onChange={handleChange}
-                  variant="outlined"
-                  InputProps={{ inputProps: { min: 0, max: 31 } }}
-                />
+                <TextField fullWidth label="Loss of Pay Days" type="number"
+                  name="lossofDaysDays" value={formData.lossofDaysDays} onChange={handleChange}
+                  sx={{ "& .MuiInputBase-root": { height: 55 } }} />
               </Grid>
+
               <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Standard Days"
-                  name="standardDays"
-                  type="number"
-                  value={formData.standardDays}
-                  onChange={handleChange}
-                  variant="outlined"
-                  InputProps={{ inputProps: { min: 0, max: 31 } }}
-                />
+                <TextField fullWidth label="Loss of Pay Reversal Days" type="number"
+                  name="lossofpayreversalDays" value={formData.lossofpayreversalDays} onChange={handleChange}
+                  sx={{ "& .MuiInputBase-root": { height: 55 } }} />
               </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Loss of Pay Days"
-                  name="lossofDaysDays"
-                  type="number"
-                  value={formData.lossofDaysDays}
-                  onChange={handleChange}
-                  variant="outlined"
-                  InputProps={{ inputProps: { min: 0, max: 31 } }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  fullWidth
-                  label="Loss of Pay Reversal Days"
-                  name="lossofpayreversalDays"
-                  type="number"
-                  value={formData.lossofpayreversalDays}
-                  onChange={handleChange}
-                  variant="outlined"
-                  InputProps={{ inputProps: { min: 0, max: 31 } }}
-                />
-              </Grid>
+
             </Grid>
           </Box>
         );
 
+      // ========== STEP 4 ==========
       case 3:
         return (
           <Box sx={{ mt: 3 }}>
-            <Typography variant="h6" gutterBottom color="primary" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Typography variant="h6" sx={{ display: "flex", gap: 1 }}>
               <Calculate /> Review Salary Structure
             </Typography>
-            
-            <Alert severity="info" sx={{ mb: 3 }}>
-              Review all information before saving the salary structure.
+
+            <Alert severity="info" sx={{ mb: 2 }}>
+              Review all details before saving.
             </Alert>
 
             <Grid container spacing={3}>
+
+              {/* LEFT SIDE */}
               <Grid item xs={12} md={6}>
-                <Card variant="outlined" sx={{ mb: 2 }}>
+                {/* Employee Details Card */}
+                <Card sx={{ mb: 2 }}>
                   <CardContent>
-                    <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="h6" sx={{ display: "flex", gap: 1 }}>
                       <AccountCircle /> Employee Details
                     </Typography>
+
                     <TableContainer>
                       <Table size="small">
                         <TableBody>
-                          <TableRow><TableCell><strong>Name</strong></TableCell><TableCell>{formData.employeeName}</TableCell></TableRow>
-                          <TableRow><TableCell><strong>Employee ID</strong></TableCell><TableCell>{formData.employeeId}</TableCell></TableRow>
-                          <TableRow><TableCell><strong>Designation</strong></TableCell><TableCell>{formData.designation}</TableCell></TableRow>
-                          <TableRow><TableCell><strong>DOJ</strong></TableCell><TableCell>{formData.dateOfJoining}</TableCell></TableRow>
-                          <TableRow><TableCell><strong>DOB</strong></TableCell><TableCell>{formData.dateOfBirth}</TableCell></TableRow>
-                          <TableRow><TableCell><strong>Location</strong></TableCell><TableCell>{formData.location}</TableCell></TableRow>
-                          <TableRow><TableCell><strong>Employment Type</strong></TableCell><TableCell>{formData.employmentType}</TableCell></TableRow>
+                          <TableRow><TableCell>Name</TableCell><TableCell>{formData.employeeName}</TableCell></TableRow>
+                          <TableRow><TableCell>Employee ID</TableCell><TableCell>{formData.employeeId}</TableCell></TableRow>
+                          <TableRow><TableCell>Designation</TableCell><TableCell>{formData.designation}</TableCell></TableRow>
+                          <TableRow><TableCell>DOJ</TableCell><TableCell>{formData.dateOfJoining}</TableCell></TableRow>
+                          <TableRow><TableCell>DOB</TableCell><TableCell>{formData.dateOfBirth}</TableCell></TableRow>
+                          <TableRow><TableCell>Location</TableCell><TableCell>{formData.location}</TableCell></TableRow>
+                          <TableRow><TableCell>Employment Type</TableCell><TableCell>{formData.employmentType}</TableCell></TableRow>
                         </TableBody>
                       </Table>
                     </TableContainer>
                   </CardContent>
                 </Card>
 
-                <Card variant="outlined">
+                {/* IDs & Bank */}
+                <Card>
                   <CardContent>
-                    <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="h6" sx={{ display: "flex", gap: 1 }}>
                       <Fingerprint /> IDs & Bank
                     </Typography>
+
                     <TableContainer>
                       <Table size="small">
                         <TableBody>
-                          <TableRow><TableCell><strong>PAN</strong></TableCell><TableCell>{formData.panNumber}</TableCell></TableRow>
-                          <TableRow><TableCell><strong>Aadhar</strong></TableCell><TableCell>{formData.aadharNumber}</TableCell></TableRow>
-                          <TableRow><TableCell><strong>UAN</strong></TableCell><TableCell>{formData.uanNumber}</TableCell></TableRow>
-                          <TableRow><TableCell><strong>Bank</strong></TableCell><TableCell>{formData.bankName}</TableCell></TableRow>
-                          <TableRow><TableCell><strong>Account No.</strong></TableCell><TableCell>{formData.accountNumber}</TableCell></TableRow>
-                          <TableRow><TableCell><strong>Payment Method</strong></TableCell><TableCell>{formData.paymentMethod}</TableCell></TableRow>
+                          <TableRow><TableCell>PAN</TableCell><TableCell>{formData.panNumber}</TableCell></TableRow>
+                          <TableRow><TableCell>Aadhar</TableCell><TableCell>{formData.aadharNumber}</TableCell></TableRow>
+                          <TableRow><TableCell>UAN</TableCell><TableCell>{formData.uanNumber}</TableCell></TableRow>
+                          <TableRow><TableCell>Bank</TableCell><TableCell>{formData.bankName}</TableCell></TableRow>
+                          <TableRow><TableCell>Account No</TableCell><TableCell>{formData.accountNumber}</TableCell></TableRow>
+                          <TableRow><TableCell>Payment Method</TableCell><TableCell>{formData.paymentMethod}</TableCell></TableRow>
                         </TableBody>
                       </Table>
                     </TableContainer>
+
                   </CardContent>
                 </Card>
               </Grid>
 
+              {/* RIGHT SIDE */}
               <Grid item xs={12} md={6}>
-                <Card variant="outlined" sx={{ mb: 2 }}>
+                {/* Salary Breakdown Card */}
+                <Card>
                   <CardContent>
-                    <Typography variant="h6" gutterBottom>Salary Breakdown</Typography>
+                    <Typography variant="h6">Salary Breakdown</Typography>
+
+                    {/* Earnings */}
                     <TableContainer>
                       <Table size="small">
                         <TableHead>
                           <TableRow>
                             <TableCell><strong>Earnings</strong></TableCell>
-                            <TableCell align="right"><strong>Amount (₹)</strong></TableCell>
+                            <TableCell align="right"><strong>Amount</strong></TableCell>
                           </TableRow>
                         </TableHead>
+
                         <TableBody>
-                          <TableRow><TableCell>Basic Pay</TableCell><TableCell align="right">{parseFloat(formData.basicPay || 0).toFixed(2)}</TableCell></TableRow>
-                          <TableRow><TableCell>HRA</TableCell><TableCell align="right">{parseFloat(formData.houseRentAllowance || 0).toFixed(2)}</TableCell></TableRow>
-                          <TableRow><TableCell>Medical Allowance</TableCell><TableCell align="right">{parseFloat(formData.medicalAllowance || 0).toFixed(2)}</TableCell></TableRow>
-                          <TableRow><TableCell>Conveyance</TableCell><TableCell align="right">{parseFloat(formData.conveyanceAllowance || 0).toFixed(2)}</TableCell></TableRow>
-                          <TableRow><TableCell>Special Allowance</TableCell><TableCell align="right">{parseFloat(formData.specialAllowance || 0).toFixed(2)}</TableCell></TableRow>
-                          <TableRow><TableCell>Other Allowance</TableCell><TableCell align="right">{parseFloat(formData.otherAllowance || 0).toFixed(2)}</TableCell></TableRow>
-                          <TableRow sx={{ bgcolor: 'action.hover' }}><TableCell><strong>Gross Salary</strong></TableCell><TableCell align="right"><strong>{totals.grossSalary.toFixed(2)}</strong></TableCell></TableRow>
+                          <TableRow><TableCell>Basic Pay</TableCell><TableCell align="right">{formData.basicPay}</TableCell></TableRow>
+                          <TableRow><TableCell>HRA</TableCell><TableCell align="right">{formData.houseRentAllowance}</TableCell></TableRow>
+                          <TableRow><TableCell>Medical Allowance</TableCell><TableCell align="right">{formData.medicalAllowance}</TableCell></TableRow>
+                          <TableRow><TableCell>Conveyance Allowance</TableCell><TableCell align="right">{formData.conveyanceAllowance}</TableCell></TableRow>
+                          <TableRow><TableCell>Special Allowance</TableCell><TableCell align="right">{formData.specialAllowance}</TableCell></TableRow>
+                          <TableRow><TableCell>Other Allowance</TableCell><TableCell align="right">{formData.otherAllowance}</TableCell></TableRow>
+
+                          {/* Drift Allowance */}
+                          <TableRow><TableCell>Drift Allowance</TableCell><TableCell align="right">{formData.driftAllowance}</TableCell></TableRow>
+
+                          <TableRow sx={{ bgcolor: "#eeeeee" }}>
+                            <TableCell><strong>Gross Salary</strong></TableCell>
+                            <TableCell align="right"><strong>{totals.grossSalary.toFixed(2)}</strong></TableCell>
+                          </TableRow>
                         </TableBody>
                       </Table>
                     </TableContainer>
 
+                    {/* Deductions */}
                     <TableContainer sx={{ mt: 2 }}>
                       <Table size="small">
                         <TableHead>
                           <TableRow>
                             <TableCell><strong>Deductions</strong></TableCell>
-                            <TableCell align="right"><strong>Amount (₹)</strong></TableCell>
+                            <TableCell align="right"><strong>Amount</strong></TableCell>
                           </TableRow>
                         </TableHead>
+
                         <TableBody>
-                          <TableRow><TableCell>Provident Fund</TableCell><TableCell align="right">{parseFloat(formData.providentFund || 0).toFixed(2)}</TableCell></TableRow>
-                          <TableRow><TableCell>Professional Tax</TableCell><TableCell align="right">{parseFloat(formData.professionalTax || 0).toFixed(2)}</TableCell></TableRow>
-                          <TableRow><TableCell>Income Tax</TableCell><TableCell align="right">{parseFloat(formData.incomeTax || 0).toFixed(2)}</TableCell></TableRow>
-                          <TableRow><TableCell>Loan Deductions</TableCell><TableCell align="right">{parseFloat(formData.loanDeductions || 0).toFixed(2)}</TableCell></TableRow>
-                          <TableRow sx={{ bgcolor: 'action.hover' }}><TableCell><strong>Total Deductions</strong></TableCell><TableCell align="right"><strong>{totals.totalDeductions.toFixed(2)}</strong></TableCell></TableRow>
+                          <TableRow><TableCell>PF</TableCell><TableCell align="right">{formData.providentFund}</TableCell></TableRow>
+                          <TableRow><TableCell>Professional Tax</TableCell><TableCell align="right">{formData.professionalTax}</TableCell></TableRow>
+                          <TableRow><TableCell>Income Tax</TableCell><TableCell align="right">{formData.incomeTax}</TableCell></TableRow>
+                          <TableRow><TableCell>Loan Deductions</TableCell><TableCell align="right">{formData.loanDeductions}</TableCell></TableRow>
+
+                          <TableRow sx={{ bgcolor: "#eeeeee" }}>
+                            <TableCell><strong>Total Deductions</strong></TableCell>
+                            <TableCell align="right"><strong>{totals.totalDeductions}</strong></TableCell>
+                          </TableRow>
                         </TableBody>
                       </Table>
                     </TableContainer>
 
-                    <Box sx={{ mt: 2, p: 2, bgcolor: 'primary.main', color: 'white', borderRadius: 1 }}>
-                      <Typography variant="h6" align="center">
-                        Net Salary: ₹{totals.netSalary.toFixed(2)}
-                      </Typography>
+                    {/* Net Salary */}
+                    <Box sx={{ mt: 2, p: 2, bgcolor: "green", color: "white", borderRadius: 1, textAlign: "center" }}>
+                      <Typography variant="h6">Net Salary: ₹{totals.netSalary.toFixed(2)}</Typography>
                     </Box>
 
                     <Box sx={{ mt: 2 }}>
-                      <Typography variant="subtitle2" gutterBottom>Days Information:</Typography>
+                      <Typography variant="subtitle2">Attendance Details</Typography>
+                      <Typography>Effective From: {formData.effectiveFrom}</Typography>
+                      <Typography>Effective To: {formData.effectiveTo}</Typography>
                       <Typography>Payable Days: {formData.payableDays}</Typography>
-                      <Typography>Standard Days: {formData.standardDays}</Typography>
                       <Typography>Loss of Pay Days: {formData.lossofDaysDays}</Typography>
                       <Typography>LOP Reversal Days: {formData.lossofpayreversalDays}</Typography>
                     </Box>
+
                   </CardContent>
                 </Card>
               </Grid>
+
             </Grid>
           </Box>
         );
 
       default:
-        return <Typography>Unknown step</Typography>;
+        return null;
     }
   };
 
   return (
-    <Box sx={{ flexGrow: 1, minHeight: '100vh', bgcolor: 'background.default' }}>
-      <AppBar position="static" elevation={0}>
+    <Box sx={{ flexGrow: 1 }}>
+      <AppBar position="static">
         <Toolbar>
           <AttachMoney sx={{ mr: 2 }} />
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Salary Structure Management
-          </Typography>
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>Salary Structure Management</Typography>
           <Chip label="Payroll System" color="secondary" />
         </Toolbar>
       </AppBar>
 
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Paper elevation={3} sx={{ p: 4 }}>
-          <Typography variant="h4" gutterBottom align="center" color="primary">
-            Employee Salary Structure
-          </Typography>
-          <Typography variant="subtitle1" gutterBottom align="center" color="text.secondary">
-            Define and manage employee salary components
-          </Typography>
+        <Paper sx={{ p: 4 }}>
+          <Typography variant="h4" align="center" color="primary">Employee Salary Structure</Typography>
+          <Typography align="center" sx={{ mb: 2 }}>Define and manage employee salary components</Typography>
 
           <Stepper activeStep={activeStep} sx={{ mt: 4, mb: 4 }}>
-            {steps.map((label) => (
-              <Step key={label}>
-                <StepLabel>{label}</StepLabel>
-              </Step>
+            {steps.map(label => (
+              <Step key={label}><StepLabel>{label}</StepLabel></Step>
             ))}
           </Stepper>
 
-          <form onSubmit={handleSubmit}>
+          <form>
             {renderStepContent(activeStep)}
 
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
@@ -789,21 +516,11 @@ const SalaryStructure = () => {
                 </Button>
 
                 {activeStep === steps.length - 1 ? (
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    color="primary"
-                    startIcon={<Download />}
-                    size="large"
-                  >
+                  <Button variant="contained" color="primary" startIcon={<Download />}>
                     Save Salary Structure
                   </Button>
                 ) : (
-                  <Button
-                    variant="contained"
-                    onClick={handleNext}
-                    color="primary"
-                  >
+                  <Button variant="contained" color="primary" onClick={handleNext}>
                     Next
                   </Button>
                 )}
