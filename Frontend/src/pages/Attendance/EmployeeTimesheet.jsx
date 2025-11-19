@@ -495,9 +495,7 @@ if (entry.leaveType) statusKey = `${entry.leaveType}_${dayIndex}`;
       days.forEach((_, i) => {
   if (!isWeekendDay(i)) {
 
-    // if (Number(hours[i]) > 0) {
-    //   newApprovalStatus[`worked_${i}`] = "submitted";
-    // }
+
 
     if (Number(shift1[i]) > 0) {
       newApprovalStatus[`shift1_${i}`] = "submitted";

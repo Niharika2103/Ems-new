@@ -38,6 +38,7 @@ import AuditLogsTable from "../pages/Attendance/AuditLogs";
 import EmployeeHolidayList from "../pages/Attendance/EmployeeHolidayList";
 import FreelancerDashboard from  "../pages/dashbaord/FreelancerDashboard";
 import FreelancerTable from  "../pages/Freelancer/freelancerTable";
+import SalaryStructure from '../pages/Accounts/SalaryStructure';
 
 function AppRoutes() {
   return (
@@ -101,6 +102,16 @@ function AppRoutes() {
         </ProtectedRoute>
       }
       />
+        <Route 
+      path="/dashboard//accounts/salary-structure"
+      element={
+        <ProtectedRoute allowedRoles={["admin"]}>
+          <SalaryStructure/>
+        </ProtectedRoute>
+      }
+      />
+
+       <Route path="/accounts/salary-structure" element={<SalaryStructure />} />
 
         <Route
           path="/attendance/projects"
