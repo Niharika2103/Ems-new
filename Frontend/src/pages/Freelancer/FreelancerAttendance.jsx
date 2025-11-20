@@ -19,7 +19,7 @@ const FreelancerDashboard = () => {
       icon: AccountCircleIcon,
       iconBg: "bg-gradient-to-r from-sky-100 to-sky-200",
       iconColor: "text-sky-700",
-    //   onClick: () => navigate("/attendance/timesheettable"),
+      onClick: () => navigate("/freelancer/attendance/timesheet-approval" ),
     },
     {
       title: "Assigned Projects",
