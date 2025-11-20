@@ -10,6 +10,11 @@ import fs from "fs";
 
 import axios from "axios";
 
+import { loadTemplate } from "../utils/templateLoader.js";
+// import pdf from "html-pdf";
+
+import puppeteer from "puppeteer";
+
 // ✅ Updated table names
 const USER_MASTER_TABLE = "user_employees_master";
 const REGISTRATIONS_TABLE = "registrations";
@@ -1639,3 +1644,190 @@ export const getAuditLogs = async (req, res) => {
     client.release();
   }
 };
+
+
+
+// Template mapping
+const templateFileMap = {
+  "Offer Letter": "offerLetter.html",
+  "Appointment Letter": "appointmentLetter.html",
+  "Experience Letter": "experienceLetter.html",
+  "Relieving Letter": "relievingLetter.html",
+  "Confirmation Letter": "confirmationLetter.html",
+  "Promotion Letter": "promotionLetter.html",
+  "Salary Increment Letter": "salaryIncrementLetter.html",
+  "Warning Letter": "warningLetter.html"
+};
+
+// Replace {{placeholders}}
+function fillTemplate(template, data) {
+  return template.replace(/{{(.*?)}}/g, (_, key) => data[key.trim()] || "");
+}
+
+// PDF generator
+async function generatePDF(htmlContent, outputPath) {
+  const browser = await puppeteer.launch({
+    headless: "new",
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
+
+  const page = await browser.newPage();
+  await page.setContent(htmlContent, { waitUntil: "networkidle0" });
+
+  await page.pdf({
+    path: outputPath,
+    format: "A4",
+    printBackground: true,
+  });
+
+  await browser.close();
+}
+
+// MAIN API
+export const generateLetter = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { employeeId, letterType } = req.body;
+
+    if (!employeeId || !letterType) {
+      return res.status(400).json({ error: "employeeId and letterType are required" });
+    }
+
+    // 1️⃣ Fetch employee
+    const empResult = await client.query(
+      `SELECT * FROM user_employees_master WHERE id = $1`,
+      [employeeId]
+    );
+    const emp = empResult.rows[0];
+
+    if (!emp) return res.status(404).json({ error: "Employee not found" });
+
+    // 2️⃣ Fetch latest salary record
+    const salResult = await client.query(
+      `SELECT * FROM salary_structure WHERE employee_id = $1 ORDER BY created_at DESC LIMIT 1`,
+      [employeeId]
+    );
+    const sal = salResult.rows[0] || {};
+
+    // 3️⃣ Select template file
+    const selectedTemplate = templateFileMap[letterType];
+    if (!selectedTemplate)
+      return res.status(400).json({ error: "Invalid letter type selected" });
+
+    const templateContent = loadTemplate(selectedTemplate);
+if (!templateContent) {
+  return res.status(500).json({ error: "Template file missing" });
+}
+
+    // 4️⃣ Prepare placeholder data
+    const data = {
+      name: emp.name,
+      designation: emp.designation,
+      department: emp.department,
+      employee_code: emp.employee_id,
+      address: emp.address,
+      permanent_address: emp.permanent_address,
+      date_of_joining: emp.date_of_joining,
+      effective_from: sal.effective_from,
+      effective_to: sal.effective_to,
+      location: sal.location,
+      basic_pay: sal.basic_pay,
+      hra: sal.hra,
+      special_allowance: sal.special_allowance,
+      other_allowances: sal.other_allowances,
+      gross_salary: sal.gross_salary,
+      net_salary: sal.net_salary,
+      pan_number: sal.pan_number,
+      bank_name: sal.bank_name,
+      ifsc_code: sal.ifsc_code,
+      account_number: sal.account_number
+    };
+
+    // Fill HTML
+    const filledHTML = fillTemplate(templateContent, data);
+
+    // 5️⃣ Generate PDF file
+    const lettersDir = path.join(process.cwd(), "src/uploads/letters");
+    if (!fs.existsSync(lettersDir)) fs.mkdirSync(lettersDir, { recursive: true });
+
+    const fileName = `${letterType.replace(/ /g, "_")}_${Date.now()}.pdf`;
+    const filePath = path.join(lettersDir, fileName);
+
+    await generatePDF(filledHTML, filePath);
+
+    // ---------------------- SAVE MULTIPLE PDF FILES IN JSONB ----------------------
+
+    // Fetch existing document list
+    const docResult = await client.query(
+      `SELECT document_url FROM user_employees_master WHERE id=$1`,
+      [employeeId]
+    );
+
+    let existingDocs = docResult.rows[0]?.document_url || [];
+
+    if (!Array.isArray(existingDocs)) existingDocs = [];
+
+    // Add new PDF filename
+    existingDocs.push(fileName);
+
+    // Update DB
+    await client.query(
+      `UPDATE user_employees_master
+         SET document_url = $1::jsonb,
+             updated_at = NOW()
+         WHERE id = $2`,
+      [JSON.stringify(existingDocs), employeeId]
+    );
+
+    // Success Response
+    return res.json({
+      message: "Letter generated successfully",
+      pdf_url: `/uploads/letters/${fileName}`,
+      file_name: fileName,
+      documents: existingDocs
+    });
+
+  } catch (err) {
+    console.error("Generate Letter Error:", err.message);
+    return res.status(500).json({ error: "Failed to generate letter" });
+  } finally {
+    client.release();
+  }
+};
+
+
+export const getEmployeeLetters = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { employeeId } = req.params;
+
+    const result = await client.query(
+      `SELECT document_url FROM user_employees_master WHERE id = $1`,
+      [employeeId]
+    );
+
+    const docs = result.rows[0]?.document_url || [];
+
+    const BASE_URL =
+      process.env.BASE_URL || `http://localhost:${process.env.PORT || 5002}`;
+
+    // Convert file names into valid URLs
+    const files = docs.map((file) => ({
+      name: file,
+      url: `${BASE_URL}/uploads/letters/${file}`,
+    }));
+
+    res.json({
+      message: "Employee letters retrieved successfully",
+      files,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+};
+

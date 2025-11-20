@@ -30,6 +30,7 @@ import AuditLogs from "../pages/Attendance/AuditLogs";
 import FinancialYearSetup from '../pages/Attendance/FinancialYearSetup';
 import ProjectDashboard from "../pages/dashbaord/ProjectDashboard";
 import Letters from "../pages/documents/Letters";
+import AdminLetterGenerator from "../pages/documents/AdminLetterGenerator";
 import MonthlyTimesheet from "../pages/Attendance/MonthlyTimesheet";
 import EmployeeLeave from "../pages/Attendance/EmployeeLeave";
 import MaternityPaternityLeaveTable from "../pages/Attendance/MaternityPaternityLeaveTable";
@@ -41,6 +42,8 @@ import FreelancerInfo from  "../pages/Freelancer/FreelancerInfo";
 import FreelancerTable from  "../pages/Freelancer/freelancerTable";
 import FreelancerAttendance from  "../pages/Freelancer/FreelancerAttendance";
 import FreelancerProjectTable from  "../pages/Freelancer/FreelancerProjectTable";
+import FreelancerDocuments from  "../pages/Freelancer/FreelancerDocuments";
+import FreelancerAssignProjectpage from  "../pages/Freelancer/FreelancerAssignProjectpage";
 import SalaryStructure from '../pages/Accounts/SalaryStructure';
 
 function AppRoutes() {
@@ -215,6 +218,24 @@ function AppRoutes() {
           }
         />
 
+         <Route
+          path="/dashboard/freelancer/assign_projects"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <FreelancerAssignProjectpage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/freelancer/documents"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <FreelancerDocuments />
+            </ProtectedRoute>
+          }
+        />
+
 
 {/* <Route path="/freelancer/projects" element={<FreelancerProjectTable />} /> */}
         
@@ -281,6 +302,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute allowedRoles={["admin", "employee"]}>
               <Letters />
+            </ProtectedRoute>
+          }
+        />
+
+         <Route path="/documents/admin/letters"
+          element={
+           <ProtectedRoute allowedRoles={["admin"]}>
+              < AdminLetterGenerator/>
             </ProtectedRoute>
           }
         />

@@ -1,0 +1,82 @@
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; }
+    .container { width: 85%; margin: 0 auto; }
+    h2 { text-align: center; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+    table, th, td {
+      border: 1px solid #333;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <h2>OFFER LETTER</h2>
+
+    <p>Date: {{effective_from}}</p>
+    <p>To,<br>
+    <b>{{name}}</b><br>
+    {{address}}</p>
+
+    <p>Dear <b>{{name}}</b>,</p>
+
+    <p>We are pleased to offer you the position of <b>{{designation}}</b>
+       at our {{location}} office.</p>
+
+    <h3>Employment Details</h3>
+    <p>Employee Code: {{employee_code}}</p>
+    <p>Date of Joining: {{date_of_joining}}</p>
+
+    <h3>Salary Structure</h3>
+
+    <table>
+      <tr>
+        <th>Earnings</th>
+        <th>Amount (₹)</th>
+      </tr>
+      <tr>
+        <td>Basic Pay</td>
+        <td>{{basic_pay}}</td>
+      </tr>
+      <tr>
+        <td>HRA</td>
+        <td>{{hra}}</td>
+      </tr>
+      <tr>
+        <td>Special Allowance</td>
+        <td>{{special_allowance}}</td>
+      </tr>
+      <tr>
+        <td>Other Allowances</td>
+        <td>{{other_allowances}}</td>
+      </tr>
+      <tr>
+        <th>Gross Salary</th>
+        <th>{{gross_salary}}</th>
+      </tr>
+      <tr>
+        <th>Net Salary</th>
+        <th>{{net_salary}}</th>
+      </tr>
+    </table>
+
+    <br>
+
+    <p>Sincerely,<br>HR Team</p>
+  </div>
+</body>
+</html>

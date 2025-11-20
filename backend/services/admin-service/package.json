@@ -20,6 +20,7 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
     "pg": "^8.16.3",
+    "puppeteer": "^24.30.0",
     "qrcode": "^1.5.4",
     "speakeasy": "^2.0.0"
   },
