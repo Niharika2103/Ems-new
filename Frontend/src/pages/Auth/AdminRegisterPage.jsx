@@ -195,7 +195,7 @@ export default function AdminRegisterPage() {
                   label="Role"
                   name="role"
                   value={formData.role}
-                  onChange={handleChange}
+                  
                   fullWidth
                   size="small"
                   required
