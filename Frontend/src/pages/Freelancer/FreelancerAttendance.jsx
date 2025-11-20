@@ -5,12 +5,12 @@ import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
 
-const ProjectDashboard = () => {
+const FreelancerDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const pathnames = location.pathname.split("/").filter((x) => x);
 
-  const secondLevel = "Attendance";
+  const secondLevel = " Freelancer Attendance";
 
   const stats = [
     {
@@ -19,7 +19,7 @@ const ProjectDashboard = () => {
       icon: AccountCircleIcon,
       iconBg: "bg-gradient-to-r from-sky-100 to-sky-200",
       iconColor: "text-sky-700",
-      onClick: () => navigate("/attendance/timesheettable"),
+    //   onClick: () => navigate("/attendance/timesheettable"),
     },
     {
       title: "Assigned Projects",
@@ -27,23 +27,23 @@ const ProjectDashboard = () => {
       icon: AssignmentIcon,
       iconBg: "bg-gradient-to-r from-indigo-100 to-indigo-200",
       iconColor: "text-indigo-700",
-      onClick: () => navigate("/attendance/projects"),
+    //   onClick: () => navigate("/attendance/projects"),
     },
-    {
-      title: "Maternity & Paternity",
-      message: "Apply or check your leave eligibility",
-      icon: FamilyRestroomIcon,
-      iconBg: "bg-gradient-to-r from-pink-100 to-rose-200",
-      iconColor: "text-pink-700",
-      onClick: () => navigate("/attendance/maternity-paternity-leaves"),
-    },
+    // {
+    //   title: "Maternity & Paternity",
+    //   message: "Apply or check your leave eligibility",
+    //   icon: FamilyRestroomIcon,
+    //   iconBg: "bg-gradient-to-r from-pink-100 to-rose-200",
+    //   iconColor: "text-pink-700",
+    // //   onClick: () => navigate("/attendance/maternity-paternity-leaves"),
+    // },
     {
       title: "List Holidays",
       message: "View Your holidays List",
       icon: AssignmentIcon,
       iconBg: "bg-gradient-to-r from-pink-100 to-rose-200",
       iconColor: "text-pink-700",
-      onClick: () => navigate("/dashboard/employee/holiday"),
+    //   onClick: () => navigate("/dashboard/employee/holiday"),
     },
   ];
 
@@ -105,4 +105,4 @@ const ProjectDashboard = () => {
   );
 };
 
-export default ProjectDashboard;
+export default FreelancerDashboard;

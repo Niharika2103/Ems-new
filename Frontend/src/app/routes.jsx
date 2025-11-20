@@ -30,6 +30,7 @@ import AuditLogs from "../pages/Attendance/AuditLogs";
 import FinancialYearSetup from '../pages/Attendance/FinancialYearSetup';
 import ProjectDashboard from "../pages/dashbaord/ProjectDashboard";
 import Letters from "../pages/documents/Letters";
+import AdminLetterGenerator from "../pages/documents/AdminLetterGenerator";
 import MonthlyTimesheet from "../pages/Attendance/MonthlyTimesheet";
 import EmployeeLeave from "../pages/Attendance/EmployeeLeave";
 import MaternityPaternityLeaveTable from "../pages/Attendance/MaternityPaternityLeaveTable";
@@ -37,7 +38,12 @@ import EmpAttendanceDashboard from "../pages/dashbaord/EmpAttendanceDashboard";
 import AuditLogsTable from "../pages/Attendance/AuditLogs";
 import EmployeeHolidayList from "../pages/Attendance/EmployeeHolidayList";
 import FreelancerDashboard from  "../pages/dashbaord/FreelancerDashboard";
+import FreelancerInfo from  "../pages/Freelancer/FreelancerInfo";
 import FreelancerTable from  "../pages/Freelancer/freelancerTable";
+import FreelancerAttendance from  "../pages/Freelancer/FreelancerAttendance";
+import FreelancerProjectTable from  "../pages/Freelancer/FreelancerProjectTable";
+import FreelancerDocuments from  "../pages/Freelancer/FreelancerDocuments";
+import SalaryStructure from '../pages/Accounts/SalaryStructure';
 
 function AppRoutes() {
   return (
@@ -101,6 +107,15 @@ function AppRoutes() {
         </ProtectedRoute>
       }
       />
+        <Route 
+      path="/accounts/salary-structure"
+      element={
+        <ProtectedRoute allowedRoles={["admin"]}>
+          <SalaryStructure/>
+        </ProtectedRoute>
+      }
+      />
+
 
         <Route
           path="/attendance/projects"
@@ -175,6 +190,45 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/dashboard/freelancer/freelancerinfo"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <FreelancerInfo />
+            </ProtectedRoute>
+          }
+        />
+         <Route
+          path="/dashboard/freelancer/freelancerattendance"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <FreelancerAttendance />
+            </ProtectedRoute>
+          }
+        />
+
+          <Route
+          path="/dashboard//freelancer/projects"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <FreelancerProjectTable />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/dashboard/freelancer/documents"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <FreelancerDocuments />
+            </ProtectedRoute>
+          }
+        />
+
+
+{/* <Route path="/freelancer/projects" element={<FreelancerProjectTable />} /> */}
+        
         <Route
           path="/dashboard/emp_info"
           element={
@@ -183,6 +237,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+         
         <Route
           path="/dashboard/add_project"
           element={
@@ -237,6 +292,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute allowedRoles={["admin", "employee"]}>
               <Letters />
+            </ProtectedRoute>
+          }
+        />
+
+         <Route path="/documents/admin/letters"
+          element={
+           <ProtectedRoute allowedRoles={["admin"]}>
+              < AdminLetterGenerator/>
             </ProtectedRoute>
           }
         />

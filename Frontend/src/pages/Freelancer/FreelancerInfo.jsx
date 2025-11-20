@@ -7,12 +7,12 @@ import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
 
-const EmpInfoDashboard = () => {
+const FreelancerDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const pathnames = location.pathname.split("/").filter((x) => x);
   // Second-level title
-  const secondLevel = "Employee Info";
+  const secondLevel = "Freelancer Info";
 
   // Current page title
   const currentPage = pathnames[pathnames.length - 1] || "";
@@ -31,7 +31,7 @@ const EmpInfoDashboard = () => {
       icon: DescriptionIcon,
       iconBg: "bg-purple-100",
       iconColor: "text-purple-600",
-      onClick: () => navigate("/documents/letters"),
+      onClick: () => navigate("/dashboard/freelancer/documents"),
     },
     {
       title: "Letters",
@@ -39,7 +39,7 @@ const EmpInfoDashboard = () => {
       icon: MailOutlineIcon,
       iconBg: "bg-pink-100",
       iconColor: "text-pink-600",
-      onClick: () => navigate("/documents/admin/letters"),
+    //   onClick: () => navigate("/payslip"),
     },
     {
       title: "Probation",
@@ -47,7 +47,7 @@ const EmpInfoDashboard = () => {
       icon: VerifiedUserIcon,
       iconBg: "bg-yellow-100",
       iconColor: "text-yellow-600",
-      onClick: () => navigate("/probation"),
+    //   onClick: () => navigate("/probation"),
     },
     {
       title: "Referrals",
@@ -55,7 +55,7 @@ const EmpInfoDashboard = () => {
       icon: GroupAddIcon,
       iconBg: "bg-green-100",
       iconColor: "text-green-600",
-      onClick: () => navigate("/referrals"),
+    //   onClick: () => navigate("/referrals"),
     },
   ];
 
@@ -89,4 +89,4 @@ const EmpInfoDashboard = () => {
   );
 };
 
-export default EmpInfoDashboard;
+export default FreelancerDashboard;

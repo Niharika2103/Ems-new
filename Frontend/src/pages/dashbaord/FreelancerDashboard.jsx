@@ -21,28 +21,28 @@ const FreelancerDashboard = () => {
       onClick: () => navigate("/dashboard/freelancer/info"),
     },
     {
-    title: "Employee Info",
+    title: "Freelancer Info",
     message: "View and manage employee details",
     icon: PersonIcon,
     iconBg: "bg-sky-100",
     iconColor: "text-sky-600",
-    // onClick: () => navigate("/dashboard/freelancer/emp_info"),
+    onClick: () => navigate("/dashboard/freelancer/freelancerinfo"),
   },
   {
-    title: "Attendance",
+    title: " Freelancer Attendance",
     message: "Check your daily attendance records",
     icon: AccessTimeIcon,
     iconBg: "bg-orange-100",
     iconColor: "text-orange-600",
-    // onClick: () => navigate("/dashboard/freelancer/attendance"),
+    onClick: () => navigate("/dashboard/freelancer/freelancerattendance"),
   },
   {
-    title: "Projects",
+    title: " Freelancer Projects",
     message: "View all assigned and active projects",
     icon: AssignmentIcon,
     iconBg: "bg-green-100",
     iconColor: "text-green-600",
-    // onClick: () => navigate("/dashboard/freelancer/fetch_project"),
+    onClick: () => navigate("/dashboard//freelancer/projects"),
   },];
 
   return (

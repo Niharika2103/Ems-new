@@ -1,0 +1,118 @@
+package com.example.salary_structure.Services;
+
+import com.example.salary_structure.Entity.SalaryStructure;
+import com.example.salary_structure.Repository.SalaryStructureRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.time.Month;
+import java.time.YearMonth;
+import java.util.UUID;
+
+@Service
+@RequiredArgsConstructor
+public class SalaryStructureService {
+
+    private final SalaryStructureRepository repository;
+
+    private BigDecimal safe(BigDecimal v) {
+        return v == null ? BigDecimal.ZERO : v;
+    }
+
+    private int convertMonthToNumber(String name) {
+        try { return Month.valueOf(name.toUpperCase()).getValue(); }
+        catch (Exception e) {
+            return Month.valueOf(name.substring(0, 3).toUpperCase()).getValue();
+        }
+    }
+
+    private int getDays(int y, int m) {
+        return YearMonth.of(y, m).lengthOfMonth();
+    }
+
+    public SalaryStructure getLastSalary(UUID employeeId) {
+        return repository.findTopByEmployeeIdOrderByEffectiveFromDesc(employeeId);
+    }
+
+    public SalaryStructure createSalaryStructure(SalaryStructure salary) {
+
+        // Set month/year automatically
+        if (salary.getEffectiveFrom() != null) {
+            if (salary.getMonth() == null) {
+                salary.setMonth(salary.getEffectiveFrom().getMonth().toString());
+            }
+            if (salary.getYear() == null) {
+                salary.setYear(salary.getEffectiveFrom().getYear());
+            }
+        }
+
+        // Get previous month data
+        SalaryStructure previous = repository
+                .findTopByEmployeeIdOrderByEffectiveFromDesc(salary.getEmployeeId());
+
+        if (previous != null) {
+
+            if (salary.getLocation() == null)  salary.setLocation(previous.getLocation());
+            if (salary.getPanNumber() == null) salary.setPanNumber(previous.getPanNumber());
+            if (salary.getPfNumber() == null)  salary.setPfNumber(previous.getPfNumber());
+            if (salary.getUanNumber() == null) salary.setUanNumber(previous.getUanNumber());
+            if (salary.getTaxRegime() == null) salary.setTaxRegime(previous.getTaxRegime());
+            if (salary.getPayGroup() == null)  salary.setPayGroup(previous.getPayGroup());
+            if (salary.getOcm() == null)       salary.setOcm(previous.getOcm());
+
+            if (salary.getAccountNumber() == null) salary.setAccountNumber(previous.getAccountNumber());
+            if (salary.getIfscCode() == null)      salary.setIfscCode(previous.getIfscCode());
+            if (salary.getBankName() == null)      salary.setBankName(previous.getBankName());
+            if (salary.getPaymentMethod() == null) salary.setPaymentMethod(previous.getPaymentMethod());
+
+            if (salary.getBasicPay() == null)             salary.setBasicPay(previous.getBasicPay());
+            if (salary.getHra() == null)                  salary.setHra(previous.getHra());
+            if (salary.getDa() == null)                   salary.setDa(previous.getDa());
+            if (salary.getConveyanceAllowance() == null)  salary.setConveyanceAllowance(previous.getConveyanceAllowance());
+            if (salary.getMedicalAllowance() == null)     salary.setMedicalAllowance(previous.getMedicalAllowance());
+            if (salary.getSpecialAllowance() == null)     salary.setSpecialAllowance(previous.getSpecialAllowance());
+            if (salary.getOtherAllowances() == null)      salary.setOtherAllowances(previous.getOtherAllowances());
+        }
+
+        // Standard days auto
+        int monthNum = convertMonthToNumber(salary.getMonth());
+        int days = getDays(salary.getYear(), monthNum);
+        salary.setStandardDays(BigDecimal.valueOf(days));
+
+        // Payable days
+        BigDecimal payable = salary.getStandardDays()
+                .subtract(safe(salary.getLossOfDays()))
+                .add(safe(salary.getLossOfPayReversalDays()));
+
+        salary.setPayableDays(payable);
+
+        // Gross salary
+        BigDecimal gross =
+                safe(salary.getBasicPay())
+                        .add(safe(salary.getHra()))
+                        .add(safe(salary.getDa()))
+                        .add(safe(salary.getConveyanceAllowance()))
+                        .add(safe(salary.getMedicalAllowance()))
+                        .add(safe(salary.getSpecialAllowance()))
+                        .add(safe(salary.getOtherAllowances()));
+
+        salary.setGrossSalary(gross);
+
+        // Total deductions
+        BigDecimal deduct =
+                safe(salary.getPfEmployee())
+                        .add(safe(salary.getEsi()))
+                        .add(safe(salary.getProfessionalTax()))
+                        .add(safe(salary.getIncomeTax()))
+                        .add(safe(salary.getLoanDeduction()))
+                        .add(safe(salary.getOtherDeductions()));
+
+        salary.setTotalDeductions(deduct);
+
+        // Net salary
+        salary.setNetSalary(gross.subtract(deduct));
+
+        return repository.save(salary);
+    }
+}

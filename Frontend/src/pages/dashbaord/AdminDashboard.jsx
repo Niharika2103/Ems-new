@@ -69,7 +69,7 @@ const AdminDashboard = () => {
       icon: AccountBalanceIcon,
       iconBg: "bg-yellow-100",
       iconColor: "text-yellow-600",
-      onClick: () => navigate("/accounts"),
+      onClick: () => navigate("/accounts/salary-structure"),
     },
 
      {

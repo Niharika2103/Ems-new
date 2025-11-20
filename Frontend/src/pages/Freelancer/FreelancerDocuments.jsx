@@ -18,7 +18,7 @@ const steps = [
   "Review & Submit",
 ];
 
-const Letters = () => {
+const FreelancerDocuments = () => {
   const [activeStep, setActiveStep] = useState(0);
 
   const [formData, setFormData] = useState({
@@ -431,4 +431,4 @@ const Letters = () => {
   );
 };
 
-export default Letters;
+export default FreelancerDocuments;

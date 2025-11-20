@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Button, Space, Popconfirm, message } from "antd";
+import { Button, Space, Popconfirm } from "antd";
 import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { deleteEmployee, fetchAllEmployees, updateEmployeebyAdmin, fetchEmployeeProfile } from "../../features/employeesDetails/employeesSlice";
 import EmployeeTable from "../../components/MyProfile/table";
 import { grantTempAdminApi, revokeTempAdminApi, promoteEmployeeApi } from "../../api/authApi";
@@ -8,23 +9,22 @@ import ReusableModal from "../../components/MyProfile/ReusableModal";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {
-  Typography,
   TextField,
   Box,
   Grid,
-  Paper,
   Radio,
   RadioGroup,
   FormControlLabel,
   FormLabel,
-  Avatar,
   MenuItem,
 } from "@mui/material";
 
 import { decodeToken } from "../../api/decodeToekn";
 import { validateEmployeeEdit } from "../../utils/validation";
+
 export default function AdminTable() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
@@ -58,7 +58,6 @@ export default function AdminTable() {
         err?.data?.error ||
         err?.error ||
         "Failed to grant access";
-
       toast.error(msg);
     }
   };
@@ -72,6 +71,16 @@ export default function AdminTable() {
       toast.error("Failed to revoke access");
     }
   };
+
+  // View Employee Details - Navigate to employee info page
+  const handleViewEmployee = (record) => {
+    navigate('/dashboard/emp_info', { 
+      state: { 
+        employee: record 
+      } 
+    });
+  };
+
   //Edit Register Model
   const handleEdit = (record) => {
     setEditingRecord(record);
@@ -80,30 +89,30 @@ export default function AdminTable() {
       return isoString.split("T")[0];
     };
 
-setFormData({
-  name: record.name || "",
-  email: record.email || "",
-  date_of_joining: formatDate(record.date_of_joining),
-  phone: record.phone || "",
-  address: record.address || "",
-  permanent_address: record.permanent_address || "",
-  department: record.department || "",
-  gender: record.gender || "",
-  emergency_contact: record.emergency_contact || "",
-  dob: formatDate(record.dob),
-
-  designation: record.designation || "",       
-  employment_type: record.employment_type || "", 
-});
+    setFormData({
+      name: record.name || "",
+      email: record.email || "",
+      date_of_joining: formatDate(record.date_of_joining),
+      phone: record.phone || "",
+      address: record.address || "",
+      permanent_address: record.permanent_address || "",
+      department: record.department || "",
+      gender: record.gender || "",
+      emergency_contact: record.emergency_contact || "",
+      dob: formatDate(record.dob),
+      designation: record.designation || "",       
+      employment_type: record.employment_type || "", 
+    });
     setIsModalOpen(true);
   };
+
   const handlePromote = async (record) => {
     if (!window.confirm(`Promote ${record.name} to Admin?`)) return;
 
     try {
       await promoteEmployeeApi(record.id);
       toast.success(`${record.name} promoted successfully!`);
-      dispatch(fetchAllEmployees()); // optional: refresh list
+      dispatch(fetchAllEmployees());
     } catch (err) {
       console.error("Promote error:", err);
       toast.error("Failed to promote employee");
@@ -113,9 +122,7 @@ setFormData({
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === "date_of_joining") {
-      // Optional: reject values that aren't YYYY-MM-DD
       if (value && !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-        // Don't update if invalid format
         return;
       }
     }
@@ -165,56 +172,116 @@ setFormData({
     }
   };
 
-
-  //employee table
+  // Optimized employee table columns with perfect widths
   const columns = [
     {
       title: "ID",
       dataIndex: "id",
-      render: (_text, _record, index) => index + 1,
+      key: "id",
+      width: 60,
+      align: 'center',
+      render: (_, __, index) => (
+        <div style={{ textAlign: 'center', fontWeight: '500' }}>
+          {index + 1}
+        </div>
+      ),
     },
     {
       title: "Name",
       dataIndex: "name",
       key: "name",
+      width: 140,
+      ellipsis: true,
+      render: (name) => (
+        <div style={{ fontWeight: '500' }}>
+          {name}
+        </div>
+      ),
     },
     {
       title: "Email",
       dataIndex: "email",
       key: "email",
-    },
-    {
-      title: "Address",
-      dataIndex: "address",
-      key: "address",
+      width: 200,
+      ellipsis: true,
     },
     {
       title: "Department",
       dataIndex: "department",
       key: "department",
+      width: 120,
+      align: 'center',
     },
     {
-      title: "Request",
-      dataIndex: "request",
-      key: "request",
-      filters: [
-        { text: "Pending", value: "Pending" },
-        { text: "Approved", value: "Approved" },
-      ],
-      onFilter: (value, record) => record.request?.includes(value),
-      render: (status, record) => (
-        <Space>
+      title: "Phone",
+      dataIndex: "phone",
+      key: "phone",
+      width: 130,
+      align: 'center',
+    },
+    {
+      title: "Status",
+      dataIndex: "is_active",
+      key: "status",
+      width: 100,
+      align: 'center',
+      render: (is_active) => (
+        <span 
+          style={{ 
+            padding: '4px 8px',
+            borderRadius: '12px',
+            fontSize: '12px',
+            fontWeight: '500',
+            backgroundColor: is_active ? '#f6ffed' : '#fff2f0',
+            color: is_active ? '#52c41a' : '#ff4d4f',
+            border: `1px solid ${is_active ? '#b7eb8f' : '#ffccc7'}`
+          }}
+        >
+          {is_active ? 'Active' : 'Inactive'}
+        </span>
+      ),
+    },
+    {
+      title: "View",
+      key: "view",
+      width: 100,
+      align: 'center',
+      fixed: 'right',
+      render: (_, record) => (
+        <Button 
+          type="primary" 
+          size="small"
+          onClick={() => handleViewEmployee(record)}
+          style={{ 
+            fontSize: '12px',
+            padding: '4px 8px',
+            height: 'auto'
+          }}
+        >
+          View
+        </Button>
+      ),
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      width: 400,
+      fixed: 'right',
+      render: (_, record) => (
+        <Space size="small" style={{ flexWrap: 'nowrap' }}>
           {/* Edit Button */}
           <Button
             type="default"
+            size="small"
             onClick={() => handleEdit(record)}
+            style={{ fontSize: '12px' }}
           >
             Edit
           </Button>
 
-          {/* Delete Button */}
+          {/* Active/Deactivate Button */}
           <Popconfirm
-            title={`Are you sure to ${record.is_active ? "deactivate" : "activate"} this admin?`}
+            title={`Are you sure to ${record.is_active ? "deactivate" : "activate"} this employee?`}
             onConfirm={() =>
               dispatch(deleteEmployee({ id: record.id, status: !record.is_active }))
                 .unwrap()
@@ -222,41 +289,37 @@ setFormData({
                   toast.success(res.message);
                   dispatch(fetchAllEmployees());
                 })
-                .catch(() => toast.error("Failed to update admin status"))
+                .catch(() => toast.error("Failed to update employee status"))
             }
             okText="Yes"
             cancelText="No"
           >
-            {record.is_active ? (
-              <Button type="primary">
-                Active
-              </Button>
-            ) : (
-              <Button type="default" danger>
-                Deactivate
-              </Button>
-            )}
+            <Button 
+              type={record.is_active ? "primary" : "default"} 
+              danger={!record.is_active}
+              size="small"
+              style={{ fontSize: '12px' }}
+            >
+              {record.is_active ? 'Deactivate' : 'Activate'}
+            </Button>
           </Popconfirm>
 
           {/* Grant Button */}
           <Button
             type="dashed"
+            size="small"
             onClick={() => handleGrant(record.email)}
+            style={{ fontSize: '12px' }}
           >
             Grant
           </Button>
 
-          {/* Revoke Button */}
-          <Button
-            type="dashed"
-            danger
-            onClick={() => handleRevoke(record.email)}
-          >
-            Revoke
-          </Button>
+          {/* Promote Button */}
           <Button
             type={record.is_promoted ? "default" : "primary"}
+            size="small"
             style={{
+              fontSize: '12px',
               backgroundColor: record.is_promoted ? "#52c41a" : "",
               color: record.is_promoted ? "white" : "",
               borderColor: record.is_promoted ? "#52c41a" : "",
@@ -266,25 +329,63 @@ setFormData({
           >
             {record.is_promoted ? "Promoted" : "Promote"}
           </Button>
-
         </Space>
       ),
     }
-
   ];
+
+  // Table scroll configuration
+  const tableScrollConfig = {
+    x: 1000, // Perfect width to accommodate all columns
+  };
 
   return (
     <>
       <ToastContainer position="top-right" autoClose={2000} />
-      <h1 className="text-xl font-bold mb-4">Employee List</h1>
-      <EmployeeTable columns={columns} />
+      
+      {/* Header */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        marginBottom: '16px',
+        padding: '0 8px'
+      }}>
+        <h1 style={{ 
+          fontSize: '24px', 
+          fontWeight: 'bold', 
+          margin: 0,
+          color: '#1f2937'
+        }}>
+          Employee Management
+        </h1>
+      </div>
+
+      {/* Table Container with Clean Styling */}
+      <div style={{ 
+        backgroundColor: 'white',
+        borderRadius: '8px',
+        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+        overflow: 'hidden'
+      }}>
+        <EmployeeTable 
+          columns={columns} 
+          scroll={tableScrollConfig}
+          style={{ 
+            minWidth: '100%',
+          }}
+          size="middle"
+        />
+      </div>
+
+      {/* Edit Modal */}
       <ReusableModal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title="Edit Employee Form"
+        title="Edit Employee Details"
       >
         <Box className="flex justify-center items-center">
-          <Box component="form" onSubmit={handleSubmit}>
+          <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
                 <TextField
@@ -294,6 +395,7 @@ setFormData({
                   onChange={handleChange}
                   fullWidth
                   size="small"
+                  margin="normal"
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
@@ -304,8 +406,10 @@ setFormData({
                   onChange={handleChange}
                   fullWidth
                   size="small"
+                  margin="normal"
                 />
               </Grid>
+              
               <Grid item xs={12}>
                 <FormLabel component="legend">Gender</FormLabel>
                 <RadioGroup
@@ -328,6 +432,7 @@ setFormData({
                   onChange={handleChange}
                   fullWidth
                   size="small"
+                  margin="normal"
                   InputLabelProps={{ shrink: true }}
                 />
               </Grid>
@@ -339,8 +444,10 @@ setFormData({
                   onChange={handleChange}
                   fullWidth
                   size="small"
+                  margin="normal"
                 />
               </Grid>
+              
               <Grid item xs={12} sm={6}>
                 <TextField
                   type="date"
@@ -350,7 +457,34 @@ setFormData({
                   onChange={handleChange}
                   fullWidth
                   size="small"
+                  margin="normal"
                   InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Emergency Contact"
+                  name="emergency_contact"
+                  value={formData.emergency_contact}
+                  onChange={handleChange}
+                  fullWidth
+                  size="small"
+                  margin="normal"
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <TextField
+                  label="Address"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  fullWidth
+                  size="small"
+                  margin="normal"
+                  multiline
+                  rows={2}
                 />
               </Grid>
 
@@ -362,29 +496,12 @@ setFormData({
                   onChange={handleChange}
                   fullWidth
                   size="small"
+                  margin="normal"
+                  multiline
+                  rows={2}
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Emergency contact"
-                  name="emergency_contact"
-                  value={formData.emergency_contact}
-                  onChange={handleChange}
-                  fullWidth
-                  size="small"
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="Address"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  fullWidth
-                  size="small"
-                />
-              </Grid>
               <Grid item xs={12} sm={6}>
                 <TextField
                   select
@@ -394,13 +511,7 @@ setFormData({
                   onChange={handleChange}
                   fullWidth
                   size="small"
-                  sx={{
-                    minWidth: 200, //  makes input box longer
-                    "& .MuiSelect-select": {
-                      paddingY: 1.2,
-                    },
-                  }}
-
+                  margin="normal"
                 >
                   <MenuItem value="HR">HR</MenuItem>
                   <MenuItem value="Finance">Finance</MenuItem>
@@ -410,31 +521,33 @@ setFormData({
               </Grid>
 
               <Grid item xs={12} sm={6}>
-  <TextField
-    label="Designation"
-    name="designation"
-    value={formData.designation}
-    onChange={handleChange}
-    fullWidth
-    size="small"
-  />
-</Grid>
+                <TextField
+                  label="Designation"
+                  name="designation"
+                  value={formData.designation}
+                  onChange={handleChange}
+                  fullWidth
+                  size="small"
+                  margin="normal"
+                />
+              </Grid>
 
-<Grid item xs={12} sm={6}>
-  <TextField
-    select
-    label="Employment Type"
-    name="employment_type"
-    value={formData.employment_type}
-    onChange={handleChange}
-    fullWidth
-    size="small"
-  >
-    <MenuItem value="fulltime">Full Time</MenuItem>
-    <MenuItem value="contract">Contract</MenuItem>
-    <MenuItem value="freelancer">Freelancer</MenuItem>
-  </TextField>
-</Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  select
+                  label="Employment Type"
+                  name="employment_type"
+                  value={formData.employment_type}
+                  onChange={handleChange}
+                  fullWidth
+                  size="small"
+                  margin="normal"
+                >
+                  <MenuItem value="fulltime">Full Time</MenuItem>
+                  <MenuItem value="contract">Contract</MenuItem>
+                  <MenuItem value="freelancer">Freelancer</MenuItem>
+                </TextField>
+              </Grid>
 
               <Grid item xs={12}>
                 <Button
@@ -442,8 +555,9 @@ setFormData({
                   type="primary"
                   block
                   loading={loading}
+                  style={{ marginTop: '16px', height: '40px' }}
                 >
-                  Save
+                  Update Employee
                 </Button>
               </Grid>
             </Grid>
