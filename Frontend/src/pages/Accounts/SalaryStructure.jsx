@@ -1,4 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import { useDispatch, useSelector } from "react-redux";
+import { fetchEmployeeProfile } from "../../features/employeesDetails/employeesSlice";
 import {
   Container,
   Paper,
@@ -42,6 +45,7 @@ import {
 
 const SalaryStructure = () => {
   const [activeStep, setActiveStep] = useState(0);
+  const dispatch = useDispatch();
 
   const getCurrentDate = () => {
     const now = new Date();
@@ -94,7 +98,7 @@ const SalaryStructure = () => {
   };
 
   const [formData, setFormData] = useState(initialFormData);
-
+console.log(formData,"formData")
   // errors: { fieldName: "error message" }
   const [errors, setErrors] = useState({});
 
@@ -102,6 +106,29 @@ const SalaryStructure = () => {
   const employmentTypes = ['Permanent', 'Contract', 'Intern', 'Trainee', 'Consultant'];
   const paymentMethods = ['Bank Transfer', 'Cash', 'Cheque'];
   const locations = ['Bangalore', 'Hyderabad', 'Pune', 'Gurgaon', 'Mumbai', 'Chennai', 'Remote'];
+
+  const { list, loading } = useSelector((state) => ({
+    list: state.employeeDetails?.list || [],
+  }));
+  const location = useLocation();
+  const emailFromQuery = new URLSearchParams(location.search).get('email');
+
+
+  useEffect(() => {
+    dispatch(fetchEmployeeProfile(emailFromQuery)).then((res) => {
+    const emp = res.payload;
+
+    setFormData(prev => ({
+      ...prev,
+      employeeName: emp?.name || "",
+      employeeId: emp?.employee_id || "",
+      designation: emp?.designation || "",
+      dateOfJoining: emp?.date_of_joining?.split("T")[0] || getCurrentDate(),
+      location: emp?.address || "",
+      email: emp?.email || "",
+    }));
+    });
+  }, [dispatch]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -331,10 +358,6 @@ const SalaryStructure = () => {
       return;
     }
 
-    // At this point, form is valid across all steps.
-    // Replace this with your save API call.
-    console.log('Form validated — ready to submit', formData);
-    alert('Validation passed — now submit to your API (see console).');
   };
 
   // STEP CONTENT
