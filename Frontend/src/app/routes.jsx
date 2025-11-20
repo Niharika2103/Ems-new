@@ -43,6 +43,7 @@ import FreelancerTable from  "../pages/Freelancer/freelancerTable";
 import FreelancerAttendance from  "../pages/Freelancer/FreelancerAttendance";
 import FreelancerProjectTable from  "../pages/Freelancer/FreelancerProjectTable";
 import FreelancerDocuments from  "../pages/Freelancer/FreelancerDocuments";
+import FreelancerAssignProjectpage from  "../pages/Freelancer/FreelancerAssignProjectpage";
 import SalaryStructure from '../pages/Accounts/SalaryStructure';
 
 function AppRoutes() {
@@ -213,6 +214,15 @@ function AppRoutes() {
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <FreelancerProjectTable />
+            </ProtectedRoute>
+          }
+        />
+
+         <Route
+          path="/dashboard/freelancer/assign_projects"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <FreelancerAssignProjectpage />
             </ProtectedRoute>
           }
         />

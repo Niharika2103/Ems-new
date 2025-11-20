@@ -27,7 +27,7 @@ const FreelancerDashboard = () => {
       icon: AssignmentIcon,
       iconBg: "bg-gradient-to-r from-indigo-100 to-indigo-200",
       iconColor: "text-indigo-700",
-    //   onClick: () => navigate("/attendance/projects"),
+      onClick: () => navigate("/dashboard/freelancer/assign_projects"),
     },
     // {
     //   title: "Maternity & Paternity",
