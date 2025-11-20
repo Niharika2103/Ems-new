@@ -26,10 +26,6 @@ import { validateEmployeeEdit } from "../../utils/validation";
 export default function AdminTable() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-<<<<<<< HEAD
-=======
-
->>>>>>> c46a05d61122e06151742cc24e600dcf044cfc4d
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
   const [formData, setFormData] = useState({
