@@ -39,7 +39,7 @@ const EmpInfoDashboard = () => {
       icon: MailOutlineIcon,
       iconBg: "bg-pink-100",
       iconColor: "text-pink-600",
-      onClick: () => navigate("/payslip"),
+      onClick: () => navigate("/documents/admin/letters"),
     },
     {
       title: "Probation",
