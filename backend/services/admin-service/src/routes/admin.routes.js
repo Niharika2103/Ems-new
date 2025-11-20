@@ -24,7 +24,9 @@ import {
   rejectMonthlyApproval,
    approveParentalLeave,
 getPendingParentalLeaves,
-getAuditLogs
+getAuditLogs,
+generateLetter,
+getEmployeeLetters
 } from "../controllers/admin.controller.js";
 const router = Router();
 // Admin Register and login
@@ -71,5 +73,9 @@ router.put("/attendance/approve-parental", approveParentalLeave);
 router.get("/attendance/pending-parental", getPendingParentalLeaves);
 
 router.get("/audit-logs", getAuditLogs);
+
+router.post("/letters/generate", generateLetter);
+router.get("/letters/:employeeId", getEmployeeLetters);
+
 
 export default router;
