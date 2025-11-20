@@ -163,7 +163,7 @@ export default function EmpTimesheet() {
     if (isWeekendDay(dayIndex)) {
       return true;
     }
-    // 🔥 ONLY read-only when week is released
+    //ONLY read-only when week is released
     if (isWeekReleased) {
       return true;
     }

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button, Space, Popconfirm, message } from "antd";
 import { useDispatch } from "react-redux";
 import { deleteEmployee, fetchAllEmployees, updateEmployeebyAdmin, fetchEmployeeProfile } from "../../features/employeesDetails/employeesSlice";
@@ -25,7 +26,7 @@ import { decodeToken } from "../../api/decodeToekn";
 import { validateEmployeeEdit } from "../../utils/validation";
 export default function AdminTable() {
   const dispatch = useDispatch();
-
+  const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
   const [formData, setFormData] = useState({
@@ -165,7 +166,13 @@ setFormData({
     }
   };
 
+  
+  const handleNavigate = ( email) => {
+    const query = new URLSearchParams();
 
+  if (email) query.set("email", email);
+  navigate(`/accounts/salary-structure/?${query.toString()}`);
+};
   //employee table
   const columns = [
     {
@@ -266,6 +273,9 @@ setFormData({
           >
             {record.is_promoted ? "Promoted" : "Promote"}
           </Button>
+           <Button variant="contained" onClick={() => handleNavigate( record.email)}>
+      Go to Salary Structure
+    </Button>
 
         </Space>
       ),

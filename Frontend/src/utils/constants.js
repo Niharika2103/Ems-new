@@ -17,6 +17,8 @@ export const API_BASES = {
 
 // };
 
+
+
 // Auth endpoints
 export const AUTH_API = {
   SUPERADMIN: `${API_BASES.SUPERADMIN}/auth/superadmin`,
