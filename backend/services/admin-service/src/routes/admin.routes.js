@@ -26,7 +26,9 @@ import {
 getPendingParentalLeaves,
 getAuditLogs,
 generateLetter,
-getEmployeeLetters
+getEmployeeLetters,
+documentUpload,
+uploadEmployeeDocuments
 } from "../controllers/admin.controller.js";
 const router = Router();
 // Admin Register and login
@@ -77,5 +79,10 @@ router.get("/audit-logs", getAuditLogs);
 router.post("/letters/generate", generateLetter);
 router.get("/letters/:employeeId", getEmployeeLetters);
 
+router.post(
+  "/employees/:id/upload-documents",
+  documentUpload,
+  uploadEmployeeDocuments
+);
 
 export default router;

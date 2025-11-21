@@ -1831,3 +1831,89 @@ export const getEmployeeLetters = async (req, res) => {
   }
 };
 
+export const documentUpload = upload.fields([
+  { name: "passbook", maxCount: 1 },
+  { name: "aadhaar", maxCount: 1 },
+  { name: "pan", maxCount: 1 },
+  { name: "educational_docs", maxCount: 10 },
+  { name: "experience_docs", maxCount: 10 }
+]);
+
+
+export const uploadEmployeeDocuments = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const admin = getUserFromToken(req);
+
+    if (admin.role !== "admin") {
+      return res.status(403).json({ error: "Only admin can upload documents." });
+    }
+
+    const employeeId = req.params.id;
+    if (!employeeId) {
+      return res.status(400).json({ error: "Employee ID required" });
+    }
+
+    const files = req.files;
+
+    // 1️⃣ Get existing document_url from DB
+    const existingDataResult = await client.query(
+      `SELECT document_url FROM user_employees_master WHERE id = $1`,
+      [employeeId]
+    );
+
+    let existingData = existingDataResult.rows[0]?.document_url || {};
+
+    // 2️⃣ Create a copy to update
+    let updatedDocuments = { ...existingData };
+
+    // 3️⃣ Add ONLY the newly uploaded files — merge instead of overwrite
+    if (files.passbook) {
+      updatedDocuments.passbook = files.passbook[0].filename;
+    }
+
+    if (files.aadhaar) {
+      updatedDocuments.aadhaar = files.aadhaar[0].filename;
+    }
+
+    if (files.pan) {
+      updatedDocuments.pan = files.pan[0].filename;
+    }
+
+    if (files.educational_docs) {
+      updatedDocuments.educational_docs = [
+        ...(existingData.educational_docs || []),
+        ...files.educational_docs.map(f => f.filename)
+      ];
+    }
+
+    if (files.experience_docs) {
+      updatedDocuments.experience_docs = [
+        ...(existingData.experience_docs || []),
+        ...files.experience_docs.map(f => f.filename)
+      ];
+    }
+
+    // 4️⃣ Save merged JSON back to DB
+    await client.query(
+      `UPDATE user_employees_master 
+       SET document_url = $1 
+       WHERE id = $2`,
+      [updatedDocuments, employeeId]
+    );
+
+    return res.json({
+      message: "Documents uploaded successfully",
+      documents: updatedDocuments
+    });
+
+  } catch (err) {
+    console.error("Doc Upload Error:", err.message);
+    return res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+};
+
+

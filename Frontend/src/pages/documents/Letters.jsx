@@ -9,6 +9,9 @@ import {
   Card,
   CardContent,
 } from "@mui/material";
+import { useDispatch } from "react-redux";
+import { uploadEmployeeDocuments } from "../../features/auth/adminSlice";;
+import { useSearchParams } from "react-router-dom";
 
 const steps = [
   "Bank Passbook Upload",
@@ -21,12 +24,17 @@ const steps = [
 const Letters = () => {
   const [activeStep, setActiveStep] = useState(0);
 
+  const dispatch = useDispatch();
+  const [searchParams] = useSearchParams();
+const employeeId = searchParams.get("employeeId");
+
+
   const [formData, setFormData] = useState({
     bankPassbook: null,
     panCard: null,
     aadhaarCard: null,
-    educationFiles: null,
-    previousDocs: null,
+    educationFiles: [],     
+    previousDocs: [], 
   });
 
   const handleNext = () => {
@@ -38,16 +46,57 @@ const Letters = () => {
   };
 
   const handleFileChange = (e, key) => {
-    const files = e.target.files;
-    if (files) {
-      setFormData({ ...formData, [key]: files.length > 1 ? Array.from(files) : files[0] });
-    }
-  };
+  const files = e.target.files;
+
+  // Handle case where user cancels file selection
+  if (!files || files.length === 0) {
+    setFormData(prev => ({
+      ...prev,
+      [key]: (key === 'educationFiles' || key === 'previousDocs') ? [] : null
+    }));
+    return;
+  }
+
+  if (key === 'educationFiles' || key === 'previousDocs') {
+    setFormData(prev => ({
+      ...prev,
+      [key]: Array.from(files)
+    }));
+  } else {
+    setFormData(prev => ({
+      ...prev,
+      [key]: files[0]
+    }));
+  }
+};
+
+  // const handleSubmit = () => {
+  //   alert("All documents submitted successfully!");
+  //   console.log(formData);
+  // };
 
   const handleSubmit = () => {
-    alert("All documents submitted successfully!");
-    console.log(formData);
+  const data = {
+    passbook: formData.bankPassbook,
+    aadhaar: formData.aadhaarCard,
+    pan: formData.panCard,
+    educational_docs: formData.educationFiles,
+    experience_docs: formData.previousDocs,
   };
+
+  dispatch(uploadEmployeeDocuments({ employeeId, data }))
+    .unwrap()
+    .then(() => {
+      alert("Documents uploaded successfully!");
+      
+    })
+    .catch((err) => {
+      alert("Upload failed: " + (err?.error || err));
+    });
+};
+
+
+
 
   // File requirements configuration
   const fileRequirements = {
