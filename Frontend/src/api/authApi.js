@@ -131,6 +131,9 @@ export const employeeDeleteApi = (id,status) =>
 //Profile get by using email
 export const getProfileApi = (email) =>
   employeeClient.get(`${AUTH_API.EMPLOYEE}/get/${email}`);
+//fetch all employee role role1 role2
+export const fetchallemployeeApi = (email) =>
+  employeeClient.get(`${AUTH_API.EMPLOYEE}/fetch/${email}`);
 
 //Profile employee edit & update
 export const editProfileApi = (data, id) => {
@@ -357,4 +360,8 @@ export const updateHolidayApi = (id,formData) =>{
 //delete
 export const deleteHolidayApi =(id)=>{
   return AttendanceClient.delete(`${AUTH_API.ATTENDANCE}/holidays/${id}`);
+}
+//salary structure 
+export const createSalaryStructureApi=(formData)=>{
+  return SalaryStructureClient.post(`${AUTH_API.SALARYSTRUCTURE}/create`,formData)
 }
