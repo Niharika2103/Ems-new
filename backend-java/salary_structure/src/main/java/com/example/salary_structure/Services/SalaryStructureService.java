@@ -3,6 +3,8 @@ package com.example.salary_structure.Services;
 import com.example.salary_structure.Entity.SalaryStructure;
 import com.example.salary_structure.Repository.SalaryStructureRepository;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -13,8 +15,8 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class SalaryStructureService {
-
-    private final SalaryStructureRepository repository;
+@Autowired
+    private  SalaryStructureRepository repository;
 
     private BigDecimal safe(BigDecimal v) {
         return v == null ? BigDecimal.ZERO : v;
@@ -115,4 +117,28 @@ public class SalaryStructureService {
 
         return repository.save(salary);
     }
+
+    public SalaryStructure getById(UUID id) {
+        return repository.findById(id).orElse(null);
+    }
+    
+    public SalaryStructure getSalaryForMonth(UUID employeeId, String monthStr, Integer year) {
+        if (employeeId == null || monthStr == null || year == null) {
+            return null;
+        }
+
+        String normalizedMonth;
+        try {
+            int m = Integer.parseInt(monthStr);
+            normalizedMonth = java.time.Month.of(m).name(); // OCTOBER
+        } catch (NumberFormatException ex) {
+            normalizedMonth = monthStr.toUpperCase();
+        }
+
+        return repository
+                .findFirstByEmployeeIdAndMonthIgnoreCaseAndYearOrderByCreatedAtDesc(
+                        employeeId, normalizedMonth, year)
+                .orElse(null);
+    }
+
 }
