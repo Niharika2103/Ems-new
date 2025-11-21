@@ -248,7 +248,7 @@ ${'='.repeat(50)}
               Get started by creating your first {selectedLetterType} letter.
             </p>
             <button 
-              onClick={handleCreateNew}
+              // onClick={handleCreateNew}
               style={styles.createButton}
             >
               Create New Letter
