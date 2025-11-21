@@ -7,6 +7,7 @@ import emailReducer from "../features/verify/emailVerify";
 import projectSlice from "../features/Project/projectsSlice";
 import attendanceSlice from '../features/attendance/attendanceSlice';
 import freelancerSlice from '../features/freelancer/freelancerSlice';
+import salarystructureSlice from "../features/Salarystructure/salaryStructureSlice";
 
 export const store = configureStore({
   reducer: {
@@ -18,5 +19,6 @@ export const store = configureStore({
     project:projectSlice,
     attendance:attendanceSlice,
     freelancerInfo:freelancerSlice,
+    salaryInfo:salarystructureSlice,
   },
 });

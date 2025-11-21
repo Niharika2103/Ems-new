@@ -1,3 +1,5 @@
+import { SalaryStructureClient } from "../api/axiosClient";
+
 // Different base URLs per r
 export const API_BASES = {
   SUPERADMIN: import.meta.env.VITE_SUPERADMIN_URL || "http://localhost:5001",
@@ -5,6 +7,8 @@ export const API_BASES = {
   EMPLOYEE: import.meta.env.VITE_EMPLOYEE_URL || "http://localhost:5004",
   PROJECT:import.meta.env.VITE_Project_URL || "http://localhost:8080/api",
   ATTENDANCE:import.meta.env.VITE_Attendance_URL || "http://localhost:9091/api",
+  SALARYSTRUCTURE:import.meta.env.VITE_SalaryStructure_URL || "http://localhost:9092/",
+
 };
 
 
@@ -26,6 +30,7 @@ export const AUTH_API = {
   EMPLOYEE: `${API_BASES.EMPLOYEE}/employee`,
   PROJECT:`${API_BASES.PROJECT}`,
   ATTENDANCE:`${API_BASES.ATTENDANCE}`,
+  SALARYSTRUCTURE:`${API_BASES.SALARYSTRUCTURE}/salary`,
 };
 
 export const ROLES = {
@@ -34,6 +39,7 @@ export const ROLES = {
   EMPLOYEE: "employee",
   PROJECT:"project",
   ATTENDANCE:"attendance",
+  SALARYSTRUCTURE:"salarystructure"
 };
 
 export const OTP_LENGTH = 6;
