@@ -2,675 +2,463 @@
 import React, { useState, useEffect } from 'react';
 
 const AdminLetterGenerator = () => {
-  const [selectedTemplate, setSelectedTemplate] = useState('offer');
-  const [formData, setFormData] = useState({});
-  const [previewData, setPreviewData] = useState(null);
-  const [isPreviewVisible, setIsPreviewVisible] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedLetterType, setSelectedLetterType] = useState('offer');
+  const [letters, setLetters] = useState({
+    offer: [],
+    joining: [],
+    appointment: [],
+    experience: [],
+    relieving: []
+  });
+  const [selectedLetter, setSelectedLetter] = useState(null);
+  const [isCreatingNew, setIsCreatingNew] = useState(false);
+  const [isViewingLetter, setIsViewingLetter] = useState(false);
 
-  // Salary components structure
-  const initialSalaryComponents = {
-    basicPay: '',
-    hra: '',
-    medicalAllowance: '',
-    conveyanceAllowance: '',
-    specialAllowance: '',
-    otherAllowance: '',
-    driftAllowance: '',
-    grossSalary: ''
-  };
+  // Letter types
+  const letterTypes = [
+    { id: 'offer', name: 'Offer Letters', icon: '📄' },
+    { id: 'joining', name: 'Joining Letters', icon: '👥' },
+    { id: 'appointment', name: 'Appointment Letters', icon: '💼' },
+    { id: 'experience', name: 'Experience Certificates', icon: '⭐' },
+    { id: 'relieving', name: 'Relieving Letters', icon: '👋' }
+  ];
 
-  // Get current date in YYYY-MM-DD format for date inputs
-  const getCurrentDate = () => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
-
-  // Initialize form data with current date and salary components
+  // Sample data for demonstration
   useEffect(() => {
-    const currentDate = getCurrentDate();
-    const initialData = {
-      currentDate: currentDate,
-      joiningDate: currentDate,
-      appointmentDate: currentDate,
-      employmentFrom: currentDate,
-      employmentTo: currentDate,
-      lastWorkingDay: currentDate,
-      salaryComponents: { ...initialSalaryComponents },
-      offerTerms: '',
-      joiningTerms: '',
-      termsConditions: ''
+    const sampleLetters = {
+      offer: [
+        { 
+          id: 1, 
+          employeeName: 'John Doe', 
+          position: 'Software Engineer', 
+          date: '2024-01-15', 
+          status: 'Draft',
+          department: 'Engineering',
+          joiningDate: '2024-02-01',
+          email: 'john.doe@email.com'
+        },
+        { 
+          id: 2, 
+          employeeName: 'Jane Smith', 
+          position: 'Product Manager', 
+          date: '2024-01-20', 
+          status: 'Sent',
+          department: 'Product',
+          joiningDate: '2024-02-15',
+          email: 'jane.smith@email.com'
+        }
+      ],
+      joining: [
+        { 
+          id: 1, 
+          employeeName: 'John Doe', 
+          position: 'Software Engineer', 
+          date: '2024-02-01', 
+          status: 'Completed',
+          department: 'Engineering',
+          email: 'john.doe@email.com'
+        }
+      ],
+      appointment: [
+        { 
+          id: 1, 
+          employeeName: 'John Doe', 
+          position: 'Software Engineer', 
+          date: '2024-02-01', 
+          status: 'Active',
+          department: 'Engineering',
+          email: 'john.doe@email.com'
+        }
+      ],
+      experience: [
+        { 
+          id: 1, 
+          employeeName: 'Robert Brown', 
+          position: 'Senior Developer', 
+          date: '2024-01-30', 
+          status: 'Issued',
+          department: 'Engineering',
+          email: 'robert.brown@email.com'
+        }
+      ],
+      relieving: [
+        { 
+          id: 1, 
+          employeeName: 'Emily Davis', 
+          position: 'Marketing Manager', 
+          date: '2024-01-28', 
+          status: 'Processed',
+          department: 'Marketing',
+          email: 'emily.davis@email.com'
+        }
+      ]
     };
     
-    setFormData(prev => ({ ...initialData, ...prev }));
-  }, [selectedTemplate]);
+    setLetters(sampleLetters);
+  }, []);
 
-  // Template configurations
-  const templates = [
-    { id: 'offer', name: 'Offer Letter' },
-    { id: 'joining', name: 'Joining Letter' },
-    { id: 'appointment', name: 'Appointment Letter' },
-    { id: 'experience', name: 'Experience Certificate' },
-    { id: 'relieving', name: 'Relieving Letter' }
-  ];
-
-  // Common fields for all templates
-  const commonFields = [
-    { key: 'companyName', label: 'Company Name', type: 'text' },
-    { key: 'companyAddress', label: 'Company Address', type: 'textarea' },
-    { key: 'currentDate', label: 'Date', type: 'date' }
-  ];
-
-  // Template-specific fields
-  const templateFields = {
-    offer: [
-      { key: 'candidateName', label: 'Candidate Name', type: 'text' },
-      { key: 'position', label: 'Position', type: 'text' },
-      { key: 'department', label: 'Department', type: 'text' },
-      { key: 'joiningDate', label: 'Joining Date', type: 'date' },
-      { key: 'reportingManager', label: 'Reporting Manager', type: 'text' },
-      { key: 'workLocation', label: 'Work Location', type: 'text' },
-      { key: 'hrManager', label: 'HR Manager', type: 'text' }
-    ],
-    joining: [
-      { key: 'employeeName', label: 'Employee Name', type: 'text' },
-      { key: 'position', label: 'Position', type: 'text' },
-      { key: 'department', label: 'Department', type: 'text' },
-      { key: 'joiningDate', label: 'Joining Date', type: 'date' },
-      { key: 'workTiming', label: 'Work Timing', type: 'text' },
-      { key: 'workLocation', label: 'Work Location', type: 'text' },
-      { key: 'hrManager', label: 'HR Manager', type: 'text' }
-    ],
-    appointment: [
-      { key: 'employeeName', label: 'Employee Name', type: 'text' },
-      { key: 'position', label: 'Position', type: 'text' },
-      { key: 'department', label: 'Department', type: 'text' },
-      { key: 'appointmentDate', label: 'Appointment Date', type: 'date' },
-      { key: 'probationPeriod', label: 'Probation Period', type: 'text' }
-    ],
-    experience: [
-      { key: 'employeeName', label: 'Employee Name', type: 'text' },
-      { key: 'position', label: 'Position', type: 'text' },
-      { key: 'employmentFrom', label: 'Employment From', type: 'date' },
-      { key: 'employmentTo', label: 'Employment To', type: 'date' },
-      { key: 'workDescription', label: 'Work Description', type: 'textarea' },
-      { key: 'managerName', label: 'Manager Name', type: 'text' }
-    ],
-    relieving: [
-      { key: 'employeeName', label: 'Employee Name', type: 'text' },
-      { key: 'position', label: 'Position', type: 'text' },
-      { key: 'lastWorkingDay', label: 'Last Working Day', type: 'date' },
-      { key: 'reason', label: 'Reason for Leaving', type: 'textarea' },
-      { key: 'clearanceStatus', label: 'Clearance Status', type: 'text' }
-    ]
-  };
-
-  // Terms and conditions fields
-  const termsFields = {
-    offer: {
-      key: 'offerTerms',
-      label: 'Offer Letter Terms & Conditions',
-      placeholder: 'Enter terms and conditions for the offer letter...'
-    },
-    joining: {
-      key: 'joiningTerms',
-      label: 'Joining Letter Terms & Conditions',
-      placeholder: 'Enter terms and conditions for the joining letter...'
-    },
-    appointment: {
-      key: 'termsConditions',
-      label: 'Appointment Letter Terms & Conditions',
-      placeholder: 'Enter terms and conditions for the appointment letter...'
-    }
-  };
-
-  // Salary components fields
-  const salaryFields = [
-    { key: 'basicPay', label: 'Basic Pay' },
-    { key: 'hra', label: 'HRA' },
-    { key: 'medicalAllowance', label: 'Medical Allowance' },
-    { key: 'conveyanceAllowance', label: 'Conveyance Allowance' },
-    { key: 'specialAllowance', label: 'Special Allowance' },
-    { key: 'otherAllowance', label: 'Other Allowance' },
-    { key: 'driftAllowance', label: 'Drift Allowance' },
-    { key: 'grossSalary', label: 'Gross Salary' }
-  ];
-
-  // Format date for display (DD/MM/YYYY)
-  const formatDateForDisplay = (dateString) => {
+  // Format date for display
+  const formatDate = (dateString) => {
     if (!dateString) return '';
-    const [year, month, day] = dateString.split('-');
-    return `${day}/${month}/${year}`;
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
   };
 
-  // Handle input changes
-  const handleInputChange = (key, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [key]: value
-    }));
-  };
-
-  // Handle salary component changes
-  const handleSalaryChange = (key, value) => {
-    setFormData(prev => ({
-      ...prev,
-      salaryComponents: {
-        ...prev.salaryComponents,
-        [key]: value
-      }
-    }));
-  };
-
-  // Calculate gross salary automatically
-  const calculateGrossSalary = () => {
-    const components = formData.salaryComponents || {};
-    const gross = Object.entries(components).reduce((total, [key, value]) => {
-      if (key !== 'grossSalary' && value) {
-        return total + (parseFloat(value) || 0);
-      }
-      return total;
-    }, 0);
-    
-    handleSalaryChange('grossSalary', gross.toFixed(2));
-  };
-
-  // Auto-calculate gross salary when any component changes
-  useEffect(() => {
-    if (hasSalaryComponents()) {
-      calculateGrossSalary();
+  // Get status color
+  const getStatusColor = (status) => {
+    switch (status.toLowerCase()) {
+      case 'sent':
+      case 'completed':
+      case 'active':
+      case 'issued':
+      case 'processed':
+        return '#28a745';
+      case 'accepted':
+        return '#17a2b8';
+      case 'pending':
+        return '#ffc107';
+      case 'draft':
+        return '#6c757d';
+      case 'rejected':
+        return '#dc3545';
+      default:
+        return '#6c757d';
     }
-  }, [formData.salaryComponents]);
-
-  // Generate preview
-  const handleGeneratePreview = (e) => {
-    e.preventDefault();
-    setPreviewData({ ...formData });
-    setIsPreviewVisible(true);
   };
 
-  // Reset form
-  const handleReset = () => {
-    const currentDate = getCurrentDate();
-    const resetData = {
-      currentDate: currentDate,
-      joiningDate: currentDate,
-      appointmentDate: currentDate,
-      employmentFrom: currentDate,
-      employmentTo: currentDate,
-      lastWorkingDay: currentDate,
-      salaryComponents: { ...initialSalaryComponents },
-      offerTerms: '',
-      joiningTerms: '',
-      termsConditions: ''
-    };
-    setFormData(resetData);
-    setPreviewData(null);
-    setIsPreviewVisible(false);
-    setCurrentPage(1);
+  // Handle create new letter
+  // const handleCreateNew = () => {
+  //   setIsCreatingNew(true);
+  //   setSelectedLetter(null);
+  //   setIsViewingLetter(false);
+  // };
+
+  // Handle view letter
+  const handleViewLetter = (letter) => {
+    setSelectedLetter(letter);
+    setIsViewingLetter(true);
+    setIsCreatingNew(false);
   };
 
-  // Set current date for a specific field
-  const handleSetCurrentDate = (fieldName) => {
-    const currentDate = getCurrentDate();
-    handleInputChange(fieldName, currentDate);
+  // Handle back to list
+  const handleBackToList = () => {
+    setSelectedLetter(null);
+    setIsCreatingNew(false);
+    setIsViewingLetter(false);
   };
 
-  // Navigate between pages
-  const handleNextPage = () => {
-    setCurrentPage(2);
+  // Handle delete letter
+  const handleDeleteLetter = (letterId, e) => {
+    if (e) e.stopPropagation();
+    if (window.confirm('Are you sure you want to delete this letter?')) {
+      setLetters(prev => ({
+        ...prev,
+        [selectedLetterType]: prev[selectedLetterType].filter(letter => letter.id !== letterId)
+      }));
+      handleBackToList();
+    }
   };
 
-  const handlePrevPage = () => {
-    setCurrentPage(1);
+  // Handle download letter
+  const handleDownloadLetter = (letter, e) => {
+    if (e) e.stopPropagation();
+    alert(`Downloading ${selectedLetterType} letter for ${letter.employeeName}`);
   };
 
-  // Download as text file
-  const handleDownload = () => {
-    const content = generateLetterContent();
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${selectedTemplate}-letter-${new Date().getTime()}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+  // Handle send letter
+  const handleSendLetter = (letter, e) => {
+    if (e) e.stopPropagation();
+    if (window.confirm(`Send ${selectedLetterType} letter to ${letter.employeeName} (${letter.email})?`)) {
+      // Update letter status to "Sent"
+      setLetters(prev => ({
+        ...prev,
+        [selectedLetterType]: prev[selectedLetterType].map(l => 
+          l.id === letter.id ? { ...l, status: 'Sent' } : l
+        )
+      }));
+      
+      if (selectedLetter && selectedLetter.id === letter.id) {
+        setSelectedLetter(prev => ({ ...prev, status: 'Sent' }));
+      }
+      
+      alert(`Letter sent successfully to ${letter.email}`);
+    }
   };
 
-  // Generate salary table content
-  const generateSalaryTable = () => {
-    const salary = formData.salaryComponents || {};
+  // Handle edit letter
+  const handleEditLetter = (letter, e) => {
+    if (e) e.stopPropagation();
+    alert(`Edit functionality for ${letter.employeeName}'s letter`);
+    // Here you would typically open an edit form
+  };
+
+  // Generate letter content for preview
+  const generateLetterContent = (letter) => {
+    const letterType = letterTypes.find(type => type.id === selectedLetterType)?.name;
     
-    if (!salary.basicPay && !salary.hra) return '';
-
     return `
-SALARY BREAKUP:
+${letterType.toUpperCase()}
 ${'='.repeat(50)}
-Basic Pay:                    ₹${salary.basicPay || '0'}
-HRA:                         ₹${salary.hra || '0'}
-Medical Allowance:           ₹${salary.medicalAllowance || '0'}
-Conveyance Allowance:        ₹${salary.conveyanceAllowance || '0'}
-Special Allowance:           ₹${salary.specialAllowance || '0'}
-Other Allowance:             ₹${salary.otherAllowance || '0'}
-Drift Allowance:             ₹${salary.driftAllowance || '0'}
-${'-'.repeat(50)}
-Gross Salary:                ₹${salary.grossSalary || '0'}
-${'='.repeat(50)}`;
-  };
 
-  // Generate letter content based on template
-  const generateLetterContent = () => {
-    if (!previewData) return '';
+Company Name: ABC Technologies
+Company Address: 123 Business Park, City, State
 
-    const data = previewData;
-    const currentDate = data.currentDate ? formatDateForDisplay(data.currentDate) : formatDateForDisplay(getCurrentDate());
-    const salaryTable = generateSalaryTable();
+Date: ${formatDate(letter.date)}
 
-    switch (selectedTemplate) {
-      case 'offer':
-        return `OFFER LETTER
-${'='.repeat(60)}
+Dear ${letter.employeeName},
 
-${data.companyName || '[Company Name]'}
-${data.companyAddress || '[Company Address]'}
+This is a sample ${selectedLetterType} letter for the position of ${letter.position} in the ${letter.department} department.
 
-Date: ${currentDate}
+${letter.joiningDate ? `Joining Date: ${formatDate(letter.joiningDate)}` : ''}
 
-Dear ${data.candidateName || '[Candidate Name]'},
-
-We are pleased to offer you the position of ${data.position || '[Position]'} in our ${data.department || '[Department]'} department.
-
-Your joining date will be: ${data.joiningDate ? formatDateForDisplay(data.joiningDate) : '[Joining Date]'}
-Work Location: ${data.workLocation || '[Work Location]'}
-Reporting Manager: ${data.reportingManager || '[Reporting Manager]'}
-
-${salaryTable}
-
-COMPENSATION & BENEFITS:
-Your annual compensation will be as detailed above. Additional benefits include:
-- Health insurance coverage
-- Provident Fund as per company policy
-- Paid leaves as per company policy
-
-TERMS AND CONDITIONS:
-${data.offerTerms || '[Please add terms and conditions for the offer letter]'}
-
-We look forward to having you on our team. Please sign and return a copy of this letter to indicate your acceptance.
-
-Sincerely,
-
-${data.hrManager || '[HR Manager]'}
-HR Department
-${data.companyName || '[Company Name]'}
-
-${'='.repeat(60)}
-Page 1 of 2
-
-OFFER LETTER - ACCEPTANCE
-${'='.repeat(60)}
-
-ACCEPTANCE OF OFFER
-
-I, ${data.candidateName || '[Candidate Name]'}, accept the offer of employment as ${data.position || '[Position]'} with ${data.companyName || '[Company Name]'} on the terms and conditions outlined in this letter.
-
-Signature: _________________________
-
-Date: _________________________
-
-Name: _________________________
-
-Employee ID: _________________________
-
-${'='.repeat(60)}
-Page 2 of 2`;
-
-      case 'joining':
-        return `JOINING LETTER
-${'='.repeat(60)}
-
-${data.companyName || '[Company Name]'}
-${data.companyAddress || '[Company Address]'}
-
-Date: ${currentDate}
-
-Dear ${data.employeeName || '[Employee Name]'},
-
-Welcome to ${data.companyName || '[Company Name]'}! We are pleased to confirm your joining as ${data.position || '[Position]'} in our ${data.department || '[Department]'} department.
-
-Joining Date: ${data.joiningDate ? formatDateForDisplay(data.joiningDate) : '[Joining Date]'}
-Work Timing: ${data.workTiming || '[Work Timing]'}
-Work Location: ${data.workLocation || '[Work Location]'}
-
-${salaryTable}
-
-EMPLOYMENT DETAILS:
-Your employment details and compensation structure are as mentioned above. You will be entitled to all benefits as per company policy.
-
-TERMS AND CONDITIONS:
-${data.joiningTerms || '[Please add terms and conditions for the joining letter]'}
-
-Please report to ${data.hrManager || '[HR Manager]'} on your joining date for completion of formalities.
+We are pleased to offer you this position and look forward to having you on our team.
 
 Best regards,
-
-${data.hrManager || '[HR Manager]'}
 HR Department
-${data.companyName || '[Company Name]'}
+ABC Technologies
 
-${'='.repeat(60)}
-Page 1 of 2
-
-JOINING LETTER - ACCEPTANCE
-${'='.repeat(60)}
-
-EMPLOYEE ACCEPTANCE
-
-I, ${data.employeeName || '[Employee Name]'}, acknowledge receipt and understanding of this joining letter and agree to the terms and conditions outlined herein.
-
-Signature: _________________________
-
-Date: _________________________
-
-Name: _________________________
-
-Employee ID: _________________________
-
-Witness: _________________________
-
-Date: _________________________
-
-${'='.repeat(60)}
-Page 2 of 2`;
-
-      case 'appointment':
-        return `APPOINTMENT LETTER
-
-${data.companyName || '[Company Name]'}
-${data.companyAddress || '[Company Address]'}
-
-Date: ${currentDate}
-
-Dear ${data.employeeName || '[Employee Name]'},
-
-We are pleased to appoint you as ${data.position || '[Position]'} in our ${data.department || '[Department]'} department.
-
-Appointment Date: ${data.appointmentDate ? formatDateForDisplay(data.appointmentDate) : '[Appointment Date]'}
-Probation Period: ${data.probationPeriod || '[Probation Period]'}
-
-Terms & Conditions:
-${data.termsConditions || '[Terms and Conditions]'}
-
-We welcome you to our organization.
-
-Sincerely,
-Management
-${data.companyName || '[Company Name]'}`;
-
-      case 'experience':
-        return `EXPERIENCE CERTIFICATE
-
-${data.companyName || '[Company Name]'}
-${data.companyAddress || '[Company Address]'}
-
-Date: ${currentDate}
-
-TO WHOM IT MAY CONCERN
-
-This is to certify that ${data.employeeName || '[Employee Name]'} worked with us as ${data.position || '[Position]'} from ${data.employmentFrom ? formatDateForDisplay(data.employmentFrom) : '[From Date]'} to ${data.employmentTo ? formatDateForDisplay(data.employmentTo) : '[To Date]'}.
-
-During this period, ${data.employeeName || '[Employee Name]'} demonstrated excellent skills and dedication. ${data.workDescription || '[Work Description]'}
-
-We wish ${data.employeeName || '[Employee Name]'} all the best for future endeavors.
-
-Sincerely,
-${data.managerName || '[Manager Name]'}
-${data.companyName || '[Company Name]'}`;
-
-      case 'relieving':
-        return `RELIEVING LETTER
-
-${data.companyName || '[Company Name]'}
-${data.companyAddress || '[Company Address]'}
-
-Date: ${currentDate}
-
-Dear ${data.employeeName || '[Employee Name]'},
-
-This letter confirms that you are relieved from your duties as ${data.position || '[Position]'} effective ${data.lastWorkingDay ? formatDateForDisplay(data.lastWorkingDay) : '[Last Working Day]'}.
-
-Reason: ${data.reason || '[Reason for Leaving]'}
-Clearance Status: ${data.clearanceStatus || '[Clearance Status]'}
-
-We thank you for your service and wish you success in your future endeavors.
-
-Sincerely,
-HR Department
-${data.companyName || '[Company Name]'}`;
-
-      default:
-        return 'Select a template to generate letter.';
-    }
+Status: ${letter.status}
+${'='.repeat(50)}
+    `;
   };
 
-  // Get all fields for current template
-  const getAllFields = () => {
-    return [...commonFields, ...(templateFields[selectedTemplate] || [])];
+  // Render letter list
+  const renderLetterList = () => {
+    const currentLetters = letters[selectedLetterType] || [];
+
+    return (
+      <div style={styles.listContainer}>
+        <div style={styles.listHeader}>
+          <h3 style={styles.listTitle}>
+            {letterTypes.find(type => type.id === selectedLetterType)?.name}
+            <span style={styles.countBadge}>{currentLetters.length}</span>
+          </h3>
+          
+        </div>
+
+        {currentLetters.length === 0 ? (
+          <div style={styles.emptyState}>
+            <div style={styles.emptyIcon}>📄</div>
+            <h4 style={styles.emptyTitle}>No {selectedLetterType} letters found</h4>
+            <p style={styles.emptyText}>
+              Get started by creating your first {selectedLetterType} letter.
+            </p>
+            <button 
+              onClick={handleCreateNew}
+              style={styles.createButton}
+            >
+              Create New Letter
+            </button>
+          </div>
+        ) : (
+          <div style={styles.lettersGrid}>
+            {currentLetters.map(letter => (
+              <div 
+                key={letter.id} 
+                style={styles.letterCard}
+              >
+                <div style={styles.cardHeader}>
+                  <h4 style={styles.employeeName}>{letter.employeeName}</h4>
+                  <span 
+                    style={{
+                      ...styles.statusBadge,
+                      backgroundColor: getStatusColor(letter.status)
+                    }}
+                  >
+                    {letter.status}
+                  </span>
+                </div>
+                
+                <div style={styles.cardContent}>
+                  <div style={styles.detailRow}>
+                    <span style={styles.detailLabel}>Position:</span>
+                    <span style={styles.detailValue}>{letter.position}</span>
+                  </div>
+                  <div style={styles.detailRow}>
+                    <span style={styles.detailLabel}>Department:</span>
+                    <span style={styles.detailValue}>{letter.department}</span>
+                  </div>
+                  {letter.joiningDate && (
+                    <div style={styles.detailRow}>
+                      <span style={styles.detailLabel}>Joining Date:</span>
+                      <span style={styles.detailValue}>{formatDate(letter.joiningDate)}</span>
+                    </div>
+                  )}
+                  <div style={styles.detailRow}>
+                    <span style={styles.detailLabel}>Email:</span>
+                    <span style={styles.detailValue}>{letter.email}</span>
+                  </div>
+                </div>
+
+                <div style={styles.cardActions}>
+                  <button 
+                    onClick={() => handleViewLetter(letter)}
+                    style={styles.viewBtn}
+                  >
+                    View
+                  </button>
+                  <button 
+                    onClick={(e) => handleEditLetter(letter, e)}
+                    style={styles.editBtn}
+                  >
+                    Edit
+                  </button>
+                  <button 
+                    onClick={(e) => handleSendLetter(letter, e)}
+                    style={styles.sendBtn}
+                    disabled={letter.status === 'Sent'}
+                  >
+                    Send
+                  </button>
+                  <button 
+                    onClick={(e) => handleDeleteLetter(letter.id, e)}
+                    style={styles.deleteBtn}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
   };
 
-  // Check if template has salary components
-  const hasSalaryComponents = () => {
-    return ['offer', 'joining'].includes(selectedTemplate);
+  // Render letter preview
+  const renderLetterPreview = () => {
+    if (!selectedLetter) return null;
+
+    return (
+      <div style={styles.previewContainer}>
+        <div style={styles.previewHeader}>
+          <button onClick={handleBackToList} style={styles.backButton}>
+            ← Back to List
+          </button>
+          <h3 style={styles.previewTitle}>
+            {selectedLetter.employeeName} - {selectedLetterType} Letter
+          </h3>
+          <div style={styles.previewActions}>
+            <button 
+              onClick={(e) => handleEditLetter(selectedLetter, e)}
+              style={styles.editButton}
+            >
+              Edit
+            </button>
+            <button 
+              onClick={(e) => handleSendLetter(selectedLetter, e)}
+              style={styles.sendButton}
+              disabled={selectedLetter.status === 'Sent'}
+            >
+              Send
+            </button>
+            <button 
+              onClick={(e) => handleDownloadLetter(selectedLetter, e)}
+              style={styles.downloadButton}
+            >
+              Download
+            </button>
+            <button 
+              onClick={(e) => handleDeleteLetter(selectedLetter.id, e)}
+              style={styles.deleteButton}
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+
+        <div style={styles.previewContent}>
+          <div style={styles.letterPreview}>
+            <pre style={styles.letterContent}>
+              {generateLetterContent(selectedLetter)}
+            </pre>
+          </div>
+        </div>
+      </div>
+    );
   };
 
-  // Check if template has terms and conditions
-  const hasTermsConditions = () => {
-    return ['offer', 'joining', 'appointment'].includes(selectedTemplate);
+  // Render create new letter form (simplified)
+  const renderCreateNew = () => {
+    return (
+      <div style={styles.createContainer}>
+        <div style={styles.createHeader}>
+          <button onClick={handleBackToList} style={styles.backButton}>
+            ← Back to List
+          </button>
+          <h3 style={styles.createTitle}>
+            Create New {letterTypes.find(type => type.id === selectedLetterType)?.name}
+          </h3>
+        </div>
+        
+        <div style={styles.createForm}>
+          <div style={styles.formGroup}>
+            <label style={styles.formLabel}>Employee Name</label>
+            <input type="text" style={styles.formInput} placeholder="Enter employee name" />
+          </div>
+          <div style={styles.formGroup}>
+            <label style={styles.formLabel}>Position</label>
+            <input type="text" style={styles.formInput} placeholder="Enter position" />
+          </div>
+          <div style={styles.formGroup}>
+            <label style={styles.formLabel}>Department</label>
+            <input type="text" style={styles.formInput} placeholder="Enter department" />
+          </div>
+          <div style={styles.formGroup}>
+            <label style={styles.formLabel}>Email</label>
+            <input type="email" style={styles.formInput} placeholder="Enter email" />
+          </div>
+          
+          <div style={styles.formActions}>
+            <button onClick={handleBackToList} style={styles.cancelButton}>
+              Cancel
+            </button>
+            <button onClick={handleBackToList} style={styles.saveButton}>
+              Create Letter
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
     <div style={styles.container}>
-      <h1 style={styles.header}>Admin Letter Generator</h1>
+      <h1 style={styles.header}>Letter Management</h1>
       
       <div style={styles.content}>
-        {/* Template Selection */}
+        {/* Letter Type Selection */}
         <div style={styles.section}>
-          <h3 style={styles.sectionTitle}>Select Template Type</h3>
-          <div style={styles.templateButtons}>
-            {templates.map(template => (
+          <h3 style={styles.sectionTitle}>Select Letter Type</h3>
+          <div style={styles.letterTypeButtons}>
+            {letterTypes.map(type => (
               <button
-                key={template.id}
-                type="button"
+                key={type.id}
                 style={{
-                  ...styles.templateButton,
-                  ...(selectedTemplate === template.id ? styles.activeButton : {})
+                  ...styles.letterTypeButton,
+                  ...(selectedLetterType === type.id ? styles.activeLetterType : {})
                 }}
                 onClick={() => {
-                  setSelectedTemplate(template.id);
-                  handleReset();
+                  setSelectedLetterType(type.id);
+                  handleBackToList();
                 }}
               >
-                {template.name}
+                <span style={styles.typeIcon}>{type.icon}</span>
+                {type.name}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Form Section */}
+        {/* Main Content */}
         <div style={styles.section}>
-          <h3 style={styles.sectionTitle}>
-            Enter Details - Page {currentPage} of {hasSalaryComponents() ? 2 : 1}
-          </h3>
-          
-          <form onSubmit={handleGeneratePreview} style={styles.form}>
-            {/* Page 1: Basic Information */}
-            {currentPage === 1 && (
-              <div>
-                <div style={styles.formGrid}>
-                  {getAllFields().map(field => (
-                    <div key={field.key} style={styles.formField}>
-                      <label style={styles.label}>
-                        {field.label}:
-                        {field.type === 'date' && (
-                          <button
-                            type="button"
-                            style={styles.todayButton}
-                            onClick={() => handleSetCurrentDate(field.key)}
-                            title="Set to today's date"
-                          >
-                        
-                          </button>
-                        )}
-                      </label>
-                      {field.type === 'textarea' ? (
-                        <textarea
-                          style={styles.textarea}
-                          value={formData[field.key] || ''}
-                          onChange={(e) => handleInputChange(field.key, e.target.value)}
-                          placeholder={`Enter ${field.label.toLowerCase()}`}
-                          rows="3"
-                        />
-                      ) : field.type === 'date' ? (
-                        <input
-                          style={styles.input}
-                          type="date"
-                          value={formData[field.key] || ''}
-                          onChange={(e) => handleInputChange(field.key, e.target.value)}
-                          required
-                        />
-                      ) : (
-                        <input
-                          style={styles.input}
-                          type={field.type}
-                          value={formData[field.key] || ''}
-                          onChange={(e) => handleInputChange(field.key, e.target.value)}
-                          placeholder={`Enter ${field.label.toLowerCase()}`}
-                        />
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Terms and Conditions for relevant templates */}
-                {hasTermsConditions() && (
-                  <div style={styles.termsSection}>
-                    <h4 style={styles.subSectionTitle}>
-                      {termsFields[selectedTemplate]?.label}
-                    </h4>
-                    <textarea
-                      style={styles.largeTextarea}
-                      value={formData[termsFields[selectedTemplate]?.key] || ''}
-                      onChange={(e) => handleInputChange(termsFields[selectedTemplate]?.key, e.target.value)}
-                      placeholder={termsFields[selectedTemplate]?.placeholder}
-                      rows="6"
-                    />
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Page 2: Salary Components */}
-            {currentPage === 2 && hasSalaryComponents() && (
-              <div style={styles.salarySection}>
-                <h4 style={styles.subSectionTitle}>Salary Components</h4>
-                <div style={styles.salaryTable}>
-                  <div style={styles.salaryHeader}>
-                    <div style={styles.salaryColumn}>Component</div>
-                    <div style={styles.salaryColumn}>Amount (₹)</div>
-                  </div>
-                  {salaryFields.map((field, index) => (
-                    <div 
-                      key={field.key} 
-                      style={{
-                        ...styles.salaryRow,
-                        ...(index === salaryFields.length - 1 ? styles.grossSalaryRow : {})
-                      }}
-                    >
-                      <div style={styles.salaryColumn}>
-                        {field.label}
-                      </div>
-                      <div style={styles.salaryColumn}>
-                        <input
-                          style={styles.salaryInput}
-                          type="number"
-                          value={formData.salaryComponents?.[field.key] || ''}
-                          onChange={(e) => handleSalaryChange(field.key, e.target.value)}
-                          placeholder="0"
-                          readOnly={field.key === 'grossSalary'}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div style={styles.calculateNote}>
-                  * Gross salary is automatically calculated
-                </div>
-              </div>
-            )}
-
-            {/* Navigation Buttons */}
-            <div style={styles.buttonGroup}>
-              {currentPage === 2 && hasSalaryComponents() && (
-                <button 
-                  type="button" 
-                  onClick={handlePrevPage}
-                  style={styles.secondaryButton}
-                >
-                  ← Previous
-                </button>
-              )}
-              
-              {currentPage === 1 && hasSalaryComponents() && (
-                <button 
-                  type="button" 
-                  onClick={handleNextPage}
-                  style={styles.primaryButton}
-                >
-                  Next → Salary Details
-                </button>
-              )}
-              
-              {(currentPage === 2 || !hasSalaryComponents()) && (
-                <button type="submit" style={styles.primaryButton}>
-                  Generate Preview
-                </button>
-              )}
-              
-              <button type="button" onClick={handleReset} style={styles.secondaryButton}>
-                Reset Form
-              </button>
-            </div>
-          </form>
+          {isCreatingNew ? renderCreateNew() : 
+           isViewingLetter ? renderLetterPreview() : renderLetterList()}
         </div>
-
-        {/* Preview Section */}
-        {isPreviewVisible && (
-          <div style={styles.section}>
-            <div style={styles.previewHeader}>
-              <h3 style={styles.sectionTitle}>Letter Preview</h3>
-              <div>
-                <button onClick={handleDownload} style={styles.downloadButton}>
-                  Download Letter
-                </button>
-                <button 
-                  onClick={() => window.print()} 
-                  style={styles.printButton}
-                >
-                  Print Letter
-                </button>
-              </div>
-            </div>
-            <div style={styles.preview}>
-              <pre style={styles.letterContent}>
-                {generateLetterContent()}
-              </pre>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -706,183 +494,250 @@ const styles = {
     borderBottom: '2px solid #dee2e6',
     paddingBottom: '10px'
   },
-  subSectionTitle: {
-    color: '#6c757d',
-    marginBottom: '15px',
-    fontSize: '1.1rem',
-    borderBottom: '1px solid #dee2e6',
-    paddingBottom: '8px'
-  },
-  templateButtons: {
+  letterTypeButtons: {
     display: 'flex',
     gap: '10px',
     flexWrap: 'wrap'
   },
-  templateButton: {
-    padding: '10px 20px',
+  letterTypeButton: {
+    padding: '12px 20px',
     border: '2px solid #007bff',
     backgroundColor: 'white',
     color: '#007bff',
-    borderRadius: '5px',
+    borderRadius: '8px',
     cursor: 'pointer',
     fontSize: '14px',
     fontWeight: 'bold',
-    transition: 'all 0.3s ease'
+    transition: 'all 0.3s ease',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px'
   },
-  activeButton: {
+  activeLetterType: {
     backgroundColor: '#007bff',
     color: 'white'
   },
-  form: {
+  typeIcon: {
+    fontSize: '16px'
+  },
+  listContainer: {
     width: '100%'
   },
-  formGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-    gap: '15px',
-    marginBottom: '20px'
-  },
-  formField: {
-    display: 'flex',
-    flexDirection: 'column'
-  },
-  label: {
-    marginBottom: '5px',
-    fontWeight: 'bold',
-    color: '#495057',
+  listHeader: {
     display: 'flex',
     justifyContent: 'space-between',
-    alignItems: 'center'
+    alignItems: 'center',
+    marginBottom: '20px'
   },
- 
-  input: {
-    padding: '10px',
-    border: '1px solid #ced4da',
-    borderRadius: '4px',
-    fontSize: '14px'
+  listTitle: {
+    margin: '0',
+    color: '#495057',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px'
   },
-  textarea: {
-    padding: '10px',
-    border: '1px solid #ced4da',
-    borderRadius: '4px',
-    fontSize: '14px',
-    resize: 'vertical',
-    minHeight: '80px'
-  },
-  largeTextarea: {
-    padding: '10px',
-    border: '1px solid #ced4da',
-    borderRadius: '4px',
-    fontSize: '14px',
-    resize: 'vertical',
-    minHeight: '120px',
-    width: '100%'
-  },
-  termsSection: {
-    marginTop: '20px',
-    padding: '15px',
-    backgroundColor: 'white',
-    borderRadius: '6px',
-    border: '1px solid #e9ecef'
-  },
-  salarySection: {
-    marginTop: '10px'
-  },
-  salaryTable: {
-    border: '1px solid #dee2e6',
-    borderRadius: '6px',
-    overflow: 'hidden',
-    backgroundColor: 'white',
-    marginBottom: '10px'
-  },
-  salaryHeader: {
-    display: 'grid',
-    gridTemplateColumns: '2fr 1fr',
+  countBadge: {
     backgroundColor: '#007bff',
     color: 'white',
+    borderRadius: '12px',
+    padding: '2px 8px',
+    fontSize: '12px',
     fontWeight: 'bold'
   },
-  salaryRow: {
-    display: 'grid',
-    gridTemplateColumns: '2fr 1fr',
-    borderBottom: '1px solid #dee2e6'
-  },
-  grossSalaryRow: {
-    backgroundColor: '#e7f3ff',
-    fontWeight: 'bold',
-    borderTop: '2px solid #007bff'
-  },
-  salaryColumn: {
-    padding: '10px',
-    display: 'flex',
-    alignItems: 'center'
-  },
-  salaryInput: {
-    padding: '8px',
-    border: '1px solid #ced4da',
-    borderRadius: '4px',
-    fontSize: '14px',
-    width: '120px',
-    textAlign: 'right'
-  },
-  calculateNote: {
-    fontSize: '12px',
-    color: '#6c757d',
-    textAlign: 'center',
-    fontStyle: 'italic'
-  },
-  buttonGroup: {
-    display: 'flex',
-    gap: '10px',
-    justifyContent: 'center',
-    marginTop: '20px',
-    flexWrap: 'wrap'
-  },
-  primaryButton: {
-    padding: '12px 30px',
+  createButton: {
+    padding: '10px 20px',
     backgroundColor: '#28a745',
     color: 'white',
     border: 'none',
     borderRadius: '5px',
     cursor: 'pointer',
-    fontSize: '16px',
+    fontSize: '14px',
     fontWeight: 'bold'
   },
-  secondaryButton: {
-    padding: '12px 30px',
-    backgroundColor: '#6c757d',
+  emptyState: {
+    textAlign: 'center',
+    padding: '40px 20px',
+    color: '#6c757d'
+  },
+  emptyIcon: {
+    fontSize: '48px',
+    marginBottom: '15px'
+  },
+  emptyTitle: {
+    margin: '0 0 10px 0',
+    color: '#495057'
+  },
+  emptyText: {
+    margin: '0 0 20px 0'
+  },
+  lettersGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+    gap: '20px'
+  },
+  letterCard: {
+    backgroundColor: 'white',
+    border: '1px solid #dee2e6',
+    borderRadius: '8px',
+    padding: '20px',
+    transition: 'all 0.3s ease',
+    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+  },
+  cardHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: '15px'
+  },
+  employeeName: {
+    margin: '0',
+    color: '#2c3e50',
+    fontSize: '18px'
+  },
+  statusBadge: {
+    padding: '4px 8px',
+    borderRadius: '12px',
+    fontSize: '11px',
+    fontWeight: 'bold',
+    color: 'white',
+    textTransform: 'uppercase'
+  },
+  cardContent: {
+    marginBottom: '15px'
+  },
+  detailRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '8px',
+    paddingBottom: '8px',
+    borderBottom: '1px solid #f8f9fa'
+  },
+  detailLabel: {
+    fontWeight: 'bold',
+    color: '#6c757d',
+    fontSize: '12px'
+  },
+  detailValue: {
+    color: '#495057',
+    fontSize: '14px'
+  },
+  cardActions: {
+    display: 'flex',
+    gap: '8px',
+    justifyContent: 'space-between'
+  },
+  viewBtn: {
+    padding: '8px 12px',
+    backgroundColor: '#17a2b8',
     color: 'white',
     border: 'none',
-    borderRadius: '5px',
+    borderRadius: '4px',
     cursor: 'pointer',
-    fontSize: '16px'
+    fontSize: '12px',
+    flex: 1
+  },
+  editBtn: {
+    padding: '8px 12px',
+    backgroundColor: '#ffc107',
+    color: 'black',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '12px',
+    flex: 1
+  },
+  sendBtn: {
+    padding: '8px 12px',
+    backgroundColor: '#28a745',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '12px',
+    flex: 1
+  },
+  deleteBtn: {
+    padding: '8px 12px',
+    backgroundColor: '#dc3545',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '12px',
+    flex: 1
+  },
+  previewContainer: {
+    width: '100%'
   },
   previewHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '15px'
+    marginBottom: '20px',
+    flexWrap: 'wrap',
+    gap: '10px'
   },
-  downloadButton: {
-    padding: '10px 20px',
-    backgroundColor: '#17a2b8',
-    color: 'white',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    fontSize: '14px',
-    marginRight: '10px'
-  },
-  printButton: {
-    padding: '10px 20px',
-    backgroundColor: '#6f42c1',
+  backButton: {
+    padding: '8px 16px',
+    backgroundColor: '#6c757d',
     color: 'white',
     border: 'none',
     borderRadius: '5px',
     cursor: 'pointer',
     fontSize: '14px'
   },
-  preview: {
+  previewTitle: {
+    margin: '0',
+    color: '#495057',
+    textAlign: 'center',
+    flex: 1
+  },
+  previewActions: {
+    display: 'flex',
+    gap: '10px'
+  },
+  editButton: {
+    padding: '8px 16px',
+    backgroundColor: '#ffc107',
+    color: 'black',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer',
+    fontSize: '14px'
+  },
+  sendButton: {
+    padding: '8px 16px',
+    backgroundColor: '#28a745',
+    color: 'white',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: 'bold'
+  },
+  downloadButton: {
+    padding: '8px 16px',
+    backgroundColor: '#17a2b8',
+    color: 'white',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer',
+    fontSize: '14px'
+  },
+  deleteButton: {
+    padding: '8px 16px',
+    backgroundColor: '#dc3545',
+    color: 'white',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer',
+    fontSize: '14px'
+  },
+  previewContent: {
+    width: '100%'
+  },
+  letterPreview: {
     backgroundColor: 'white',
     border: '1px solid #dee2e6',
     borderRadius: '5px',
@@ -896,6 +751,66 @@ const styles = {
     fontSize: '14px',
     lineHeight: '1.5',
     margin: '0'
+  },
+  createContainer: {
+    width: '100%'
+  },
+  createHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '15px',
+    marginBottom: '20px'
+  },
+  createTitle: {
+    margin: '0',
+    color: '#495057'
+  },
+  createForm: {
+    backgroundColor: 'white',
+    padding: '20px',
+    borderRadius: '8px',
+    border: '1px solid #dee2e6'
+  },
+  formGroup: {
+    marginBottom: '15px'
+  },
+  formLabel: {
+    display: 'block',
+    marginBottom: '5px',
+    fontWeight: 'bold',
+    color: '#495057'
+  },
+  formInput: {
+    width: '100%',
+    padding: '10px',
+    border: '1px solid #ced4da',
+    borderRadius: '4px',
+    fontSize: '14px'
+  },
+  formActions: {
+    display: 'flex',
+    gap: '10px',
+    justifyContent: 'flex-end',
+    marginTop: '20px'
+  },
+  cancelButton: {
+    padding: '10px 20px',
+    backgroundColor: '#6c757d',
+    color: 'white',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer',
+    fontSize: '14px'
+  },
+  saveButton: {
+    padding: '10px 20px',
+    backgroundColor: '#28a745',
+    color: 'white',
+    border: 'none',
+    borderRadius: '5px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: 'bold'
   }
 };
 
