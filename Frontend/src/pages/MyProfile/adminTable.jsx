@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Button, Space, Popconfirm } from "antd";
-import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { Button, Space, Popconfirm, message } from "antd";
+import { useDispatch } from "react-redux";
 import { deleteEmployee, fetchAllEmployees, updateEmployeebyAdmin, fetchEmployeeProfile } from "../../features/employeesDetails/employeesSlice";
 import EmployeeTable from "../../components/MyProfile/table";
 import { grantTempAdminApi, revokeTempAdminApi, promoteEmployeeApi } from "../../api/authApi";
@@ -25,7 +25,6 @@ import { validateEmployeeEdit } from "../../utils/validation";
 export default function AdminTable() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
   const [formData, setFormData] = useState({
@@ -39,7 +38,7 @@ export default function AdminTable() {
     department: "",
     gender: "",
     emergency_contact: "",
-    designation: "",        
+    designation: "",
     employment_type: "",
   });
   const [loading, setLoading] = useState(false);
@@ -73,13 +72,13 @@ export default function AdminTable() {
   };
 
   // View Employee Details - Navigate to employee info page
-  const handleViewEmployee = (record) => {
-    navigate('/dashboard/emp_info', { 
-      state: { 
-        employee: record 
-      } 
-    });
-  };
+  // const handleViewEmployee = (record) => {
+  //   navigate('/dashboard/emp_info', {
+  //     state: {
+  //       employee: record
+  //     }
+  //   });
+  // };
 
   //Edit Register Model
   const handleEdit = (record) => {
@@ -100,8 +99,8 @@ export default function AdminTable() {
       gender: record.gender || "",
       emergency_contact: record.emergency_contact || "",
       dob: formatDate(record.dob),
-      designation: record.designation || "",       
-      employment_type: record.employment_type || "", 
+      designation: record.designation || "",
+      employment_type: record.employment_type || "",
     });
     setIsModalOpen(true);
   };
@@ -172,7 +171,13 @@ export default function AdminTable() {
     }
   };
 
-  // Optimized employee table columns with perfect widths
+
+  const handleNavigate = (email) => {
+    const query = new URLSearchParams();
+    if (email) query.set("email", email);
+    navigate(`/accounts/salary-structure/?${query.toString()}`);
+  };
+  //employee table
   const columns = [
     {
       title: "ID",
@@ -180,6 +185,7 @@ export default function AdminTable() {
       key: "id",
       width: 60,
       align: 'center',
+      fixed: 'left',
       render: (_, __, index) => (
         <div style={{ textAlign: 'center', fontWeight: '500' }}>
           {index + 1}
@@ -191,6 +197,7 @@ export default function AdminTable() {
       dataIndex: "name",
       key: "name",
       width: 140,
+      fixed: 'left',
       ellipsis: true,
       render: (name) => (
         <div style={{ fontWeight: '500' }}>
@@ -203,6 +210,7 @@ export default function AdminTable() {
       dataIndex: "email",
       key: "email",
       width: 200,
+      
       ellipsis: true,
     },
     {
@@ -226,8 +234,8 @@ export default function AdminTable() {
       width: 100,
       align: 'center',
       render: (is_active) => (
-        <span 
-          style={{ 
+        <span
+          style={{
             padding: '4px 8px',
             borderRadius: '12px',
             fontSize: '12px',
@@ -241,40 +249,40 @@ export default function AdminTable() {
         </span>
       ),
     },
-    {
-      title: "View",
-      key: "view",
-      width: 100,
-      align: 'center',
-      fixed: 'right',
-      render: (_, record) => (
-        <Button 
-          type="primary" 
-          size="small"
-          onClick={() => handleViewEmployee(record)}
-          style={{ 
-            fontSize: '12px',
-            padding: '4px 8px',
-            height: 'auto'
-          }}
-        >
-          View
-        </Button>
-      ),
-    },
+    // {
+    //   title: "View",
+    //   key: "view",
+    //   width: 100,
+    //   align: 'center',
+    //   // fixed: 'right',
+    //   render: (_, record) => (
+    //     <Button
+    //       type="primary"
+    //       size="small"
+    //       onClick={() => handleViewEmployee(record)}
+    //       style={{
+    //         fontSize: '12px',
+    //         padding: '4px 8px',
+    //         height: 'auto'
+    //       }}
+    //     >
+    //       View
+    //     </Button>
+    //   ),
+    // },
     {
       title: "Actions",
       key: "actions",
       width: 400,
-      fixed: 'right',
+      // fixed: 'right',
       render: (_, record) => (
-        <Space size="small" style={{ flexWrap: 'nowrap' }}>
+        <Space size="small" wrap={false} style={{ flexWrap: 'nowrap' }}>
           {/* Edit Button */}
           <Button
             type="default"
             size="small"
             onClick={() => handleEdit(record)}
-            style={{ fontSize: '12px' }}
+            style={{ fontSize: '12px', }}
           >
             Edit
           </Button>
@@ -294,8 +302,8 @@ export default function AdminTable() {
             okText="Yes"
             cancelText="No"
           >
-            <Button 
-              type={record.is_active ? "primary" : "default"} 
+            <Button
+              type={record.is_active ? "primary" : "default"}
               danger={!record.is_active}
               size="small"
               style={{ fontSize: '12px' }}
@@ -309,7 +317,7 @@ export default function AdminTable() {
             type="dashed"
             size="small"
             onClick={() => handleGrant(record.email)}
-            style={{ fontSize: '12px' }}
+            style={{ fontSize: '12px', minWidth: '80px', }}
           >
             Grant
           </Button>
@@ -319,6 +327,7 @@ export default function AdminTable() {
             type={record.is_promoted ? "default" : "primary"}
             size="small"
             style={{
+              //  minWidth: '80px',
               fontSize: '12px',
               backgroundColor: record.is_promoted ? "#52c41a" : "",
               color: record.is_promoted ? "white" : "",
@@ -329,6 +338,10 @@ export default function AdminTable() {
           >
             {record.is_promoted ? "Promoted" : "Promote"}
           </Button>
+          <Button variant="contained" onClick={() => handleNavigate(record.email)}>
+            Go to Salary Structure
+          </Button>
+
         </Space>
       ),
     }
@@ -336,24 +349,23 @@ export default function AdminTable() {
 
   // Table scroll configuration
   const tableScrollConfig = {
-    x: 1000, // Perfect width to accommodate all columns
+    x: 500, // ✅ Increased from 1000 to ensure horizontal scroll
   };
-
   return (
     <>
       <ToastContainer position="top-right" autoClose={2000} />
-      
+
       {/* Header */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         marginBottom: '16px',
         padding: '0 8px'
       }}>
-        <h1 style={{ 
-          fontSize: '24px', 
-          fontWeight: 'bold', 
+        <h1 style={{
+          fontSize: '24px',
+          fontWeight: 'bold',
           margin: 0,
           color: '#1f2937'
         }}>
@@ -362,19 +374,19 @@ export default function AdminTable() {
       </div>
 
       {/* Table Container with Clean Styling */}
-      <div style={{ 
+      <div style={{
         backgroundColor: 'white',
         borderRadius: '8px',
         boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
         overflow: 'hidden'
       }}>
-        <EmployeeTable 
-          columns={columns} 
+        <EmployeeTable
+          columns={columns}
           scroll={tableScrollConfig}
-          style={{ 
-            minWidth: '100%',
+          style={{
+            // minWidth: '100%',
           }}
-          size="middle"
+          size="small"
         />
       </div>
 
@@ -409,7 +421,7 @@ export default function AdminTable() {
                   margin="normal"
                 />
               </Grid>
-              
+
               <Grid item xs={12}>
                 <FormLabel component="legend">Gender</FormLabel>
                 <RadioGroup
@@ -447,7 +459,7 @@ export default function AdminTable() {
                   margin="normal"
                 />
               </Grid>
-              
+
               <Grid item xs={12} sm={6}>
                 <TextField
                   type="date"

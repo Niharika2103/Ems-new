@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchAllEmployees } from "../../features/employeesDetails/employeesSlice";
 import { fetchallAdmin } from "../../features/auth/authSlice";
 
-const EmployeeTable = ({ columns }) => {
+const EmployeeTable = ({ columns,scroll  }) => {
   const dispatch = useDispatch();
 
   const { list = [], loading = false } = useSelector((state) => ({
@@ -82,6 +82,7 @@ const EmployeeTable = ({ columns }) => {
 
       {/* Data Table */}
       <Table
+      size="small" 
         columns={columns.map((col) =>
           col.dataIndex === "id"
             ? {
@@ -101,7 +102,10 @@ const EmployeeTable = ({ columns }) => {
           showSizeChanger: true,
           onChange: (page, pageSize) => setPagination({ current: page, pageSize }),
         }}
-        scroll={{x: true}}
+        // scroll={{x: true}}
+        scroll={scroll || { x: 1000 }} // Use passed scroll prop or default
+        
+        sticky
       />
     </div>
   );
