@@ -155,7 +155,7 @@ const TimesheetApprovalList = () => {
                         {/* View Button - Updated path */}
                         <Button
                           color="primary"
-                          onClick={() => navigate('/freelancer/timesheet')}
+                          onClick={() => navigate("/attendance/timesheet")}
                           size="small"
                           startIcon={<Visibility />}
                           variant="contained"
