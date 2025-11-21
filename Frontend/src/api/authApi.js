@@ -99,6 +99,17 @@ export const promoteEmployeeApi = (employeeId) =>
   adminClient.post(`${AUTH_API.ADMIN}/promote/${employeeId}`)
 
 
+
+// ======== Letter Generation API ========
+export const generateLetterApi = (payload) =>
+  adminClient.post(`${AUTH_API.ADMIN}/letters/generate`, payload);
+
+export const getEmployeeLettersApi = (employeeId) =>
+  adminClient.get(`${AUTH_API.ADMIN}/letters/${employeeId}`);
+
+// Delete letter API
+export const deleteLetterApi = (employeeId, filename) =>
+  adminClient.delete(`${AUTH_API.ADMIN}/letters/${employeeId}/${filename}`); 
 // ================= Employee Auth =================
 export const employeeRegisterApi = (data) =>
   employeeClient.post(`${AUTH_API.EMPLOYEE}/register`, data);
