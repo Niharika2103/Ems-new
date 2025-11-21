@@ -1,5 +1,6 @@
 import { superadminClient,employeeClient,adminClient,ProjectClient,AttendanceClient} from "./axiosClient";
 import { AUTH_API } from "../utils/constants";
+import { SalaryClient } from "./axiosClient";
 
 // ================= SuperAdmin =================
 export const checkEmailApi = (email) =>
@@ -359,6 +360,7 @@ export const fetchAuditLogsApi = () => {
 };
 
 
+
 // Public ADD Holidays 
 export const saveHolidayApi = (formData) =>{
  return AttendanceClient.post(`${AUTH_API.ATTENDANCE}/holidays`, formData);
@@ -368,11 +370,20 @@ export const saveHolidayApi = (formData) =>{
 export const updateHolidayApi = (id,formData) =>{
  return AttendanceClient.put(`${AUTH_API.ATTENDANCE}/holidays/${id}`,formData);
 }
+
+
 //delete
 export const deleteHolidayApi =(id)=>{
   return AttendanceClient.delete(`${AUTH_API.ATTENDANCE}/holidays/${id}`);
 }
 
+//PayslipDownload
+
+export const downloadPayslipApi = (employeeId, month, year) => {
+  return SalaryClient.get(`/salary/download/${employeeId}/${month}/${year}`, {
+    responseType: "blob",
+  });
+};
 // ================= Employee Document Upload (Admin) =================
 export const uploadEmployeeDocumentsApi = (employeeId, data) => {
   const formData = new FormData();
