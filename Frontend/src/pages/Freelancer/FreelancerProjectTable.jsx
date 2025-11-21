@@ -77,7 +77,7 @@ const FreelancerProjectTable = () => {
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ background: "#f8f9fa" }}>
-              <th style={thStyle}><Briefcase size={16} /> Project</th>
+              <th style={thStyle}><Briefcase size={16} /> Name</th>
               <th style={thStyle}>Description</th>
               <th style={thStyle}><User size={16} /> Freelancer</th>
               <th style={thStyle}>Role</th>
