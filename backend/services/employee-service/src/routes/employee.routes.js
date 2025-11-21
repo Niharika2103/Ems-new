@@ -10,6 +10,7 @@ import {
   deleteEmployee,
   getEmployees,
   getEmployeeById,
+  fetchEmployeeById,
   exportEmployees,
   upload,
   sendEmailVerification,
@@ -42,6 +43,7 @@ router.post("/bulk-insert", bulkInsertEmployees);
 
 // 📋 CRUD
 router.get("/get/:email", getEmployeeById);
+router.get("/fetch/:email",fetchEmployeeById);
 router.get("/get", getEmployees);
 // router.get("/fetch", getEmployees);
 router.put("/edit/:id", updateEmployee);

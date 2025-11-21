@@ -45,6 +45,7 @@ import FreelancerProjectTable from  "../pages/Freelancer/FreelancerProjectTable"
 import FreelancerDocuments from  "../pages/Freelancer/FreelancerDocuments";
 import FreelancerAssignProjectpage from  "../pages/Freelancer/FreelancerAssignProjectpage";
 import TimesheetApprovalList from '../pages/Freelancer/Attendance/TimesheetApprovalList';
+
 import SalaryStructure from '../pages/Accounts/SalaryStructure';
 
 function AppRoutes() {
@@ -217,6 +218,7 @@ function AppRoutes() {
           }
         />
 
+       
           <Route
           path="/dashboard/freelancer/projects"
           element={

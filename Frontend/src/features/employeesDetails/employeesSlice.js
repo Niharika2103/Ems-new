@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import {
   getProfileApi, editProfileApi, employeeFetchApi,
   employeeDeleteApi, getAdminProfileApi, getSuperadminProfileApi,
-  updateAdminProfileApi, updateSuperAdminProfileApi, adminUpdateEmployeeApi,
+  updateAdminProfileApi, updateSuperAdminProfileApi, adminUpdateEmployeeApi,fetchallemployeeApi,
 } from "../../api/authApi";
 
 // Fetch Employee profile by EMail
@@ -11,6 +11,18 @@ export const fetchEmployeeProfile = createAsyncThunk(
   async (email, thunkAPI) => {
     try {
       const response = await getProfileApi(email);
+      return response.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+//fetch all employee role role1 role2
+export const fetchallemployee = createAsyncThunk(
+  "employee/fetchallemployee",
+  async (email, thunkAPI) => {
+    try {
+      const response = await fetchallemployeeApi(email);
       return response.data;
     } catch (err) {
       return thunkAPI.rejectWithValue(err.response?.data || err.message);
@@ -152,6 +164,7 @@ const empDetailsSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+      
       // fetch admin
       .addCase(fetchAdminProfile.pending, (state) => {
         state.loading = true;
@@ -267,6 +280,18 @@ const empDetailsSlice = createSlice({
 
         state.success = true;
         state.error = null;
+      })
+      .addCase(fetchallemployee.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchallemployee.fulfilled, (state, action) => {
+        state.loading = false;
+        state.list = action.payload;
+      })
+      .addCase(fetchallemployee.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       })
    
   },

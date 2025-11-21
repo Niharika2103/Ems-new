@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { adminRegisterApi, adminLoginApi, adminVerifyOtpApi, DeleteAdminApi } from "../../api/authApi";
+import { adminRegisterApi, adminLoginApi, adminVerifyOtpApi, DeleteAdminApi, uploadEmployeeDocumentsApi } from "../../api/authApi";
 
 export const adminRegister = createAsyncThunk("admin/register", async (data, thunkAPI) => {
   try {
@@ -35,6 +35,18 @@ export const deleteAdmin = createAsyncThunk(
     try {
       const response = await DeleteAdminApi(id, status);
       return id; 
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+
+export const uploadEmployeeDocuments = createAsyncThunk(
+  "admin/uploadEmployeeDocuments",
+  async ({ employeeId, data }, thunkAPI) => {
+    try {
+      const res = await uploadEmployeeDocumentsApi(employeeId, data);
+      return res.data; // returns { message, documents }
     } catch (err) {
       return thunkAPI.rejectWithValue(err.response?.data || err.message);
     }
@@ -117,7 +129,24 @@ const adminSlice = createSlice({
       .addCase(adminverifyOtp.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "OTP verification failed";
-      });
+      })
+
+      // Upload Employee Documents
+.addCase(uploadEmployeeDocuments.pending, (state) => {
+    state.loading = true;
+    state.error = null;
+})
+.addCase(uploadEmployeeDocuments.fulfilled, (state, action) => {
+    state.loading = false;
+    state.error = null;
+
+    // success → store uploaded documents if needed
+    state.uploadedDocuments = action.payload.documents;
+})
+.addCase(uploadEmployeeDocuments.rejected, (state, action) => {
+    state.loading = false;
+    state.error = action.payload || "Document upload failed";
+});
   },
 });
 

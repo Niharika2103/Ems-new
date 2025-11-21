@@ -1694,7 +1694,7 @@ export const generateLetter = async (req, res) => {
       return res.status(400).json({ error: "employeeId and letterType are required" });
     }
 
-    // 1️⃣ Fetch employee
+    // Fetch employee
     const empResult = await client.query(
       `SELECT * FROM user_employees_master WHERE id = $1`,
       [employeeId]
@@ -1703,14 +1703,14 @@ export const generateLetter = async (req, res) => {
 
     if (!emp) return res.status(404).json({ error: "Employee not found" });
 
-    // 2️⃣ Fetch latest salary record
+    // Fetch latest salary record
     const salResult = await client.query(
       `SELECT * FROM salary_structure WHERE employee_id = $1 ORDER BY created_at DESC LIMIT 1`,
       [employeeId]
     );
     const sal = salResult.rows[0] || {};
 
-    // 3️⃣ Select template file
+    // Select template file
     const selectedTemplate = templateFileMap[letterType];
     if (!selectedTemplate)
       return res.status(400).json({ error: "Invalid letter type selected" });
@@ -1720,7 +1720,7 @@ if (!templateContent) {
   return res.status(500).json({ error: "Template file missing" });
 }
 
-    // 4️⃣ Prepare placeholder data
+    // Prepare placeholder data
     const data = {
       name: emp.name,
       designation: emp.designation,
@@ -1747,7 +1747,7 @@ if (!templateContent) {
     // Fill HTML
     const filledHTML = fillTemplate(templateContent, data);
 
-    // 5️⃣ Generate PDF file
+    //  Generate PDF file
     const lettersDir = path.join(process.cwd(), "src/uploads/letters");
     if (!fs.existsSync(lettersDir)) fs.mkdirSync(lettersDir, { recursive: true });
 
@@ -1797,6 +1797,40 @@ if (!templateContent) {
 };
 
 
+// export const getEmployeeLetters = async (req, res) => {
+//   const client = await pool.connect();
+
+//   try {
+//     const { employeeId } = req.params;
+
+//     const result = await client.query(
+//       `SELECT document_url FROM user_employees_master WHERE id = $1`,
+//       [employeeId]
+//     );
+
+//     const docs = result.rows[0]?.document_url || [];
+
+//     const BASE_URL =
+//       process.env.BASE_URL || `http://localhost:${process.env.PORT || 5002}`;
+
+//     // Convert file names into valid URLs
+//     const files = docs.map((file) => ({
+//       name: file,
+//       url: `${BASE_URL}/uploads/letters/${file}`,
+//     }));
+
+//     res.json({
+//       message: "Employee letters retrieved successfully",
+//       files,
+//     });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: err.message });
+//   } finally {
+//     client.release();
+//   }
+// };
+
 export const getEmployeeLetters = async (req, res) => {
   const client = await pool.connect();
 
@@ -1808,12 +1842,16 @@ export const getEmployeeLetters = async (req, res) => {
       [employeeId]
     );
 
-    const docs = result.rows[0]?.document_url || [];
+    // ✅ Safely extract and normalize document_url
+    let docs = result.rows[0]?.document_url;
 
-    const BASE_URL =
-      process.env.BASE_URL || `http://localhost:${process.env.PORT || 5002}`;
+    // If docs is not an array, treat as empty
+    if (!Array.isArray(docs)) {
+      docs = [];
+    }
 
-    // Convert file names into valid URLs
+    const BASE_URL = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5002}`;
+
     const files = docs.map((file) => ({
       name: file,
       url: `${BASE_URL}/uploads/letters/${file}`,
@@ -1824,10 +1862,149 @@ export const getEmployeeLetters = async (req, res) => {
       files,
     });
   } catch (err) {
-    console.error(err);
+    console.error("Get Employee Letters Error:", err);
     res.status(500).json({ error: err.message });
   } finally {
     client.release();
   }
 };
+
+export const documentUpload = upload.fields([
+  { name: "passbook", maxCount: 1 },
+  { name: "aadhaar", maxCount: 1 },
+  { name: "pan", maxCount: 1 },
+  { name: "educational_docs", maxCount: 10 },
+  { name: "experience_docs", maxCount: 10 }
+]);
+
+
+export const uploadEmployeeDocuments = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const admin = getUserFromToken(req);
+
+    if (admin.role !== "admin") {
+      return res.status(403).json({ error: "Only admin can upload documents." });
+    }
+
+    const employeeId = req.params.id;
+    if (!employeeId) {
+      return res.status(400).json({ error: "Employee ID required" });
+    }
+
+    const files = req.files;
+
+    // Get existing document_url from DB
+    const existingDataResult = await client.query(
+      `SELECT document_url FROM user_employees_master WHERE id = $1`,
+      [employeeId]
+    );
+
+    let existingData = existingDataResult.rows[0]?.document_url || {};
+
+    //  Create a copy to update
+    let updatedDocuments = { ...existingData };
+
+    //  Add ONLY the newly uploaded files — merge instead of overwrite
+    if (files.passbook) {
+      updatedDocuments.passbook = files.passbook[0].filename;
+    }
+
+    if (files.aadhaar) {
+      updatedDocuments.aadhaar = files.aadhaar[0].filename;
+    }
+
+    if (files.pan) {
+      updatedDocuments.pan = files.pan[0].filename;
+    }
+
+    if (files.educational_docs) {
+      updatedDocuments.educational_docs = [
+        ...(existingData.educational_docs || []),
+        ...files.educational_docs.map(f => f.filename)
+      ];
+    }
+
+    if (files.experience_docs) {
+      updatedDocuments.experience_docs = [
+        ...(existingData.experience_docs || []),
+        ...files.experience_docs.map(f => f.filename)
+      ];
+    }
+
+    //  Save merged JSON back to DB
+    await client.query(
+      `UPDATE user_employees_master 
+       SET document_url = $1 
+       WHERE id = $2`,
+      [updatedDocuments, employeeId]
+    );
+
+    return res.json({
+      message: "Documents uploaded successfully",
+      documents: updatedDocuments
+    });
+
+  } catch (err) {
+    console.error("Doc Upload Error:", err.message);
+    return res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+};
+// DELETE /letters/:employeeId/:filename
+export const deleteLetter = async (req, res) => {
+  const client = await pool.connect();
+  const { employeeId, filename } = req.params;
+
+  try {
+    // Validate input
+    if (!employeeId || !filename) {
+      return res.status(400).json({ error: "employeeId and filename are required" });
+    }
+
+    //  Fetch current document list
+    const docResult = await client.query(
+      `SELECT document_url FROM user_employees_master WHERE id = $1`,
+      [employeeId]
+    );
+
+    const existingDocs = docResult.rows[0]?.document_url || [];
+
+    if (!Array.isArray(existingDocs) || !existingDocs.includes(filename)) {
+      return res.status(404).json({ error: "Letter not found" });
+    }
+
+    //  Remove filename from array
+    const updatedDocs = existingDocs.filter((file) => file !== filename);
+
+    //  Update DB
+    await client.query(
+      `UPDATE user_employees_master
+       SET document_url = $1::jsonb,
+           updated_at = NOW()
+       WHERE id = $2`,
+      [JSON.stringify(updatedDocs), employeeId]
+    );
+
+    //  Delete file from filesystem
+    const filePath = path.join(process.cwd(), "src/uploads/letters", filename);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath); // Synchronous delete (or use fs.promises.unlink for async)
+    }
+
+    return res.json({
+      message: "Letter deleted successfully",
+      documents: updatedDocs
+    });
+
+  } catch (err) {
+    console.error("Delete Letter Error:", err.message);
+    return res.status(500).json({ error: "Failed to delete letter" });
+  } finally {
+    client.release();
+  }
+};
+
 
