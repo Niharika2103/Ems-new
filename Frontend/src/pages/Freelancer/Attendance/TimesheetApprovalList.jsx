@@ -47,6 +47,20 @@ const TimesheetApprovalList = () => {
     return <Chip label={config.label} color={config.color} size="small" />;
   };
 
+  const handleViewTimesheet = (timesheet) => {
+    navigate("/attendance/timesheet", { 
+      state: { 
+        employeeId: timesheet.employee.id,
+        employeeName: timesheet.employee.name,
+        viewType: "weekly",
+        employeeType: "freelancer", // This is the key change
+        currentStartDate: new Date().toISOString(),
+        projectName: timesheet.project.name,
+        shifts: timesheet.shifts
+      }
+    });
+  };
+
   return (
     <Box sx={{ p: 3 }}>
       <Card>
@@ -55,6 +69,9 @@ const TimesheetApprovalList = () => {
           <Box sx={{ mb: 3 }}>
             <Typography variant="h4" component="h1" fontWeight="bold">
               Timesheet Approval
+            </Typography>
+            <Typography variant="subtitle1" color="text.secondary">
+              Freelancer Timesheets
             </Typography>
           </Box>
 
@@ -84,6 +101,9 @@ const TimesheetApprovalList = () => {
                       <Typography variant="subtitle1" fontWeight="medium">
                         {timesheet.employee.name}
                       </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        ID: {timesheet.employee.id}
+                      </Typography>
                     </TableCell>
 
                     {/* Project Column */}
@@ -106,6 +126,9 @@ const TimesheetApprovalList = () => {
                           />
                         ))}
                       </Box>
+                      {/* <Typography variant="caption" color="text.secondary">
+                        {timesheet.shifts.length} shift(s)
+                      </Typography> */}
                     </TableCell>
 
                     {/* Status Column */}
@@ -152,10 +175,10 @@ const TimesheetApprovalList = () => {
                           </>
                         )}
 
-                        {/* View Button - Updated path */}
+                        {/* View Button - Updated to use handleViewTimesheet */}
                         <Button
                           color="primary"
-                          onClick={() => navigate("/attendance/timesheet")}
+                          onClick={() => handleViewTimesheet(timesheet)}
                           size="small"
                           startIcon={<Visibility />}
                           variant="contained"
@@ -205,11 +228,12 @@ const TimesheetApprovalList = () => {
   );
 };
 
-// Mock Data
+// Updated Mock Data with employee IDs
 const mockTimesheets = [
   {
     id: 1,
     employee: { 
+      id: 'FREELANCER_001', // Added employee ID
       name: 'John Doe'
     },
     project: { 
@@ -238,6 +262,7 @@ const mockTimesheets = [
   {
     id: 2,
     employee: { 
+      id: 'FREELANCER_002', // Added employee ID
       name: 'Jane Smith'
     },
     project: { 
@@ -255,6 +280,7 @@ const mockTimesheets = [
       }
     ]
   },
+  
 ];
 
 export default TimesheetApprovalList;
