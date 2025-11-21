@@ -696,82 +696,81 @@ export default function Timesheet() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {/* Worked Hours - Show only for regular employees */}
-            {employeeType !== "freelancer" && (
-              <TableRow>
-                <TableCell sx={{ fontWeight: "bold" }}>Worked Hours</TableCell>
-                {(currentWorkedHours || Array(days.length).fill(0)).map((h, i) => {
-                  const dateStr = days[i].date.toISOString().slice(0, 10);
-                  const isWeekend = days[i].dayIndex === 0 || days[i].dayIndex === 6;
-                  const isHoliday = isHolidayDate(dateStr);
-                  if (isHoliday) {
-                    return (
-                      <TableCell key={i} align="center" sx={{ p: 0.5 }}>
-                        <input
-                          type="text"
-                          value="H"
-                          title={getHolidayName(dateStr)}
-                          disabled
-                          style={{
-                            width: 50,
-                            height: 22,
-                            textAlign: "center",
-                            backgroundColor: "#ffeaea",
-                            color: "#d32f2f",
-                            border: "1px solid #ccc",
-                            borderRadius: 4,
-                            fontWeight: "bold",
-                            cursor: "not-allowed",
-                          }}
-                        />
-                      </TableCell>
-                    );
-                  }
+            {/* Worked Hours - Show for ALL employees (both regular and freelancer) */}
+            <TableRow>
+              <TableCell sx={{ fontWeight: "bold" }}>Worked Hours</TableCell>
+              {(currentWorkedHours || Array(days.length).fill(0)).map((h, i) => {
+                const dateStr = days[i].date.toISOString().slice(0, 10);
+                const isWeekend = days[i].dayIndex === 0 || days[i].dayIndex === 6;
+                const isHoliday = isHolidayDate(dateStr);
+                if (isHoliday) {
                   return (
                     <TableCell key={i} align="center" sx={{ p: 0.5 }}>
                       <input
-                        type="number"
-                        value={h}
-                        min="0"
-                        max="9"
-                        step="0.5"
+                        type="text"
+                        value="H"
+                        title={getHolidayName(dateStr)}
+                        disabled
                         style={{
                           width: 50,
                           height: 22,
                           textAlign: "center",
-                          backgroundColor: getInputBackgroundColor("Worked Hours", i, h),
+                          backgroundColor: "#ffeaea",
+                          color: "#d32f2f",
                           border: "1px solid #ccc",
                           borderRadius: 4,
-                        }}
-                        disabled={!isEditMode || isWeekend}
-                        onChange={(e) => {
-                          const val = parseHour(e.target.value);
-                          if (viewMode === "weekly") {
-                            setWorkedHours(prev => {
-                              const arr = [...prev];
-                              arr[i] = val;
-                              return arr;
-                            });
-                          } else {
-                            setMonthlyWorkedHours(prev => {
-                              const arr = [...prev];
-                              arr[i] = val;
-                              return arr;
-                            });
-                          }
+                          fontWeight: "bold",
+                          cursor: "not-allowed",
                         }}
                       />
                     </TableCell>
                   );
-                })}
-                <TableCell align="center">{`${workedTotal}/45`}</TableCell>
-                <TableCell align="center">
-                  <IconButton onClick={(e) => handleMenuOpen(e, "Worked Hours")}>
-                    <MoreVert />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            )}
+                }
+                return (
+                  <TableCell key={i} align="center" sx={{ p: 0.5 }}>
+                    <input
+                      type="number"
+                      value={h}
+                      min="0"
+                      max="9"
+                      step="0.5"
+                      style={{
+                        width: 50,
+                        height: 22,
+                        textAlign: "center",
+                        // backgroundColor: getInputBackgroundColor("Worked Hours", i, h),
+                        backgroundColor: "#fff",
+                        border: "1px solid #ccc",
+                        borderRadius: 4,
+                      }}
+                      disabled={!isEditMode || isWeekend}
+                      onChange={(e) => {
+                        const val = parseHour(e.target.value);
+                        if (viewMode === "weekly") {
+                          setWorkedHours(prev => {
+                            const arr = [...prev];
+                            arr[i] = val;
+                            return arr;
+                          });
+                        } else {
+                          setMonthlyWorkedHours(prev => {
+                            const arr = [...prev];
+                            arr[i] = val;
+                            return arr;
+                          });
+                        }
+                      }}
+                    />
+                  </TableCell>
+                );
+              })}
+              <TableCell align="center">{`${workedTotal}/45`}</TableCell>
+              <TableCell align="center">
+                <IconButton onClick={(e) => handleMenuOpen(e, "Worked Hours")}>
+                  <MoreVert />
+                </IconButton>
+              </TableCell>
+            </TableRow>
 
             {/* Shift Rows for Freelancers - Weekly View Only */}
             {employeeType === "freelancer" && viewMode === "weekly" && Object.keys(shiftRows).map((shift) => (
