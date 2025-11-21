@@ -1,4 +1,4 @@
-
+// AdminLetterGenerator.js
 import React, { useState, useEffect } from 'react';
 
 const AdminLetterGenerator = () => {
@@ -11,7 +11,6 @@ const AdminLetterGenerator = () => {
     relieving: []
   });
   const [selectedLetter, setSelectedLetter] = useState(null);
-  const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [isViewingLetter, setIsViewingLetter] = useState(false);
 
   // Letter types
@@ -31,8 +30,7 @@ const AdminLetterGenerator = () => {
           id: 1, 
           employeeName: 'John Doe', 
           position: 'Software Engineer', 
-          date: '2024-01-15', 
-          status: 'Draft',
+          date: '2024-01-15',
           department: 'Engineering',
           joiningDate: '2024-02-01',
           email: 'john.doe@email.com'
@@ -41,8 +39,7 @@ const AdminLetterGenerator = () => {
           id: 2, 
           employeeName: 'Jane Smith', 
           position: 'Product Manager', 
-          date: '2024-01-20', 
-          status: 'Sent',
+          date: '2024-01-20',
           department: 'Product',
           joiningDate: '2024-02-15',
           email: 'jane.smith@email.com'
@@ -53,8 +50,7 @@ const AdminLetterGenerator = () => {
           id: 1, 
           employeeName: 'John Doe', 
           position: 'Software Engineer', 
-          date: '2024-02-01', 
-          status: 'Completed',
+          date: '2024-02-01',
           department: 'Engineering',
           email: 'john.doe@email.com'
         }
@@ -64,8 +60,7 @@ const AdminLetterGenerator = () => {
           id: 1, 
           employeeName: 'John Doe', 
           position: 'Software Engineer', 
-          date: '2024-02-01', 
-          status: 'Active',
+          date: '2024-02-01',
           department: 'Engineering',
           email: 'john.doe@email.com'
         }
@@ -75,8 +70,7 @@ const AdminLetterGenerator = () => {
           id: 1, 
           employeeName: 'Robert Brown', 
           position: 'Senior Developer', 
-          date: '2024-01-30', 
-          status: 'Issued',
+          date: '2024-01-30',
           department: 'Engineering',
           email: 'robert.brown@email.com'
         }
@@ -86,8 +80,7 @@ const AdminLetterGenerator = () => {
           id: 1, 
           employeeName: 'Emily Davis', 
           position: 'Marketing Manager', 
-          date: '2024-01-28', 
-          status: 'Processed',
+          date: '2024-01-28',
           department: 'Marketing',
           email: 'emily.davis@email.com'
         }
@@ -108,92 +101,35 @@ const AdminLetterGenerator = () => {
     });
   };
 
-  // Get status color
-  const getStatusColor = (status) => {
-    switch (status.toLowerCase()) {
-      case 'sent':
-      case 'completed':
-      case 'active':
-      case 'issued':
-      case 'processed':
-        return '#28a745';
-      case 'accepted':
-        return '#17a2b8';
-      case 'pending':
-        return '#ffc107';
-      case 'draft':
-        return '#6c757d';
-      case 'rejected':
-        return '#dc3545';
-      default:
-        return '#6c757d';
-    }
+  // Handle create new letter
+  const handleCreateNew = () => {
+    alert('Create new letter functionality would go here');
+    // Here you would typically open a form to create new letter
   };
 
-  // Handle create new letter
-  // const handleCreateNew = () => {
-  //   setIsCreatingNew(true);
-  //   setSelectedLetter(null);
-  //   setIsViewingLetter(false);
-  // };
+  // Handle create letter for specific person
+  const handleCreateForPerson = (person, e) => {
+    if (e) e.stopPropagation();
+    alert(`Create ${selectedLetterType} letter for ${person.employeeName}`);
+    // Here you would open create form with pre-filled person data
+  };
 
   // Handle view letter
   const handleViewLetter = (letter) => {
     setSelectedLetter(letter);
     setIsViewingLetter(true);
-    setIsCreatingNew(false);
   };
 
   // Handle back to list
   const handleBackToList = () => {
     setSelectedLetter(null);
-    setIsCreatingNew(false);
     setIsViewingLetter(false);
-  };
-
-  // Handle delete letter
-  const handleDeleteLetter = (letterId, e) => {
-    if (e) e.stopPropagation();
-    if (window.confirm('Are you sure you want to delete this letter?')) {
-      setLetters(prev => ({
-        ...prev,
-        [selectedLetterType]: prev[selectedLetterType].filter(letter => letter.id !== letterId)
-      }));
-      handleBackToList();
-    }
   };
 
   // Handle download letter
   const handleDownloadLetter = (letter, e) => {
     if (e) e.stopPropagation();
     alert(`Downloading ${selectedLetterType} letter for ${letter.employeeName}`);
-  };
-
-  // Handle send letter
-  const handleSendLetter = (letter, e) => {
-    if (e) e.stopPropagation();
-    if (window.confirm(`Send ${selectedLetterType} letter to ${letter.employeeName} (${letter.email})?`)) {
-      // Update letter status to "Sent"
-      setLetters(prev => ({
-        ...prev,
-        [selectedLetterType]: prev[selectedLetterType].map(l => 
-          l.id === letter.id ? { ...l, status: 'Sent' } : l
-        )
-      }));
-      
-      if (selectedLetter && selectedLetter.id === letter.id) {
-        setSelectedLetter(prev => ({ ...prev, status: 'Sent' }));
-      }
-      
-      alert(`Letter sent successfully to ${letter.email}`);
-    }
-  };
-
-  // Handle edit letter
-  const handleEditLetter = (letter, e) => {
-    if (e) e.stopPropagation();
-    alert(`Edit functionality for ${letter.employeeName}'s letter`);
-    // Here you would typically open an edit form
   };
 
   // Generate letter content for preview
@@ -221,7 +157,6 @@ Best regards,
 HR Department
 ABC Technologies
 
-Status: ${letter.status}
 ${'='.repeat(50)}
     `;
   };
@@ -237,7 +172,7 @@ ${'='.repeat(50)}
             {letterTypes.find(type => type.id === selectedLetterType)?.name}
             <span style={styles.countBadge}>{currentLetters.length}</span>
           </h3>
-          
+         
         </div>
 
         {currentLetters.length === 0 ? (
@@ -248,7 +183,7 @@ ${'='.repeat(50)}
               Get started by creating your first {selectedLetterType} letter.
             </p>
             <button 
-              // onClick={handleCreateNew}
+              onClick={handleCreateNew}
               style={styles.createButton}
             >
               Create New Letter
@@ -263,21 +198,10 @@ ${'='.repeat(50)}
               >
                 <div style={styles.cardHeader}>
                   <h4 style={styles.employeeName}>{letter.employeeName}</h4>
-                  <span 
-                    style={{
-                      ...styles.statusBadge,
-                      backgroundColor: getStatusColor(letter.status)
-                    }}
-                  >
-                    {letter.status}
-                  </span>
+                  <div style={styles.position}>{letter.position}</div>
                 </div>
                 
                 <div style={styles.cardContent}>
-                  <div style={styles.detailRow}>
-                    <span style={styles.detailLabel}>Position:</span>
-                    <span style={styles.detailValue}>{letter.position}</span>
-                  </div>
                   <div style={styles.detailRow}>
                     <span style={styles.detailLabel}>Department:</span>
                     <span style={styles.detailValue}>{letter.department}</span>
@@ -292,6 +216,10 @@ ${'='.repeat(50)}
                     <span style={styles.detailLabel}>Email:</span>
                     <span style={styles.detailValue}>{letter.email}</span>
                   </div>
+                  <div style={styles.detailRow}>
+                    <span style={styles.detailLabel}>Created:</span>
+                    <span style={styles.detailValue}>{formatDate(letter.date)}</span>
+                  </div>
                 </div>
 
                 <div style={styles.cardActions}>
@@ -302,23 +230,16 @@ ${'='.repeat(50)}
                     View
                   </button>
                   <button 
-                    onClick={(e) => handleEditLetter(letter, e)}
-                    style={styles.editBtn}
+                    onClick={(e) => handleCreateForPerson(letter, e)}
+                    style={styles.createBtn}
                   >
-                    Edit
+                    Create
                   </button>
                   <button 
-                    onClick={(e) => handleSendLetter(letter, e)}
-                    style={styles.sendBtn}
-                    disabled={letter.status === 'Sent'}
+                    onClick={(e) => handleDownloadLetter(letter, e)}
+                    style={styles.downloadBtn}
                   >
-                    Send
-                  </button>
-                  <button 
-                    onClick={(e) => handleDeleteLetter(letter.id, e)}
-                    style={styles.deleteBtn}
-                  >
-                    Delete
+                    Download
                   </button>
                 </div>
               </div>
@@ -344,29 +265,16 @@ ${'='.repeat(50)}
           </h3>
           <div style={styles.previewActions}>
             <button 
-              onClick={(e) => handleEditLetter(selectedLetter, e)}
-              style={styles.editButton}
+              onClick={(e) => handleCreateForPerson(selectedLetter, e)}
+              style={styles.createButton}
             >
-              Edit
-            </button>
-            <button 
-              onClick={(e) => handleSendLetter(selectedLetter, e)}
-              style={styles.sendButton}
-              disabled={selectedLetter.status === 'Sent'}
-            >
-              Send
+              + Create New
             </button>
             <button 
               onClick={(e) => handleDownloadLetter(selectedLetter, e)}
               style={styles.downloadButton}
             >
-              Download
-            </button>
-            <button 
-              onClick={(e) => handleDeleteLetter(selectedLetter.id, e)}
-              style={styles.deleteButton}
-            >
-              Delete
+              Download Letter
             </button>
           </div>
         </div>
@@ -377,49 +285,37 @@ ${'='.repeat(50)}
               {generateLetterContent(selectedLetter)}
             </pre>
           </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Render create new letter form (simplified)
-  const renderCreateNew = () => {
-    return (
-      <div style={styles.createContainer}>
-        <div style={styles.createHeader}>
-          <button onClick={handleBackToList} style={styles.backButton}>
-            ← Back to List
-          </button>
-          <h3 style={styles.createTitle}>
-            Create New {letterTypes.find(type => type.id === selectedLetterType)?.name}
-          </h3>
-        </div>
-        
-        <div style={styles.createForm}>
-          <div style={styles.formGroup}>
-            <label style={styles.formLabel}>Employee Name</label>
-            <input type="text" style={styles.formInput} placeholder="Enter employee name" />
-          </div>
-          <div style={styles.formGroup}>
-            <label style={styles.formLabel}>Position</label>
-            <input type="text" style={styles.formInput} placeholder="Enter position" />
-          </div>
-          <div style={styles.formGroup}>
-            <label style={styles.formLabel}>Department</label>
-            <input type="text" style={styles.formInput} placeholder="Enter department" />
-          </div>
-          <div style={styles.formGroup}>
-            <label style={styles.formLabel}>Email</label>
-            <input type="email" style={styles.formInput} placeholder="Enter email" />
-          </div>
           
-          <div style={styles.formActions}>
-            <button onClick={handleBackToList} style={styles.cancelButton}>
-              Cancel
-            </button>
-            <button onClick={handleBackToList} style={styles.saveButton}>
-              Create Letter
-            </button>
+          <div style={styles.letterInfo}>
+            <h4 style={styles.infoTitle}>Letter Information</h4>
+            <div style={styles.infoGrid}>
+              <div style={styles.infoItem}>
+                <label style={styles.infoLabel}>Employee Name:</label>
+                <span style={styles.infoValue}>{selectedLetter.employeeName}</span>
+              </div>
+              <div style={styles.infoItem}>
+                <label style={styles.infoLabel}>Position:</label>
+                <span style={styles.infoValue}>{selectedLetter.position}</span>
+              </div>
+              <div style={styles.infoItem}>
+                <label style={styles.infoLabel}>Department:</label>
+                <span style={styles.infoValue}>{selectedLetter.department}</span>
+              </div>
+              <div style={styles.infoItem}>
+                <label style={styles.infoLabel}>Email:</label>
+                <span style={styles.infoValue}>{selectedLetter.email}</span>
+              </div>
+              <div style={styles.infoItem}>
+                <label style={styles.infoLabel}>Created Date:</label>
+                <span style={styles.infoValue}>{formatDate(selectedLetter.date)}</span>
+              </div>
+              {selectedLetter.joiningDate && (
+                <div style={styles.infoItem}>
+                  <label style={styles.infoLabel}>Joining Date:</label>
+                  <span style={styles.infoValue}>{formatDate(selectedLetter.joiningDate)}</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -456,8 +352,7 @@ ${'='.repeat(50)}
 
         {/* Main Content */}
         <div style={styles.section}>
-          {isCreatingNew ? renderCreateNew() : 
-           isViewingLetter ? renderLetterPreview() : renderLetterList()}
+          {isViewingLetter ? renderLetterPreview() : renderLetterList()}
         </div>
       </div>
     </div>
@@ -584,23 +479,19 @@ const styles = {
     boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
   },
   cardHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
     marginBottom: '15px'
   },
   employeeName: {
-    margin: '0',
+    margin: '0 0 5px 0',
     color: '#2c3e50',
-    fontSize: '18px'
+    fontSize: '18px',
+    fontWeight: 'bold'
   },
-  statusBadge: {
-    padding: '4px 8px',
-    borderRadius: '12px',
-    fontSize: '11px',
-    fontWeight: 'bold',
-    color: 'white',
-    textTransform: 'uppercase'
+  position: {
+    margin: '0',
+    color: '#6c757d',
+    fontSize: '14px',
+    fontStyle: 'italic'
   },
   cardContent: {
     marginBottom: '15px'
@@ -624,48 +515,41 @@ const styles = {
   },
   cardActions: {
     display: 'flex',
-    gap: '8px',
+    gap: '10px',
     justifyContent: 'space-between'
   },
   viewBtn: {
-    padding: '8px 12px',
+    padding: '10px 15px',
     backgroundColor: '#17a2b8',
     color: 'white',
     border: 'none',
-    borderRadius: '4px',
+    borderRadius: '5px',
     cursor: 'pointer',
-    fontSize: '12px',
-    flex: 1
+    fontSize: '14px',
+    flex: 1,
+    fontWeight: 'bold'
   },
-  editBtn: {
-    padding: '8px 12px',
+  createBtn: {
+    padding: '10px 15px',
     backgroundColor: '#ffc107',
     color: 'black',
     border: 'none',
-    borderRadius: '4px',
+    borderRadius: '5px',
     cursor: 'pointer',
-    fontSize: '12px',
-    flex: 1
+    fontSize: '14px',
+    flex: 1,
+    fontWeight: 'bold'
   },
-  sendBtn: {
-    padding: '8px 12px',
+  downloadBtn: {
+    padding: '10px 15px',
     backgroundColor: '#28a745',
     color: 'white',
     border: 'none',
-    borderRadius: '4px',
+    borderRadius: '5px',
     cursor: 'pointer',
-    fontSize: '12px',
-    flex: 1
-  },
-  deleteBtn: {
-    padding: '8px 12px',
-    backgroundColor: '#dc3545',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '12px',
-    flex: 1
+    fontSize: '14px',
+    flex: 1,
+    fontWeight: 'bold'
   },
   previewContainer: {
     width: '100%'
@@ -697,17 +581,8 @@ const styles = {
     display: 'flex',
     gap: '10px'
   },
-  editButton: {
-    padding: '8px 16px',
-    backgroundColor: '#ffc107',
-    color: 'black',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    fontSize: '14px'
-  },
-  sendButton: {
-    padding: '8px 16px',
+  downloadButton: {
+    padding: '10px 20px',
     backgroundColor: '#28a745',
     color: 'white',
     border: 'none',
@@ -716,26 +591,10 @@ const styles = {
     fontSize: '14px',
     fontWeight: 'bold'
   },
-  downloadButton: {
-    padding: '8px 16px',
-    backgroundColor: '#17a2b8',
-    color: 'white',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    fontSize: '14px'
-  },
-  deleteButton: {
-    padding: '8px 16px',
-    backgroundColor: '#dc3545',
-    color: 'white',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    fontSize: '14px'
-  },
   previewContent: {
-    width: '100%'
+    display: 'grid',
+    gridTemplateColumns: '2fr 1fr',
+    gap: '20px'
   },
   letterPreview: {
     backgroundColor: 'white',
@@ -752,65 +611,38 @@ const styles = {
     lineHeight: '1.5',
     margin: '0'
   },
-  createContainer: {
-    width: '100%'
-  },
-  createHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '15px',
-    marginBottom: '20px'
-  },
-  createTitle: {
-    margin: '0',
-    color: '#495057'
-  },
-  createForm: {
+  letterInfo: {
     backgroundColor: 'white',
-    padding: '20px',
-    borderRadius: '8px',
-    border: '1px solid #dee2e6'
+    border: '1px solid #dee2e6',
+    borderRadius: '5px',
+    padding: '20px'
   },
-  formGroup: {
-    marginBottom: '15px'
+  infoTitle: {
+    margin: '0 0 15px 0',
+    color: '#495057',
+    borderBottom: '1px solid #dee2e6',
+    paddingBottom: '10px'
   },
-  formLabel: {
-    display: 'block',
-    marginBottom: '5px',
-    fontWeight: 'bold',
-    color: '#495057'
-  },
-  formInput: {
-    width: '100%',
-    padding: '10px',
-    border: '1px solid #ced4da',
-    borderRadius: '4px',
-    fontSize: '14px'
-  },
-  formActions: {
+  infoGrid: {
     display: 'flex',
-    gap: '10px',
-    justifyContent: 'flex-end',
-    marginTop: '20px'
+    flexDirection: 'column',
+    gap: '12px'
   },
-  cancelButton: {
-    padding: '10px 20px',
-    backgroundColor: '#6c757d',
-    color: 'white',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
+  infoItem: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: '8px',
+    borderBottom: '1px solid #f8f9fa'
+  },
+  infoLabel: {
+    fontWeight: 'bold',
+    color: '#6c757d',
     fontSize: '14px'
   },
-  saveButton: {
-    padding: '10px 20px',
-    backgroundColor: '#28a745',
-    color: 'white',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: 'bold'
+  infoValue: {
+    color: '#495057',
+    fontSize: '14px'
   }
 };
 
