@@ -116,9 +116,6 @@ const TimesheetApprovalList = () => {
                     {/* Actions Column - All buttons side by side */}
                     <TableCell align="center">
                       <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-                       
-                        
-
                         {/* Approve/Reject Buttons - Only for pending status */}
                         {timesheet.status === 'pending' && (
                           <>
@@ -143,7 +140,7 @@ const TimesheetApprovalList = () => {
                               startIcon={<Close />}
                               variant="contained"
                               sx={{ 
-                                backgroundColor: '#f44336',
+                                backgroundColor: '#b8130bff',
                                 '&:hover': {
                                   backgroundColor: '#d32f2f'
                                 },
@@ -155,9 +152,10 @@ const TimesheetApprovalList = () => {
                           </>
                         )}
 
+                        {/* View Button - Updated path */}
                         <Button
                           color="primary"
-                          onClick={() => navigate('/timesheet')}
+                          onClick={() => navigate('/freelancer/timesheet')}
                           size="small"
                           startIcon={<Visibility />}
                           variant="contained"
@@ -178,7 +176,7 @@ const TimesheetApprovalList = () => {
                             label={timesheet.status === 'approved' ? 'Approved' : 'Rejected'}
                             size="small"
                             sx={{
-                              backgroundColor: timesheet.status === 'approved' ? '#4caf50' : '#f44336',
+                              backgroundColor: timesheet.status === 'approved' ? '#4caf50' : '#770d05ff',
                               color: 'white',
                               fontWeight: 'bold',
                               minWidth: 100,
@@ -257,7 +255,6 @@ const mockTimesheets = [
       }
     ]
   },
-
 ];
 
 export default TimesheetApprovalList;

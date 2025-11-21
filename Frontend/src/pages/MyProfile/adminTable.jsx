@@ -72,13 +72,13 @@ export default function AdminTable() {
   };
 
   // View Employee Details - Navigate to employee info page
-  const handleViewEmployee = (record) => {
-    navigate('/dashboard/emp_info', {
-      state: {
-        employee: record
-      }
-    });
-  };
+  // const handleViewEmployee = (record) => {
+  //   navigate('/dashboard/emp_info', {
+  //     state: {
+  //       employee: record
+  //     }
+  //   });
+  // };
 
   //Edit Register Model
   const handleEdit = (record) => {
@@ -249,27 +249,27 @@ export default function AdminTable() {
         </span>
       ),
     },
-    {
-      title: "View",
-      key: "view",
-      width: 100,
-      align: 'center',
-      // fixed: 'right',
-      render: (_, record) => (
-        <Button
-          type="primary"
-          size="small"
-          onClick={() => handleViewEmployee(record)}
-          style={{
-            fontSize: '12px',
-            padding: '4px 8px',
-            height: 'auto'
-          }}
-        >
-          View
-        </Button>
-      ),
-    },
+    // {
+    //   title: "View",
+    //   key: "view",
+    //   width: 100,
+    //   align: 'center',
+    //   // fixed: 'right',
+    //   render: (_, record) => (
+    //     <Button
+    //       type="primary"
+    //       size="small"
+    //       onClick={() => handleViewEmployee(record)}
+    //       style={{
+    //         fontSize: '12px',
+    //         padding: '4px 8px',
+    //         height: 'auto'
+    //       }}
+    //     >
+    //       View
+    //     </Button>
+    //   ),
+    // },
     {
       title: "Actions",
       key: "actions",

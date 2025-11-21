@@ -45,6 +45,7 @@ import FreelancerProjectTable from  "../pages/Freelancer/FreelancerProjectTable"
 import FreelancerDocuments from  "../pages/Freelancer/FreelancerDocuments";
 import FreelancerAssignProjectpage from  "../pages/Freelancer/FreelancerAssignProjectpage";
 import TimesheetApprovalList from '../pages/Freelancer/Attendance/TimesheetApprovalList';
+import FreelancerWeeklyTimesheet from '../pages/Freelancer/Attendance/FreelancerWeeklyTimesheet';
 import SalaryStructure from '../pages/Accounts/SalaryStructure';
 
 function AppRoutes() {
@@ -213,6 +214,14 @@ function AppRoutes() {
          element={
              <ProtectedRoute allowedRoles={["admin"]}>
               <TimesheetApprovalList />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route path="/freelancer/timesheet"
+         element={
+           <ProtectedRoute allowedRoles={["admin"]}>
+              <FreelancerWeeklyTimesheet />
             </ProtectedRoute>
           }
         />
