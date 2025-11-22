@@ -46,7 +46,7 @@ import FreelancerProjectTable from  "../pages/Freelancer/FreelancerProjectTable"
 import FreelancerDocuments from  "../pages/Freelancer/FreelancerDocuments";
 import FreelancerAssignProjectpage from  "../pages/Freelancer/FreelancerAssignProjectpage";
 import TimesheetApprovalList from '../pages/Freelancer/Attendance/TimesheetApprovalList';
-
+import ReferCandidatePage from "../pages/Referral/ReferCandidatePage";
 import SalaryStructure from '../pages/Accounts/SalaryStructure';
 
 function AppRoutes() {
@@ -246,6 +246,15 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route
+        path="/dashboard/emp_info/referral"
+        element={
+          <ProtectedRoute allowedRoles={["employee"]}>
+          <ReferCandidatePage/>
+          </ProtectedRoute>
+        }
+        />
+
 
 
 {/* <Route path="/freelancer/projects" element={<FreelancerProjectTable />} /> */}

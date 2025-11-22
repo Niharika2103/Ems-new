@@ -55,7 +55,7 @@ const EmpInfoDashboard = () => {
       icon: GroupAddIcon,
       iconBg: "bg-green-100",
       iconColor: "text-green-600",
-      onClick: () => navigate("/referrals"),
+      onClick: () => navigate("/dashboard/emp_info/referral"),
     },
   ];
 
