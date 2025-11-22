@@ -10,6 +10,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/salary")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class SalaryStructureController {
 
     private final SalaryStructureService service;

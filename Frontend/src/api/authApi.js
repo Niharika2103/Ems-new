@@ -1,4 +1,4 @@
-import { superadminClient,employeeClient,adminClient,ProjectClient,AttendanceClient} from "./axiosClient";
+import { superadminClient,employeeClient,adminClient,ProjectClient,AttendanceClient,SalaryStructureClient } from "./axiosClient";
 import { AUTH_API } from "../utils/constants";
 
 // ================= SuperAdmin =================
@@ -364,4 +364,8 @@ export const deleteHolidayApi =(id)=>{
 //salary structure 
 export const createSalaryStructureApi=(formData)=>{
   return SalaryStructureClient.post(`${AUTH_API.SALARYSTRUCTURE}/create`,formData)
+}
+//get salary 
+export const fetchsalarybgidApi=(id)=>{
+  return SalaryStructureClient.get(`${AUTH_API.SALARYSTRUCTURE}/last/${id}`)
 }
