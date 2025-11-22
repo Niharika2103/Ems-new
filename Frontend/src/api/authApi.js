@@ -380,7 +380,7 @@ export const deleteHolidayApi =(id)=>{
 //PayslipDownload
 
 export const downloadPayslipApi = (employeeId, month, year) => {
-  return SalaryClient.get(`/salary/download/${employeeId}/${month}/${year}`, {
+  return SalaryStructureClient.get(`${AUTH_API.SALARYSTRUCTURE}/download/${employeeId}/${month}/${year}`, {
     responseType: "blob",
   });
 };

@@ -7,7 +7,7 @@ export const API_BASES = {
   EMPLOYEE: import.meta.env.VITE_EMPLOYEE_URL || "http://localhost:5004",
   PROJECT:import.meta.env.VITE_Project_URL || "http://localhost:8080/api",
   ATTENDANCE:import.meta.env.VITE_Attendance_URL || "http://localhost:9091/api",
-  SALARYSTRUCTURE:import.meta.env.VITE_SalaryStructure_URL || "http://localhost:9092/",
+  SALARYSTRUCTURE:import.meta.env.VITE_SalaryStructure_URL || "http://localhost:9092",
 
 };
 

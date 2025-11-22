@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import { downloadPayslipApi } from "../../api/authApi";
+import { decodeToken } from "../../api/decodeToekn";
 import {
   Box,
   Typography,
@@ -12,28 +13,37 @@ import { CalendarToday } from "@mui/icons-material";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import dayjs from "dayjs";
-
+import { useDispatch, useSelector } from "react-redux";
 const EmpPayslip = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
-
+const [userId, setUserId] = useState(null);
   const handleCalendarOpen = (event) => setAnchorEl(event.currentTarget);
   const handleCalendarClose = () => setAnchorEl(null);
-
+const dispatch = useDispatch();
   const handleMonthSelect = (date) => {
     setSelectedDate(date);
     handleCalendarClose();
   };
-
+useEffect(() => {
+    const getDecoded = async () => {
+      try {
+        const decoded = await decodeToken();
+        setUserId(decoded.id); } catch (error) {
+        console.error("Error decoding token:", error);
+      }
+    };
+    getDecoded();
+  }, [dispatch]);
   const downloadPayslip = async () => {
   if (!selectedDate) return;
 
-  const employeeId = localStorage.getItem("empId");  // UUID
+
   const month = dayjs(selectedDate).format("MMMM").toUpperCase();
   const year = dayjs(selectedDate).format("YYYY");
 
   try {
-    const response = await downloadPayslipApi(employeeId, month, year);
+    const response = await downloadPayslipApi(userId, month, year);
 
     const blob = new Blob([response.data], { type: "application/pdf" });
     const url = window.URL.createObjectURL(blob);
