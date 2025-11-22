@@ -182,21 +182,22 @@ const AdminLetterGenerator = () => {
                         {letters.map((file, idx) => (
                           <div key={idx} style={styles.fileRow}>
                             <span style={styles.fileName}>{file.name.replace('.pdf', '')}</span>
-                            <button
-                              onClick={() => handleDownload(file.url)}
-                              style={styles.viewBtn}
-                            >
-                              View
-                            </button>
-                             <button
-        onClick={(e) => {
-          e.stopPropagation();
-          handleDeleteLetter(emp.id, file.name);
-        }}
-        style={styles.deleteBtn}
-      >
-        Delete
-      </button>
+                           <button
+  onClick={() => handleDownload(file.url)}
+  style={styles.viewBtn}
+>
+  View
+</button>
+<span style={{ margin: '0 8px' }}></span> {/* Space between buttons */}
+<button
+  onClick={(e) => {
+    e.stopPropagation();
+    handleDeleteLetter(emp.id, file.name);
+  }}
+  style={styles.deleteBtn}
+>
+  Delete
+</button>
                           </div>
                         ))}
                       </div>
