@@ -4,10 +4,17 @@ import com.example.salary_structure.Entity.SalaryStructure;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface SalaryStructureRepository extends JpaRepository<SalaryStructure, UUID> {
     SalaryStructure findTopByEmployeeIdOrderByEffectiveFromDesc(UUID employeeId);
-
+    Optional<SalaryStructure> findByEmployeeIdAndMonthAndYear(UUID employeeId, String month, Integer year);
+    
+    Optional<SalaryStructure> findFirstByEmployeeIdAndMonthIgnoreCaseAndYearOrderByCreatedAtDesc(
+            UUID employeeId,
+            String month,
+            Integer year
+    );
 }

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { downloadPayslipApi } from "../../api/authApi";
 import {
   Box,
   Typography,
@@ -25,32 +26,31 @@ const EmpPayslip = () => {
   };
 
   const downloadPayslip = async () => {
-    if (!selectedDate) return;
+  if (!selectedDate) return;
 
-    const month = dayjs(selectedDate).format("YYYY-MM");
-    const employeeId = 101;
+  const employeeId = localStorage.getItem("empId");  // UUID
+  const month = dayjs(selectedDate).format("MMMM").toUpperCase();
+  const year = dayjs(selectedDate).format("YYYY");
 
-    try {
-      const response = await fetch(
-        `http://localhost:8080/api/payslips/${employeeId}?month=${month}`
-      );
+  try {
+    const response = await downloadPayslipApi(employeeId, month, year);
 
-      if (!response.ok) {
-        alert("Payslip not found for this month");
-        return;
-      }
+    const blob = new Blob([response.data], { type: "application/pdf" });
+    const url = window.URL.createObjectURL(blob);
 
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `Payslip-${month}.pdf`;
-      a.click();
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Payslip download failed:", error);
-    }
-  };
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Payslip-${month}-${year}.pdf`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+
+  } catch (error) {
+    console.error("Payslip download failed:", error);
+    alert("Payslip not found for this month");
+  }
+};
+
+
 
   return (
     <Box sx={{ p: 2 }}>

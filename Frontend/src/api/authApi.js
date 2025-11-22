@@ -1,5 +1,6 @@
 import { superadminClient,employeeClient,adminClient,ProjectClient,AttendanceClient,SalaryStructureClient } from "./axiosClient";
 import { AUTH_API } from "../utils/constants";
+import { SalaryStructureClient } from "./axiosClient";
 
 // ================= SuperAdmin =================
 export const checkEmailApi = (email) =>
@@ -99,6 +100,17 @@ export const promoteEmployeeApi = (employeeId) =>
   adminClient.post(`${AUTH_API.ADMIN}/promote/${employeeId}`)
 
 
+
+// ======== Letter Generation API ========
+export const generateLetterApi = (payload) =>
+  adminClient.post(`${AUTH_API.ADMIN}/letters/generate`, payload);
+
+export const getEmployeeLettersApi = (employeeId) =>
+  adminClient.get(`${AUTH_API.ADMIN}/letters/${employeeId}`);
+
+// Delete letter API
+export const deleteLetterApi = (employeeId, filename) =>
+  adminClient.delete(`${AUTH_API.ADMIN}/letters/${employeeId}/${filename}`); 
 // ================= Employee Auth =================
 export const employeeRegisterApi = (data) =>
   employeeClient.post(`${AUTH_API.EMPLOYEE}/register`, data);
@@ -348,6 +360,7 @@ export const fetchAuditLogsApi = () => {
 };
 
 
+
 // Public ADD Holidays 
 export const saveHolidayApi = (formData) =>{
  return AttendanceClient.post(`${AUTH_API.ATTENDANCE}/holidays`, formData);
@@ -357,10 +370,47 @@ export const saveHolidayApi = (formData) =>{
 export const updateHolidayApi = (id,formData) =>{
  return AttendanceClient.put(`${AUTH_API.ATTENDANCE}/holidays/${id}`,formData);
 }
+
+
 //delete
 export const deleteHolidayApi =(id)=>{
   return AttendanceClient.delete(`${AUTH_API.ATTENDANCE}/holidays/${id}`);
 }
+
+//PayslipDownload
+
+export const downloadPayslipApi = (employeeId, month, year) => {
+  return SalaryClient.get(`/salary/download/${employeeId}/${month}/${year}`, {
+    responseType: "blob",
+  });
+};
+// ================= Employee Document Upload (Admin) =================
+export const uploadEmployeeDocumentsApi = (employeeId, data) => {
+  const formData = new FormData();
+
+  // Append single files
+  if (data.passbook) formData.append("passbook", data.passbook);
+  if (data.aadhaar) formData.append("aadhaar", data.aadhaar);
+  if (data.pan) formData.append("pan", data.pan);
+
+  // Append multiple files
+  if (data.educational_docs && data.educational_docs.length > 0) {
+    data.educational_docs.forEach((file) => {
+      formData.append("educational_docs", file);
+    });
+  }
+
+  if (data.experience_docs && data.experience_docs.length > 0) {
+    data.experience_docs.forEach((file) => {
+      formData.append("experience_docs", file);
+    });
+  }
+
+  return adminClient.post(
+    `${AUTH_API.ADMIN}/employees/${employeeId}/upload-documents`,
+    formData
+  );
+};
 //salary structure 
 export const createSalaryStructureApi=(formData)=>{
   return SalaryStructureClient.post(`${AUTH_API.SALARYSTRUCTURE}/create`,formData)

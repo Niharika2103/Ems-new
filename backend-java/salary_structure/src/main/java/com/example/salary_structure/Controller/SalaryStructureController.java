@@ -1,8 +1,24 @@
 package com.example.salary_structure.Controller;
+import java.io.ByteArrayInputStream;
+import java.util.UUID;
+
+
 
 import com.example.salary_structure.Entity.SalaryStructure;
+import com.example.salary_structure.Services.PdfGeneratorService;
 import com.example.salary_structure.Services.SalaryStructureService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.io.ByteArrayInputStream;
+import java.util.UUID;
+import com.example.salary_structure.Services.SalaryStructureService;
+import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -13,17 +29,48 @@ import java.util.UUID;
 @CrossOrigin(origins = "*")
 public class SalaryStructureController {
 
-    private final SalaryStructureService service;
+@Autowired
+private  SalaryStructureService salaryStructureService;
+@Autowired
+private  PdfGeneratorService pdfGeneratorService;
 
     // frontend autofill purpose
     @GetMapping("/last/{employeeId}")
     public SalaryStructure getLastMonth(@PathVariable UUID employeeId) {
-        return service.getLastSalary(employeeId);  // ✅ Correct method
+        return salaryStructureService.getLastSalary(employeeId);  // ✅ Correct method
     }
 
     // create new salary
     @PostMapping("/create")
     public SalaryStructure createSalary(@RequestBody SalaryStructure salary) {
-        return service.createSalaryStructure(salary);
+        return salaryStructureService.createSalaryStructure(salary);
     }
+    
+    
+    @GetMapping("/download/{employeeId}/{month}/{year}")
+    public ResponseEntity<byte[]> downloadPayslipByMonthYear(
+            @PathVariable UUID employeeId,
+            @PathVariable String month,
+            @PathVariable Integer year) {
+
+        SalaryStructure salary = salaryStructureService.getSalaryForMonth(employeeId, month, year);
+
+        if (salary == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        ByteArrayInputStream pdf = pdfGeneratorService.generatePayslip(salary);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(
+                "Content-Disposition",
+                "attachment; filename=payslip_" + employeeId + "_" + month + "_" + year + ".pdf"
+        );
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdf.readAllBytes());
+    }
+
 }
