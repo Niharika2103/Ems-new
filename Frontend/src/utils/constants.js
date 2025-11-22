@@ -14,8 +14,8 @@ export const API_BASES = {
 
 // Auth endpoints
 export const AUTH_API = {
-  SUPERADMIN: `${API_BASES.SUPERADMIN}`,
-  ADMIN: `${API_BASES.ADMIN}`,
+  SUPERADMIN: `${API_BASES.SUPERADMIN}/auth/superadmin`,
+  ADMIN: `${API_BASES.ADMIN}/admin`,
   EMPLOYEE: `${API_BASES.EMPLOYEE}/employee`,
   PROJECT:`${API_BASES.PROJECT}`,
   ATTENDANCE:`${API_BASES.ATTENDANCE}`,
