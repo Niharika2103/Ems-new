@@ -198,6 +198,16 @@ const AdminLetterGenerator = () => {
 >
   Delete
 </button>
+<span style={{ margin: '0 8px' }}></span> {/* Space between Delete and Send */}
+<button
+  onClick={(e) => {
+    e.stopPropagation();
+    handleSend(emp.id, file.name); // Add your send handler function
+  }}
+  style={styles.sendBtn}
+>
+  Send
+</button>
                           </div>
                         ))}
                       </div>
@@ -372,6 +382,14 @@ deleteBtn: {
   fontSize: '12px',
   fontWeight: 'bold',
 },
+ sendBtn: {
+    padding: '8px 16px',
+    backgroundColor: '#dda31bff', // Green color for send action
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer'
+  }
 };
 
 export default AdminLetterGenerator;
