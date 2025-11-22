@@ -12,21 +12,10 @@ export const API_BASES = {
 };
 
 
-// export const API_BASES = {
-//   // SUPERADMIN: import.meta.env.VITE_SUPERADMIN_URL || "http://20.40.57.43:5001/auth/superadmin",
-//   // ADMIN: import.meta.env.VITE_ADMIN_URL || "http://20.40.57.43:5002/admin",
-//   EMPLOYEE: import.meta.env.VITE_EMPLOYEE_URL || "http://20.40.57.43:5004",
-  // PROJECT:import.meta.env.VITE_Project_URL || "http://20.40.57.43:8081/api",
-  // ATTENDANCE:import.meta.env.VITE_Attendance_URL || "http://20.40.57.43:9090/api",
-
-// };
-
-
-
 // Auth endpoints
 export const AUTH_API = {
-  SUPERADMIN: `${API_BASES.SUPERADMIN}/auth/superadmin`,
-  ADMIN: `${API_BASES.ADMIN}/admin`,
+  SUPERADMIN: `${API_BASES.SUPERADMIN}`,
+  ADMIN: `${API_BASES.ADMIN}`,
   EMPLOYEE: `${API_BASES.EMPLOYEE}/employee`,
   PROJECT:`${API_BASES.PROJECT}`,
   ATTENDANCE:`${API_BASES.ATTENDANCE}`,
