@@ -1,6 +1,6 @@
 import { superadminClient,employeeClient,adminClient,ProjectClient,AttendanceClient,SalaryStructureClient } from "./axiosClient";
 import { AUTH_API } from "../utils/constants";
-import { SalaryStructureClient } from "./axiosClient";
+
 
 // ================= SuperAdmin =================
 export const checkEmailApi = (email) =>
