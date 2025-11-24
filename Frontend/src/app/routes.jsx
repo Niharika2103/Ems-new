@@ -34,6 +34,7 @@ import AdminLetterGenerator from "../pages/documents/AdminLetterGenerator";
 import EmployeeDocumentTable from '../pages/documents/EmployeeDocumentTable';
 import MonthlyTimesheet from "../pages/Attendance/MonthlyTimesheet";
 import EmployeeLeave from "../pages/Attendance/EmployeeLeave";
+import LettersDownload from '../pages/documents/LettersDownload';
 import MaternityPaternityLeaveTable from "../pages/Attendance/MaternityPaternityLeaveTable";
 import EmpAttendanceDashboard from "../pages/dashbaord/EmpAttendanceDashboard";
 import AuditLogsTable from "../pages/Attendance/AuditLogs";
@@ -330,6 +331,13 @@ function AppRoutes() {
             element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <EmployeeDocumentTable />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/employee/letters" 
+        element={
+          <ProtectedRoute allowedRoles={["employee"]}>
+              <LettersDownload />
             </ProtectedRoute>
           }
         />
