@@ -367,7 +367,7 @@ export const registerEmployee = async (req, res) => {
 export const employeeLogin = async (req, res) => {
   const client = await pool.connect();
   try {
-    const { email, password, otp } = req.body;
+    const { email, password, employment_type,otp, } = req.body;
 
     const userRes = await client.query(
       `SELECT * FROM ${USERS_TABLE} WHERE email = $1 AND role IN ('employee','admin','superadmin')`,
@@ -379,6 +379,17 @@ export const employeeLogin = async (req, res) => {
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) return res.status(401).json({ error: "Invalid Password" });
 
+      if (user.role === "employee") {
+      if (!employment_type) {
+        return res.status(400).json({ error: "Employment type is required" });
+      }
+
+      // DB match check: fulltime / contract / freelancer
+      if (user.employment_type !== employment_type) {
+        return res.status(401).json({ error: "Invalid employment type" });
+      }
+    }
+    
     // Admin/Superadmin MFA flow
     if (["admin", "superadmin"].includes(user.role)) {
       if (!otp) {
@@ -464,7 +475,7 @@ export const employeeLogin = async (req, res) => {
     const token = issueJwt({
       email: user.email,
       role: user.role,
-       employee_type: employeeType, 
+       employment_type: user.employment_type, 
       employee_id: user.employee_id,
       is_temp_admin: isTempAdmin,
       id: user.id,
