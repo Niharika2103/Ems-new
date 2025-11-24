@@ -8,13 +8,14 @@ import {
   Typography,
   Card,
   CardContent,
+  TextField,
 } from "@mui/material";
 
 const steps = [
   "Bank Passbook Upload",
   "Aadhaar & PAN Upload",
-  "Educational Certificates",
-  "Previous Company Docs",
+  "GST Registration",
+  "GST Documents Upload",
   "Review & Submit",
 ];
 
@@ -25,8 +26,9 @@ const FreelancerDocuments = () => {
     bankPassbook: null,
     panCard: null,
     aadhaarCard: null,
-    educationFiles: null,
-    previousDocs: null,
+    gstNumber: "",
+    gstCertificate: null,
+    gstReturns: null,
   });
 
   const handleNext = () => {
@@ -42,6 +44,11 @@ const FreelancerDocuments = () => {
     if (files) {
       setFormData({ ...formData, [key]: files.length > 1 ? Array.from(files) : files[0] });
     }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleSubmit = () => {
@@ -80,24 +87,24 @@ const FreelancerDocuments = () => {
         "Full card should be visible in the image"
       ]
     },
-    educationFiles: {
+    gstCertificate: {
       formats: ".jpg, .jpeg, .png, .pdf",
-      maxSize: "10MB per file",
+      maxSize: "10MB",
       requirements: [
-        "Upload all educational certificates",
-        "Marksheets and degree certificates required",
-        "Files should be clearly readable",
-        "Multiple files can be uploaded together"
+        "GST registration certificate required",
+        "Certificate should be clearly readable",
+        "All details including GSTIN should be visible",
+        "Ensure the document is valid and not expired"
       ]
     },
-    previousDocs: {
-      formats: ".jpg, .jpeg, .png, .pdf",
+    gstReturns: {
+      formats: ".pdf",
       maxSize: "10MB per file",
       requirements: [
-        "Experience letters from previous employers",
-        "Relieving letters if available",
-        "Salary slips (last 3 months from each company)",
-        "All documents should be clearly readable"
+        "Upload GST returns for the last 6 months",
+        "Files should be in PDF format",
+        "All pages should be included",
+        "Returns should be properly signed and verified"
       ]
     }
   };
@@ -120,6 +127,12 @@ const FreelancerDocuments = () => {
       ))}
     </Box>
   );
+
+  // GST number validation
+  const isValidGST = (gst) => {
+    const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+    return gstRegex.test(gst);
+  };
 
   return (
     <Box
@@ -260,109 +273,124 @@ const FreelancerDocuments = () => {
               </Box>
             )}
 
-            {/* Step 3: Educational Certificates */}
+            {/* Step 3: GST Registration */}
             {activeStep === 2 && (
               <Box textAlign="center" sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
                 <Typography variant="h6" fontWeight="bold">
-                  Step 3: Educational Certificates
+                  Step 3: GST Registration
                 </Typography>
                 
                 <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-                  Upload all your educational certificates and marksheets
+                  Enter your GST registration details
                 </Typography>
 
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "center" }}>
-                  <Button variant="contained" component="label" sx={{ px: 4, py: 1 }}>
-                    Choose Files
-                    <input
-                      hidden
-                      type="file"
-                      multiple
-                      accept=".jpg,.jpeg,.png,.pdf"
-                      onChange={(e) => handleFileChange(e, "educationFiles")}
-                    />
-                  </Button>
-                  
-                  {formData.educationFiles && (
-                    <Box sx={{ mt: 2, p: 2, border: "1px dashed #ccc", borderRadius: 1, width: "100%" }}>
-                      <Typography variant="subtitle1" fontWeight="bold" color="primary">
-                        Selected Files:
-                      </Typography>
-                      {Array.isArray(formData.educationFiles) ? (
-                        formData.educationFiles.map((file, index) => (
-                          <Typography key={index} variant="body2" color="text.secondary">
-                            • {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
-                          </Typography>
-                        ))
-                      ) : (
-                        <Typography variant="body2" color="text.secondary">
-                          • {formData.educationFiles.name} ({(formData.educationFiles.size / 1024 / 1024).toFixed(2)} MB)
-                        </Typography>
-                      )}
-                    </Box>
-                  )}
-                  
-                  {!formData.educationFiles && (
-                    <Typography variant="body2" color="text.secondary">
-                      No files chosen
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 3, alignItems: "center" }}>
+                  <TextField
+                    fullWidth
+                    label="GST Number"
+                    name="gstNumber"
+                    value={formData.gstNumber}
+                    onChange={handleInputChange}
+                    placeholder="Enter 15-digit GSTIN"
+                    error={formData.gstNumber && !isValidGST(formData.gstNumber)}
+                    helperText={
+                      formData.gstNumber && !isValidGST(formData.gstNumber)
+                        ? "Please enter a valid 15-digit GSTIN"
+                        : "Format: 22AAAAA0000A1Z5"
+                    }
+                    sx={{ maxWidth: 400 }}
+                  />
+
+                  <Box sx={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "center", width: "100%" }}>
+                    <Typography variant="subtitle1" sx={{ fontSize: "1.1rem", fontWeight: 500 }}>
+                      Upload GST Certificate
                     </Typography>
-                  )}
+                    <Button variant="contained" component="label" sx={{ px: 4, py: 1 }}>
+                      Choose File
+                      <input
+                        hidden
+                        type="file"
+                        accept=".jpg,.jpeg,.png,.pdf"
+                        onChange={(e) => handleFileChange(e, "gstCertificate")}
+                      />
+                    </Button>
+                    
+                    {formData.gstCertificate && (
+                      <Box sx={{ mt: 2, p: 2, border: "1px dashed #ccc", borderRadius: 1, width: "100%" }}>
+                        <Typography variant="subtitle1" fontWeight="bold" color="primary">
+                          Selected File:
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {formData.gstCertificate.name}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
+                          Size: {(formData.gstCertificate.size / 1024 / 1024).toFixed(2)} MB
+                        </Typography>
+                      </Box>
+                    )}
+                    
+                    {!formData.gstCertificate && (
+                      <Typography variant="body2" color="text.secondary">
+                        No file chosen
+                      </Typography>
+                    )}
+                  </Box>
                 </Box>
 
-                <FileRequirementsBox type="educationFiles" />
+                <FileRequirementsBox type="gstCertificate" />
               </Box>
             )}
 
-            {/* Step 4: Previous Company Docs */}
+            {/* Step 4: GST Documents Upload */}
             {activeStep === 3 && (
               <Box textAlign="center" sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
                 <Typography variant="h6" fontWeight="bold">
-                  Step 4: Previous Company Documents
+                  Step 4: GST Documents Upload
                 </Typography>
                 
                 <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-                  Upload documents from your previous employment
+                  Upload your GST returns and related documents
                 </Typography>
 
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "center" }}>
                   <Button variant="contained" component="label" sx={{ px: 4, py: 1 }}>
-                    Choose Files
+                    Upload GST Returns
                     <input
                       hidden
                       type="file"
                       multiple
-                      accept=".jpg,.jpeg,.png,.pdf"
-                      onChange={(e) => handleFileChange(e, "previousDocs")}
+                      accept=".pdf"
+                      onChange={(e) => handleFileChange(e, "gstReturns")}
                     />
                   </Button>
                   
-                  {formData.previousDocs && (
+                  {formData.gstReturns && (
                     <Box sx={{ mt: 2, p: 2, border: "1px dashed #ccc", borderRadius: 1, width: "100%" }}>
                       <Typography variant="subtitle1" fontWeight="bold" color="primary">
                         Selected Files:
                       </Typography>
-                      {Array.isArray(formData.previousDocs) ? (
-                        formData.previousDocs.map((file, index) => (
+                      {Array.isArray(formData.gstReturns) ? (
+                        formData.gstReturns.map((file, index) => (
                           <Typography key={index} variant="body2" color="text.secondary">
                             • {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
                           </Typography>
                         ))
                       ) : (
                         <Typography variant="body2" color="text.secondary">
-                          • {formData.previousDocs.name} ({(formData.previousDocs.size / 1024 / 1024).toFixed(2)} MB)
+                          • {formData.gstReturns.name} ({(formData.gstReturns.size / 1024 / 1024).toFixed(2)} MB)
                         </Typography>
                       )}
                     </Box>
                   )}
                   
-                  {!formData.previousDocs && (
+                  {!formData.gstReturns && (
                     <Typography variant="body2" color="text.secondary">
                       No files chosen
                     </Typography>
                   )}
                 </Box>
 
-                <FileRequirementsBox type="previousDocs" />
+                <FileRequirementsBox type="gstReturns" />
               </Box>
             )}
 
@@ -390,19 +418,18 @@ const FreelancerDocuments = () => {
                     {formData.panCard && ` (${(formData.panCard.size / 1024 / 1024).toFixed(2)} MB)`}
                   </Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                    🎓 Education Files:{" "}
-                    {formData.educationFiles
-                      ? Array.isArray(formData.educationFiles)
-                        ? formData.educationFiles.map((f) => `${f.name} (${(f.size / 1024 / 1024).toFixed(2)} MB)`).join(", ")
-                        : `${formData.educationFiles.name} (${(formData.educationFiles.size / 1024 / 1024).toFixed(2)} MB)`
-                      : "No file chosen"}
+                    🏢 GST Number: {formData.gstNumber || "Not provided"}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    📄 GST Certificate: {formData.gstCertificate?.name || "No file chosen"}
+                    {formData.gstCertificate && ` (${(formData.gstCertificate.size / 1024 / 1024).toFixed(2)} MB)`}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    💼 Company Docs:{" "}
-                    {formData.previousDocs
-                      ? Array.isArray(formData.previousDocs)
-                        ? formData.previousDocs.map((f) => `${f.name} (${(f.size / 1024 / 1024).toFixed(2)} MB)`).join(", ")
-                        : `${formData.previousDocs.name} (${(formData.previousDocs.size / 1024 / 1024).toFixed(2)} MB)`
+                    📊 GST Returns:{" "}
+                    {formData.gstReturns
+                      ? Array.isArray(formData.gstReturns)
+                        ? formData.gstReturns.map((f) => `${f.name} (${(f.size / 1024 / 1024).toFixed(2)} MB)`).join(", ")
+                        : `${formData.gstReturns.name} (${(formData.gstReturns.size / 1024 / 1024).toFixed(2)} MB)`
                       : "No file chosen"}
                   </Typography>
                 </Box>

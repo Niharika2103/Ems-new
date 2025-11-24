@@ -14,6 +14,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Link,
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import { employeeLogin } from "../../features/auth/employeeSlice";
@@ -46,19 +47,37 @@ export default function Login() {
   const [errors, setErrors] = useState({});
   const [step, setStep] = useState(1);
   const [showPassword, setShowPassword] = useState(true);
+  const [forgotPassword, setForgotPassword] = useState(false);
+  const [newPasswordData, setNewPasswordData] = useState({
+    newPassword: "",
+    confirmPassword: "",
+  });
 
-  //  Handle input changes and password validation
+  // Handle input changes and password validation
   const handleChange = (e) => {
     const { name, value } = e.target;
 
     // Password length validation
-    if (name === "password" && value.length > 16) {
-      setErrors((prev) => ({ ...prev, password: "Password cannot exceed 16 characters" }));
+    if ((name === "password" || name === "newPassword") && value.length > 16) {
+      setErrors((prev) => ({ ...prev, [name]: "Password cannot exceed 16 characters" }));
     } else {
       setErrors((prev) => ({ ...prev, [name]: "" }));
     }
 
     setFormData({ ...formData, [name]: value });
+  };
+
+  // Handle new password input changes
+  const handleNewPasswordChange = (e) => {
+    const { name, value } = e.target;
+
+    if (value.length > 16) {
+      setErrors((prev) => ({ ...prev, [name]: "Password cannot exceed 16 characters" }));
+    } else {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+
+    setNewPasswordData({ ...newPasswordData, [name]: value });
   };
 
   const handleLoginSubmit = (e) => {
@@ -70,7 +89,7 @@ export default function Login() {
         return;
       }
 
-      //  Prevent login if password exceeds 16
+      // Prevent login if password exceeds 16
       if (formData.password.length > 16) {
         toast.error("Password cannot exceed 16 characters");
         return;
@@ -95,7 +114,6 @@ export default function Login() {
           } else {
             navigate("/dashboard", { replace: true });
             window.onpopstate = null;
-
           }
         })
         .catch((err) => toast.error(err.error || "Login failed"));
@@ -111,10 +129,40 @@ export default function Login() {
           toast.success(response.message);
           navigate("/dashboard", { replace: true });
           window.onpopstate = null;
-
         })
         .catch((err) => toast.error(err.error || "OTP verification failed"));
     }
+  };
+
+  const handleForgotPasswordSubmit = (e) => {
+    e.preventDefault();
+    
+    if (!formData.email) {
+      toast.error("Please enter your email address");
+      return;
+    }
+
+    if (!newPasswordData.newPassword || !newPasswordData.confirmPassword) {
+      toast.error("Please enter both new password and confirm password");
+      return;
+    }
+
+    if (newPasswordData.newPassword !== newPasswordData.confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    if (newPasswordData.newPassword.length > 16) {
+      toast.error("Password cannot exceed 16 characters");
+      return;
+    }
+
+    // Here you would typically make an API call to reset the password
+    toast.success("Password reset instructions sent to your email");
+    
+    // Reset the form and go back to login
+    setForgotPassword(false);
+    setNewPasswordData({ newPassword: "", confirmPassword: "" });
   };
 
   // Enable Login button only if fields are valid
@@ -122,6 +170,11 @@ export default function Login() {
     formData.employmentType.trim() !== "";
   const isStep2Valid = otp.trim() !== "";
   const isButtonDisabled = loading || (step === 1 ? !isStep1Valid : !isStep2Valid);
+
+  // Enable Reset Password button
+  const isResetPasswordValid = formData.email.trim() !== "" && 
+    newPasswordData.newPassword.trim() !== "" && 
+    newPasswordData.confirmPassword.trim() !== "";
 
   return (
     <div className="login-page">
@@ -156,118 +209,236 @@ export default function Login() {
               <Box textAlign="center" mb={2}>
                 <PersonIcon className="admin-icon" sx={{ fontSize: { xs: 35, sm: 40 } }} />
                 <Typography variant="h6" fontWeight="bold" mt={1} fontSize={{ xs: "1rem", sm: "1.2rem" }}>
-                  Login
+                  {forgotPassword ? "Reset Password" : "Login"}
                 </Typography>
               </Box>
 
               <Divider sx={{ mb: 2 }} />
 
-              <Box component="form" onSubmit={handleLoginSubmit} noValidate>
-                <TextField
-                  label="Email"
-                  name="email"
-                  type="email"
-                  fullWidth
-                  size="small"
-                  margin="normal"
-                  variant="outlined"
-                  value={formData.email}
-                  onChange={handleChange}
-                  error={!!errors.email}
-                  helperText={errors.email}
-                  required
-                />
-
-                <TextField
-                  label="Password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  fullWidth
-                  size="small"
-                  margin="normal"
-                  variant="outlined"
-                  value={formData.password}
-                  onChange={handleChange}
-                  error={!!errors.password}
-                  helperText={errors.password}
-                  required
-                  inputProps={{ maxLength: 16 }} // ✅ limit typing
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton edge="end" onClick={() => setShowPassword((prev) => !prev)}
-                          aria-label={showPassword ? "Hide password" : "Show password"} >
-                          {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                />
-                <TextField
-                  select
-                  fullWidth
-                  size="small"
-                  margin="normal"
-                  name="employmentType"
-                  label="Employee Type"
-                  value={formData.employmentType}
-                  onChange={(e) =>
-                    setFormData({ ...formData, employmentType: e.target.value })
-                  }
-                  SelectProps={{
-                    MenuProps: {
-                      disablePortal: false, // Changed to false
-                      anchorOrigin: {
-                        vertical: 'bottom',
-                        horizontal: 'left',
-                      },
-                      transformOrigin: {
-                        vertical: 'top',
-                        horizontal: 'left',
-                      },
-                      PaperProps: {
-                        style: {
-                          maxHeight: 300,
-                          marginTop: 4,
-                        },
-                      },
-                    },
-                  }}
-                >
-                  <MenuItem value="">Select</MenuItem>
-                  <MenuItem value="fulltime">Full-time</MenuItem>
-                  <MenuItem value="contract">Contract</MenuItem>
-                  <MenuItem value="freelancer">Freelancer</MenuItem>
-
-                </TextField>
-
-
-
-                {step === 2 && (
+              {!forgotPassword ? (
+                <Box component="form" onSubmit={handleLoginSubmit} noValidate>
                   <TextField
-                    label="Enter OTP"
-                    name="otp"
+                    label="Email"
+                    name="email"
+                    type="email"
                     fullWidth
-                    margin="normal"
                     size="small"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
+                    margin="normal"
+                    variant="outlined"
+                    value={formData.email}
+                    onChange={handleChange}
+                    error={!!errors.email}
+                    helperText={errors.email}
                     required
                   />
-                )}
 
-                <Button
-                  fullWidth
-                  variant="contained"
-                  size="small"
-                  className="!px-1 !py-1 !text-md admin-button"
-                  sx={{ mt: 2, fontSize: { xs: "0.9rem", sm: "1rem" } }}
-                  type="submit"
-                  disabled={isButtonDisabled}
-                >
-                  {loading ? "Logging in..." : "Log In"}
-                </Button>
-              </Box>
+                  <TextField
+                    label="Password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    fullWidth
+                    size="small"
+                    margin="normal"
+                    variant="outlined"
+                    value={formData.password}
+                    onChange={handleChange}
+                    error={!!errors.password}
+                    helperText={errors.password}
+                    required
+                    inputProps={{ maxLength: 16 }}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton 
+                            edge="end" 
+                            onClick={() => setShowPassword((prev) => !prev)}
+                            aria-label={showPassword ? "Hide password" : "Show password"}
+                          >
+                            {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+
+                  {/* Forgot Password Link - Better positioned */}
+                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: -0.5, mb: 1 }}>
+                    <Link
+                      component="button"
+                      type="button"
+                      variant="body2"
+                      sx={{
+                        fontSize: '0.8rem',
+                        textDecoration: 'none',
+                        color: 'primary.main',
+                        fontWeight: 500,
+                        '&:hover': {
+                          textDecoration: 'underline',
+                          color: 'primary.dark',
+                        },
+                      }}
+                      onClick={() => setForgotPassword(true)}
+                    >
+                      Forgot Password?
+                    </Link>
+                  </Box>
+
+                  <TextField
+                    select
+                    fullWidth
+                    size="small"
+                    margin="normal"
+                    name="employmentType"
+                    label="Employee Type"
+                    value={formData.employmentType}
+                    onChange={(e) =>
+                      setFormData({ ...formData, employmentType: e.target.value })
+                    }
+                    SelectProps={{
+                      MenuProps: {
+                        disablePortal: false,
+                        anchorOrigin: {
+                          vertical: 'bottom',
+                          horizontal: 'left',
+                        },
+                        transformOrigin: {
+                          vertical: 'top',
+                          horizontal: 'left',
+                        },
+                        PaperProps: {
+                          style: {
+                            maxHeight: 300,
+                            marginTop: 4,
+                          },
+                        },
+                      },
+                    }}
+                  >
+                    <MenuItem value="">Select</MenuItem>
+                    <MenuItem value="fulltime">Full-time</MenuItem>
+                    <MenuItem value="contract">Contract</MenuItem>
+                    <MenuItem value="freelancer">Freelancer</MenuItem>
+
+                  </TextField>
+
+                  {step === 2 && (
+                    <TextField
+                      label="Enter OTP"
+                      name="otp"
+                      fullWidth
+                      margin="normal"
+                      size="small"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      required
+                    />
+                  )}
+
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    size="small"
+                    className="!px-1 !py-1 !text-md admin-button"
+                    sx={{ 
+                      mt: 2, 
+                      fontSize: { xs: "0.9rem", sm: "1rem" },
+                      py: 1.2
+                    }}
+                    type="submit"
+                    disabled={isButtonDisabled}
+                  >
+                    {loading ? "Logging in..." : "Log In"}
+                  </Button>
+                </Box>
+              ) : (
+                <Box component="form" onSubmit={handleForgotPasswordSubmit} noValidate>
+
+                  {/* <TextField
+                    label="Email"
+                    name="email"
+                    type="email"
+                    fullWidth
+                    size="small"
+                    margin="normal"
+                    variant="outlined"
+                    value={formData.email}
+                    onChange={handleChange}
+                    error={!!errors.email}
+                    helperText={errors.email}
+                    required
+                  /> */}
+
+                  <TextField
+                    label="New Password"
+                    name="newPassword"
+                    type={showPassword ? "text" : "password"}
+                    fullWidth
+                    size="small"
+                    margin="normal"
+                    variant="outlined"
+                    value={newPasswordData.newPassword}
+                    onChange={handleNewPasswordChange}
+                    error={!!errors.newPassword}
+                    helperText={errors.newPassword}
+                    required
+                    inputProps={{ maxLength: 16 }}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton 
+                            edge="end" 
+                            onClick={() => setShowPassword((prev) => !prev)}
+                            aria-label={showPassword ? "Hide password" : "Show password"}
+                          >
+                            {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+
+                  <TextField
+                    label="Confirm Password"
+                    name="confirmPassword"
+                    type={showPassword ? "text" : "password"}
+                    fullWidth
+                    size="small"
+                    margin="normal"
+                    variant="outlined"
+                    value={newPasswordData.confirmPassword}
+                    onChange={handleNewPasswordChange}
+                    error={!!errors.confirmPassword}
+                    helperText={errors.confirmPassword}
+                    required
+                    inputProps={{ maxLength: 16 }}
+                  />
+
+                  <Box sx={{ display: "flex", gap: 1, mt: 3 }}>
+                    <Button
+                      fullWidth
+                      variant="outlined"
+                      size="small"
+                      sx={{ py: 1.2 }}
+                      onClick={() => {
+                        setForgotPassword(false);
+                        setNewPasswordData({ newPassword: "", confirmPassword: "" });
+                      }}
+                    >
+                      Back to Login
+                    </Button>
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      size="small"
+                      type="submit"
+                      sx={{ py: 1.2 }}
+                      disabled={!isResetPasswordValid}
+                    >
+                      Reset Password
+                    </Button>
+                  </Box>
+                </Box>
+              )}
             </CardContent>
           </Card>
         </div>

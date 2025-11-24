@@ -31,7 +31,7 @@ const EmpInfoDashboard = () => {
       icon: DescriptionIcon,
       iconBg: "bg-purple-100",
       iconColor: "text-purple-600",
-      onClick: () => navigate("/documents/employees"),
+      onClick: () => navigate("/dashboard/freelancer/documents"),
     },
     {
       title: "Letters",
@@ -39,7 +39,9 @@ const EmpInfoDashboard = () => {
       icon: MailOutlineIcon,
       iconBg: "bg-pink-100",
       iconColor: "text-pink-600",
-      onClick: () => navigate("/documents/admin/letters"),
+      // onClick: () => navigate("/documents/admin/letters"),
+      onClick: () => navigate("/employee/letters"),
+      
     },
     {
       title: "Probation",

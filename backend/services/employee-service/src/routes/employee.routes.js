@@ -17,7 +17,9 @@ import {
   verifyEmail,
   updateEmployeeProfile,
   applyParentalLeave,
-  getFreelancers
+  getFreelancers,
+  createReferral,
+  getMyReferrals
 } from "../controllers/employee.controller.js";
 
 const router = Router();
@@ -70,6 +72,13 @@ router.post("/attendance/apply-parental", applyParentalLeave);
 
 router.get("/freelancers", getFreelancers);
 
+router.post(
+  "/refer-candidate",
+  upload.single("resume"), // your existing multer
+  createReferral
+);
+
+router.get("/my-referrals", getMyReferrals);
+
 export default router;
 
-// dba

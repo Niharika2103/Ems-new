@@ -64,7 +64,19 @@
         <version>42.7.3</version>
     </dependency>
 
+<!-- BouncyCastle Provider -->
+<dependency>
+    <groupId>org.bouncycastle</groupId>
+    <artifactId>bcprov-jdk15on</artifactId>
+    <version>1.70</version>
+</dependency>
 
+<!-- BouncyCastle PKIX (needed for encryption) -->
+<dependency>
+    <groupId>org.bouncycastle</groupId>
+    <artifactId>bcpkix-jdk15on</artifactId>
+    <version>1.70</version>
+</dependency>
 
     </dependencies>
 
