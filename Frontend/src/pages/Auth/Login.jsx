@@ -41,7 +41,7 @@ export default function Login() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    employmentType: "",
+    employment_type: "",
   });
   const [otp, setOtp] = useState("");
   const [errors, setErrors] = useState({});
@@ -101,7 +101,7 @@ export default function Login() {
           return;
         }
       }
-      dispatch(employeeLogin({ email: formData.email, password: formData.password }))
+      dispatch(employeeLogin({ email: formData.email, password: formData.password ,employment_type:formData.employment_type}))
         .unwrap()
         .then((response) => {
           if (response.firstLogin) {
@@ -123,7 +123,7 @@ export default function Login() {
         return;
       }
 
-      dispatch(employeeLogin({ email: formData.email, password: formData.password, otp }))
+      dispatch(employeeLogin({ email: formData.email, password: formData.password, employment_type:formData.employment_type,otp }))
         .unwrap()
         .then((response) => {
           toast.success(response.message);
@@ -167,7 +167,7 @@ export default function Login() {
 
   // Enable Login button only if fields are valid
   const isStep1Valid = formData.email.trim() !== "" && formData.password.trim() !== "" &&
-    formData.employmentType.trim() !== "";
+    formData.employment_type.trim() !== "";
   const isStep2Valid = otp.trim() !== "";
   const isButtonDisabled = loading || (step === 1 ? !isStep1Valid : !isStep2Valid);
 
@@ -288,11 +288,11 @@ export default function Login() {
                     fullWidth
                     size="small"
                     margin="normal"
-                    name="employmentType"
+                    name="employment_type"
                     label="Employee Type"
-                    value={formData.employmentType}
+                    value={formData.employment_type}
                     onChange={(e) =>
-                      setFormData({ ...formData, employmentType: e.target.value })
+                      setFormData({ ...formData, employment_type: e.target.value })
                     }
                     SelectProps={{
                       MenuProps: {
@@ -317,6 +317,8 @@ export default function Login() {
                     <MenuItem value="">Select</MenuItem>
                     <MenuItem value="fulltime">Full-time</MenuItem>
                     <MenuItem value="contract">Contract</MenuItem>
+                    <MenuItem value="freelancer">Freelancer</MenuItem>
+
                   </TextField>
 
                   {step === 2 && (
