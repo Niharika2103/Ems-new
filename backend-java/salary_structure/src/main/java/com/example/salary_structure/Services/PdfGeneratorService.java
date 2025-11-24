@@ -1,5 +1,6 @@
 package com.example.salary_structure.Services;
 
+
 import com.example.salary_structure.Entity.SalaryStructure;
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.PdfPCell;
@@ -16,7 +17,6 @@ import java.math.BigDecimal;
 @Service
 public class PdfGeneratorService {
 
-    // SAFE helpers to avoid null errors
     private String safe(BigDecimal v) { return v == null ? "0" : v.toPlainString(); }
     private String safe(String v) { return v == null ? "-" : v; }
 
@@ -26,16 +26,14 @@ public class PdfGeneratorService {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         try {
-            // ============================
-            // 🔐 PDF PASSWORD PROTECTION
-            // ============================
+            // PASSWORD PROTECTION
             String pan = s.getPanNumber();
             if (pan == null || pan.isEmpty()) {
-                pan = "DEFAULT1234"; // fallback
+                pan = "DEFAULT1234";
             }
 
-            String userPassword = pan.toUpperCase(); // employee password
-            String ownerPassword = "ADMIN123";       // admin password
+            String userPassword = pan.toUpperCase();
+            String ownerPassword = "ADMIN123";
 
             PdfWriter writer = PdfWriter.getInstance(document, out);
 
@@ -46,11 +44,11 @@ public class PdfGeneratorService {
                     PdfWriter.ENCRYPTION_AES_128
             );
 
-            // ============================
             document.open();
-            // ============================
+            
+            
 
-            // ---------- TITLE ----------
+            // TITLE
             Font titleFont = new Font(Font.HELVETICA, 20, Font.BOLD);
             Paragraph title = new Paragraph("PAYSLIP", titleFont);
             title.setAlignment(Element.ALIGN_CENTER);
@@ -65,7 +63,7 @@ public class PdfGeneratorService {
 
             document.add(Chunk.NEWLINE);
 
-            // ---------- EMPLOYEE DETAILS ----------
+            // EMPLOYEE DETAILS
             PdfPTable emp = new PdfPTable(2);
             emp.setWidthPercentage(100);
 
@@ -93,7 +91,68 @@ public class PdfGeneratorService {
             document.add(emp);
             document.add(Chunk.NEWLINE);
 
-            // ---------- EARNINGS ----------
+            // ==============================
+            // 🔥 PER-DAY CALCULATION SECTION
+            // ==============================
+            BigDecimal daysWorked = s.getDaysWorked() == null ? BigDecimal.ZERO : s.getDaysWorked();
+            BigDecimal divisor = new BigDecimal("30");
+
+            BigDecimal perDayBasic = s.getBasicPay().divide(divisor, 2, BigDecimal.ROUND_HALF_UP);
+            BigDecimal perDayHra = s.getHra().divide(divisor, 2, BigDecimal.ROUND_HALF_UP);
+            BigDecimal perDayDa = s.getDa().divide(divisor, 2, BigDecimal.ROUND_HALF_UP);
+            BigDecimal perDayConv = s.getConveyanceAllowance().divide(divisor, 2, BigDecimal.ROUND_HALF_UP);
+            BigDecimal perDayGross = s.getGrossSalary().divide(divisor, 2, BigDecimal.ROUND_HALF_UP);
+
+            BigDecimal earnedBasic = perDayBasic.multiply(daysWorked);
+            BigDecimal earnedHra = perDayHra.multiply(daysWorked);
+            BigDecimal earnedDa = perDayDa.multiply(daysWorked);
+            BigDecimal earnedConv = perDayConv.multiply(daysWorked);
+            BigDecimal earnedGross = perDayGross.multiply(daysWorked);
+
+            Paragraph pdTitle = new Paragraph("PER-DAY & EARNED VALUES",
+                    new Font(Font.HELVETICA, 14, Font.BOLD));
+            document.add(pdTitle);
+
+            PdfPTable pd = new PdfPTable(2);
+            pd.setWidthPercentage(100);
+
+            pd.addCell(cell("Days Worked", true));
+            pd.addCell(cell(safe(daysWorked), false));
+
+            pd.addCell(cell("Per Day Basic", true));
+            pd.addCell(cell(perDayBasic.toPlainString(), false));
+
+            pd.addCell(cell("Per Day HRA", true));
+            pd.addCell(cell(perDayHra.toPlainString(), false));
+
+            pd.addCell(cell("Per Day DA", true));
+            pd.addCell(cell(perDayDa.toPlainString(), false));
+
+            pd.addCell(cell("Per Day Conveyance", true));
+            pd.addCell(cell(perDayConv.toPlainString(), false));
+
+            pd.addCell(cell("Per Day Gross Salary", true));
+            pd.addCell(cell(perDayGross.toPlainString(), false));
+
+            pd.addCell(cell("Earned Basic", true));
+            pd.addCell(cell(earnedBasic.toPlainString(), false));
+
+            pd.addCell(cell("Earned HRA", true));
+            pd.addCell(cell(earnedHra.toPlainString(), false));
+
+            pd.addCell(cell("Earned DA", true));
+            pd.addCell(cell(earnedDa.toPlainString(), false));
+
+            pd.addCell(cell("Earned Conveyance", true));
+            pd.addCell(cell(earnedConv.toPlainString(), false));
+
+            pd.addCell(cell("Total Earned Gross", true));
+            pd.addCell(cell(earnedGross.toPlainString(), false));
+
+            document.add(pd);
+            document.add(Chunk.NEWLINE);
+
+            // EARNINGS
             Paragraph earnTitle = new Paragraph("EARNINGS", new Font(Font.HELVETICA, 14, Font.BOLD));
             document.add(earnTitle);
 
@@ -127,7 +186,7 @@ public class PdfGeneratorService {
             document.add(earn);
             document.add(Chunk.NEWLINE);
 
-            // ---------- DEDUCTIONS ----------
+            // DEDUCTIONS
             Paragraph dedTitle = new Paragraph("DEDUCTIONS", new Font(Font.HELVETICA, 14, Font.BOLD));
             document.add(dedTitle);
 
@@ -161,7 +220,7 @@ public class PdfGeneratorService {
             document.add(ded);
             document.add(Chunk.NEWLINE);
 
-            // ---------- NET SALARY ----------
+            // NET SALARY
             PdfPTable net = new PdfPTable(1);
             PdfPCell netCell = new PdfPCell(
                     new Phrase("NET SALARY: " + safe(s.getNetSalary()),
@@ -183,9 +242,9 @@ public class PdfGeneratorService {
         return new ByteArrayInputStream(out.toByteArray());
     }
 
-    private PdfPCell cell(String text, boolean bold) {
+    private PdfPCell cell(Object text, boolean bold) {
         Font font = new Font(Font.HELVETICA, 11, bold ? Font.BOLD : Font.NORMAL);
-        PdfPCell cell = new PdfPCell(new Phrase(text, font));
+        PdfPCell cell = new PdfPCell(new Phrase(String.valueOf(text), font));
         cell.setPadding(6);
         return cell;
     }
