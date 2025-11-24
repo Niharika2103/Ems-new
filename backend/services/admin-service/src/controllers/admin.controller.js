@@ -1972,5 +1972,56 @@ export const deleteLetter = async (req, res) => {
     client.release();
   }
 };
+export const sendLetterEmail = async (req, res) => {
+  const client = await pool.connect();
 
+  try {
+    const { employeeId, fileName } = req.body;
+
+    if (!employeeId || !fileName) {
+      return res.status(400).json({ error: "employeeId and fileName are required" });
+    }
+
+    // Fetch employee info
+    const empResult = await client.query(
+      `SELECT name, email FROM user_employees_master WHERE id=$1`,
+      [employeeId]
+    );
+    const emp = empResult.rows[0];
+
+    if (!emp) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+
+    // File path
+    const filePath = path.join(process.cwd(), "src/uploads/letters", fileName);
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: "File not found on server" });
+    }
+
+    // Send email with attachment
+    await sendEmail(
+      emp.email,
+      `Your ${fileName.split("_")[0]} Letter`,
+      `<p>Hello ${emp.name},</p>
+       <p>Please find your <strong>${fileName.split("_")[0]}</strong> attached.</p>
+       <p>Regards,<br/>HR Team</p>`,
+      filePath,
+      fileName
+    );
+
+    return res.json({
+      message: "📧 Email sent successfully with attachment",
+      sent_to: emp.email,
+      file: fileName
+    });
+
+  } catch (err) {
+    console.error("Send Letter Email Error:", err);
+    return res.status(500).json({ error: "Failed to send email with attachment" });
+  } finally {
+    client.release();
+  }
+};
 
