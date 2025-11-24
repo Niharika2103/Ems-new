@@ -110,8 +110,14 @@ export const getEmployeeLettersApi = (employeeId) =>
 
 // Delete letter API
 export const deleteLetterApi = (employeeId, filename) =>
-  adminClient.delete(`${AUTH_API.ADMIN}/letters/${employeeId}/${filename}`); 
+  adminClient.delete(`${AUTH_API.ADMIN}/letters/${employeeId}/${filename}`);
+
 // ================= Employee Auth =================
+
+export const getEmployeeLettersEmployeeApi = (employeeId) =>
+  employeeClient.get(`/employee/letters/${employeeId}`);
+
+
 export const employeeRegisterApi = (data) =>
   employeeClient.post(`${AUTH_API.EMPLOYEE}/register`, data);
 

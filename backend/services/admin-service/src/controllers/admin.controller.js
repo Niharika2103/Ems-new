@@ -1797,40 +1797,6 @@ if (!templateContent) {
 };
 
 
-// export const getEmployeeLetters = async (req, res) => {
-//   const client = await pool.connect();
-
-//   try {
-//     const { employeeId } = req.params;
-
-//     const result = await client.query(
-//       `SELECT document_url FROM user_employees_master WHERE id = $1`,
-//       [employeeId]
-//     );
-
-//     const docs = result.rows[0]?.document_url || [];
-
-//     const BASE_URL =
-//       process.env.BASE_URL || `http://localhost:${process.env.PORT || 5002}`;
-
-//     // Convert file names into valid URLs
-//     const files = docs.map((file) => ({
-//       name: file,
-//       url: `${BASE_URL}/uploads/letters/${file}`,
-//     }));
-
-//     res.json({
-//       message: "Employee letters retrieved successfully",
-//       files,
-//     });
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ error: err.message });
-//   } finally {
-//     client.release();
-//   }
-// };
-
 export const getEmployeeLetters = async (req, res) => {
   const client = await pool.connect();
 
