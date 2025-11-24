@@ -237,6 +237,8 @@ export default function Login() {
                   <MenuItem value="">Select</MenuItem>
                   <MenuItem value="fulltime">Full-time</MenuItem>
                   <MenuItem value="contract">Contract</MenuItem>
+                  <MenuItem value="freelancer">Freelancer</MenuItem>
+
                 </TextField>
 
 

@@ -15,9 +15,9 @@ const USERS_TABLE = "user_employees_master";
 const REGISTRATIONS_TABLE = "registrations";
 
 // ================== JWT Helper ==================
-function issueJwt({ email, role, employee_id,id, is_temp_admin = false,name }) {
+function issueJwt({ email, role, employee_id,employment_type,id, is_temp_admin = false,name }) {
   return jwt.sign(
-    { email, role, employee_id, is_temp_admin ,id,name},
+    { email, role, employee_id,employment_type,is_temp_admin ,id,name},
     process.env.JWT_SECRET,
     { expiresIn: "1h" }
   );
@@ -438,6 +438,7 @@ export const employeeLogin = async (req, res) => {
     const token = issueJwt({
       email: user.email,
       role: user.role,
+       employee_type: employeeType, 
       employee_id: user.employee_id,
       is_temp_admin: isTempAdmin,
       id: user.id,
@@ -448,6 +449,7 @@ export const employeeLogin = async (req, res) => {
       token,
       employee: {
         employeeId: user.employee_id,
+            employee_type:user.employeeType,
         fullName: user.name,
         email: user.email,
         is_temp_admin: isTempAdmin,
