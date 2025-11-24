@@ -242,7 +242,7 @@ function AppRoutes() {
         <Route
           path="/dashboard/freelancer/documents"
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["employee"]}>
               <FreelancerDocuments />
             </ProtectedRoute>
           }

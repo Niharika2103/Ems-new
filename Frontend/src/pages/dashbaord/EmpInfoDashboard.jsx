@@ -31,7 +31,7 @@ const EmpInfoDashboard = () => {
       icon: DescriptionIcon,
       iconBg: "bg-purple-100",
       iconColor: "text-purple-600",
-      onClick: () => navigate("/documents/employees"),
+      onClick: () => navigate("/dashboard/freelancer/documents"),
     },
     {
       title: "Letters",
