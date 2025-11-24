@@ -1,166 +1,159 @@
-import React, { useState } from 'react';
-
+import React, { useState, useEffect } from "react";
+import { getEmployeeLettersEmployeeApi } from "../../api/authApi";
+ 
 const LettersDownload = () => {
-  const [loading, setLoading] = useState(null);
-
-  const letters = [
-    { id: 'offer', title: 'Offer', icon: '💼', color: '#3498db' },
-    { id: 'appointment', title: 'Appointment', icon: '⭐', color: '#f39c12' },
-    { id: 'experience', title: 'Experience', icon: '👋', color: '#2ecc71' },
-    { id: 'relieving', title: 'Relieving', icon: '✅', color: '#e74c3c' },
-    { id: 'confirmation', title: 'Confirmation', icon: '📈', color: '#9b59b6' },
-    { id: 'promotion', title: 'Promotion', icon: '💰', color: '#1abc9c' },
-    { id: 'salary', title: 'Salary Inc', icon: '📊', color: '#d35400' },
-    { id: 'warning', title: 'Warning', icon: '⚠️', color: '#c0392b' }
-  ];
-
-  const handleDownload = async (letter) => {
-    setLoading(letter.id);
+  const [letters, setLetters] = useState([]);
+  const [loading, setLoading] = useState(false);
+ 
+  const iconMap = {
+    Offer: "💼",
+    Appointment: "📄",
+    Experience: "⭐",
+    Relieving: "👋",
+    Confirmation: "📌",
+    Promotion: "📈",
+    Salary: "💰",
+    Increment: "💰",
+    Warning: "⚠️"
+  };
+ 
+  const fetchLetters = async () => {
+    setLoading(true);
+ 
+    const storedDetails = JSON.parse(localStorage.getItem("ProjectDetails"));
+    const employeeId = storedDetails?.employeeId;
+ 
+    console.log("Logged-In Employee Details =>", storedDetails);
+    console.log("Detected employeeId =>", employeeId);
+ 
+    if (!employeeId) {
+      console.error("❌ Employee ID not found");
+      setLoading(false);
+      return;
+    }
+ 
     try {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      alert(`Downloaded ${letter.title} Letter`);
+      const res = await getEmployeeLettersEmployeeApi(employeeId);
+      setLetters(res.data.files || []);
     } catch (error) {
-      alert('Download failed');
-    } finally {
-      setLoading(null);
+      console.error("Error fetching letters:", error);
     }
+    setLoading(false);
   };
-
-  const handleBulkDownload = async () => {
-    setLoading('bulk');
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      alert('All letters downloaded!');
-    } catch (error) {
-      alert('Download failed');
-    } finally {
-      setLoading(null);
-    }
+ 
+  const handleDownload = (url) => {
+    window.open(url, "_blank");
   };
-
-  // Compact Styles
-  const styles = {
-    container: {
-      padding: '15px',
-      maxWidth: '900px',
-      margin: '0 auto',
-      fontFamily: 'Arial, sans-serif'
-    },
-    header: {
-      textAlign: 'center',
-      marginBottom: '20px'
-    },
-    title: {
-      fontSize: '20px',
-      fontWeight: 'bold',
-      color: '#2c3e50',
-      margin: '0 0 5px 0'
-    },
-    subtitle: {
-      color: '#7f8c8d',
-      fontSize: '12px',
-      margin: '0'
-    },
-    bulkButton: {
-      width: '100%',
-      padding: '10px',
-      background: '#27ae60',
-      color: 'white',
-      border: 'none',
-      borderRadius: '6px',
-      fontSize: '13px',
-      fontWeight: '600',
-      cursor: 'pointer',
-      marginBottom: '15px'
-    },
-    lettersRow: {
-      display: 'flex',
-      gap: '10px',
-      marginBottom: '15px',
-      flexWrap: 'wrap',
-      justifyContent: 'center'
-    },
-    letterCard: {
-      background: 'white',
-      padding: '15px',
-      borderRadius: '8px',
-      textAlign: 'center',
-      boxShadow: '0 1px 5px rgba(0,0,0,0.1)',
-      border: '1px solid #e1e8ed',
-      minWidth: '100px',
-      flex: '1'
-    },
-    letterIcon: {
-      fontSize: '1.5em',
-      marginBottom: '8px'
-    },
-    letterTitle: {
-      fontSize: '12px',
-      fontWeight: '600',
-      color: '#2c3e50',
-      margin: '0 0 10px 0'
-    },
-    downloadBtn: {
-      width: '100%',
-      padding: '6px',
-      background: '#3498db',
-      color: 'white',
-      border: 'none',
-      borderRadius: '4px',
-      fontSize: '11px',
-      fontWeight: '600',
-      cursor: 'pointer'
-    },
-    footer: {
-      textAlign: 'center',
-      fontSize: '11px',
-      color: '#95a5a6',
-      marginTop: '15px'
-    }
-  };
-
+ 
+  useEffect(() => {
+    fetchLetters();
+  }, []);
+ 
   return (
     <div style={styles.container}>
-      <div style={styles.header}>
-        <h1 style={styles.title}>📄 Employment Letters</h1>
-        <p style={styles.subtitle}>Quick download access</p>
-      </div>
-
-      <button 
-        style={styles.bulkButton}
-        onClick={handleBulkDownload}
-        disabled={loading}
-      >
-        {loading === 'bulk' ? 'Downloading...' : '📦 Download All'}
-      </button>
-
-      <div style={styles.lettersRow}>
-        {letters.map(letter => (
-          <div key={letter.id} style={styles.letterCard}>
-            <div style={{...styles.letterIcon, color: letter.color}}>
-              {letter.icon}
+      <h1 style={styles.title}>📄 Employment Letters</h1>
+      <p style={styles.subtitle}>Download your issued HR letters anytime</p>
+ 
+      {loading && <div style={styles.loader}>⏳ Fetching letters...</div>}
+ 
+      {!loading && letters.length === 0 && (
+        <p style={styles.empty}>No letters generated yet</p>
+      )}
+ 
+      <div style={styles.grid}>
+        {letters.map((file, index) => {
+          const namePart = file.name.replace(".pdf", "");
+          const displayIcon =
+            iconMap[
+              Object.keys(iconMap).find((key) =>
+                namePart.toLowerCase().includes(key.toLowerCase())
+              )
+            ] || "📄";
+ 
+          return (
+            <div key={index} style={styles.card}>
+              <div style={styles.icon}>{displayIcon}</div>
+              <h3 style={styles.cardTitle}>{namePart}</h3>
+              <button
+                style={styles.button}
+                onClick={() => handleDownload(file.url)}
+              >
+                Download PDF
+              </button>
             </div>
-            <h3 style={styles.letterTitle}>{letter.title}</h3>
-            <button
-              style={{
-                ...styles.downloadBtn,
-                background: letter.color,
-                opacity: loading === letter.id ? 0.6 : 1
-              }}
-              onClick={() => handleDownload(letter)}
-              disabled={loading}
-            >
-              {loading === letter.id ? '...' : 'Get'}
-            </button>
-          </div>
-        ))}
-      </div>
-
-      <div style={styles.footer}>
-        HR Portal • Instant Access
+          );
+        })}
       </div>
     </div>
   );
 };
-
+ 
+// Styles
+const styles = {
+  container: {
+    padding: "30px",
+    maxWidth: "1100px",
+    margin: "0 auto",
+    fontFamily: "Poppins, sans-serif",
+  },
+  title: {
+    textAlign: "center",
+    fontSize: "28px",
+    fontWeight: "700",
+    color: "#2c3e50",
+  },
+  subtitle: {
+    textAlign: "center",
+    color: "#7f8c8d",
+    marginBottom: "25px",
+    fontSize: "14px",
+  },
+  loader: {
+    textAlign: "center",
+    fontSize: "16px",
+    color: "#2980b9",
+  },
+  empty: {
+    textAlign: "center",
+    color: "#888",
+    fontStyle: "italic",
+    marginTop: "20px",
+  },
+  grid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fill, minmax(230px, 1fr))",
+    gap: "20px",
+    marginTop: "20px",
+  },
+  card: {
+    background: "rgba(255,255,255,0.8)",
+    borderRadius: "15px",
+    padding: "20px",
+    textAlign: "center",
+    backdropFilter: "blur(8px)",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+    transition: "transform 0.2s ease-in-out",
+  },
+  icon: {
+    fontSize: "40px",
+    marginBottom: "10px",
+  },
+  cardTitle: {
+    fontSize: "15px",
+    color: "#2c3e50",
+    fontWeight: "600",
+    marginBottom: "12px",
+  },
+  button: {
+    padding: "8px 14px",
+    background: "#3498db",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontWeight: "600",
+    fontSize: "13px",
+  },
+};
+// d
 export default LettersDownload;

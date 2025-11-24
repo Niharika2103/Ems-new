@@ -31,23 +31,26 @@ import FinancialYearSetup from '../pages/Attendance/FinancialYearSetup';
 import ProjectDashboard from "../pages/dashbaord/ProjectDashboard";
 import Letters from "../pages/documents/Letters";
 import AdminLetterGenerator from "../pages/documents/AdminLetterGenerator";
-import EmployeeDocumentTable from '../pages/documents/EmployeeDocumentTable';
+import EmployeeDocumentUpload from '../pages/documents/EmployeeDocumentUpload';
 import MonthlyTimesheet from "../pages/Attendance/MonthlyTimesheet";
 import EmployeeLeave from "../pages/Attendance/EmployeeLeave";
 import LettersDownload from '../pages/documents/LettersDownload';
+import EmployeeDocumentList from '../pages/documents/EmployeeDocumentList';
 import MaternityPaternityLeaveTable from "../pages/Attendance/MaternityPaternityLeaveTable";
 import EmpAttendanceDashboard from "../pages/dashbaord/EmpAttendanceDashboard";
 import AuditLogsTable from "../pages/Attendance/AuditLogs";
 import EmployeeHolidayList from "../pages/Attendance/EmployeeHolidayList";
-import FreelancerDashboard from "../pages/dashbaord/FreelancerDashboard";
-import FreelancerInfo from "../pages/Freelancer/FreelancerInfo";
-import FreelancerTable from "../pages/Freelancer/freelancerTable";
-import FreelancerAttendance from "../pages/Freelancer/FreelancerAttendance";
-import FreelancerProjectTable from "../pages/Freelancer/FreelancerProjectTable";
-import FreelancerDocuments from "../pages/Freelancer/FreelancerDocuments";
-import FreelancerAssignProjectpage from "../pages/Freelancer/FreelancerAssignProjectpage";
+import FreelancerDashboard from  "../pages/dashbaord/FreelancerDashboard";
+import FreelancerInfo from  "../pages/Freelancer/FreelancerInfo";
+import FreelancerTable from  "../pages/Freelancer/freelancerTable";
+import FreelancerAttendance from  "../pages/Freelancer/FreelancerAttendance";
+import FreelancerHolidayList from  "../pages/Freelancer/FreelancerHolidayList";
+import FreelancerProjectTable from  "../pages/Freelancer/FreelancerProjectTable";
+import FreelancerDocuments from  "../pages/Freelancer/FreelancerDocuments";
+import FreelancerAssignProjectpage from  "../pages/Freelancer/FreelancerAssignProjectpage";
 import TimesheetApprovalList from '../pages/Freelancer/Attendance/TimesheetApprovalList';
 import ReferCandidatePage from "../pages/Referral/ReferCandidatePage";
+import AdminReferralDashboard from '../pages/Referral/AdminReferralDashboard';
 import SalaryStructure from '../pages/Accounts/SalaryStructure';
 import EmpTypeFreelancerDashboard from '../pages/dashbaord/EmpTypeFreelancerDashboard';
 
@@ -176,6 +179,14 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+         <Route
+          path="/dashboard/freelancer/holiday"
+          element={
+            <ProtectedRoute allowedRoles={["employee", "admin"]}>
+              <FreelancerHolidayList />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Superadmin routes */}
         <Route
@@ -266,6 +277,15 @@ function AppRoutes() {
           }
         />
 
+        <Route path="/admin/referrals"
+         element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+          <AdminReferralDashboard/>
+          </ProtectedRoute>
+        }
+        />
+         
+
 
 
         {/* <Route path="/freelancer/projects" element={<FreelancerProjectTable />} /> */}
@@ -340,13 +360,23 @@ function AppRoutes() {
           path="/documents/employees"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
-              <EmployeeDocumentTable />
+              <EmployeeDocumentUpload />
             </ProtectedRoute>
           }
         />
-        <Route path="/employee/letters"
+
+        
+          <Route path="/employee/documents/list" 
           element={
-            <ProtectedRoute allowedRoles={["employee"]}>
+          <ProtectedRoute allowedRoles={["admin"]}>
+              <EmployeeDocumentList  />
+            </ProtectedRoute>
+          }
+        />
+        
+        <Route path="/employee/letters" 
+        element={
+          <ProtectedRoute allowedRoles={["employee"]}>
               <LettersDownload />
             </ProtectedRoute>
           }

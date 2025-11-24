@@ -29,7 +29,8 @@ generateLetter,
 getEmployeeLetters,
 documentUpload,
 uploadEmployeeDocuments,
-deleteLetter
+deleteLetter,
+sendLetterEmail
 } from "../controllers/admin.controller.js";
 const router = Router();
 // Admin Register and login
@@ -87,4 +88,8 @@ router.post(
 );
 
 router.delete("/letters/:employeeId/:filename", deleteLetter);
+
+router.post("/letters/send-email", sendLetterEmail);
+
+
 export default router;

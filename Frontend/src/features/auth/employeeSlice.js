@@ -70,6 +70,7 @@ const employeeSlice = createSlice({
     token: localStorage.getItem("token") || null,
     role: localStorage.getItem("role") || null,
     Id: localStorage.getItem("empId") || null,
+    empUUID: localStorage.getItem("empUUID") || null,
     loading: false,
     error: null,
     preview: [],
@@ -128,6 +129,11 @@ const employeeSlice = createSlice({
         state.is_temp_admin = is_temp_admin;
 
         //  Save to localStorage (optional but recommended)
+
+        if (action.payload.employee?.id) {
+  localStorage.setItem("empUUID", action.payload.employee.id);
+}
+
         if (action.payload.employee) {
           localStorage.setItem("user", JSON.stringify(action.payload.employee));
         }
@@ -137,6 +143,11 @@ const employeeSlice = createSlice({
         localStorage.setItem("role", role);
         localStorage.setItem("employment_type", employment_type);
         localStorage.setItem("is_temp_admin", is_temp_admin);
+
+        const uuid = action.payload.employee?.id;
+  if (uuid) {
+    localStorage.setItem("empUUID", uuid);
+  }
       })
       .addCase(employeeLogin.rejected, (state, action) => {
         state.loading = false;
