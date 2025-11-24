@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import {
   employeeFetchApi,
   generateLetterApi,
-  getEmployeeLettersApi,deleteLetterApi
+  getEmployeeLettersApi,deleteLetterApi,sendLetterEmailApi
 } from "../../api/authApi";
 
 const AdminLetterGenerator = () => {
@@ -104,6 +104,18 @@ const AdminLetterGenerator = () => {
     alert(`❌ ${errorMsg}`);
   }
 };
+
+const handleSend = async (employeeId, fileName) => {
+  try {
+    await sendLetterEmailApi(employeeId, fileName);
+    alert("📧 Email sent successfully!");
+  } catch (err) {
+    console.error("Email send error:", err);
+    const msg = err.response?.data?.error || "Failed to send email";
+    alert(`❌ ${msg}`);
+  }
+};
+
 
   const handleDownload = (url) => {
     window.open(url, '_blank');
