@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { getEmployeeLettersEmployeeApi } from "../../api/authApi";
-
+ 
 const LettersDownload = () => {
   const [letters, setLetters] = useState([]);
   const [loading, setLoading] = useState(false);
-
+ 
   const iconMap = {
     Offer: "💼",
     Appointment: "📄",
@@ -16,22 +16,22 @@ const LettersDownload = () => {
     Increment: "💰",
     Warning: "⚠️"
   };
-
+ 
   const fetchLetters = async () => {
     setLoading(true);
-
+ 
     const storedDetails = JSON.parse(localStorage.getItem("ProjectDetails"));
     const employeeId = storedDetails?.employeeId;
-
+ 
     console.log("Logged-In Employee Details =>", storedDetails);
     console.log("Detected employeeId =>", employeeId);
-
+ 
     if (!employeeId) {
       console.error("❌ Employee ID not found");
       setLoading(false);
       return;
     }
-
+ 
     try {
       const res = await getEmployeeLettersEmployeeApi(employeeId);
       setLetters(res.data.files || []);
@@ -40,26 +40,26 @@ const LettersDownload = () => {
     }
     setLoading(false);
   };
-
+ 
   const handleDownload = (url) => {
     window.open(url, "_blank");
   };
-
+ 
   useEffect(() => {
     fetchLetters();
   }, []);
-
+ 
   return (
     <div style={styles.container}>
       <h1 style={styles.title}>📄 Employment Letters</h1>
       <p style={styles.subtitle}>Download your issued HR letters anytime</p>
-
+ 
       {loading && <div style={styles.loader}>⏳ Fetching letters...</div>}
-
+ 
       {!loading && letters.length === 0 && (
         <p style={styles.empty}>No letters generated yet</p>
       )}
-
+ 
       <div style={styles.grid}>
         {letters.map((file, index) => {
           const namePart = file.name.replace(".pdf", "");
@@ -69,7 +69,7 @@ const LettersDownload = () => {
                 namePart.toLowerCase().includes(key.toLowerCase())
               )
             ] || "📄";
-
+ 
           return (
             <div key={index} style={styles.card}>
               <div style={styles.icon}>{displayIcon}</div>
@@ -87,7 +87,7 @@ const LettersDownload = () => {
     </div>
   );
 };
-
+ 
 // Styles
 const styles = {
   container: {

@@ -23,7 +23,7 @@ import {
   LocalAtm
 } from '@mui/icons-material';
 
-const EmployeeDocumentTable = () => {
+const EmployeeDocumentUpload = () => {
   const navigate = useNavigate();
 
   const employees = [
@@ -64,7 +64,7 @@ const EmployeeDocumentTable = () => {
     return colors[department] || '#666666';
   };
 
-  const handleViewDocuments = (employee) => {
+  const handleUploadDocuments = (employee) => {
     navigate('/documents/letters', { 
       state: { 
         employee: employee 
@@ -157,7 +157,7 @@ const EmployeeDocumentTable = () => {
                   <Button
                     variant="contained"
                     startIcon={<Visibility />}
-                    onClick={() => handleViewDocuments(employee)}
+                    onClick={() => handleUploadDocuments(employee)}
                     size="medium"
                     sx={{
                       backgroundColor: 'primary.main',
@@ -175,7 +175,7 @@ const EmployeeDocumentTable = () => {
                       minWidth: '160px'
                     }}
                   >
-                    View Documents
+                    Upload Documents
                   </Button>
                 </TableCell>
               </TableRow>
@@ -187,4 +187,4 @@ const EmployeeDocumentTable = () => {
   );
 };
 
-export default EmployeeDocumentTable;
+export default EmployeeDocumentUpload;
