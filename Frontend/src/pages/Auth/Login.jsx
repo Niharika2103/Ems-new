@@ -167,7 +167,7 @@ export default function Login() {
 
   // Enable Login button only if fields are valid
   const isStep1Valid = formData.email.trim() !== "" && formData.password.trim() !== "" &&
-    formData.employmentType.trim() !== "";
+    formData.employment_type.trim() !== "";
   const isStep2Valid = otp.trim() !== "";
   const isButtonDisabled = loading || (step === 1 ? !isStep1Valid : !isStep2Valid);
 

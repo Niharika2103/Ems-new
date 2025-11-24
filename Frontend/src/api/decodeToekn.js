@@ -4,8 +4,10 @@ export const decodeToken = () => {
   const token = localStorage.getItem("token");
   if (!token) return null;
 
+
   try {
     const decoded = jwtDecode(token);
+    console.log(decoded,"Hi")
     return {
       email: decoded?.email || null,
       role: decoded?.role || null,

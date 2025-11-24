@@ -48,6 +48,7 @@ import FreelancerDocuments from  "../pages/Freelancer/FreelancerDocuments";
 import FreelancerAssignProjectpage from  "../pages/Freelancer/FreelancerAssignProjectpage";
 import TimesheetApprovalList from '../pages/Freelancer/Attendance/TimesheetApprovalList';
 import ReferCandidatePage from "../pages/Referral/ReferCandidatePage";
+import AdminReferralDashboard from '../pages/Referral/AdminReferralDashboard';
 import SalaryStructure from '../pages/Accounts/SalaryStructure';
 
 function AppRoutes() {
@@ -255,6 +256,15 @@ function AppRoutes() {
           </ProtectedRoute>
         }
         />
+
+        <Route path="/admin/referrals"
+         element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+          <AdminReferralDashboard/>
+          </ProtectedRoute>
+        }
+        />
+         
 
 
 
