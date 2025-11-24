@@ -69,6 +69,10 @@ router.put(
 router.post("/attendance/apply-parental", applyParentalLeave);
 
 router.get("/freelancers", getFreelancers);
+import { getEmployeeLetters } from "../../../admin-service/src/controllers/admin.controller.js";
+
+
+router.get("/letters/:employeeId", getEmployeeLetters);
 
 export default router;
 
