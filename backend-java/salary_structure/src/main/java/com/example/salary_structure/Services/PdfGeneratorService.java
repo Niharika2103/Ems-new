@@ -1,17 +1,14 @@
 package com.example.salary_structure.Services;
 
-
 import com.example.salary_structure.Entity.SalaryStructure;
 import com.lowagie.text.*;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
 import org.springframework.stereotype.Service;
+
 import java.awt.Color;
 import com.lowagie.text.Font;
-
-
-import java.awt.*;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
@@ -19,26 +16,41 @@ import java.math.BigDecimal;
 @Service
 public class PdfGeneratorService {
 
-    // SAFE method to avoid null.toString() crash
-    private String safe(BigDecimal v) {
-        return v == null ? "0" : v.toPlainString();
-    }
-
-    private String safe(String v) {
-        return v == null ? "-" : v;
-    }
+    // SAFE helpers to avoid null errors
+    private String safe(BigDecimal v) { return v == null ? "0" : v.toPlainString(); }
+    private String safe(String v) { return v == null ? "-" : v; }
 
     public ByteArrayInputStream generatePayslip(SalaryStructure s) {
+
         Document document = new Document(PageSize.A4, 40, 40, 40, 40);
         ByteArrayOutputStream out = new ByteArrayOutputStream();
 
         try {
-            PdfWriter.getInstance(document, out);
-            document.open();
+            // ============================
+            // 🔐 PDF PASSWORD PROTECTION
+            // ============================
+            String pan = s.getPanNumber();
+            if (pan == null || pan.isEmpty()) {
+                pan = "DEFAULT1234"; // fallback
+            }
+
+            String userPassword = pan.toUpperCase(); // employee password
+            String ownerPassword = "ADMIN123";       // admin password
+
+            PdfWriter writer = PdfWriter.getInstance(document, out);
+
+            writer.setEncryption(
+                    userPassword.getBytes(),
+                    ownerPassword.getBytes(),
+                    PdfWriter.ALLOW_PRINTING,
+                    PdfWriter.ENCRYPTION_AES_128
+            );
 
             // ============================
-            // TITLE
+            document.open();
             // ============================
+
+            // ---------- TITLE ----------
             Font titleFont = new Font(Font.HELVETICA, 20, Font.BOLD);
             Paragraph title = new Paragraph("PAYSLIP", titleFont);
             title.setAlignment(Element.ALIGN_CENTER);
@@ -53,12 +65,9 @@ public class PdfGeneratorService {
 
             document.add(Chunk.NEWLINE);
 
-            // ============================
-            // EMPLOYEE DETAILS
-            // ============================
+            // ---------- EMPLOYEE DETAILS ----------
             PdfPTable emp = new PdfPTable(2);
             emp.setWidthPercentage(100);
-            emp.setSpacingBefore(10);
 
             emp.addCell(cell("Employee ID", true));
             emp.addCell(cell(String.valueOf(s.getEmployeeId()), false));
@@ -69,7 +78,7 @@ public class PdfGeneratorService {
             emp.addCell(cell("PAN Number", true));
             emp.addCell(cell(safe(s.getPanNumber()), false));
 
-            emp.addCell(cell("Aadhar Link Status", true));
+            emp.addCell(cell("Aadhar Status", true));
             emp.addCell(cell(safe(s.getAadharLinkStatus()), false));
 
             emp.addCell(cell("Bank Name", true));
@@ -84,11 +93,8 @@ public class PdfGeneratorService {
             document.add(emp);
             document.add(Chunk.NEWLINE);
 
-            // ============================
-            // EARNINGS TABLE
-            // ============================
+            // ---------- EARNINGS ----------
             Paragraph earnTitle = new Paragraph("EARNINGS", new Font(Font.HELVETICA, 14, Font.BOLD));
-            earnTitle.setSpacingBefore(10);
             document.add(earnTitle);
 
             PdfPTable earn = new PdfPTable(2);
@@ -121,11 +127,8 @@ public class PdfGeneratorService {
             document.add(earn);
             document.add(Chunk.NEWLINE);
 
-            // ============================
-            // DEDUCTIONS TABLE
-            // ============================
+            // ---------- DEDUCTIONS ----------
             Paragraph dedTitle = new Paragraph("DEDUCTIONS", new Font(Font.HELVETICA, 14, Font.BOLD));
-            dedTitle.setSpacingBefore(10);
             document.add(dedTitle);
 
             PdfPTable ded = new PdfPTable(2);
@@ -147,7 +150,7 @@ public class PdfGeneratorService {
             ded.addCell(cell(safe(s.getIncomeTax()), false));
 
             ded.addCell(cell("Loan Deduction", true));
-            ded.addCell(cell(  safe(s.getLoanDeduction()), false));
+            ded.addCell(cell(safe(s.getLoanDeduction()), false));
 
             ded.addCell(cell("Other Deductions", true));
             ded.addCell(cell(safe(s.getOtherDeductions()), false));
@@ -157,26 +160,20 @@ public class PdfGeneratorService {
 
             document.add(ded);
             document.add(Chunk.NEWLINE);
-            
-            
-            
 
-            // ============================
-            // NET SALARY BOX
-            // ============================
+            // ---------- NET SALARY ----------
             PdfPTable net = new PdfPTable(1);
-            net.setWidthPercentage(100);
-
-            PdfPCell netCell = new PdfPCell(new Phrase(
-                    "NET SALARY: " + safe(s.getNetSalary()),
-                    new Font(Font.HELVETICA, 14, Font.BOLD)
-            ));
-            netCell.setPadding(10);
+            PdfPCell netCell = new PdfPCell(
+                    new Phrase("NET SALARY: " + safe(s.getNetSalary()),
+                            new Font(Font.HELVETICA, 14, Font.BOLD))
+            );
             netCell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            netCell.setPadding(10);
             netCell.setBackgroundColor(Color.LIGHT_GRAY);
 
             net.addCell(netCell);
             document.add(net);
+
             document.close();
 
         } catch (Exception e) {
@@ -186,7 +183,6 @@ public class PdfGeneratorService {
         return new ByteArrayInputStream(out.toByteArray());
     }
 
-    // Reusable table cell
     private PdfPCell cell(String text, boolean bold) {
         Font font = new Font(Font.HELVETICA, 11, bold ? Font.BOLD : Font.NORMAL);
         PdfPCell cell = new PdfPCell(new Phrase(text, font));
