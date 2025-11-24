@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { getEmployeeLettersEmployeeApi } from "../../api/authApi";
 
 const LettersDownload = () => {
-  const [letters, setLetters] = useState([]);
+  const [letter, setLetters] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const letters = [
