@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Box,
@@ -10,10 +10,12 @@ import {
   Divider,
   IconButton,
   InputAdornment,
+  Fade,
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
 import { adminLogin } from "../../features/auth/adminSlice";
 import PersonIcon from "@mui/icons-material/Person";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { validateLogin } from "../../utils/validation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -40,13 +42,23 @@ export default function AdminLogin() {
     otp: "",
   });
 
-  const [errors, setErrors] = useState({});
-  const [showPassword, setShowPassword] = useState(true);
+  const [forgotPasswordData, setForgotPasswordData] = useState({
+    newPassword: "",
+    confirmPassword: "",
+  });
 
-  // handle input changes
+  const [errors, setErrors] = useState({});
+  const [forgotPasswordErrors, setForgotPasswordErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
+
+  // Handle input changes for login form
   const handleChange = (e) => {
     const { name, value } = e.target;
-    //  Prevent password longer than 16 chars
+    // Prevent password longer than 16 chars
     if (name === "password" && value.length > 16) {
       setErrors((prev) => ({
         ...prev,
@@ -59,8 +71,23 @@ export default function AdminLogin() {
     setFormData({ ...formData, [name]: value });
   };
 
+  // Handle forgot password input changes
+  const handleForgotPasswordChange = (e) => {
+    const { name, value } = e.target;
+    // Prevent password longer than 16 chars
+    if ((name === "newPassword" || name === "confirmPassword") && value.length > 16) {
+      setForgotPasswordErrors((prev) => ({
+        ...prev,
+        [name]: "Password cannot exceed 16 characters",
+      }));
+      return;
+    } else {
+      setForgotPasswordErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+    setForgotPasswordData({ ...forgotPasswordData, [name]: value });
+  };
 
-  //  form validation on submit
+  // Form validation on submit
   const handleLoginSubmit = (e) => {
     e.preventDefault();
 
@@ -87,18 +114,57 @@ export default function AdminLogin() {
     } else {
       setErrors(validationErrors);
     }
-
   };
 
-  //disable button until all inputs are filled
-  const isButtonDisabled =
-    !formData.email.trim() || !formData.password.trim() || !formData.otp.trim();
+  // Handle forgot password submit
+  const handleForgotPasswordSubmit = (e) => {
+    e.preventDefault();
+    
+    const validationErrors = {};
+
+    if (!forgotPasswordData.newPassword.trim()) {
+      validationErrors.newPassword = "New password is required";
+    } else if (forgotPasswordData.newPassword.length < 6) {
+      validationErrors.newPassword = "Password must be at least 6 characters";
+    } else if (forgotPasswordData.newPassword.length > 16) {
+      validationErrors.newPassword = "Password cannot exceed 16 characters";
+    }
+
+    if (!forgotPasswordData.confirmPassword.trim()) {
+      validationErrors.confirmPassword = "Please confirm your password";
+    } else if (forgotPasswordData.newPassword !== forgotPasswordData.confirmPassword) {
+      validationErrors.confirmPassword = "Passwords do not match";
+    }
+
+    if (Object.keys(validationErrors).length === 0) {
+      setForgotPasswordLoading(true);
+      
+      // Simulate API call to reset password
+      setTimeout(() => {
+        toast.success("Password reset successfully!");
+        setForgotPasswordLoading(false);
+        setShowForgotPassword(false);
+        setForgotPasswordData({ newPassword: "", confirmPassword: "" });
+        setForgotPasswordErrors({});
+      }, 1500);
+    } else {
+      setForgotPasswordErrors(validationErrors);
+    }
+  };
+
+  // Handle back to login
+  const handleBackToLogin = () => {
+    setShowForgotPassword(false);
+    setForgotPasswordData({ newPassword: "", confirmPassword: "" });
+    setForgotPasswordErrors({});
+    setForgotPasswordLoading(false);
+  };
 
   return (
     <div className="admin-page">
       <ToastContainer position="top-right" autoClose={3000} />
 
-      {/*  Image Carousel */}
+      {/* Image Carousel */}
       <div className="top-carousel">
         <Swiper
           modules={[Autoplay, EffectCoverflow]}
@@ -121,116 +187,302 @@ export default function AdminLogin() {
 
       <div className="bottom-area" />
 
-      {/* Login Card */}
+      {/* Login Card - Reduced Size */}
       <div className="login-card">
         <div className="login-inner">
-          <Card sx={{ borderRadius: 3, boxShadow: 6, width: "100%" }}>
-            <CardContent>
-              <Box textAlign="center" mb={2}>
+          <Card sx={{ 
+            borderRadius: 3, 
+            boxShadow: 6, 
+            width: "100%",
+            maxWidth: "400px",
+            margin: "0 auto",
+            minHeight: showForgotPassword ? "420px" : "auto",
+            transition: "all 0.3s ease-in-out"
+          }}>
+            <CardContent sx={{ 
+              p: 2,
+              '&:last-child': { 
+                pb: 2 
+              } 
+            }}>
+              
+              {/* Back Button for Forgot Password */}
+              {showForgotPassword && (
+                <Box sx={{ mb: 1 }}>
+                  <Button
+                    startIcon={<ArrowBackIcon />}
+                    onClick={handleBackToLogin}
+                    variant="text"
+                    size="small"
+                    sx={{
+                      textTransform: 'none',
+                      color: 'primary.main',
+                      fontSize: '0.8rem',
+                      minWidth: 'auto',
+                      '&:hover': {
+                        backgroundColor: 'transparent',
+                      }
+                    }}
+                  >
+                    Back to Login
+                  </Button>
+                </Box>
+              )}
+
+              <Box textAlign="center" mb={1}>
                 <PersonIcon
                   className="admin-icon"
-                  sx={{ fontSize: { xs: 35, sm: 40 } }}
+                  sx={{ fontSize: 30 }}
                 />
                 <Typography
                   variant="h6"
                   fontWeight="bold"
-                  mt={1}
-                  fontSize={{ xs: "1rem", sm: "1.2rem" }}
+                  mt={0.5}
+                  fontSize="1.1rem"
                 >
-                  Admin Sign In
+                  {showForgotPassword ? "Reset Password" : "Admin Sign In"}
                 </Typography>
               </Box>
 
-              <Divider sx={{ mb: 2 }} />
+              <Divider sx={{ mb: 1.5 }} />
 
-              <Box component="form" onSubmit={handleLoginSubmit} noValidate>
-                {/* Email */}
-                <TextField
-                  label="Email"
-                  name="email"
-                  type="email"
-                  fullWidth
-                  margin="normal"
-                  size="small"
-                  variant="outlined"
-                  value={formData.email}
-                  onChange={handleChange}
-                  error={!!errors.email}
-                  helperText={errors.email}
-                  required
-                />
+              {/* Login Form */}
+              <Fade in={!showForgotPassword} timeout={300}>
+                <Box component="form" onSubmit={handleLoginSubmit} noValidate sx={{ 
+                  display: showForgotPassword ? 'none' : 'block'
+                }}>
+                  {/* Email */}
+                  <TextField
+                    label="Email"
+                    name="email"
+                    type="email"
+                    fullWidth
+                    margin="dense"
+                    size="small"
+                    variant="outlined"
+                    value={formData.email}
+                    onChange={handleChange}
+                    error={!!errors.email}
+                    helperText={errors.email}
+                    required
+                  />
 
-                {/*  Password */}
-                <TextField
-                  label="Password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  fullWidth
-                  margin="normal"
-                  size="small"
-                  variant="outlined"
-                  value={formData.password}
-                  onChange={handleChange}
-                  error={!!errors.password}
-                  helperText={errors.password}
-                  required
-                  inputProps={{ maxLength: 16 }}
+                  {/* Password */}
+                  <TextField
+                    label="Password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    fullWidth
+                    margin="dense"
+                    size="small"
+                    variant="outlined"
+                    value={formData.password}
+                    onChange={handleChange}
+                    error={!!errors.password}
+                    helperText={errors.password}
+                    required
+                    inputProps={{ maxLength: 16 }}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            edge="end"
+                            size="small"
+                            onClick={() => setShowPassword((prev) => !prev)}
+                            aria-label={
+                              showPassword ? "Hide password" : "Show password"
+                            }
+                          >
+                            {showPassword ? (
+                              <Visibility fontSize="small" />
+                            ) : (
+                              <VisibilityOff fontSize="small" />
+                            )}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
 
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          edge="end"
-                          onClick={() => setShowPassword((prev) => !prev)}
-                          aria-label={
-                            showPassword ? "Hide password" : "Show password"
-                          }
-                        >
-                          {showPassword ? (
-                            <Visibility fontSize="small" />
-                          ) : (
-                            <VisibilityOff fontSize="small" />
-                          )}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                />
+                  {/* Forgot Password Link */}
+                  <Box textAlign="right" sx={{ mt: 0.5, mb: 0.5 }}>
+                    <Button
+                      variant="text"
+                      size="small"
+                      onClick={() => setShowForgotPassword(true)}
+                      sx={{
+                        textTransform: 'none',
+                        fontSize: '0.75rem',
+                        color: 'primary.main',
+                        '&:hover': {
+                          backgroundColor: 'transparent',
+                          textDecoration: 'underline'
+                        },
+                        padding: '2px 6px',
+                        minWidth: 'auto'
+                      }}
+                    >
+                      Forgot Password?
+                    </Button>
+                  </Box>
 
-                {/*OTP Field with proper error message display */}
-                <TextField
-                  label="Enter OTP"
-                  name="otp"
-                  fullWidth
-                  size="small"
-                  margin="normal"
-                  value={formData.otp}
-                  onChange={handleChange}
-                  error={!!errors.otp}
-                  helperText={errors.otp}
-                  required
-                />
+                  {/* OTP Field */}
+                  <TextField
+                    label="Enter OTP"
+                    name="otp"
+                    fullWidth
+                    size="small"
+                    margin="dense"
+                    value={formData.otp}
+                    onChange={handleChange}
+                    error={!!errors.otp}
+                    helperText={errors.otp}
+                    required
+                  />
 
-                <Typography variant="body2" align="center" sx={{ mt: 2 }}>
-                  Don’t have an account?{" "}
-                  <a href="/#/admin/register" className="admin-register-link">
-                    Register Here
-                  </a>
-                </Typography>
+                  <Typography variant="body2" align="center" sx={{ mt: 1.5, fontSize: '0.8rem' }}>
+                    Don't have an account?{" "}
+                    <a href="/#/admin/register" className="admin-register-link">
+                      Register Here
+                    </a>
+                  </Typography>
 
-                {/*  Login button enable/disable logic */}
-                <Button
-                  fullWidth
-                  variant="contained"
-                  size="small"
-                  className="!px-1 !py-1 !text-md admin-button"
-                  sx={{ mt: 2, fontSize: { xs: "0.9rem", sm: "1rem" } }}
-                  type="submit"
-                  disabled={loading || isButtonDisabled}
-                >
-                  {loading ? "Logging in..." : "Log In"}
-                </Button>
-              </Box>
+                  {/* Login Button - REMOVED DISABLED PROPERTY */}
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    size="small"
+                    className="!px-1 !py-1 !text-md admin-button"
+                    sx={{ 
+                      mt: 1.5,
+                      fontSize: "0.9rem",
+                      py: 0.75
+                    }}
+                    type="submit"
+                    disabled={loading} // Only disable when loading, not based on form data
+                  >
+                    {loading ? "Logging in..." : "Log In"}
+                  </Button>
+                </Box>
+              </Fade>
+
+              {/* Forgot Password Form */}
+              <Fade in={showForgotPassword} timeout={300}>
+                <Box component="form" onSubmit={handleForgotPasswordSubmit} noValidate sx={{
+                  display: showForgotPassword ? 'block' : 'none'
+                }}>
+                  
+                  {/* New Password */}
+                  <TextField
+                    label="New Password"
+                    name="newPassword"
+                    type={showNewPassword ? "text" : "password"}
+                    fullWidth
+                    margin="dense"
+                    size="small"
+                    variant="outlined"
+                    value={forgotPasswordData.newPassword}
+                    onChange={handleForgotPasswordChange}
+                    error={!!forgotPasswordErrors.newPassword}
+                    helperText={forgotPasswordErrors.newPassword}
+                    required
+                    inputProps={{ maxLength: 16 }}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            edge="end"
+                            size="small"
+                            onClick={() => setShowNewPassword((prev) => !prev)}
+                            aria-label={
+                              showNewPassword ? "Hide password" : "Show password"
+                            }
+                          >
+                            {showNewPassword ? (
+                              <Visibility fontSize="small" />
+                            ) : (
+                              <VisibilityOff fontSize="small" />
+                            )}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+
+                  {/* Confirm Password */}
+                  <TextField
+                    label="Confirm Password"
+                    name="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    fullWidth
+                    margin="dense"
+                    size="small"
+                    variant="outlined"
+                    value={forgotPasswordData.confirmPassword}
+                    onChange={handleForgotPasswordChange}
+                    error={!!forgotPasswordErrors.confirmPassword}
+                    helperText={forgotPasswordErrors.confirmPassword}
+                    required
+                    inputProps={{ maxLength: 16 }}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton
+                            edge="end"
+                            size="small"
+                            onClick={() => setShowConfirmPassword((prev) => !prev)}
+                            aria-label={
+                              showConfirmPassword ? "Hide password" : "Show password"
+                            }
+                          >
+                            {showConfirmPassword ? (
+                              <Visibility fontSize="small" />
+                            ) : (
+                              <VisibilityOff fontSize="small" />
+                            )}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
+
+                  {/* Password Requirements */}
+                  <Box sx={{ 
+                    mt: 1.5,
+                    p: 1,
+                    backgroundColor: 'grey.50', 
+                    borderRadius: 1,
+                    border: '1px solid',
+                    borderColor: 'grey.200'
+                  }}>
+                    <Typography variant="caption" fontWeight="bold" color="text.primary" display="block" gutterBottom>
+                      Password Requirements:
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      • 6-16 characters
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary" display="block">
+                      • Passwords must match
+                    </Typography>
+                  </Box>
+
+                  {/* Reset Password Button */}
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    size="small"
+                    sx={{ 
+                      mt: 2,
+                      fontSize: "0.9rem",
+                      py: 0.75
+                    }}
+                    type="submit"
+                    disabled={forgotPasswordLoading} // Only disable when loading
+                  >
+                    {forgotPasswordLoading ? "Resetting..." : "Reset Password"}
+                  </Button>
+                </Box>
+              </Fade>
             </CardContent>
           </Card>
         </div>

@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from "react-redux";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useNavigate } from "react-router-dom";
 import { fetchallemployee } from "../../features/employeesDetails/employeesSlice";
-import {saveSalaryStructure} from "../../features/Salarystructure/salaryStructureSlice";
+import { saveSalaryStructure, getsalarybyid } from "../../features/Salarystructure/salaryStructureSlice";
 import {
   Container,
   Paper,
@@ -47,16 +48,44 @@ import {
 } from '@mui/icons-material';
 
 const SalaryStructure = () => {
-  const [activeStep, setActiveStep] = useState(0);
-  const dispatch = useDispatch();
+  const mapBackendToForm = (data) => ({
+    // Earnings
+    basicPay: data.basicPay ?? "",
+    houseRentAllowance: data.hra ?? "",
+    driftAllowance: data.da ?? "",
+    conveyanceAllowance: data.conveyanceAllowance ?? "",
+    medicalAllowance: data.medicalAllowance ?? "",
+    specialAllowance: data.specialAllowance ?? "",
+    otherAllowance: data.otherAllowances ?? "",
 
-  const getCurrentDate = () => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
+    // Deductions
+    providentFund: data.pfEmployee ?? "",
+    professionalTax: data.professionalTax ?? "",
+    incomeTax: data.incomeTax ?? "",
+    loanDeductions: data.loanDeduction ?? "",
+    TotalDeductions: data.totalDeductions ?? "",
+
+    // IDs
+    panNumber: data.panNumber ?? "",
+    pfNumber: data.pfNumber ?? "",
+    uanNumber: data.uanNumber ?? "",
+    esiNumber: data.esi ?? "",
+
+    // Bank
+    bankName: data.bankName ?? "",
+    accountNumber: data.accountNumber ?? "",
+    ifscCode: data.ifscCode ?? "",
+    paymentMethod: data.paymentMethod ?? "",
+
+    // Days
+    payableDays: data.payableDays ?? "",
+    lossofDaysDays: data.lossOfDays ?? "",
+    lossofpayreversalDays: data.lossOfPayReversalDays ?? "",
+
+    // Others
+    location: data.location ?? "",
+  });
+
 
   const initialFormData = {
     employeeName: '',
@@ -90,8 +119,45 @@ const SalaryStructure = () => {
     TotalDeductions: '',
     loanDeductions: '',
 
-    effectiveFrom: getCurrentDate(),
-    effectiveTo: getCurrentDate(),
+    effectiveFrom: '',
+    effectiveTo: "",
+    payableDays: '',
+    lossofDaysDays: '',
+    lossofpayreversalDays: '',
+
+    location: '',
+    employmentType: ''
+  };
+  const initialFormData1 = {
+
+    id: '',
+    panNumber: '',
+    // aadharNumber: '',
+    uanNumber: '',
+    pfNumber: '',
+    esiNumber: '',
+
+    bankName: '',
+    accountNumber: '',
+    ifscCode: '',
+    paymentMethod: '',
+
+    basicPay: '',
+    houseRentAllowance: '',
+    medicalAllowance: '',
+    conveyanceAllowance: '',
+    specialAllowance: '',
+    otherAllowance: '',
+    driftAllowance: '',
+
+    providentFund: '',
+    professionalTax: '',
+    incomeTax: '',
+    TotalDeductions: '',
+    loanDeductions: '',
+
+    effectiveFrom: "",
+    effectiveTo: "",
     payableDays: '',
     lossofDaysDays: '',
     lossofpayreversalDays: '',
@@ -100,11 +166,14 @@ const SalaryStructure = () => {
     employmentType: ''
   };
 
+  const [activeStep, setActiveStep] = useState(0);
+  const dispatch = useDispatch();
   const [formData, setFormData] = useState(initialFormData);
-console.log(formData,"formData")
+  const [formData1, setFormData1] = useState(initialFormData1);
+  const navigate = useNavigate();
+
   // errors: { fieldName: "error message" }
   const [errors, setErrors] = useState({});
-
   const steps = ['Employee Details', 'Bank & IDs', 'Salary Components', 'Review & Generate'];
   const employmentTypes = ['Permanent', 'Contract', 'Intern', 'Trainee', 'Consultant'];
   const paymentMethods = ['Bank Transfer', 'Cash', 'Cheque'];
@@ -117,35 +186,57 @@ console.log(formData,"formData")
   const emailFromQuery = new URLSearchParams(location.search).get('email');
 
 
- useEffect(() => {
-  const loadProfile = async () => {
-    try {
-      const res = await dispatch(fetchallemployee(emailFromQuery));
+  useEffect(() => {
+    const loadAll = async () => {
+      if (!emailFromQuery) return;
+      try {
+        // 1) fetch employee by email
+        const empRes = await dispatch(fetchallemployee(emailFromQuery));
+        const emp = empRes?.payload;
+        if (!emp) {
+          toast.error("Employee not found");
+          return;
+        }
 
-      if (!res.payload) {
-        throw new Error("No data received");
+        // set employee fields (formData1)
+        setFormData1(prev => ({
+          ...prev,
+          id: emp.id,
+          employeeName: emp.name || "",
+          employeeId: emp.employee_id || "",
+          designation: emp.designation || "",
+          dateOfJoining: emp.date_of_joining ? emp.date_of_joining.split("T")[0] : "",
+          email: emp.email || "",
+          dateOfBirth: emp.dob ? emp.dob.split("T")[0] : "",
+        }));
+
+        // 2) fetch salary by employee id (in the same flow)
+        if (emp.id) {
+          const salRes = await dispatch(getsalarybyid(emp.id));
+          const salary = salRes?.payload;
+          if (salary) {
+            setFormData(prev => ({
+              ...prev,
+              ...mapBackendToForm(salary),
+              // optionally copy employee fields to formData if your UI expects them there:
+              employeeName: emp.name || "",
+              employeeId: emp.employee_id || "",
+              designation: emp.designation || "",
+              dateOfJoining: emp.date_of_joining ? emp.date_of_joining.split("T")[0] : "",
+              dateOfBirth: emp.dob ? emp.dob.split("T")[0] : "",
+            }));
+          } else {
+            // no salary found — keep defaults (or clear fields as needed)
+          }
+        }
+      } catch (error) {
+        console.error("Error loading profile or salary:", error);
+        toast.error("Failed to load employee or salary data. Please try again.");
       }
+    };
 
-      const emp = res.payload;
-
-      setFormData(prev => ({
-        ...prev,
-        employeeName: emp?.name || "",
-        employeeId: emp?.employee_id || "",
-        designation: emp?.designation || "",
-        dateOfJoining: emp?.date_of_joining?.split("T")[0] ,
-        location: emp?.address || "",
-        email: emp?.email || "",
-        dateOfBirth:emp?.dob?.split("T")[0],
-      }));
-    } catch (error) {
-      console.error("Error loading profile:", error);
-      toast.error("Failed to load employee profile. Please try again.");
-    }
-  };
-
-  loadProfile();
-}, [dispatch, emailFromQuery]);
+    loadAll();
+  }, [dispatch, emailFromQuery]);
 
 
   const handleChange = (e) => {
@@ -222,44 +313,15 @@ console.log(formData,"formData")
     const e = {};
 
     if (step === 0) {
-      // Employee Details
-      // if (!formData.employeeName || formData.employeeName.trim().length < 2) {
-      //   e.employeeName = 'Employee name is required (min 2 chars).';
-      // }
-      // if (!formData.employeeId || formData.employeeId.trim().length === 0) {
-      //   e.employeeId = 'Employee ID is required.';
-      // }
-      // if (!formData.designation || formData.designation.trim().length === 0) {
-      //   e.designation = 'Designation is required.';
-      // }
-      // if (!formData.employmentType) {
-      //   e.employmentType = 'Select employment type.';
-      // }
-      // if (!isValidDate(formData.dateOfJoining)) {
-      //   e.dateOfJoining = 'Enter a valid joining date.';
-      // }
-      // if (!isValidDate(formData.dateOfBirth)) {
-      //   e.dateOfBirth = 'Enter a valid birth date.';
-      // }
       if (!formData.location) {
         e.location = 'Select location.';
       }
-      
     }
-
     if (step === 1) {
       // PAN & Aadhar validation
       if (!formData.panNumber || !panRegex.test(formData.panNumber.trim())) {
         e.panNumber = 'Enter a valid PAN (e.g. ABCDE1234F).';
       }
-      // if (!formData.aadharNumber || !aadharRegex.test(formData.aadharNumber.trim())) {
-      //   e.aadharNumber = 'Aadhaar must be 12 digits.';
-      // }
-      // UAN/PF/ESI optional — only basic checks
-      // if (formData.uanNumber && formData.uanNumber.trim().length < 5) {
-      //   e.uanNumber = 'UAN looks too short.';
-      // }
-
       if (!formData.paymentMethod) {
         e.paymentMethod = 'Select payment method.';
       }
@@ -359,51 +421,75 @@ console.log(formData,"formData")
     return allErrors;
   };
 
-  // const handleSave = () => {
-  //   const allErrors = validateAll();
-  //   if (Object.keys(allErrors).length > 0) {
-  //     setErrors(allErrors);
-  //     // focus to first step that has error
-  //     const step0Keys = Object.keys(validateStep(0));
-  //     const step1Keys = Object.keys(validateStep(1));
-  //     const step2Keys = Object.keys(validateStep(2));
-  //     if (step0Keys.length > 0) setActiveStep(0);
-  //     else if (step1Keys.length > 0) setActiveStep(1);
-  //     else if (step2Keys.length > 0) setActiveStep(2);
-  //     return;
-  //   }
-
-  // };
 
   const handleSave = async () => {
-  const allErrors = validateAll();
-  if (Object.keys(allErrors).length > 0) {
-    setErrors(allErrors);
+    const allErrors = validateAll();
+    if (Object.keys(allErrors).length > 0) {
+      setErrors(allErrors);
 
-    const step0 = Object.keys(validateStep(0));
-    const step1 = Object.keys(validateStep(1));
-    const step2 = Object.keys(validateStep(2));
+      if (Object.keys(validateStep(0)).length > 0) setActiveStep(0);
+      else if (Object.keys(validateStep(1)).length > 0) setActiveStep(1);
+      else if (Object.keys(validateStep(2)).length > 0) setActiveStep(2);
 
-    if (step0.length > 0) setActiveStep(0);
-    else if (step1.length > 0) setActiveStep(1);
-    else if (step2.length > 0) setActiveStep(2);
-
-    return;
-  }
-
-  try {
-    const res = await dispatch(saveSalaryStructure(formData));
-
-    if (res?.payload?.success) {
-      toast.success("Salary Structure Saved Successfully!");
-    } else {
-      toast.error("Failed to save salary structure");
+      return;
     }
-  } catch (err) {
-    toast.error("Error while saving");
-    console.error(err);
-  }
-};
+
+    const payload = {
+      employeeId: formData1.id,
+      location: formData.location,
+
+      panNumber: formData.panNumber,
+      pfNumber: formData.pfNumber,
+      uanNumber: formData.uanNumber,
+      esi: formData.esiNumber,  // ✔ correct key name
+
+      bankName: formData.bankName,
+      accountNumber: formData.accountNumber,
+      ifscCode: formData.ifscCode,
+      paymentMethod: formData.paymentMethod,
+
+      effectiveFrom: formData.effectiveFrom,
+      effectiveTo: formData.effectiveTo,
+
+      // Earnings
+      basicPay: formData.basicPay,
+      hra: formData.houseRentAllowance,
+      da: formData.driftAllowance,
+      conveyanceAllowance: formData.conveyanceAllowance,
+      medicalAllowance: formData.medicalAllowance,
+      specialAllowance: formData.specialAllowance,
+      otherAllowances: formData.otherAllowance,
+
+      // Deductions
+      pfEmployee: formData.providentFund,
+      pfEmployer: 0,
+      professionalTax: formData.professionalTax,
+      incomeTax: formData.incomeTax,
+      loanDeduction: formData.loanDeductions,
+      esi: formData.esiNumber,
+      otherDeductions: formData.otherAllowance,
+      // Days
+      lossOfDays: formData.lossofDaysDays,
+      lossOfPayReversalDays: formData.lossofpayreversalDays,
+      payableDays: formData.payableDays,
+    };
+
+
+    try {
+      const res = await dispatch(saveSalaryStructure(payload));
+      console.log("dispatch result:", res);
+
+      if (res?.payload?.id) {
+        toast.success("Salary Structure Saved Successfully!");
+         setTimeout(() => navigate("/dashboard/emp_requestTable", { replace: true }), 2000);
+      } else {
+        toast.error("Failed to save salary structure");
+      }
+    } catch (err) {
+      toast.error("Error while saving");
+    }
+  };
+
 
 
   // STEP CONTENT
@@ -418,66 +504,46 @@ console.log(formData,"formData")
             </Typography>
 
             <Grid container spacing={3}>
-      <ToastContainer position="top-right" autoClose={3000} />
               <Grid item xs={12} sm={6}>
                 <TextField fullWidth label="Employee Name"
-                  name="employeeName" value={formData.employeeName} InputProps={{ readOnly: true }}
-                  // error={!!errors.employeeName} helperText={errors.employeeName || ''}
-                   />
+                  name="employeeName" value={formData1.employeeName} InputProps={{ readOnly: true }}
+                />
               </Grid>
 
               <Grid item xs={12} sm={6}>
                 <TextField fullWidth label="Employee ID"
-                  name="employeeId" value={formData.employeeId} 
-                  // error={!!errors.employeeId} helperText={errors.employeeId || ''} 
-                  />
+                  name="employeeId" value={formData1.employeeId}
+                />
               </Grid>
 
               <Grid item xs={12} sm={6}>
                 <TextField fullWidth label="Designation"
-                  name="designation" value={formData.designation} InputProps={{ readOnly: true }}
-                  // error={!!errors.designation} helperText={errors.designation || ''} 
-                  />
+                  name="designation" value={formData1.designation} InputProps={{ readOnly: true }}
+                />
               </Grid>
 
-             
+
 
               {/* Employment Type */}
-               <Grid item xs={12} sm={6}>
+              <Grid item xs={12} sm={6}>
                 <TextField fullWidth label="Employment Type"
-                  name="employmentType" value={formData.employmentType} InputProps={{ readOnly: true }}
-                  // error={!!errors.designation} helperText={errors.designation || ''} 
-                  />
+                  name="employmentType" value={formData1.employmentType} InputProps={{ readOnly: true }}
+                />
               </Grid>
-              {/* <Grid item xs={12} sm={6}>
-                <FormControl fullWidth
-                  sx={{ "& .MuiInputBase-root": { height: 60, borderRadius: "10px" } }}
-                  error={!!errors.employmentType}
-                >
-                  <InputLabel>Employment Type</InputLabel>
-                  <Select name="employmentType" label="Employment Type"
-                    value={formData.employmentType} onChange={handleChange}>
-                    {employmentTypes.map(t => <MenuItem key={t} value={t}>{t}</MenuItem>)}
-                  </Select>
-                  {errors.employmentType && <Typography color="error" variant="caption">{errors.employmentType}</Typography>}
-                </FormControl>
-              </Grid> */}
 
               {/* Dates */}
               <Grid item xs={12} sm={6}>
                 <TextField fullWidth type="date" label="Date of Joining"
                   name="dateOfJoining" InputLabelProps={{ shrink: true }}
-                  value={formData.dateOfJoining} InputProps={{ readOnly: true }}
-                  // error={!!errors.dateOfJoining} helperText={errors.dateOfJoining || ''} 
-                  />
+                  value={formData1.dateOfJoining} InputProps={{ readOnly: true }}
+                />
               </Grid>
 
               <Grid item xs={12} sm={6}>
                 <TextField fullWidth type="date" label="Date of Birth"
                   name="dateOfBirth" InputLabelProps={{ shrink: true }}
-                  value={formData.dateOfBirth} InputProps={{ readOnly: true }}
-                  // error={!!errors.dateOfBirth} helperText={errors.dateOfBirth || ''} 
-                  />
+                  value={formData1.dateOfBirth} InputProps={{ readOnly: true }}
+                />
               </Grid>
 
               {/* Location */}
@@ -521,8 +587,7 @@ console.log(formData,"formData")
 
               <Grid item xs={12} sm={6}>
                 <TextField fullWidth label="UAN Number" name="uanNumber" value={formData.uanNumber} onChange={handleChange}
-                  // error={!!errors.uanNumber} helperText={errors.uanNumber || ''} 
-                  />
+                />
               </Grid>
 
               <Grid item xs={12} sm={6}>
@@ -530,7 +595,7 @@ console.log(formData,"formData")
               </Grid>
 
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="ESI Number" name="esiNumber" value={formData.esiNumber} onChange={handleChange} />
+                <TextField fullWidth label="ESI Number" name="esiNumber" value={formData.esiNumber ?? ""} onChange={handleChange} />
               </Grid>
 
               <Grid item xs={12}><Divider /><Typography variant="h6" sx={{ mt: 2, display: "flex", gap: 1 }}><AccountBalance /> Bank Details</Typography></Grid>
@@ -634,7 +699,7 @@ console.log(formData,"formData")
               </Grid>
 
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="Loan Deductions" type="number" name="loanDeductions" value={formData.loanDeductions} onChange={handleChange}
+                <TextField fullWidth label="Loan Deductions" type="number" name="loanDeductions" value={formData.loanDeductions ?? ""} onChange={handleChange}
                   error={!!errors.loanDeductions} helperText={errors.loanDeductions || ''} />
               </Grid>
 
@@ -676,7 +741,7 @@ console.log(formData,"formData")
 
               <Grid item xs={12} sm={6}>
                 <TextField fullWidth label="Loss of Pay Reversal Days" type="number"
-                  name="lossofpayreversalDays" value={formData.lossofpayreversalDays} onChange={handleChange}
+                  name="lossofpayreversalDays" value={formData.lossofpayreversalDays ?? ''} onChange={handleChange}
                   error={!!errors.lossofpayreversalDays} helperText={errors.lossofpayreversalDays || ''} sx={{ "& .MuiInputBase-root": { height: 55 } }} />
               </Grid>
 
@@ -836,6 +901,7 @@ console.log(formData,"formData")
 
   return (
     <Box sx={{ flexGrow: 1 }}>
+    <ToastContainer position="top-right" autoClose={3000} />
       <AppBar position="static">
         <Toolbar>
           <AttachMoney sx={{ mr: 2 }} />
@@ -855,7 +921,7 @@ console.log(formData,"formData")
             ))}
           </Stepper>
 
-          <form  onSubmit={(e) => e.preventDefault()}>
+          <form onSubmit={(e) => e.preventDefault()}>
             {renderStepContent(activeStep)}
 
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
@@ -879,7 +945,7 @@ console.log(formData,"formData")
                 </Button>
 
                 {activeStep === steps.length - 1 ? (
-                  <Button variant="contained" type="button"  color="primary" startIcon={<Download />} onClick={handleSave}>
+                  <Button variant="contained" type="button" color="primary" startIcon={<Download />} onClick={handleSave}>
                     Save Salary Structure
                   </Button>
                 ) : (

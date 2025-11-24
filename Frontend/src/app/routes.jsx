@@ -31,8 +31,10 @@ import FinancialYearSetup from '../pages/Attendance/FinancialYearSetup';
 import ProjectDashboard from "../pages/dashbaord/ProjectDashboard";
 import Letters from "../pages/documents/Letters";
 import AdminLetterGenerator from "../pages/documents/AdminLetterGenerator";
+import EmployeeDocumentTable from '../pages/documents/EmployeeDocumentTable';
 import MonthlyTimesheet from "../pages/Attendance/MonthlyTimesheet";
 import EmployeeLeave from "../pages/Attendance/EmployeeLeave";
+import LettersDownload from '../pages/documents/LettersDownload';
 import MaternityPaternityLeaveTable from "../pages/Attendance/MaternityPaternityLeaveTable";
 import EmpAttendanceDashboard from "../pages/dashbaord/EmpAttendanceDashboard";
 import AuditLogsTable from "../pages/Attendance/AuditLogs";
@@ -45,7 +47,7 @@ import FreelancerProjectTable from  "../pages/Freelancer/FreelancerProjectTable"
 import FreelancerDocuments from  "../pages/Freelancer/FreelancerDocuments";
 import FreelancerAssignProjectpage from  "../pages/Freelancer/FreelancerAssignProjectpage";
 import TimesheetApprovalList from '../pages/Freelancer/Attendance/TimesheetApprovalList';
-
+import ReferCandidatePage from "../pages/Referral/ReferCandidatePage";
 import SalaryStructure from '../pages/Accounts/SalaryStructure';
 
 function AppRoutes() {
@@ -245,6 +247,15 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route
+        path="/dashboard/emp_info/referral"
+        element={
+          <ProtectedRoute allowedRoles={["employee"]}>
+          <ReferCandidatePage/>
+          </ProtectedRoute>
+        }
+        />
+
 
 
 {/* <Route path="/freelancer/projects" element={<FreelancerProjectTable />} /> */}
@@ -312,6 +323,21 @@ function AppRoutes() {
           element={
             <ProtectedRoute allowedRoles={["admin", "employee"]}>
               <Letters />
+            </ProtectedRoute>
+          }
+        />
+         <Route 
+            path="/documents/employees" 
+            element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <EmployeeDocumentTable />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/employee/letters" 
+        element={
+          <ProtectedRoute allowedRoles={["employee"]}>
+              <LettersDownload />
             </ProtectedRoute>
           }
         />

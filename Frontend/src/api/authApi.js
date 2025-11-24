@@ -1,5 +1,6 @@
-import { superadminClient,employeeClient,adminClient,ProjectClient,AttendanceClient} from "./axiosClient";
+import { superadminClient,employeeClient,adminClient,ProjectClient,AttendanceClient,SalaryStructureClient } from "./axiosClient";
 import { AUTH_API } from "../utils/constants";
+
 
 // ================= SuperAdmin =================
 export const checkEmailApi = (email) =>
@@ -99,6 +100,17 @@ export const promoteEmployeeApi = (employeeId) =>
   adminClient.post(`${AUTH_API.ADMIN}/promote/${employeeId}`)
 
 
+
+// ======== Letter Generation API ========
+export const generateLetterApi = (payload) =>
+  adminClient.post(`${AUTH_API.ADMIN}/letters/generate`, payload);
+
+export const getEmployeeLettersApi = (employeeId) =>
+  adminClient.get(`${AUTH_API.ADMIN}/letters/${employeeId}`);
+
+// Delete letter API
+export const deleteLetterApi = (employeeId, filename) =>
+  adminClient.delete(`${AUTH_API.ADMIN}/letters/${employeeId}/${filename}`); 
 // ================= Employee Auth =================
 export const employeeRegisterApi = (data) =>
   employeeClient.post(`${AUTH_API.EMPLOYEE}/register`, data);
@@ -348,6 +360,7 @@ export const fetchAuditLogsApi = () => {
 };
 
 
+
 // Public ADD Holidays 
 export const saveHolidayApi = (formData) =>{
  return AttendanceClient.post(`${AUTH_API.ATTENDANCE}/holidays`, formData);
@@ -357,11 +370,20 @@ export const saveHolidayApi = (formData) =>{
 export const updateHolidayApi = (id,formData) =>{
  return AttendanceClient.put(`${AUTH_API.ATTENDANCE}/holidays/${id}`,formData);
 }
+
+
 //delete
 export const deleteHolidayApi =(id)=>{
   return AttendanceClient.delete(`${AUTH_API.ATTENDANCE}/holidays/${id}`);
 }
 
+//PayslipDownload
+
+export const downloadPayslipApi = (employeeId, month, year) => {
+  return SalaryStructureClient.get(`${AUTH_API.SALARYSTRUCTURE}/download/${employeeId}/${month}/${year}`, {
+    responseType: "blob",
+  });
+};
 // ================= Employee Document Upload (Admin) =================
 export const uploadEmployeeDocumentsApi = (employeeId, data) => {
   const formData = new FormData();
@@ -392,4 +414,8 @@ export const uploadEmployeeDocumentsApi = (employeeId, data) => {
 //salary structure 
 export const createSalaryStructureApi=(formData)=>{
   return SalaryStructureClient.post(`${AUTH_API.SALARYSTRUCTURE}/create`,formData)
+}
+//get salary 
+export const fetchsalarybgidApi=(id)=>{
+  return SalaryStructureClient.get(`${AUTH_API.SALARYSTRUCTURE}/last/${id}`)
 }

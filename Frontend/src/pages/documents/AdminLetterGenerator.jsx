@@ -1,358 +1,222 @@
 // AdminLetterGenerator.js
 import React, { useState, useEffect } from 'react';
+import {
+  employeeFetchApi,
+  generateLetterApi,
+  getEmployeeLettersApi,deleteLetterApi
+} from "../../api/authApi";
 
 const AdminLetterGenerator = () => {
-  const [selectedLetterType, setSelectedLetterType] = useState('offer');
-  const [letters, setLetters] = useState({
-    offer: [],
-    joining: [],
-    appointment: [],
-    experience: [],
-    relieving: []
-  });
-  const [selectedLetter, setSelectedLetter] = useState(null);
-  const [isViewingLetter, setIsViewingLetter] = useState(false);
+  const [employees, setEmployees] = useState([]);
+  const [selectedLetterType, setSelectedLetterType] = useState('Offer Letter');
+  const [employeeLettersMap, setEmployeeLettersMap] = useState({}); // { empId: [ {name, url}, ... ] }
+  const [loadingEmployees, setLoadingEmployees] = useState(false);
+  const [generatingFor, setGeneratingFor] = useState(null); // employeeId being processed
 
-  // Letter types
+  // Supported letter types (must match backend exactly)
   const letterTypes = [
-    { id: 'offer', name: 'Offer Letters', icon: '📄' },
-    { id: 'joining', name: 'Joining Letters', icon: '👥' },
-    { id: 'appointment', name: 'Appointment Letters', icon: '💼' },
-    { id: 'experience', name: 'Experience Certificates', icon: '⭐' },
-    { id: 'relieving', name: 'Relieving Letters', icon: '👋' }
+    { id: 'Offer Letter', name: 'Offer Letter', icon: '📄' },
+    { id: 'Appointment Letter', name: 'Appointment Letter', icon: '💼' },
+    { id: 'Experience Letter', name: 'Experience Letter', icon: '⭐' },
+    { id: 'Relieving Letter', name: 'Relieving Letter', icon: '👋' },
+    { id: 'Confirmation Letter', name: 'Confirmation Letter', icon: '✅' },
+    { id: 'Promotion Letter', name: 'Promotion Letter', icon: '📈' },
+    { id: 'Salary Increment Letter', name: 'Salary Increment Letter', icon: '💰' },
+    { id: 'Warning Letter', name: 'Warning Letter', icon: '⚠️' },
   ];
 
-  // Sample data for demonstration
+  // Fetch all employees on mount
   useEffect(() => {
-    const sampleLetters = {
-      offer: [
-        { 
-          id: 1, 
-          employeeName: 'John Doe', 
-          position: 'Software Engineer', 
-          date: '2024-01-15',
-          department: 'Engineering',
-          joiningDate: '2024-02-01',
-          email: 'john.doe@email.com'
-        },
-        { 
-          id: 2, 
-          employeeName: 'Jane Smith', 
-          position: 'Product Manager', 
-          date: '2024-01-20',
-          department: 'Product',
-          joiningDate: '2024-02-15',
-          email: 'jane.smith@email.com'
+    const fetchAll = async () => {
+      setLoadingEmployees(true);
+      try {
+        const res = await employeeFetchApi();
+        const empList = Array.isArray(res.data) ? res.data : res.data?.employees || [];
+        setEmployees(empList);
+
+        // Pre-fetch letters for all employees (optional: can lazy-load on expand)
+        const lettersMap = {};
+        for (const emp of empList) {
+          try {
+            const letterRes = await getEmployeeLettersApi(emp.id);
+            lettersMap[emp.id] = letterRes.data.files || [];
+          } catch {
+            lettersMap[emp.id] = [];
+          }
         }
-      ],
-      joining: [
-        { 
-          id: 1, 
-          employeeName: 'John Doe', 
-          position: 'Software Engineer', 
-          date: '2024-02-01',
-          department: 'Engineering',
-          email: 'john.doe@email.com'
-        }
-      ],
-      appointment: [
-        { 
-          id: 1, 
-          employeeName: 'John Doe', 
-          position: 'Software Engineer', 
-          date: '2024-02-01',
-          department: 'Engineering',
-          email: 'john.doe@email.com'
-        }
-      ],
-      experience: [
-        { 
-          id: 1, 
-          employeeName: 'Robert Brown', 
-          position: 'Senior Developer', 
-          date: '2024-01-30',
-          department: 'Engineering',
-          email: 'robert.brown@email.com'
-        }
-      ],
-      relieving: [
-        { 
-          id: 1, 
-          employeeName: 'Emily Davis', 
-          position: 'Marketing Manager', 
-          date: '2024-01-28',
-          department: 'Marketing',
-          email: 'emily.davis@email.com'
-        }
-      ]
+        setEmployeeLettersMap(lettersMap);
+      } catch (err) {
+        console.error('Failed to load employees or letters:', err);
+        alert('Failed to load employee data');
+      } finally {
+        setLoadingEmployees(false);
+      }
     };
-    
-    setLetters(sampleLetters);
+    fetchAll();
   }, []);
 
-  // Format date for display
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
+  const handleGenerateLetter = async (employeeId) => {
+    if (!employeeId || !selectedLetterType) return;
+
+    setGeneratingFor(employeeId);
+    try {
+      await generateLetterApi({
+        employeeId,
+        letterType: selectedLetterType,
+      });
+
+      // Refresh letters for this employee
+      const res = await getEmployeeLettersApi(employeeId);
+      setEmployeeLettersMap((prev) => ({
+        ...prev,
+        [employeeId]: res.data.files || [],
+      }));
+      alert(`✅ ${selectedLetterType} generated for employee!`);
+    } catch (err) {
+      console.error('Generation failed:', err);
+      const msg = err.response?.data?.error || 'Failed to generate letter';
+      alert(`❌ ${msg}`);
+    } finally {
+      setGeneratingFor(null);
+    }
+  };
+
+  const handleDeleteLetter = async (employeeId, filename) => {
+  if (!window.confirm(`Are you sure you want to delete "${filename}"?\nThis action cannot be undone.`)) {
+    return;
+  }
+
+  try {
+    // Call backend delete API
+    await deleteLetterApi(employeeId, filename);
+
+    // Update UI: remove the file from local state
+    setEmployeeLettersMap(prev => {
+      const updated = { ...prev };
+      updated[employeeId] = (updated[employeeId] || []).filter(file => file.name !== filename);
+      return updated;
     });
+
+    alert('✅ Letter deleted successfully!');
+  } catch (err) {
+    console.error('Delete error:', err);
+    const errorMsg = err.response?.data?.error || 'Failed to delete letter. Please try again.';
+    alert(`❌ ${errorMsg}`);
+  }
+};
+
+  const handleDownload = (url) => {
+    window.open(url, '_blank');
   };
 
-  // Handle create new letter
-  const handleCreateNew = () => {
-    alert('Create new letter functionality would go here');
-    // Here you would typically open a form to create new letter
-  };
-
-  // Handle create letter for specific person
-  const handleCreateForPerson = (person, e) => {
-    if (e) e.stopPropagation();
-    alert(`Create ${selectedLetterType} letter for ${person.employeeName}`);
-    // Here you would open create form with pre-filled person data
-  };
-
-  // Handle view letter
-  const handleViewLetter = (letter) => {
-    setSelectedLetter(letter);
-    setIsViewingLetter(true);
-  };
-
-  // Handle back to list
-  const handleBackToList = () => {
-    setSelectedLetter(null);
-    setIsViewingLetter(false);
-  };
-
-  // Handle download letter
-  const handleDownloadLetter = (letter, e) => {
-    if (e) e.stopPropagation();
-    alert(`Downloading ${selectedLetterType} letter for ${letter.employeeName}`);
-  };
-
-  // Generate letter content for preview
-  const generateLetterContent = (letter) => {
-    const letterType = letterTypes.find(type => type.id === selectedLetterType)?.name;
-    
-    return `
-${letterType.toUpperCase()}
-${'='.repeat(50)}
-
-Company Name: ABC Technologies
-Company Address: 123 Business Park, City, State
-
-Date: ${formatDate(letter.date)}
-
-Dear ${letter.employeeName},
-
-This is a sample ${selectedLetterType} letter for the position of ${letter.position} in the ${letter.department} department.
-
-${letter.joiningDate ? `Joining Date: ${formatDate(letter.joiningDate)}` : ''}
-
-We are pleased to offer you this position and look forward to having you on our team.
-
-Best regards,
-HR Department
-ABC Technologies
-
-${'='.repeat(50)}
-    `;
-  };
-
-  // Render letter list
-  const renderLetterList = () => {
-    const currentLetters = letters[selectedLetterType] || [];
-
-    return (
-      <div style={styles.listContainer}>
-        <div style={styles.listHeader}>
-          <h3 style={styles.listTitle}>
-            {letterTypes.find(type => type.id === selectedLetterType)?.name}
-            <span style={styles.countBadge}>{currentLetters.length}</span>
-          </h3>
-         
-        </div>
-
-        {currentLetters.length === 0 ? (
-          <div style={styles.emptyState}>
-            <div style={styles.emptyIcon}>📄</div>
-            <h4 style={styles.emptyTitle}>No {selectedLetterType} letters found</h4>
-            <p style={styles.emptyText}>
-              Get started by creating your first {selectedLetterType} letter.
-            </p>
-            <button 
-              onClick={handleCreateNew}
-              style={styles.createButton}
-            >
-              Create New Letter
-            </button>
-          </div>
-        ) : (
-          <div style={styles.lettersGrid}>
-            {currentLetters.map(letter => (
-              <div 
-                key={letter.id} 
-                style={styles.letterCard}
-              >
-                <div style={styles.cardHeader}>
-                  <h4 style={styles.employeeName}>{letter.employeeName}</h4>
-                  <div style={styles.position}>{letter.position}</div>
-                </div>
-                
-                <div style={styles.cardContent}>
-                  <div style={styles.detailRow}>
-                    <span style={styles.detailLabel}>Department:</span>
-                    <span style={styles.detailValue}>{letter.department}</span>
-                  </div>
-                  {letter.joiningDate && (
-                    <div style={styles.detailRow}>
-                      <span style={styles.detailLabel}>Joining Date:</span>
-                      <span style={styles.detailValue}>{formatDate(letter.joiningDate)}</span>
-                    </div>
-                  )}
-                  <div style={styles.detailRow}>
-                    <span style={styles.detailLabel}>Email:</span>
-                    <span style={styles.detailValue}>{letter.email}</span>
-                  </div>
-                  <div style={styles.detailRow}>
-                    <span style={styles.detailLabel}>Created:</span>
-                    <span style={styles.detailValue}>{formatDate(letter.date)}</span>
-                  </div>
-                </div>
-
-                <div style={styles.cardActions}>
-                  <button 
-                    onClick={() => handleViewLetter(letter)}
-                    style={styles.viewBtn}
-                  >
-                    View
-                  </button>
-                  <button 
-                    onClick={(e) => handleCreateForPerson(letter, e)}
-                    style={styles.createBtn}
-                  >
-                    Create
-                  </button>
-                  <button 
-                    onClick={(e) => handleDownloadLetter(letter, e)}
-                    style={styles.downloadBtn}
-                  >
-                    Download
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  // Render letter preview
-  const renderLetterPreview = () => {
-    if (!selectedLetter) return null;
-
-    return (
-      <div style={styles.previewContainer}>
-        <div style={styles.previewHeader}>
-          <button onClick={handleBackToList} style={styles.backButton}>
-            ← Back to List
-          </button>
-          <h3 style={styles.previewTitle}>
-            {selectedLetter.employeeName} - {selectedLetterType} Letter
-          </h3>
-          <div style={styles.previewActions}>
-            <button 
-              onClick={(e) => handleCreateForPerson(selectedLetter, e)}
-              style={styles.createButton}
-            >
-              + Create New
-            </button>
-            <button 
-              onClick={(e) => handleDownloadLetter(selectedLetter, e)}
-              style={styles.downloadButton}
-            >
-              Download Letter
-            </button>
-          </div>
-        </div>
-
-        <div style={styles.previewContent}>
-          <div style={styles.letterPreview}>
-            <pre style={styles.letterContent}>
-              {generateLetterContent(selectedLetter)}
-            </pre>
-          </div>
-          
-          <div style={styles.letterInfo}>
-            <h4 style={styles.infoTitle}>Letter Information</h4>
-            <div style={styles.infoGrid}>
-              <div style={styles.infoItem}>
-                <label style={styles.infoLabel}>Employee Name:</label>
-                <span style={styles.infoValue}>{selectedLetter.employeeName}</span>
-              </div>
-              <div style={styles.infoItem}>
-                <label style={styles.infoLabel}>Position:</label>
-                <span style={styles.infoValue}>{selectedLetter.position}</span>
-              </div>
-              <div style={styles.infoItem}>
-                <label style={styles.infoLabel}>Department:</label>
-                <span style={styles.infoValue}>{selectedLetter.department}</span>
-              </div>
-              <div style={styles.infoItem}>
-                <label style={styles.infoLabel}>Email:</label>
-                <span style={styles.infoValue}>{selectedLetter.email}</span>
-              </div>
-              <div style={styles.infoItem}>
-                <label style={styles.infoLabel}>Created Date:</label>
-                <span style={styles.infoValue}>{formatDate(selectedLetter.date)}</span>
-              </div>
-              {selectedLetter.joiningDate && (
-                <div style={styles.infoItem}>
-                  <label style={styles.infoLabel}>Joining Date:</label>
-                  <span style={styles.infoValue}>{formatDate(selectedLetter.joiningDate)}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+  const formatDate = (dateString) => {
+    if (!dateString) return '—';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
   };
 
   return (
     <div style={styles.container}>
       <h1 style={styles.header}>Letter Management</h1>
-      
-      <div style={styles.content}>
-        {/* Letter Type Selection */}
-        <div style={styles.section}>
-          <h3 style={styles.sectionTitle}>Select Letter Type</h3>
-          <div style={styles.letterTypeButtons}>
-            {letterTypes.map(type => (
-              <button
-                key={type.id}
-                style={{
-                  ...styles.letterTypeButton,
-                  ...(selectedLetterType === type.id ? styles.activeLetterType : {})
-                }}
-                onClick={() => {
-                  setSelectedLetterType(type.id);
-                  handleBackToList();
-                }}
-              >
-                <span style={styles.typeIcon}>{type.icon}</span>
-                {type.name}
-              </button>
-            ))}
-          </div>
-        </div>
 
-        {/* Main Content */}
-        <div style={styles.section}>
-          {isViewingLetter ? renderLetterPreview() : renderLetterList()}
+      {/* Letter Type Selector */}
+      <div style={styles.letterTypeSection}>
+        <h3 style={styles.sectionTitle}>Select Letter Type</h3>
+        <div style={styles.letterTypeButtons}>
+          {letterTypes.map((type) => (
+            <button
+              key={type.id}
+              style={{
+                ...styles.letterTypeButton,
+                ...(selectedLetterType === type.id ? styles.activeLetterType : {}),
+              }}
+              onClick={() => setSelectedLetterType(type.id)}
+            >
+              <span style={styles.typeIcon}>{type.icon}</span>
+              {type.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Employee List with Actions */}
+      <div style={styles.mainContent}>
+        {/* Employee List */}
+        <div style={styles.employeeListContainer}>
+          <h3 style={styles.listHeader}>Employees ({employees.length})</h3>
+          {loadingEmployees ? (
+            <p style={styles.loadingText}>Loading employees...</p>
+          ) : employees.length === 0 ? (
+            <p style={styles.emptyText}>No employees found.</p>
+          ) : (
+            <div style={styles.employeeList}>
+              {employees.map((emp) => {
+                const letters = employeeLettersMap[emp.id] || [];
+                return (
+                  <div key={emp.id} style={styles.employeeCard}>
+                    <div style={styles.employeeInfo}>
+                      <strong>{emp.name}</strong>
+                      <div>Emp ID: {emp.employee_id || '—'}</div>
+                      <div>Dept: {emp.department || '—'}</div>
+                      <div>Designation: {emp.designation || '—'}</div>
+                    </div>
+
+                    <div style={styles.actionButtons}>
+                      <button
+                        onClick={() => handleGenerateLetter(emp.id)}
+                        disabled={generatingFor === emp.id}
+                        style={styles.generateBtn}
+                      >
+                        {generatingFor === emp.id ? 'Generating...' : 'Generate'}
+                      </button>
+                    </div>
+
+                    {/* Show existing letters */}
+                    {letters.length > 0 && (
+                      <div style={styles.letterPreviewList}>
+                        <small style={styles.letterLabel}>Generated:</small>
+                        {letters.map((file, idx) => (
+                          <div key={idx} style={styles.fileRow}>
+                            <span style={styles.fileName}>{file.name.replace('.pdf', '')}</span>
+                           <button
+  onClick={() => handleDownload(file.url)}
+  style={styles.viewBtn}
+>
+  View
+</button>
+<span style={{ margin: '0 8px' }}></span> {/* Space between buttons */}
+<button
+  onClick={(e) => {
+    e.stopPropagation();
+    handleDeleteLetter(emp.id, file.name);
+  }}
+  style={styles.deleteBtn}
+>
+  Delete
+</button>
+<span style={{ margin: '0 8px' }}></span> {/* Space between Delete and Send */}
+<button
+  onClick={(e) => {
+    e.stopPropagation();
+    handleSend(emp.id, file.name); // Add your send handler function
+  }}
+  style={styles.sendBtn}
+>
+  Send
+</button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -362,287 +226,169 @@ ${'='.repeat(50)}
 // Styles
 const styles = {
   container: {
-    maxWidth: '1200px',
+    maxWidth: '1400px',
     margin: '0 auto',
     padding: '20px',
-    fontFamily: 'Arial, sans-serif'
+    fontFamily: 'Arial, sans-serif',
   },
   header: {
     textAlign: 'center',
     color: '#2c3e50',
-    marginBottom: '30px'
+    marginBottom: '20px',
   },
-  content: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '20px'
-  },
-  section: {
+  letterTypeSection: {
     backgroundColor: '#f8f9fa',
     padding: '20px',
     borderRadius: '8px',
-    border: '1px solid #e9ecef'
+    marginBottom: '20px',
+    border: '1px solid #e9ecef',
   },
   sectionTitle: {
-    marginTop: '0',
+    margin: '0 0 15px 0',
     color: '#495057',
-    borderBottom: '2px solid #dee2e6',
-    paddingBottom: '10px'
   },
   letterTypeButtons: {
     display: 'flex',
     gap: '10px',
-    flexWrap: 'wrap'
+    flexWrap: 'wrap',
   },
   letterTypeButton: {
-    padding: '12px 20px',
+    padding: '10px 16px',
     border: '2px solid #007bff',
     backgroundColor: 'white',
     color: '#007bff',
-    borderRadius: '8px',
+    borderRadius: '6px',
     cursor: 'pointer',
     fontSize: '14px',
-    fontWeight: 'bold',
-    transition: 'all 0.3s ease',
+    fontWeight: '600',
     display: 'flex',
     alignItems: 'center',
-    gap: '8px'
+    gap: '6px',
   },
   activeLetterType: {
     backgroundColor: '#007bff',
-    color: 'white'
+    color: 'white',
   },
   typeIcon: {
-    fontSize: '16px'
+    fontSize: '16px',
   },
-  listContainer: {
-    width: '100%'
+  mainContent: {
+    display: 'flex',
+    gap: '20px',
+  },
+  employeeListContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+    border: '1px solid #e9ecef',
+    borderRadius: '8px',
+    padding: '16px',
+    maxHeight: '70vh',
+    overflowY: 'auto',
   },
   listHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '20px'
-  },
-  listTitle: {
-    margin: '0',
+    margin: '0 0 16px 0',
+    padding: '0 0 10px',
+    borderBottom: '1px solid #eee',
     color: '#495057',
+  },
+  loadingText: {
+    textAlign: 'center',
+    color: '#6c757d',
+  },
+  emptyText: {
+    textAlign: 'center',
+    color: '#6c757d',
+    fontStyle: 'italic',
+  },
+  employeeList: {
     display: 'flex',
-    alignItems: 'center',
-    gap: '10px'
+    flexDirection: 'column',
+    gap: '16px',
   },
-  countBadge: {
-    backgroundColor: '#007bff',
-    color: 'white',
-    borderRadius: '12px',
-    padding: '2px 8px',
-    fontSize: '12px',
-    fontWeight: 'bold'
+  employeeCard: {
+    display: 'flex',
+    flexDirection: 'column',
+    padding: '14px',
+    border: '1px solid #e9ecef',
+    borderRadius: '8px',
+    backgroundColor: '#fafafa',
   },
-  createButton: {
-    padding: '10px 20px',
+  employeeInfo: {
+    fontSize: '14px',
+    marginBottom: '12px',
+    lineHeight: 1.4,
+  },
+  actionButtons: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+    marginBottom: '10px',
+  },
+  generateBtn: {
+    padding: '8px 16px',
     backgroundColor: '#28a745',
     color: 'white',
     border: 'none',
     borderRadius: '5px',
     cursor: 'pointer',
     fontSize: '14px',
-    fontWeight: 'bold'
+    fontWeight: 'bold',
   },
-  emptyState: {
-    textAlign: 'center',
-    padding: '40px 20px',
-    color: '#6c757d'
+  letterPreviewList: {
+    borderTop: '1px dashed #ccc',
+    paddingTop: '10px',
+    marginTop: '10px',
   },
-  emptyIcon: {
-    fontSize: '48px',
-    marginBottom: '15px'
-  },
-  emptyTitle: {
-    margin: '0 0 10px 0',
-    color: '#495057'
-  },
-  emptyText: {
-    margin: '0 0 20px 0'
-  },
-  lettersGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
-    gap: '20px'
-  },
-  letterCard: {
-    backgroundColor: 'white',
-    border: '1px solid #dee2e6',
-    borderRadius: '8px',
-    padding: '20px',
-    transition: 'all 0.3s ease',
-    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-  },
-  cardHeader: {
-    marginBottom: '15px'
-  },
-  employeeName: {
-    margin: '0 0 5px 0',
-    color: '#2c3e50',
-    fontSize: '18px',
-    fontWeight: 'bold'
-  },
-  position: {
-    margin: '0',
+  letterLabel: {
+    display: 'block',
+    marginBottom: '6px',
     color: '#6c757d',
-    fontSize: '14px',
-    fontStyle: 'italic'
+    fontSize: '12px',
   },
-  cardContent: {
-    marginBottom: '15px'
-  },
-  detailRow: {
+  fileRow: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: '8px',
-    paddingBottom: '8px',
-    borderBottom: '1px solid #f8f9fa'
+    padding: '4px 0',
+    fontSize: '13px',
   },
-  detailLabel: {
-    fontWeight: 'bold',
-    color: '#6c757d',
-    fontSize: '12px'
-  },
-  detailValue: {
-    color: '#495057',
-    fontSize: '14px'
-  },
-  cardActions: {
-    display: 'flex',
-    gap: '10px',
-    justifyContent: 'space-between'
+  fileName: {
+    flex: 1,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    color: '#2c3e50',
   },
   viewBtn: {
-    padding: '10px 15px',
+    padding: '4px 10px',
     backgroundColor: '#17a2b8',
     color: 'white',
     border: 'none',
-    borderRadius: '5px',
+    borderRadius: '4px',
     cursor: 'pointer',
-    fontSize: '14px',
-    flex: 1,
-    fontWeight: 'bold'
+    fontSize: '12px',
+    marginLeft: '8px',
   },
-  createBtn: {
-    padding: '10px 15px',
-    backgroundColor: '#ffc107',
-    color: 'black',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    fontSize: '14px',
-    flex: 1,
-    fontWeight: 'bold'
-  },
-  downloadBtn: {
-    padding: '10px 15px',
-    backgroundColor: '#28a745',
-    color: 'white',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    fontSize: '14px',
-    flex: 1,
-    fontWeight: 'bold'
-  },
-  previewContainer: {
-    width: '100%'
-  },
-  previewHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '20px',
-    flexWrap: 'wrap',
-    gap: '10px'
-  },
-  backButton: {
+  fileActions: {
+  display: 'flex',
+  gap: '8px',
+},
+deleteBtn: {
+  padding: '4px 10px',
+  backgroundColor: '#dc3545', // Bootstrap danger red
+  color: 'white',
+  border: 'none',
+  borderRadius: '4px',
+  cursor: 'pointer',
+  fontSize: '12px',
+  fontWeight: 'bold',
+},
+ sendBtn: {
     padding: '8px 16px',
-    backgroundColor: '#6c757d',
+    backgroundColor: '#dda31bff', // Green color for send action
     color: 'white',
     border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    fontSize: '14px'
-  },
-  previewTitle: {
-    margin: '0',
-    color: '#495057',
-    textAlign: 'center',
-    flex: 1
-  },
-  previewActions: {
-    display: 'flex',
-    gap: '10px'
-  },
-  downloadButton: {
-    padding: '10px 20px',
-    backgroundColor: '#28a745',
-    color: 'white',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: 'bold'
-  },
-  previewContent: {
-    display: 'grid',
-    gridTemplateColumns: '2fr 1fr',
-    gap: '20px'
-  },
-  letterPreview: {
-    backgroundColor: 'white',
-    border: '1px solid #dee2e6',
-    borderRadius: '5px',
-    padding: '20px',
-    maxHeight: '500px',
-    overflow: 'auto'
-  },
-  letterContent: {
-    whiteSpace: 'pre-wrap',
-    fontFamily: 'monospace',
-    fontSize: '14px',
-    lineHeight: '1.5',
-    margin: '0'
-  },
-  letterInfo: {
-    backgroundColor: 'white',
-    border: '1px solid #dee2e6',
-    borderRadius: '5px',
-    padding: '20px'
-  },
-  infoTitle: {
-    margin: '0 0 15px 0',
-    color: '#495057',
-    borderBottom: '1px solid #dee2e6',
-    paddingBottom: '10px'
-  },
-  infoGrid: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '12px'
-  },
-  infoItem: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingBottom: '8px',
-    borderBottom: '1px solid #f8f9fa'
-  },
-  infoLabel: {
-    fontWeight: 'bold',
-    color: '#6c757d',
-    fontSize: '14px'
-  },
-  infoValue: {
-    color: '#495057',
-    fontSize: '14px'
+    borderRadius: '4px',
+    cursor: 'pointer'
   }
 };
 

@@ -28,7 +28,8 @@ getAuditLogs,
 generateLetter,
 getEmployeeLetters,
 documentUpload,
-uploadEmployeeDocuments
+uploadEmployeeDocuments,
+deleteLetter
 } from "../controllers/admin.controller.js";
 const router = Router();
 // Admin Register and login
@@ -85,5 +86,5 @@ router.post(
   uploadEmployeeDocuments
 );
 
+router.delete("/letters/:employeeId/:filename", deleteLetter);
 export default router;
-//a

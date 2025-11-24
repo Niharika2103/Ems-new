@@ -91,7 +91,367 @@ public class SalaryStructure {
     @Column(name = "other_allowances")
     private BigDecimal otherAllowances;
 
-    @Column(name = "pf_employee")
+    public UUID getId() {
+		return id;
+	}
+
+	public void setId(UUID id) {
+		this.id = id;
+	}
+
+	public UUID getEmployeeId() {
+		return employeeId;
+	}
+
+	public void setEmployeeId(UUID employeeId) {
+		this.employeeId = employeeId;
+	}
+
+	public String getLocation() {
+		return location;
+	}
+
+	public void setLocation(String location) {
+		this.location = location;
+	}
+
+	public String getPanNumber() {
+		return panNumber;
+	}
+
+	public void setPanNumber(String panNumber) {
+		this.panNumber = panNumber;
+	}
+
+	public String getAadharLinkStatus() {
+		return aadharLinkStatus;
+	}
+
+	public void setAadharLinkStatus(String aadharLinkStatus) {
+		this.aadharLinkStatus = aadharLinkStatus;
+	}
+
+	public String getPfNumber() {
+		return pfNumber;
+	}
+
+	public void setPfNumber(String pfNumber) {
+		this.pfNumber = pfNumber;
+	}
+
+	public String getUanNumber() {
+		return uanNumber;
+	}
+
+	public void setUanNumber(String uanNumber) {
+		this.uanNumber = uanNumber;
+	}
+
+	public String getTaxRegime() {
+		return taxRegime;
+	}
+
+	public void setTaxRegime(String taxRegime) {
+		this.taxRegime = taxRegime;
+	}
+
+	public String getPayGroup() {
+		return payGroup;
+	}
+
+	public void setPayGroup(String payGroup) {
+		this.payGroup = payGroup;
+	}
+
+	public String getOcm() {
+		return ocm;
+	}
+
+	public void setOcm(String ocm) {
+		this.ocm = ocm;
+	}
+
+	public String getAccountNumber() {
+		return accountNumber;
+	}
+
+	public void setAccountNumber(String accountNumber) {
+		this.accountNumber = accountNumber;
+	}
+
+	public String getIfscCode() {
+		return ifscCode;
+	}
+
+	public void setIfscCode(String ifscCode) {
+		this.ifscCode = ifscCode;
+	}
+
+	public UUID getAccHolderId() {
+		return accHolderId;
+	}
+
+	public void setAccHolderId(UUID accHolderId) {
+		this.accHolderId = accHolderId;
+	}
+
+	public String getBankName() {
+		return bankName;
+	}
+
+	public void setBankName(String bankName) {
+		this.bankName = bankName;
+	}
+
+	public String getPaymentMethod() {
+		return paymentMethod;
+	}
+
+	public void setPaymentMethod(String paymentMethod) {
+		this.paymentMethod = paymentMethod;
+	}
+
+	public LocalDate getEffectiveFrom() {
+		return effectiveFrom;
+	}
+
+	public void setEffectiveFrom(LocalDate effectiveFrom) {
+		this.effectiveFrom = effectiveFrom;
+	}
+
+	public LocalDate getEffectiveTo() {
+		return effectiveTo;
+	}
+
+	public void setEffectiveTo(LocalDate effectiveTo) {
+		this.effectiveTo = effectiveTo;
+	}
+
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
+	}
+
+	public BigDecimal getBasicPay() {
+		return basicPay;
+	}
+
+	public void setBasicPay(BigDecimal basicPay) {
+		this.basicPay = basicPay;
+	}
+
+	public BigDecimal getHra() {
+		return hra;
+	}
+
+	public void setHra(BigDecimal hra) {
+		this.hra = hra;
+	}
+
+	public BigDecimal getDa() {
+		return da;
+	}
+
+	public void setDa(BigDecimal da) {
+		this.da = da;
+	}
+
+	public BigDecimal getConveyanceAllowance() {
+		return conveyanceAllowance;
+	}
+
+	public void setConveyanceAllowance(BigDecimal conveyanceAllowance) {
+		this.conveyanceAllowance = conveyanceAllowance;
+	}
+
+	public BigDecimal getMedicalAllowance() {
+		return medicalAllowance;
+	}
+
+	public void setMedicalAllowance(BigDecimal medicalAllowance) {
+		this.medicalAllowance = medicalAllowance;
+	}
+
+	public BigDecimal getSpecialAllowance() {
+		return specialAllowance;
+	}
+
+	public void setSpecialAllowance(BigDecimal specialAllowance) {
+		this.specialAllowance = specialAllowance;
+	}
+
+	public BigDecimal getOtherAllowances() {
+		return otherAllowances;
+	}
+
+	public void setOtherAllowances(BigDecimal otherAllowances) {
+		this.otherAllowances = otherAllowances;
+	}
+
+	public BigDecimal getPfEmployee() {
+		return pfEmployee;
+	}
+
+	public void setPfEmployee(BigDecimal pfEmployee) {
+		this.pfEmployee = pfEmployee;
+	}
+
+	public BigDecimal getPfEmployer() {
+		return pfEmployer;
+	}
+
+	public void setPfEmployer(BigDecimal pfEmployer) {
+		this.pfEmployer = pfEmployer;
+	}
+
+	public BigDecimal getEsi() {
+		return esi;
+	}
+
+	public void setEsi(BigDecimal esi) {
+		this.esi = esi;
+	}
+
+	public BigDecimal getProfessionalTax() {
+		return professionalTax;
+	}
+
+	public void setProfessionalTax(BigDecimal professionalTax) {
+		this.professionalTax = professionalTax;
+	}
+
+	public BigDecimal getIncomeTax() {
+		return incomeTax;
+	}
+
+	public void setIncomeTax(BigDecimal incomeTax) {
+		this.incomeTax = incomeTax;
+	}
+
+	public BigDecimal getLoanDeduction() {
+		return loanDeduction;
+	}
+
+	public void setLoanDeduction(BigDecimal loanDeduction) {
+		this.loanDeduction = loanDeduction;
+	}
+
+	public BigDecimal getOtherDeductions() {
+		return otherDeductions;
+	}
+
+	public void setOtherDeductions(BigDecimal otherDeductions) {
+		this.otherDeductions = otherDeductions;
+	}
+
+	public BigDecimal getStandardDays() {
+		return standardDays;
+	}
+
+	public void setStandardDays(BigDecimal standardDays) {
+		this.standardDays = standardDays;
+	}
+
+	public BigDecimal getDaysWorked() {
+		return daysWorked;
+	}
+
+	public void setDaysWorked(BigDecimal daysWorked) {
+		this.daysWorked = daysWorked;
+	}
+
+	public BigDecimal getLossOfDays() {
+		return lossOfDays;
+	}
+
+	public void setLossOfDays(BigDecimal lossOfDays) {
+		this.lossOfDays = lossOfDays;
+	}
+
+	public BigDecimal getLossOfPayReversalDays() {
+		return lossOfPayReversalDays;
+	}
+
+	public void setLossOfPayReversalDays(BigDecimal lossOfPayReversalDays) {
+		this.lossOfPayReversalDays = lossOfPayReversalDays;
+	}
+
+	public BigDecimal getPayableDays() {
+		return payableDays;
+	}
+
+	public void setPayableDays(BigDecimal payableDays) {
+		this.payableDays = payableDays;
+	}
+
+	public BigDecimal getGrossSalary() {
+		return grossSalary;
+	}
+
+	public void setGrossSalary(BigDecimal grossSalary) {
+		this.grossSalary = grossSalary;
+	}
+
+	public BigDecimal getTotalDeductions() {
+		return totalDeductions;
+	}
+
+	public void setTotalDeductions(BigDecimal totalDeductions) {
+		this.totalDeductions = totalDeductions;
+	}
+
+	public BigDecimal getNetSalary() {
+		return netSalary;
+	}
+
+	public void setNetSalary(BigDecimal netSalary) {
+		this.netSalary = netSalary;
+	}
+
+	public OffsetDateTime getCreatedAt() {
+		return createdAt;
+	}
+
+	public void setCreatedAt(OffsetDateTime createdAt) {
+		this.createdAt = createdAt;
+	}
+
+	public OffsetDateTime getUpdatedAt() {
+		return updatedAt;
+	}
+
+	public void setUpdatedAt(OffsetDateTime updatedAt) {
+		this.updatedAt = updatedAt;
+	}
+
+	public Integer getYear() {
+		return year;
+	}
+
+	public void setYear(Integer year) {
+		this.year = year;
+	}
+
+	public String getMonth() {
+		return month;
+	}
+
+	public void setMonth(String month) {
+		this.month = month;
+	}
+
+	public LocalDate getJoiningDate() {
+		return joiningDate;
+	}
+
+	public void setJoiningDate(LocalDate joiningDate) {
+		this.joiningDate = joiningDate;
+	}
+
+	@Column(name = "pf_employee")
     private BigDecimal pfEmployee;
 
     @Column(name = "pf_employer")

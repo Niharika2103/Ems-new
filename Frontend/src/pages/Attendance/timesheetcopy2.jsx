@@ -80,7 +80,6 @@ export default function Timesheet() {
     employeeId,
     viewType,
     currentStartDate,
-    employeeType = "regular", // Add employeeType to distinguish freelancer
   } = location.state || {};
 
   const [viewMode, setViewMode] = useState(viewType || "weekly");
@@ -89,8 +88,6 @@ export default function Timesheet() {
   const [leaveRows, setLeaveRows] = useState({ EL: Array(7).fill(0) });
   const [workedHours, setWorkedHours] = useState(Array(7).fill(0));
   const [monthlyWorkedHours, setMonthlyWorkedHours] = useState([]);
-  // Add shift rows state for freelancers
-  const [shiftRows, setShiftRows] = useState({});
 
   const [weekStart, setWeekStart] = useState(() => {
     if (currentStartDate && viewType === "weekly") {
@@ -131,17 +128,6 @@ export default function Timesheet() {
     remaining_leaves: 0,
     provided_leaves: 0,
   });
-
-  // --- Initialize shift rows for freelancers ---
-  useEffect(() => {
-    if (employeeType === "freelancer" && viewMode === "weekly") {
-      setShiftRows({
-        shift1: Array(7).fill(0),
-        shift2: Array(7).fill(0),
-        shift3: Array(7).fill(0)
-      });
-    }
-  }, [employeeType, viewMode]);
 
   // --- Extract backend balances from attendanceData ---
   useEffect(() => {
@@ -429,8 +415,6 @@ export default function Timesheet() {
     const len = viewMode === "weekly" ? 7 : getMonthDays(monthStart).length;
     if (row === "Worked Hours") {
       viewMode === "weekly" ? setWorkedHours(Array(len).fill(0)) : setMonthlyWorkedHours(Array(len).fill(0));
-    } else if (row.startsWith("shift")) {
-      setShiftRows(prev => ({ ...prev, [row]: Array(len).fill(0) }));
     } else {
       setLeaveRows((prev) => ({ ...prev, [row]: Array(len).fill(0) }));
       setApprovalStatus(prev => ({ ...prev, [row]: Array(len).fill("pending") }));
@@ -439,25 +423,17 @@ export default function Timesheet() {
   };
 
   const handleDeleteRow = (row) => {
-    if (row.startsWith("shift")) {
-      setShiftRows(prev => {
-        const updated = { ...prev };
-        delete updated[row];
-        return updated;
-      });
-    } else {
-      setUsedLeaveTypes((prev) => prev.filter((lt) => lt !== row));
-      setLeaveRows((prev) => {
-        const updated = { ...prev };
-        delete updated[row];
-        return updated;
-      });
-      setApprovalStatus(prev => {
-        const updated = { ...prev };
-        delete updated[row];
-        return updated;
-      });
-    }
+    setUsedLeaveTypes((prev) => prev.filter((lt) => lt !== row));
+    setLeaveRows((prev) => {
+      const updated = { ...prev };
+      delete updated[row];
+      return updated;
+    });
+    setApprovalStatus(prev => {
+      const updated = { ...prev };
+      delete updated[row];
+      return updated;
+    });
     handleMenuClose();
   };
 
@@ -590,18 +566,7 @@ export default function Timesheet() {
   usedLeaveTypes.forEach((lt) => {
     rowTotals[lt] = (leaveRows[lt] || Array(days.length).fill(0)).reduce((a, b) => a + Number(b || 0), 0);
   });
-  
-  // Calculate shift totals for freelancers
-  const shiftTotals = {};
-  if (employeeType === "freelancer" && viewMode === "weekly") {
-    Object.keys(shiftRows).forEach(shift => {
-      shiftTotals[shift] = (shiftRows[shift] || Array(days.length).fill(0)).reduce((a, b) => a + Number(b || 0), 0);
-    });
-  }
-  
-  const grandTotal = workedTotal + 
-    Object.values(rowTotals).reduce((a, b) => a + b, 0) + 
-    Object.values(shiftTotals).reduce((a, b) => a + b, 0);
+  const grandTotal = workedTotal + Object.values(rowTotals).reduce((a, b) => a + b, 0);
 
   // --- Fetch attendance data ---
   useEffect(() => {
@@ -651,8 +616,7 @@ export default function Timesheet() {
           </Popover>
         </Box>
         <Typography variant="h6" fontWeight="bold">
-          {viewMode === "weekly" ? "Weekly Timesheet" : "Monthly Timesheet"} 
-          {employeeType === "freelancer" && " (Freelancer)"}
+          {viewMode === "weekly" ? "Weekly Timesheet" : "Monthly Timesheet"}
         </Typography>
         <Button variant="contained" onClick={handleViewModeChange}>
           {viewMode === "weekly" ? "View Monthly" : "View Weekly"}
@@ -696,7 +660,7 @@ export default function Timesheet() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {/* Worked Hours - Show for ALL employees (both regular and freelancer) */}
+            {/* Worked Hours */}
             <TableRow>
               <TableCell sx={{ fontWeight: "bold" }}>Worked Hours</TableCell>
               {(currentWorkedHours || Array(days.length).fill(0)).map((h, i) => {
@@ -738,8 +702,7 @@ export default function Timesheet() {
                         width: 50,
                         height: 22,
                         textAlign: "center",
-                        // backgroundColor: getInputBackgroundColor("Worked Hours", i, h),
-                        backgroundColor: "#fff",
+                        backgroundColor: getInputBackgroundColor("Worked Hours", i, h),
                         border: "1px solid #ccc",
                         borderRadius: 4,
                       }}
@@ -771,76 +734,6 @@ export default function Timesheet() {
                 </IconButton>
               </TableCell>
             </TableRow>
-
-            {/* Shift Rows for Freelancers - Weekly View Only */}
-            {employeeType === "freelancer" && viewMode === "weekly" && Object.keys(shiftRows).map((shift) => (
-              <TableRow key={shift}>
-                <TableCell sx={{ fontWeight: "bold" }}>{shift.toUpperCase()}</TableCell>
-                {(shiftRows[shift] || Array(days.length).fill(0)).map((v, i) => {
-                  const dateStr = days[i].date.toISOString().slice(0, 10);
-                  const isWeekend = days[i].dayIndex === 0 || days[i].dayIndex === 6;
-                  const isHoliday = isHolidayDate(dateStr);
-                  
-                  if (isHoliday) {
-                    return (
-                      <TableCell key={i} align="center" sx={{ p: 0.5 }}>
-                        <input
-                          type="text"
-                          value="H"
-                          title={getHolidayName(dateStr)}
-                          disabled
-                          style={{
-                            width: 50,
-                            height: 22,
-                            textAlign: "center",
-                            backgroundColor: "#ffeaea",
-                            color: "#d32f2f",
-                            border: "1px solid #ccc",
-                            borderRadius: 4,
-                            fontWeight: "bold",
-                            cursor: "not-allowed",
-                          }}
-                        />
-                      </TableCell>
-                    );
-                  }
-                  
-                  return (
-                    <TableCell key={i} align="center" sx={{ p: 0.5 }}>
-                      <input
-                        type="number"
-                        value={v}
-                        min="0"
-                        max="9"
-                        step="0.5"
-                        style={{
-                          width: 50,
-                          height: 22,
-                          textAlign: "center",
-                          backgroundColor: isWeekend ? "#f0f0f0" : "#fff",
-                          border: "1px solid #ccc",
-                          borderRadius: 4,
-                        }}
-                        disabled={!isEditMode || isWeekend}
-                        onChange={(e) => {
-                          const val = parseHour(e.target.value);
-                          setShiftRows(prev => ({
-                            ...prev,
-                            [shift]: prev[shift].map((hour, idx) => idx === i ? val : hour)
-                          }));
-                        }}
-                      />
-                    </TableCell>
-                  );
-                })}
-                <TableCell align="center">{shiftTotals[shift] || 0}</TableCell>
-                <TableCell align="center">
-                  <IconButton onClick={(e) => handleMenuOpen(e, shift)}>
-                    <MoreVert />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
 
             {/* Leave Rows */}
             {usedLeaveTypes.map((lt) => (
@@ -906,10 +799,7 @@ export default function Timesheet() {
               <TableCell sx={{ fontWeight: "bold" }}>Target</TableCell>
               {days.map((_, i) => {
                 const total = (Number((currentWorkedHours || [])[i]) || 0) +
-                  usedLeaveTypes.reduce((sum, lt) => sum + (Number((leaveRows[lt] || [])[i]) || 0), 0) +
-                  (employeeType === "freelancer" && viewMode === "weekly" 
-                    ? Object.keys(shiftRows).reduce((sum, shift) => sum + (Number((shiftRows[shift] || [])[i]) || 0), 0)
-                    : 0);
+                  usedLeaveTypes.reduce((sum, lt) => sum + (Number((leaveRows[lt] || [])[i]) || 0), 0);
                 return <TableCell key={i} align="center">{total}</TableCell>;
               })}
               <TableCell align="center">{`${grandTotal}/45`}</TableCell>

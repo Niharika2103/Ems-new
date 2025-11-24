@@ -31,7 +31,7 @@ const EmpInfoDashboard = () => {
       icon: DescriptionIcon,
       iconBg: "bg-purple-100",
       iconColor: "text-purple-600",
-      onClick: () => navigate("/documents/letters"),
+      onClick: () => navigate("/documents/employees"),
     },
     {
       title: "Letters",
@@ -39,7 +39,9 @@ const EmpInfoDashboard = () => {
       icon: MailOutlineIcon,
       iconBg: "bg-pink-100",
       iconColor: "text-pink-600",
-      onClick: () => navigate("/documents/admin/letters"),
+      // onClick: () => navigate("/documents/admin/letters"),
+      onClick: () => navigate("/employee/letters"),
+      
     },
     {
       title: "Probation",
@@ -55,7 +57,7 @@ const EmpInfoDashboard = () => {
       icon: GroupAddIcon,
       iconBg: "bg-green-100",
       iconColor: "text-green-600",
-      onClick: () => navigate("/referrals"),
+      onClick: () => navigate("/dashboard/emp_info/referral"),
     },
   ];
 
