@@ -13,6 +13,7 @@ import dotenv from "dotenv";
 
 const USERS_TABLE = "user_employees_master";
 const REGISTRATIONS_TABLE = "registrations";
+const REFERRALS_TABLE = "referrals";
 
 // ================== JWT Helper ==================
 function issueJwt({ email, role, employee_id,id, is_temp_admin = false,name }) {
@@ -54,6 +55,7 @@ const storage = multer.diskStorage({
  // store file in memory
 export const upload = multer({ storage });
 
+//autogenerate the employee id
 async function generateEmployeeId(client) {
   const { rows } = await client.query(`SELECT employee_id FROM ${USERS_TABLE}`);
   const existingIds = rows
@@ -72,6 +74,30 @@ async function generateEmployeeId(client) {
   return `EMP${nextNum.toString().padStart(3, "0")}`;
 }
 
+//autogenerate the referral id
+async function generateReferralId(client) {
+  // find numeric parts of existing referral_ids
+  const { rows } = await client.query(
+    `SELECT referral_id FROM ${REFERRALS_TABLE} WHERE referral_id IS NOT NULL`
+  );
+
+  const nums = rows
+    .map(r => r.referral_id)
+    .filter(Boolean)
+    .map(id => {
+      const m = id.match(/REF0*([0-9]+)$/i);
+      return m ? parseInt(m[1], 10) : NaN;
+    })
+    .filter(n => !isNaN(n))
+    .sort((a, b) => a - b);
+
+  let next = 1;
+  for (const n of nums) {
+    if (n === next) next++;
+    else if (n > next) break;
+  }
+  return `REF${next.toString().padStart(3, "0")}`;
+}
 
 function validateEmployeeData(data) {
   const { fullName, email, phone, address } = data;
@@ -1169,7 +1195,7 @@ export const applyParentalLeave = async (req, res) => {
 };
 
 export const getFreelancers = async (req, res) => {
-  console.log("@1149", req.body);
+  
   const client = await pool.connect();
   try {
     const query = `
@@ -1190,3 +1216,162 @@ and employment_type = 'freelancer';
   }
 };
 
+// to create referrals
+export const createReferral = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    // Get logged-in employee from JWT
+    const user = getUserFromToken(req);
+    const employeeId = user.id; // This is the employee's DB UUID
+
+    // Get data from request
+    const { candidate_name, candidate_email, phone_number, position, work_exp } = req.body;
+
+    if (!candidate_name || !candidate_email || !phone_number || !position) {
+      return res.status(400).json({ error: "All fields are required." });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: "Resume (PDF) is required." });
+    }
+
+    // Fetch employee details from user_employees_master
+    const empQuery = `
+      SELECT id, employee_id, name, email 
+      FROM ${USERS_TABLE}
+      WHERE id = $1
+    `;
+    const empResult = await client.query(empQuery, [employeeId]);
+
+    if (empResult.rowCount === 0) {
+      return res.status(404).json({ error: "Employee not found." });
+    }
+
+    const employee = empResult.rows[0];
+
+    const duplicateQuery = `
+      SELECT *
+      FROM ${REFERRALS_TABLE}
+      WHERE (candidate_email = $1 OR phone_number = $2)
+      AND position = $3
+    `;
+    const dupCheck = await client.query(duplicateQuery, [
+      candidate_email,
+      phone_number,
+      position,
+    ]);
+
+    if (dupCheck.rowCount > 0) {
+      return res.status(409).json({
+        error: "Duplicate referral detected.",
+        message: "This candidate is already referred for this position.",
+        existing_referral: dupCheck.rows[0],
+      });
+    }
+
+    // Create JSON for uploading resume
+    const resumeJson = {
+      resume: req.file.filename,
+      
+    };
+
+    // Use your referral ID generator
+    const referralId = await generateReferralId(client);
+
+    // Insert referral into DB
+    const insertQuery = `
+      INSERT INTO ${REFERRALS_TABLE}
+      (referred_by, candidate_name, candidate_email, phone_number, position, 
+       work_exp, resume, referral_id, status, created_by, updated_by)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'Submitted',$9,$10)
+      RETURNING *
+    `;
+
+    const values = [
+      employee.id,              // referred_by (UUID)
+      candidate_name,
+      candidate_email,
+      phone_number,
+      position,
+      work_exp,
+      resumeJson,
+      referralId,
+      employee.name,
+      employee.name,
+    ];
+
+    const insertRes = await client.query(insertQuery, values);
+    const referral = insertRes.rows[0];
+
+    // Send email to employee
+    await sendEmail(
+      employee.email,
+      "Referral Submitted Successfully",
+      `
+        <h2>Your Referral Is Successfully Submitted</h2>
+        <p><strong>Referral ID:</strong> ${referralId}</p>
+        <p><strong>Candidate Name:</strong> ${candidate_name}</p>
+        <p><strong>Status:</strong> Submitted</p>
+        <br/>
+        <p>Thank you for submitting a referral!</p>
+      `
+    );
+
+    return res.status(201).json({
+      message: "Referral submitted successfully.",
+      referral_id: referralId,
+      referred_by: {
+        employee_id: employee.employee_id,
+        employee_name: employee.name,
+      },
+      referral,
+    });
+
+  } catch (err) {
+    console.error("Create Referral Error:", err.message);
+    return res.status(500).json({ error: "Internal server error." });
+  } finally {
+    client.release();
+  }
+};
+
+export const getMyReferrals = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const user = getUserFromToken(req);
+    const employeeId = user.id;
+
+    const query = `
+      SELECT 
+        referral_id,
+        candidate_name,
+        candidate_email,
+        phone_number,
+        position,
+        status,
+        referred_at,
+        work_exp,
+        resume
+      FROM ${REFERRALS_TABLE}
+      WHERE referred_by = $1
+      ORDER BY referred_at DESC
+    `;
+
+    const result = await client.query(query, [employeeId]);
+
+    return res.status(200).json({
+      total: result.rowCount,
+      referrals: result.rows,
+    });
+
+  } catch (err) {
+    console.error("Get My Referrals Error:", err.message);
+    return res.status(500).json({ error: "Internal server error." });
+  } finally {
+    client.release();
+  }
+};
+
+// a
