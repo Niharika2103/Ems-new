@@ -9,9 +9,10 @@ export const decodeToken = () => {
     return {
       email: decoded?.email || null,
       role: decoded?.role || null,
-      employeeId:decoded?.employee_id || null,
-       id: decoded?.id || null,
-       name : decoded?.name || null,
+      employeeId: decoded?.employee_id || null,
+      id: decoded?.id || null,
+      name: decoded?.name || null,
+      employment_type: decoded?.employment_type || null,
     };
   } catch (err) {
     console.error("Failed to decode token:", err);

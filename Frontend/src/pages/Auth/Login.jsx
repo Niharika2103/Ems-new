@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { replace, useNavigate } from "react-router-dom";
+import { decodeToken } from "../../api/decodeToekn";
 import {
   Box,
   Button,
@@ -53,6 +54,20 @@ export default function Login() {
     confirmPassword: "",
   });
 
+  useEffect(() => {
+    const getDecoded = async () => {
+      try {
+        const decoded = await decodeToken();
+        console.log(decoded, "decoded");
+      } catch (error) {
+        console.error("Error decoding token:", error);
+      }
+    };
+
+    getDecoded();
+
+
+  }, []);
   // Handle input changes and password validation
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -101,7 +116,7 @@ export default function Login() {
           return;
         }
       }
-      dispatch(employeeLogin({ email: formData.email, password: formData.password ,employment_type:formData.employment_type}))
+      dispatch(employeeLogin({ email: formData.email, password: formData.password, employment_type: formData.employment_type }))
         .unwrap()
         .then((response) => {
           if (response.firstLogin) {
@@ -112,7 +127,16 @@ export default function Login() {
             setOtp("");
             toast.info(response.message);
           } else {
-            navigate("/dashboard", { replace: true });
+            localStorage.setItem("token", response.token);
+            const decoded = decodeToken();                     
+            console.log("Decoded after login:", decoded.employment_type);
+           if(decoded.employment_type==="freelancer"){
+          navigate("/freelancer_dashboard", { replace: true });
+
+          }else{
+          navigate("/dashboard", { replace: true });
+
+          }
             window.onpopstate = null;
           }
         })
@@ -123,11 +147,20 @@ export default function Login() {
         return;
       }
 
-      dispatch(employeeLogin({ email: formData.email, password: formData.password, employment_type:formData.employment_type,otp }))
+      dispatch(employeeLogin({ email: formData.email, password: formData.password, employment_type: formData.employment_type, otp }))
         .unwrap()
         .then((response) => {
           toast.success(response.message);
+          localStorage.setItem("token", response.token);
+          const decoded = decodeToken();
+          console.log("Decoded after login:", decoded.employment_type);
+          if(decoded.employment_type==="freelancer"){
+          navigate("/freelancer_dashboard", { replace: true });
+
+          }else{
           navigate("/dashboard", { replace: true });
+
+          }
           window.onpopstate = null;
         })
         .catch((err) => toast.error(err.error || "OTP verification failed"));
@@ -136,7 +169,7 @@ export default function Login() {
 
   const handleForgotPasswordSubmit = (e) => {
     e.preventDefault();
-    
+
     if (!formData.email) {
       toast.error("Please enter your email address");
       return;
@@ -159,7 +192,7 @@ export default function Login() {
 
     // Here you would typically make an API call to reset the password
     toast.success("Password reset instructions sent to your email");
-    
+
     // Reset the form and go back to login
     setForgotPassword(false);
     setNewPasswordData({ newPassword: "", confirmPassword: "" });
@@ -172,8 +205,8 @@ export default function Login() {
   const isButtonDisabled = loading || (step === 1 ? !isStep1Valid : !isStep2Valid);
 
   // Enable Reset Password button
-  const isResetPasswordValid = formData.email.trim() !== "" && 
-    newPasswordData.newPassword.trim() !== "" && 
+  const isResetPasswordValid = formData.email.trim() !== "" &&
+    newPasswordData.newPassword.trim() !== "" &&
     newPasswordData.confirmPassword.trim() !== "";
 
   return (
@@ -249,8 +282,8 @@ export default function Login() {
                     InputProps={{
                       endAdornment: (
                         <InputAdornment position="end">
-                          <IconButton 
-                            edge="end" 
+                          <IconButton
+                            edge="end"
                             onClick={() => setShowPassword((prev) => !prev)}
                             aria-label={showPassword ? "Hide password" : "Show password"}
                           >
@@ -339,8 +372,8 @@ export default function Login() {
                     variant="contained"
                     size="small"
                     className="!px-1 !py-1 !text-md admin-button"
-                    sx={{ 
-                      mt: 2, 
+                    sx={{
+                      mt: 2,
                       fontSize: { xs: "0.9rem", sm: "1rem" },
                       py: 1.2
                     }}
@@ -385,8 +418,8 @@ export default function Login() {
                     InputProps={{
                       endAdornment: (
                         <InputAdornment position="end">
-                          <IconButton 
-                            edge="end" 
+                          <IconButton
+                            edge="end"
                             onClick={() => setShowPassword((prev) => !prev)}
                             aria-label={showPassword ? "Hide password" : "Show password"}
                           >

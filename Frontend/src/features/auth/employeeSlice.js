@@ -120,7 +120,8 @@ const employeeSlice = createSlice({
         state.token = action.payload.token || null;
         const role = action.payload.employee?.role || "employee";
         state.role = role;
-
+        const employment_type = action.payload.employee?.employment_type || null;
+        state.employment_type = employment_type;
 
         // EXTRACT is_temp_admin FLAG
         const is_temp_admin = action.payload.employee?.is_temp_admin || false;
@@ -134,6 +135,7 @@ const employeeSlice = createSlice({
           localStorage.setItem("token", action.payload.token);
         }
         localStorage.setItem("role", role);
+        localStorage.setItem("employment_type", employment_type);
         localStorage.setItem("is_temp_admin", is_temp_admin);
       })
       .addCase(employeeLogin.rejected, (state, action) => {
