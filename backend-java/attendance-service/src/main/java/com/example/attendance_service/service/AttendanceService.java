@@ -77,104 +77,114 @@ public class AttendanceService {
 				.collect(Collectors.toList());
 	}
 
-	
 	@Transactional
-public List<AttendanceEntity> saveOrUpdateAttendance(
-        UUID employeeId, UUID projectId,  List<AttendanceRequestDTO> attendanceList, String employeename) {
+	public List<AttendanceEntity> saveOrUpdateAttendance(
+	        UUID employeeId, UUID projectId, List<AttendanceRequestDTO> attendanceList, String employeename) {
 
-    if (employeeId == null || projectId == null) {
-        return Collections.emptyList();
-    }
+	    if (employeeId == null || projectId == null) {
+	        return Collections.emptyList();
+	    }
+
+	    UserEmployeeMasterEntity employee = userRepository.findById(employeeId)
+	            .orElseThrow(() -> new RuntimeException("Employee not found"));
+	    ProjectEntity project = projectRepository.findById(projectId)
+	            .orElseThrow(() -> new RuntimeException("Project not found"));
+
+	    double cumulativeTotal = 0.0;
+	    List<AttendanceEntity> allRecords = new ArrayList<>();
+
+	    if (attendanceList != null && !attendanceList.isEmpty()) {
+
+	        attendanceList.sort(Comparator.comparing(AttendanceRequestDTO::getDate));
+
+	        for (AttendanceRequestDTO dto : attendanceList) {
+	            LocalDate date = dto.getDate();
+	            if (date == null) continue;
+
+	            AttendanceEntity existing = attendanceRepository
+	                    .findByEmployee_IdAndProject_IdAndDate(employeeId, projectId, date)
+	                    .orElse(null);
+
+	            if (existing == null) {
+	                existing = new AttendanceEntity();
+	                existing.setEmployee(employee);
+	                existing.setProject(project);
+	                existing.setGender(employee.getGender());
+	                existing.setDate(date);
+	                existing.setYear(date.getYear());
+
+	                existing.setWorkingDays(0);
+	                existing.setWorkFromHome(0);
+	                existing.setHolidays(0);
+	                existing.setOptionalHolidays(0);
+	                existing.setEl(0);
+	                existing.setSl(0);
+	                existing.setExtraMilar(0);
+	                existing.setMaternityLeave(0);
+	                existing.setPaternityLeave(0);
+	                existing.setRemainingLeaves(0);
+	            }
+
+	            existing.setLeaveType(dto.getLeaveType());
+
+	            if (dto.getLeaveType() == null || dto.getLeaveType().isEmpty()) {
+	                existing.setWorkedHours(dto.getWorkedHours() != null ? dto.getWorkedHours() : 0.0);
+	            } else {
+	                existing.setWorkedHours(0.0);
+	            }
+
+	            existing.setStatus("draft");
+	            existing.setMonthlyStatus("draft");
+
+	            cumulativeTotal += existing.getWorkedHours();
+	            existing.setTotalWorkedHours(cumulativeTotal);
+
+	            // ----------------------------------------------------
+	            //            📌 WORKING DAYS CALCULATION LOGIC
+	            // ----------------------------------------------------
+	            LocalDate currentDate = existing.getDate();
+	            YearMonth currentMonth = YearMonth.from(currentDate);
+
+	            AttendanceEntity lastMonthlyRecord = attendanceRepository
+	                    .findTopByEmployee_IdAndProject_IdAndDateBeforeOrderByDateDesc(
+	                            employeeId, projectId, currentDate)
+	                    .orElse(null);
+
+	            int workingDays = 0;
+
+	            if (lastMonthlyRecord != null) {
+	                YearMonth lastRecordMonth = YearMonth.from(lastMonthlyRecord.getDate());
+
+	                if (lastRecordMonth.equals(currentMonth)) {
+	                	workingDays = safeGetOrDefault(lastMonthlyRecord.getWorkingDays(), 0);
 
 
+	                    if ((dto.getLeaveType() == null || dto.getLeaveType().isEmpty()) &&
+	                        dto.getWorkedHours() != null &&
+	                        dto.getWorkedHours() >= 9) {
 
-    UserEmployeeMasterEntity employee = userRepository.findById(employeeId)
-            .orElseThrow(() -> new RuntimeException("Employee not found"));
-    ProjectEntity project = projectRepository.findById(projectId)
-            .orElseThrow(() -> new RuntimeException("Project not found"));
+	                        workingDays += 1;
+	                    }
+	                }
+	            }
 
-    double cumulativeTotal = 0.0;
-    List<AttendanceEntity> allRecords = new ArrayList<>();
+	            existing.setWorkingDays(workingDays);
+	            // ----------------------------------------------------
 
-    if (attendanceList != null && !attendanceList.isEmpty()) {
-        // Sort by date so cumulative calculation works properly
-        attendanceList.sort(Comparator.comparing(AttendanceRequestDTO::getDate));
+	            attendanceRepository.save(existing);
+	            allRecords.add(existing);
+	        }
+	    }
 
-        for (AttendanceRequestDTO dto : attendanceList) {
-            LocalDate date = dto.getDate();
-            if (date == null) continue;
+	    return allRecords.stream()
+	            .sorted(Comparator.comparing(AttendanceEntity::getDate))
+	            .collect(Collectors.toList());
+	}
 
-            //  Find if record exists for that exact date
-            AttendanceEntity existing = attendanceRepository
-                    .findByEmployee_IdAndProject_IdAndDate(employeeId, projectId, date)
-                    .orElse(null);
+	private int safeGetOrDefault(Integer val, int defaultVal) {
+	    return val != null ? val : defaultVal;
+	}
 
-            if (existing == null) {
-                //  Create new record
-                existing = new AttendanceEntity();
-                existing.setEmployee(employee);
-                existing.setProject(project);
-                existing.setGender(employee.getGender());
-                existing.setDate(date);
-                existing.setYear(date.getYear());
-                
-                if (dto.getWorkedHours() == 0 && "sl".equalsIgnoreCase(dto.getLeaveType())) {
-                    // ✅ Case: Sick Leave (SL)
-                    LocalDate previousDate = dto.getDate().minusDays(1);
- 
-                    AttendanceEntity previousRecord = attendanceRepository
-                            .findByEmployee_IdAndProject_IdAndDate(employeeId, projectId, previousDate)
-                            .orElse(null);
- 
-                    if (previousRecord != null) {
-                        existing.setSl(previousRecord.getSl() - 1);
-                    }
-                }
-
-
-                // ✅ SET WEEKLY RECORD DEFAULTS (NOT org-level defaults!)
-                existing.setWorkingDays(0);
-                existing.setWorkFromHome(0);          // ← 0, not 315
-                existing.setHolidays(0);              // ← 0, not 10
-                existing.setOptionalHolidays(0);      // ← 0, not 2
-                existing.setEl(0);
-                existing.setSl(0);
-                existing.setExtraMilar(0);
-                existing.setMaternityLeave(0);
-                existing.setPaternityLeave(0);
-//                existing.setUpdatedBy(employeename);
-//                existing.setUpdatedAt(LocalDateTime.now());
-                existing.setRemainingLeaves(0);
-            }
-
-            // ✅ Update leave type and worked hours properly
-            existing.setLeaveType(dto.getLeaveType());
-
-            // If leaveType is empty or null → use workedHours from DTO
-            // Else (e.g., CL, SL, etc.) → set workedHours = 0
-            if (dto.getLeaveType() == null || dto.getLeaveType().isEmpty()) {
-                existing.setWorkedHours(dto.getWorkedHours() != null ? dto.getWorkedHours() : 0.0);
-            } else {
-                existing.setWorkedHours(0.0);
-            }
-
-            existing.setStatus("draft");
-            existing.setMonthlyStatus("draft");
-
-            // ✅ Cumulative total worked hours
-            cumulativeTotal += existing.getWorkedHours();
-            existing.setTotalWorkedHours(cumulativeTotal);
-
-            attendanceRepository.save(existing);
-            allRecords.add(existing);
-        }
-    }
-
-    // ✅ Return all saved or updated records sorted by date
-    return allRecords.stream()
-            .sorted(Comparator.comparing(AttendanceEntity::getDate))
-            .collect(Collectors.toList());
-}
 
 
 
@@ -338,9 +348,13 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 	            latest.getRemainingLeaves()
 	        );
 	    })
-	    .sorted(Comparator.comparing(AttendanceResponseDTO::getEmployeeName,
-	            Comparator.nullsLast(String::compareToIgnoreCase)))
-	    .collect(Collectors.toList());
+	    		.sorted(Comparator.comparing(
+	    		        AttendanceResponseDTO::getEmployeeName,
+	    		        Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)
+	    		))
+	    		.collect(Collectors.toList());
+
+
 	}
 	@Transactional
 	public boolean canApplyLeave(UUID employeeId, String leaveType, int requestedDays) {
