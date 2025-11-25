@@ -1,24 +1,32 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import employeeRoutes from "./routes/employee.routes.js";
+import path from "path";
+import { fileURLToPath } from "url";
+
+import freelancerRoutes from "./routes/Freelancer.routes.js";
+
+// Load environment variables
 dotenv.config();
 
 const app = express();
-app.use(cors({
-  origin: "*" // your Vercel frontend domain
-  
-}));
 app.use(express.json());
-app.get("/test-email", async (req, res) => {
-  try {
-    await sendEmail("yourpersonal@gmail.com", "Test Email", "<b>Hello from EMS</b>");
-    res.send("Email sent!");
-  } catch (err) {
-    res.status(500).send("Email failed: " + err.response?.body || err.message);
-  }
-});
-app.use("/employee", employeeRoutes);
+app.use(cors());
 
-const PORT = process.env.PORT || 5004;
-app.listen(PORT, () => console.log(`✅ Employee service running on port ${PORT}`));
+// ES Module dirname & filename handling
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Serve uploaded files
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// Routes
+app.use("/freelancer", freelancerRoutes);
+
+// Port
+const PORT = process.env.PORT || 5005;
+
+app.listen(PORT, () => {
+  console.log(`🚀 Freelancer-service running on port ${PORT}`);
+});
+//
