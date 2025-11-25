@@ -65,11 +65,6 @@ public interface AttendanceRepository extends JpaRepository<AttendanceEntity, UU
 	// ✅ Fetch last approved record for carrying balances
 	Optional<AttendanceEntity> findTopByEmployee_IdAndStatusOrderByDateDesc(UUID employeeId, String status);
 
-	
-	Optional<AttendanceEntity> findTopByEmployee_IdAndProject_IdAndDateBeforeOrderByDateDesc(
-	        UUID employeeId, UUID projectId, LocalDate date
-	);
-
 	// ✅ Find last approved attendance BEFORE a given date
 	
 	@Query("SELECT a FROM AttendanceEntity a " +

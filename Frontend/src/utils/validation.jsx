@@ -94,10 +94,10 @@ if (!formData.designation || formData.designation.trim().length < 2) {
 
   
   const validTypes = ["freelancer", "contract", "fulltime"];
-  if (!formData.employment_type) {
-    errors.employment_type = "Employment type is required";
-  } else if (!validTypes.includes(formData.employment_type)) {
-    errors.employment_type =
+  if (!formData.employmentType) {
+    errors.employmentType = "Employment type is required";
+  } else if (!validTypes.includes(formData.employmentType)) {
+    errors.employmentType =
       "Employment type must be fulltime, contract, or freelancer";
   }
   return errors;
@@ -302,10 +302,10 @@ export const validateEmployeeEdit = (formData) => {
   }
 
   const validTypes = ["freelancer", "contract", "fulltime"];
-  if (!formData.employment_type) {
-    errors.employment_type = "Employment Type is required";
-  } else if (!validTypes.includes(formData.employment_type)) {
-    errors.employment_type =
+  if (!formData.employmentType) {
+    errors.employmentType = "Employment Type is required";
+  } else if (!validTypes.includes(formData.employmentType)) {
+    errors.employmentType =
       "Employment Type must be fulltime, contract, or freelancer";
   }
 
