@@ -16,9 +16,9 @@ const REGISTRATIONS_TABLE = "registrations";
 const REFERRALS_TABLE = "referrals";
 
 // ================== JWT Helper ==================
-function issueJwt({ email, role, employee_id,id, is_temp_admin = false,name }) {
+function issueJwt({ email, role, employee_id,employment_type,id, is_temp_admin = false,name }) {
   return jwt.sign(
-    { email, role, employee_id, is_temp_admin ,id,name},
+    { email, role, employee_id,employment_type,is_temp_admin ,id,name},
     process.env.JWT_SECRET,
     { expiresIn: "1h" }
   );
@@ -367,7 +367,7 @@ export const registerEmployee = async (req, res) => {
 export const employeeLogin = async (req, res) => {
   const client = await pool.connect();
   try {
-    const { email, password, otp } = req.body;
+    const { email, password, employment_type,otp, } = req.body;
 
     const userRes = await client.query(
       `SELECT * FROM ${USERS_TABLE} WHERE email = $1 AND role IN ('employee','admin','superadmin')`,
@@ -379,6 +379,17 @@ export const employeeLogin = async (req, res) => {
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) return res.status(401).json({ error: "Invalid Password" });
 
+      if (user.role === "employee") {
+      if (!employment_type) {
+        return res.status(400).json({ error: "Employment type is required" });
+      }
+
+      // DB match check: fulltime / contract / freelancer
+      if (user.employment_type !== employment_type) {
+        return res.status(401).json({ error: "Invalid employment type" });
+      }
+    }
+    
     // Admin/Superadmin MFA flow
     if (["admin", "superadmin"].includes(user.role)) {
       if (!otp) {
@@ -399,6 +410,7 @@ export const employeeLogin = async (req, res) => {
       const token = issueJwt({
         email: user.email,
         role: user.role,
+        employment_type:user.employment_type,
         id: user.id,
         name: user.name,
       });
@@ -411,6 +423,7 @@ export const employeeLogin = async (req, res) => {
           email: user.email,
           role: user.role,
           mfa_enabled: user.mfa_enabled,
+          employment_type:user.employment_type,
         },
       });
     }
@@ -464,6 +477,7 @@ export const employeeLogin = async (req, res) => {
     const token = issueJwt({
       email: user.email,
       role: user.role,
+       employment_type: user.employment_type, 
       employee_id: user.employee_id,
       is_temp_admin: isTempAdmin,
       id: user.id,
@@ -474,6 +488,7 @@ export const employeeLogin = async (req, res) => {
       token,
       employee: {
         employeeId: user.employee_id,
+            employment_type:user.employment_type,
         fullName: user.name,
         email: user.email,
         is_temp_admin: isTempAdmin,

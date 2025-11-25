@@ -10,8 +10,8 @@ import {
   CardContent,
 } from "@mui/material";
 import { useDispatch } from "react-redux";
-import { uploadEmployeeDocuments } from "../../features/auth/adminSlice";;
-import { useSearchParams } from "react-router-dom";
+import { uploadEmployeeDocuments } from "../../features/auth/adminSlice";
+import { useSearchParams, useNavigate } from "react-router-dom";
 
 const steps = [
   "Bank Passbook Upload",
@@ -23,11 +23,10 @@ const steps = [
 
 const Letters = () => {
   const [activeStep, setActiveStep] = useState(0);
-
   const dispatch = useDispatch();
   const [searchParams] = useSearchParams();
-const employeeId = searchParams.get("employeeId");
-
+  const employeeId = searchParams.get("employeeId");
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     bankPassbook: null,
@@ -46,57 +45,49 @@ const employeeId = searchParams.get("employeeId");
   };
 
   const handleFileChange = (e, key) => {
-  const files = e.target.files;
+    const files = e.target.files;
 
-  // Handle case where user cancels file selection
-  if (!files || files.length === 0) {
-    setFormData(prev => ({
-      ...prev,
-      [key]: (key === 'educationFiles' || key === 'previousDocs') ? [] : null
-    }));
-    return;
-  }
+    if (!files || files.length === 0) {
+      setFormData(prev => ({
+        ...prev,
+        [key]: (key === 'educationFiles' || key === 'previousDocs') ? [] : null
+      }));
+      return;
+    }
 
-  if (key === 'educationFiles' || key === 'previousDocs') {
-    setFormData(prev => ({
-      ...prev,
-      [key]: Array.from(files)
-    }));
-  } else {
-    setFormData(prev => ({
-      ...prev,
-      [key]: files[0]
-    }));
-  }
-};
-
-  // const handleSubmit = () => {
-  //   alert("All documents submitted successfully!");
-  //   console.log(formData);
-  // };
-
-  const handleSubmit = () => {
-  const data = {
-    passbook: formData.bankPassbook,
-    aadhaar: formData.aadhaarCard,
-    pan: formData.panCard,
-    educational_docs: formData.educationFiles,
-    experience_docs: formData.previousDocs,
+    if (key === 'educationFiles' || key === 'previousDocs') {
+      setFormData(prev => ({
+        ...prev,
+        [key]: Array.from(files)
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [key]: files[0]
+      }));
+    }
   };
 
-  dispatch(uploadEmployeeDocuments({ employeeId, data }))
-    .unwrap()
-    .then(() => {
-      alert("Documents uploaded successfully!");
-      
-    })
-    .catch((err) => {
-      alert("Upload failed: " + (err?.error || err));
-    });
-};
+  const handleSubmit = () => {
+    const data = {
+      passbook: formData.bankPassbook,
+      aadhaar: formData.aadhaarCard,
+      pan: formData.panCard,
+      educational_docs: formData.educationFiles,
+      experience_docs: formData.previousDocs,
+    };
 
-
-
+    dispatch(uploadEmployeeDocuments({ employeeId, data }))
+      .unwrap()
+      .then(() => {
+        alert("Documents uploaded successfully!");
+        // Navigate to employee documents list table
+        // navigate("/employee/documents/list");
+      })
+      .catch((err) => {
+        alert("Upload failed: " + (err?.error || err));
+      });
+  };
 
   // File requirements configuration
   const fileRequirements = {
@@ -203,7 +194,6 @@ const employeeId = searchParams.get("employeeId");
                   Please upload a clear image or PDF of your bank passbook showing your account details
                 </Typography>
 
-                {/* Upload Bank Passbook */}
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "center" }}>
                   <Button 
                     variant="contained" 
@@ -251,7 +241,6 @@ const employeeId = searchParams.get("employeeId");
                   Step 2: Aadhaar & PAN Upload
                 </Typography>
 
-                {/* Upload Aadhaar */}
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                   <Typography variant="subtitle1" sx={{ fontSize: "1.1rem", fontWeight: 500 }}>
                     Upload Aadhaar Card
@@ -279,7 +268,6 @@ const employeeId = searchParams.get("employeeId");
 
                 <FileRequirementsBox type="aadhaarCard" />
 
-                {/* Upload PAN */}
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
                   <Typography variant="subtitle1" sx={{ fontSize: "1.1rem", fontWeight: 500 }}>
                     Upload PAN Card
@@ -332,26 +320,20 @@ const employeeId = searchParams.get("employeeId");
                     />
                   </Button>
                   
-                  {formData.educationFiles && (
+                  {formData.educationFiles && formData.educationFiles.length > 0 && (
                     <Box sx={{ mt: 2, p: 2, border: "1px dashed #ccc", borderRadius: 1, width: "100%" }}>
                       <Typography variant="subtitle1" fontWeight="bold" color="primary">
                         Selected Files:
                       </Typography>
-                      {Array.isArray(formData.educationFiles) ? (
-                        formData.educationFiles.map((file, index) => (
-                          <Typography key={index} variant="body2" color="text.secondary">
-                            • {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
-                          </Typography>
-                        ))
-                      ) : (
-                        <Typography variant="body2" color="text.secondary">
-                          • {formData.educationFiles.name} ({(formData.educationFiles.size / 1024 / 1024).toFixed(2)} MB)
+                      {formData.educationFiles.map((file, index) => (
+                        <Typography key={index} variant="body2" color="text.secondary">
+                          • {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
                         </Typography>
-                      )}
+                      ))}
                     </Box>
                   )}
                   
-                  {!formData.educationFiles && (
+                  {(!formData.educationFiles || formData.educationFiles.length === 0) && (
                     <Typography variant="body2" color="text.secondary">
                       No files chosen
                     </Typography>
@@ -385,26 +367,20 @@ const employeeId = searchParams.get("employeeId");
                     />
                   </Button>
                   
-                  {formData.previousDocs && (
+                  {formData.previousDocs && formData.previousDocs.length > 0 && (
                     <Box sx={{ mt: 2, p: 2, border: "1px dashed #ccc", borderRadius: 1, width: "100%" }}>
                       <Typography variant="subtitle1" fontWeight="bold" color="primary">
                         Selected Files:
                       </Typography>
-                      {Array.isArray(formData.previousDocs) ? (
-                        formData.previousDocs.map((file, index) => (
-                          <Typography key={index} variant="body2" color="text.secondary">
-                            • {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
-                          </Typography>
-                        ))
-                      ) : (
-                        <Typography variant="body2" color="text.secondary">
-                          • {formData.previousDocs.name} ({(formData.previousDocs.size / 1024 / 1024).toFixed(2)} MB)
+                      {formData.previousDocs.map((file, index) => (
+                        <Typography key={index} variant="body2" color="text.secondary">
+                          • {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
                         </Typography>
-                      )}
+                      ))}
                     </Box>
                   )}
                   
-                  {!formData.previousDocs && (
+                  {(!formData.previousDocs || formData.previousDocs.length === 0) && (
                     <Typography variant="body2" color="text.secondary">
                       No files chosen
                     </Typography>
@@ -440,26 +416,21 @@ const employeeId = searchParams.get("employeeId");
                   </Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                     🎓 Education Files:{" "}
-                    {formData.educationFiles
-                      ? Array.isArray(formData.educationFiles)
-                        ? formData.educationFiles.map((f) => `${f.name} (${(f.size / 1024 / 1024).toFixed(2)} MB)`).join(", ")
-                        : `${formData.educationFiles.name} (${(formData.educationFiles.size / 1024 / 1024).toFixed(2)} MB)`
-                      : "No file chosen"}
+                    {formData.educationFiles && formData.educationFiles.length > 0
+                      ? formData.educationFiles.map((f) => `${f.name} (${(f.size / 1024 / 1024).toFixed(2)} MB)`).join(", ")
+                      : "No files chosen"}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     💼 Company Docs:{" "}
-                    {formData.previousDocs
-                      ? Array.isArray(formData.previousDocs)
-                        ? formData.previousDocs.map((f) => `${f.name} (${(f.size / 1024 / 1024).toFixed(2)} MB)`).join(", ")
-                        : `${formData.previousDocs.name} (${(formData.previousDocs.size / 1024 / 1024).toFixed(2)} MB)`
-                      : "No file chosen"}
+                    {formData.previousDocs && formData.previousDocs.length > 0
+                      ? formData.previousDocs.map((f) => `${f.name} (${(f.size / 1024 / 1024).toFixed(2)} MB)`).join(", ")
+                      : "No files chosen"}
                   </Typography>
                 </Box>
               </Box>
             )}
           </Box>
 
-          {/* Navigation Buttons */}
           <Box sx={{ mt: 5, display: "flex", justifyContent: "space-between" }}>
             <Button disabled={activeStep === 0} variant="outlined" onClick={handleBack}>
               Back

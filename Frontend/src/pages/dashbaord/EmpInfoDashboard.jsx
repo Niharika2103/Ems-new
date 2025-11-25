@@ -31,7 +31,8 @@ const EmpInfoDashboard = () => {
       icon: DescriptionIcon,
       iconBg: "bg-purple-100",
       iconColor: "text-purple-600",
-      onClick: () => navigate("/dashboard/freelancer/documents"),
+      // onClick: () => navigate("/dashboard/freelancer/documents"),//employee,freelancer
+      onClick: () => navigate("/documents/employees")//admin
     },
     {
       title: "Letters",
@@ -57,7 +58,8 @@ const EmpInfoDashboard = () => {
       icon: GroupAddIcon,
       iconBg: "bg-green-100",
       iconColor: "text-green-600",
-      onClick: () => navigate("/dashboard/emp_info/referral"),
+      // onClick: () => navigate("/dashboard/emp_info/referral"),
+      onClick: () => navigate("/admin/referrals"),
     },
   ];
 
