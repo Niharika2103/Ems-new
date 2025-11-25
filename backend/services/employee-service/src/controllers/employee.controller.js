@@ -410,6 +410,7 @@ export const employeeLogin = async (req, res) => {
       const token = issueJwt({
         email: user.email,
         role: user.role,
+        employment_type:user.employment_type,
         id: user.id,
         name: user.name,
       });
@@ -422,6 +423,7 @@ export const employeeLogin = async (req, res) => {
           email: user.email,
           role: user.role,
           mfa_enabled: user.mfa_enabled,
+          employment_type:user.employment_type,
         },
       });
     }
@@ -486,7 +488,7 @@ export const employeeLogin = async (req, res) => {
       token,
       employee: {
         employeeId: user.employee_id,
-            employee_type:user.employeeType,
+            employment_type:user.employment_type,
         fullName: user.name,
         email: user.email,
         is_temp_admin: isTempAdmin,

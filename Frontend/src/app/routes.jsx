@@ -44,6 +44,7 @@ import FreelancerDashboard from  "../pages/dashbaord/FreelancerDashboard";
 import FreelancerInfo from  "../pages/Freelancer/FreelancerInfo";
 import FreelancerTable from  "../pages/Freelancer/freelancerTable";
 import FreelancerAttendance from  "../pages/Freelancer/FreelancerAttendance";
+import FreelancerHolidayList from  "../pages/Freelancer/FreelancerHolidayList";
 import FreelancerProjectTable from  "../pages/Freelancer/FreelancerProjectTable";
 import FreelancerDocuments from  "../pages/Freelancer/FreelancerDocuments";
 import FreelancerAssignProjectpage from  "../pages/Freelancer/FreelancerAssignProjectpage";
@@ -51,6 +52,7 @@ import TimesheetApprovalList from '../pages/Freelancer/Attendance/TimesheetAppro
 import ReferCandidatePage from "../pages/Referral/ReferCandidatePage";
 import AdminReferralDashboard from '../pages/Referral/AdminReferralDashboard';
 import SalaryStructure from '../pages/Accounts/SalaryStructure';
+import EmpTypeFreelancerDashboard from '../pages/dashbaord/EmpTypeFreelancerDashboard';
 
 function AppRoutes() {
   return (
@@ -85,14 +87,23 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/freelancer_dashboard"
+          element={
+            <ProtectedRoute>
+              <EmpTypeFreelancerDashboard />
+            </ProtectedRoute>
+          }
+
+        />
         <Route path="/payslip" element={
-           <ProtectedRoute allowedRoles={["employee"]}>
+          <ProtectedRoute allowedRoles={["employee"]}>
             <EmpPayslip />
           </ProtectedRoute>
         } />
-          
-        
-        
+
+
+
         <Route path="dashboard/employee/leave" element={
           <ProtectedRoute allowedRoles={["employee"]}>
             <EmployeeLeave />
@@ -106,22 +117,22 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-        <Route 
-      path="/dashboard/freelancer"
-      element={
-        <ProtectedRoute allowedRoles={["admin"]}>
-          <FreelancerDashboard/>
-        </ProtectedRoute>
-      }
-      />
-        <Route 
-      path="/accounts/salary-structure"
-      element={
-        <ProtectedRoute allowedRoles={["admin"]}>
-          <SalaryStructure/>
-        </ProtectedRoute>
-      }
-      />
+        <Route
+          path="/dashboard/freelancer"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <FreelancerDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/accounts/salary-structure"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <SalaryStructure />
+            </ProtectedRoute>
+          }
+        />
 
 
         <Route
@@ -137,8 +148,8 @@ function AppRoutes() {
 
         {/* Dashboard & profile (accessible to all logged-in users) */}
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/profile" 
-        element={
+        <Route path="/profile"
+          element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <Profile />
             </ProtectedRoute>
@@ -165,6 +176,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute allowedRoles={["employee", "admin"]}>
               <EmployeeHolidayList />
+            </ProtectedRoute>
+          }
+        />
+         <Route
+          path="/dashboard/freelancer/holiday"
+          element={
+            <ProtectedRoute allowedRoles={["employee", "admin"]}>
+              <FreelancerHolidayList />
             </ProtectedRoute>
           }
         />
@@ -206,7 +225,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-         <Route
+        <Route
           path="/dashboard/freelancer/freelancerattendance"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
@@ -214,16 +233,16 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-         <Route path="/freelancer/attendance/timesheet-approval" 
-         element={
-             <ProtectedRoute allowedRoles={["admin"]}>
+        <Route path="/freelancer/attendance/timesheet-approval"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
               <TimesheetApprovalList />
             </ProtectedRoute>
           }
         />
 
-       
-          <Route
+
+        <Route
           path="/dashboard/freelancer/projects"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
@@ -232,7 +251,7 @@ function AppRoutes() {
           }
         />
 
-         <Route
+        <Route
           path="/dashboard/freelancer/assign_projects"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
@@ -250,12 +269,12 @@ function AppRoutes() {
           }
         />
         <Route
-        path="/dashboard/emp_info/referral"
-        element={
-          <ProtectedRoute allowedRoles={["employee"]}>
-          <ReferCandidatePage/>
-          </ProtectedRoute>
-        }
+          path="/dashboard/emp_info/referral"
+          element={
+            <ProtectedRoute allowedRoles={["employee"]}>
+              <ReferCandidatePage />
+            </ProtectedRoute>
+          }
         />
 
         <Route path="/admin/referrals"
@@ -269,8 +288,8 @@ function AppRoutes() {
 
 
 
-{/* <Route path="/freelancer/projects" element={<FreelancerProjectTable />} /> */}
-        
+        {/* <Route path="/freelancer/projects" element={<FreelancerProjectTable />} /> */}
+
         <Route
           path="/dashboard/emp_info"
           element={
@@ -279,7 +298,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-         
+
         <Route
           path="/dashboard/add_project"
           element={
@@ -337,9 +356,9 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-         <Route 
-            path="/documents/employees" 
-            element={
+        <Route
+          path="/documents/employees"
+          element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <EmployeeDocumentUpload />
             </ProtectedRoute>
@@ -363,10 +382,10 @@ function AppRoutes() {
           }
         />
 
-         <Route path="/documents/admin/letters"
+        <Route path="/documents/admin/letters"
           element={
-           <ProtectedRoute allowedRoles={["admin"]}>
-              < AdminLetterGenerator/>
+            <ProtectedRoute allowedRoles={["admin"]}>
+              < AdminLetterGenerator />
             </ProtectedRoute>
           }
         />
@@ -386,7 +405,7 @@ function AppRoutes() {
           }
         />
       </Route>
-      
+
     </Routes>
 
 

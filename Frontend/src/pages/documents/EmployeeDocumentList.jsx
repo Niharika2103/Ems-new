@@ -177,14 +177,14 @@ const EmployeeDocumentList = () => {
                     {Object.keys(documentTypes).map(docType => {
                       const count = getDocumentTypeCount(employee, docType);
                       if (count > 0) {
-                        return (
-                          <Chip
-                            key={docType}
-                            label={`${documentTypes[docType].label}: ${count}`}
-                            size="small"
-                            variant="outlined"
-                          />
-                        );
+                        // return (
+                        //   <Chip
+                        //     key={docType}
+                        //     label={`${documentTypes[docType].label}: ${count}`}
+                        //     size="small"
+                        //     variant="outlined"
+                        //   />
+                        // );
                       }
                       return null;
                     })}

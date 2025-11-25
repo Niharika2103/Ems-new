@@ -43,7 +43,7 @@ const FreelancerDashboard = () => {
       icon: AssignmentIcon,
       iconBg: "bg-gradient-to-r from-pink-100 to-rose-200",
       iconColor: "text-pink-700",
-    //   onClick: () => navigate("/dashboard/employee/holiday"),
+      onClick: () => navigate("/dashboard/freelancer/holiday"),
     },
   ];
 
