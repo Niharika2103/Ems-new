@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { Home, Users, Calendar, Settings, LogOut, CheckSquare } from "lucide-react";
+import { Home, Users, Calendar, Settings, LogOut, CheckSquare,Briefcase } from "lucide-react";
 import { useSelector } from "react-redux";
 
 const Sidebar = ({ isOpen, handleClose }) => {
@@ -34,6 +34,7 @@ const Sidebar = ({ isOpen, handleClose }) => {
     //  Full time employee
     employeeMenus = [
       { name: "Dashboard", icon: <Home size={20} />, path: "/dashboard" },
+      { name: "Job Posting", icon: <Briefcase size={20} />, path: "/dashboard/JobPostDashboard" },
       { name: "Attendance", icon: <Calendar size={20} />, path: "/dashboard/emp_attendance" },
       { name: "HR", icon: <CheckSquare size={20} />, path: "/hr" },
       { name: "Payslip", icon: <Users size={20} />, path: "/slip" },
@@ -44,6 +45,7 @@ const Sidebar = ({ isOpen, handleClose }) => {
   const roleMenus = {
     admin: [
       { name: "Dashboard", icon: <Home size={20} />, path: "/dashboard" },
+      { name: "Job Posting", icon: <Briefcase size={20} />, path: "/dashboard/JobPostDashboard" },
       { name: "Manage Employees", icon: <Users size={20} />, path: "/dashboard/emp_requestTable" },
       { name: "Attendance", icon: <Calendar size={20} />, path: "/dashboard/attendance" },
       { name: "Freelancer", icon: <CheckSquare size={20} />, path: "/dashboard/freelancer" },
@@ -52,6 +54,7 @@ const Sidebar = ({ isOpen, handleClose }) => {
     ],
     superadmin: [
       { name: "Dashboard", icon: <Home size={20} />, path: "/dashboard" },
+      { name: "Job Posting", icon: <Briefcase size={20} />, path: "/jobs" },
       { name: "Manage Admins", icon: <Users size={20} />, path: "/manage-admins" },
       { name: "System Config", icon: <Settings size={20} />, path: "/system-config" },
       { name: "Audit Logs", icon: <CheckSquare size={20} />, path: "/audit-logs" },
