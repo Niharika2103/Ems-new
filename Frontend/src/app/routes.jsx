@@ -58,6 +58,7 @@ import EmpTypeFreelancerDashboard from '../pages/dashbaord/EmpTypeFreelancerDash
 import JobList from "../pages/JobPosting/JobList";
 import JobPostDashboard from "../pages/dashbaord/JobPostDashboard";
 import JobPosts from "../pages/JobPosting/JobPosts"; 
+import ApplyJob from "../components/ApplyJob";
 
 function AppRoutes() {
   return (
@@ -171,6 +172,16 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
+        <Route path="/apply-job" 
+        element={
+           <ProtectedRoute allowedRoles={["employee"]}>
+              <ApplyJob />
+            </ProtectedRoute>
+          }
+        />
+       
+
 
         <Route
           path="/attendance/projects"

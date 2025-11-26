@@ -31,8 +31,8 @@ const EmpInfoDashboard = () => {
       icon: DescriptionIcon,
       iconBg: "bg-purple-100",
       iconColor: "text-purple-600",
-      onClick: () => navigate("/dashboard/freelancer/documents"),//employee,freelancer
-      // onClick: () => navigate("/documents/employees")//admin
+      // onClick: () => navigate("/dashboard/freelancer/documents"),//employee,freelancer
+      onClick: () => navigate("/documents/employees")//admin
     },
     {
       title: "Letters",
@@ -40,8 +40,8 @@ const EmpInfoDashboard = () => {
       icon: MailOutlineIcon,
       iconBg: "bg-pink-100",
       iconColor: "text-pink-600",
-      // onClick: () => navigate("/documents/admin/letters"),
-      onClick: () => navigate("/employee/letters"),
+      onClick: () => navigate("/documents/admin/letters"),
+      // onClick: () => navigate("/employee/letters"),
       
     },
     {

@@ -9,12 +9,11 @@ import {
   Container,
   Button,
   Slider,
+  Grid,
+  TextField,
+  FormLabel,
 } from "@mui/material";
-import {
-  BusinessCenter,
-  LocationOn,
-  AttachMoney,
-} from "@mui/icons-material";
+import { LocationOn, AttachMoney } from "@mui/icons-material";
 
 // ----------------- JOBS DATA -----------------
 const jobs = [
@@ -24,7 +23,7 @@ const jobs = [
     company: "Google",
     salaryMin: 1800000,
     salaryMax: 3000000,
-    postedDaysAgo: 1, // for filter
+    postedDaysAgo: 1,
     description:
       "We are looking for a skilled Frontend Developer with strong React.js experience.",
     location: "Bangalore",
@@ -56,87 +55,39 @@ const jobs = [
     description:
       "Design world-class UX/UI for Amazon apps with strong usability.",
     location: "Chennai",
-    skills: ["Figma", "UX Research"],
+    skills: ["Figma", "UX Research", "UI Design"],
     experience: "2–4 years",
     type: "Full-time",
   },
-  
   {
     id: 4,
-    title: "Frontend Developer",
-    company: "Google",
-    salaryMin: 1800000,
-    salaryMax: 3000000,
-    postedDaysAgo: 1,
-    description:
-      "We are seeking a skilled Frontend Developer experienced in React.js and modern UI frameworks to build scalable web applications.",
-    location: "Bangalore, India",
-    skills: ["React.js", "JavaScript", "Material UI", "HTML", "CSS"],
-    experience: "2–5 years",
-    type: "Full-time",
-  },
-
-  {
-    id: 5,
     title: "Backend Developer",
     company: "Amazon",
     salaryMin: 2200000,
     salaryMax: 3800000,
     postedDaysAgo: 2,
     description:
-      "Build highly scalable backend APIs and distributed microservices to support high-traffic Amazon systems.",
+      "Build scalable backend services & APIs for high-volume systems.",
     location: "Hyderabad, India",
     skills: ["Node.js", "AWS", "MongoDB", "Microservices"],
     experience: "3–6 years",
     type: "Full-time",
   },
-
   {
-    id: 6,
-    title: "UI/UX Designer",
-    company: "Microsoft",
-    salaryMin: 1500000,
-    salaryMax: 2500000,
-    postedDaysAgo: 5,
-    description:
-      "Design intuitive user interfaces for enterprise products with strong wireframing and prototyping skills.",
-    location: "Noida, India",
-    skills: ["Figma", "Adobe XD", "Wireframing", "User Research"],
-    experience: "2–4 years",
-    type: "Full-time",
-  },
-
-  {
-    id: 7,
+    id: 5,
     title: "Full Stack Developer",
     company: "Netflix",
     salaryMin: 3000000,
     salaryMax: 5000000,
     postedDaysAgo: 7,
     description:
-      "Work on large-scale distributed applications using React, Node.js and cloud technologies.",
+      "Work on distributed apps using React, Node.js and AWS.",
     location: "Remote",
-    skills: ["React.js", "Node.js", "AWS", "Docker", "SQL"],
+    skills: ["React.js", "Node.js", "Docker", "SQL"],
     experience: "4–8 years",
     type: "Remote",
   },
-
-  {
-    id: 8,
-    title: "Data Scientist",
-    company: "Meta",
-    salaryMin: 2500000,
-    salaryMax: 4200000,
-    postedDaysAgo: 3,
-    description:
-      "Build predictive machine learning models and analyze large-scale data to drive decision-making.",
-    location: "Gurgaon, India",
-    skills: ["Python", "Machine Learning", "TensorFlow", "SQL", "Data Analysis"],
-    experience: "3–6 years",
-    type: "Full-time",
-  }
 ];
-
 
 // ---------------- JOB CARD ----------------
 const JobCard = ({ job, onClick }) => (
@@ -164,17 +115,54 @@ const JobCard = ({ job, onClick }) => (
     </Box>
 
     <Chip label={job.type} size="small" sx={{ mt: 2 }} />
+
+    {/* SKILLS PREVIEW */}
+    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 2 }}>
+      {job.skills.slice(0, 3).map((skill, index) => (
+        <Chip
+          key={index}
+          label={skill}
+          size="small"
+          sx={{
+            background: "#f1f1f1",
+            fontSize: "12px",
+            borderRadius: "6px",
+          }}
+        />
+      ))}
+    </Box>
   </Card>
 );
 
 // ---------------- MAIN COMPONENT ----------------
 const JobPost = () => {
   const [open, setOpen] = useState(false);
+  const [applyOpen, setApplyOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null);
 
-  // FILTER STATES
   const [dateFilter, setDateFilter] = useState("all");
   const [minSalary, setMinSalary] = useState(0);
+
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    resume: null,
+    coverLetter: null,
+    documents: null,
+  });
+
+  const handleChange = (e) => {
+    const { name, value, files } = e.target;
+    setFormData({ ...formData, [name]: files ? files[0] : value });
+  };
+
+  const handleApplySubmit = (e) => {
+    e.preventDefault();
+    alert("Application Submitted!");
+    setApplyOpen(false);
+    setOpen(false);
+  };
 
   const handleOpen = (job) => {
     setSelectedJob(job);
@@ -188,94 +176,86 @@ const JobPost = () => {
 
   // ---------------- FILTER LOGIC ----------------
   const filteredJobs = jobs.filter((job) => {
-    // Date posted filter
     if (dateFilter === "24" && job.postedDaysAgo > 1) return false;
     if (dateFilter === "3" && job.postedDaysAgo > 3) return false;
     if (dateFilter === "7" && job.postedDaysAgo > 7) return false;
 
-    // Salary filter
     if (job.salaryMin < minSalary * 100000) return false;
 
     return true;
   });
 
   return (
-    <Box
-      sx={{
-        width: "100%",
-        minHeight: "100vh",
-        bgcolor: "#f5f7fa",
-        py: 4,
-        display: "flex",
-        justifyContent: "center",
-      }}
-    >
+    <Box sx={{ width: "100%", minHeight: "100vh", bgcolor: "#f5f7fa", py: 4 }}>
       <Container maxWidth="xl" sx={{ display: "flex", gap: 3 }}>
-        
-        {/* ------------ LEFT FILTERS (Sticky) ------------ */}
+
+        {/* ------------ LEFT FILTERS ------------ */}
         <Box
           sx={{
             width: 280,
             background: "#fff",
-            borderRadius: 2,
+            borderRadius: 3,
             p: 3,
             height: "fit-content",
             position: "sticky",
             top: 20,
-            boxShadow: "0 3px 14px rgba(0,0,0,0.08)",
+            boxShadow: "0 4px 18px rgba(0,0,0,0.07)",
           }}
         >
-          <Typography variant="h6" fontWeight={700} mb={2}>
+          <Typography variant="h6" fontWeight={700} mb={3}>
             Filters
           </Typography>
 
-          {/* DATE FILTER */}
+          {/* DATE POSTED */}
           <Typography fontWeight={600} mb={1}>
             Date Posted
           </Typography>
 
-          <Box sx={{ ml: 1 }}>
-            <Typography>
+          <Box sx={{ ml: 1, display: "flex", flexDirection: "column", gap: 1 }}>
+            <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <input
                 type="radio"
                 name="date"
                 checked={dateFilter === "all"}
                 onChange={() => setDateFilter("all")}
-              />{" "}
-              All
-            </Typography>
-            <Typography>
+              />
+              <span>All</span>
+            </label>
+
+            <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <input
                 type="radio"
                 name="date"
                 checked={dateFilter === "24"}
                 onChange={() => setDateFilter("24")}
-              />{" "}
-              Last 24 hours
-            </Typography>
-            <Typography>
+              />
+              <span>Last 24 hours</span>
+            </label>
+
+            <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <input
                 type="radio"
                 name="date"
                 checked={dateFilter === "3"}
                 onChange={() => setDateFilter("3")}
-              />{" "}
-              Last 3 days
-            </Typography>
-            <Typography>
+              />
+              <span>Last 3 days</span>
+            </label>
+
+            <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <input
                 type="radio"
                 name="date"
                 checked={dateFilter === "7"}
                 onChange={() => setDateFilter("7")}
-              />{" "}
-              Last 7 days
-            </Typography>
+              />
+              <span>Last 7 days</span>
+            </label>
           </Box>
 
-          <Divider sx={{ my: 2 }} />
+          <Divider sx={{ my: 3 }} />
 
-          {/* SALARY FILTER */}
+          {/* SALARY SLIDER */}
           <Typography fontWeight={600} mb={1}>
             Minimum Salary (Lakhs)
           </Typography>
@@ -294,21 +274,14 @@ const JobPost = () => {
           </Typography>
         </Box>
 
-        {/* ------------ RIGHT JOB LIST (Scrollable) ------------ */}
-        <Box
-          sx={{
-            flex: 1,
-            height: "85vh",
-            overflowY: "scroll",
-            pr: 2,
-          }}
-        >
+        {/* ------------ RIGHT JOB LIST ------------ */}
+        <Box sx={{ flex: 1, height: "85vh", overflowY: "scroll", pr: 2 }}>
           <Typography variant="h5" fontWeight={700} mb={3}>
             Jobs — Filtered Results
           </Typography>
 
           {filteredJobs.length === 0 ? (
-            <Typography>No jobs found with selected filters.</Typography>
+            <Typography>No jobs match your filters.</Typography>
           ) : (
             filteredJobs.map((job) => (
               <JobCard key={job.id} job={job} onClick={() => handleOpen(job)} />
@@ -317,7 +290,7 @@ const JobPost = () => {
         </Box>
       </Container>
 
-      {/* ---------------- JOB MODAL ---------------- */}
+      {/* ---------------- JOB DETAILS MODAL ---------------- */}
       <Modal open={open} onClose={handleClose}>
         <Box
           sx={{
@@ -327,7 +300,6 @@ const JobPost = () => {
             borderRadius: 3,
             mx: "auto",
             mt: 10,
-            boxShadow: "0px 8px 30px rgba(0,0,0,0.15)",
           }}
         >
           {selectedJob && (
@@ -336,10 +308,7 @@ const JobPost = () => {
                 {selectedJob.title}
               </Typography>
 
-              <Typography color="gray" mb={2}>
-                {selectedJob.company}
-              </Typography>
-
+              <Typography color="gray">{selectedJob.company}</Typography>
               <Divider sx={{ my: 2 }} />
 
               <Typography>
@@ -349,10 +318,6 @@ const JobPost = () => {
               <Typography>
                 💰 <b>Salary:</b> ₹{selectedJob.salaryMin / 100000}L - ₹
                 {selectedJob.salaryMax / 100000}L
-              </Typography>
-
-              <Typography>
-                💼 <b>Experience:</b> {selectedJob.experience}
               </Typography>
 
               <Typography mt={2} mb={1} fontWeight={700}>
@@ -365,16 +330,119 @@ const JobPost = () => {
               </Typography>
 
               <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                {selectedJob.skills.map((skill) => (
-                  <Chip key={skill} label={skill} />
+                {selectedJob.skills.map((skill, index) => (
+                  <Chip key={index} label={skill} />
                 ))}
               </Box>
 
-              <Button fullWidth variant="contained" sx={{ mt: 3 }}>
+              <Button
+                fullWidth
+                variant="contained"
+                sx={{ mt: 3 }}
+                onClick={() => setApplyOpen(true)}
+              >
                 Apply Now
               </Button>
             </>
           )}
+        </Box>
+      </Modal>
+
+      {/* ---------------- APPLY FORM MODAL ---------------- */}
+      <Modal open={applyOpen} onClose={() => setApplyOpen(false)}>
+        <Box
+          sx={{
+            width: 600,
+            bgcolor: "#fff",
+            p: 3,
+            borderRadius: 3,
+            mx: "auto",
+            mt: 8,
+            maxHeight: "85vh",
+            overflowY: "auto",
+          }}
+        >
+          <Typography variant="h5" fontWeight="bold" mb={2}>
+            Apply for {selectedJob?.title}
+          </Typography>
+
+          <Box component="form" onSubmit={handleApplySubmit}>
+            <Grid container spacing={2}>
+
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Full Name"
+                  name="fullName"
+                  fullWidth
+                  required
+                  onChange={handleChange}
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Email"
+                  name="email"
+                  type="email"
+                  fullWidth
+                  required
+                  onChange={handleChange}
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Phone"
+                  name="phone"
+                  fullWidth
+                  required
+                  onChange={handleChange}
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <FormLabel>Resume *</FormLabel>
+                <TextField
+                  type="file"
+                  name="resume"
+                  fullWidth
+                  required
+                  inputProps={{ accept: ".pdf,.doc,.docx" }}
+                  onChange={handleChange}
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <FormLabel>Cover Letter *</FormLabel>
+                <TextField
+                  type="file"
+                  name="coverLetter"
+                  fullWidth
+                  required
+                  inputProps={{ accept: ".pdf,.doc,.docx" }}
+                  onChange={handleChange}
+                />
+              </Grid>
+
+              <Grid item xs={12} sm={6}>
+                <FormLabel>Documents</FormLabel>
+                <TextField
+                  type="file"
+                  name="documents"
+                  fullWidth
+                  inputProps={{ accept: ".pdf,.jpg,.png,.doc,.docx" }}
+                  onChange={handleChange}
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <Button type="submit" fullWidth variant="contained" sx={{ py: 1.5 }}>
+                  Submit Application
+                </Button>
+              </Grid>
+
+            </Grid>
+          </Box>
         </Box>
       </Modal>
     </Box>
