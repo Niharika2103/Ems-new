@@ -11,8 +11,9 @@ import {
 } from "@mui/material";
 import { useDispatch } from "react-redux";
 import { uploadEmployeeDocuments } from "../../features/auth/adminSlice";
-import { useSearchParams, useNavigate } from "react-router-dom";
-
+import { useLocation, useNavigate } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 const steps = [
   "Bank Passbook Upload",
   "Aadhaar & PAN Upload",
@@ -24,16 +25,16 @@ const steps = [
 const Letters = () => {
   const [activeStep, setActiveStep] = useState(0);
   const dispatch = useDispatch();
-  const [searchParams] = useSearchParams();
-  const employeeId = searchParams.get("employeeId");
+  const location = useLocation();
   const navigate = useNavigate();
+  const employeeId = location.state?.employeeId;
 
   const [formData, setFormData] = useState({
     bankPassbook: null,
     panCard: null,
     aadhaarCard: null,
-    educationFiles: [],     
-    previousDocs: [], 
+    educationFiles: [],
+    previousDocs: [],
   });
 
   const handleNext = () => {
@@ -80,9 +81,9 @@ const Letters = () => {
     dispatch(uploadEmployeeDocuments({ employeeId, data }))
       .unwrap()
       .then(() => {
-        alert("Documents uploaded successfully!");
+         toast.success("Documents uploaded successfully!");
         // Navigate to employee documents list table
-        // navigate("/employee/documents/list");
+        navigate("/employee/documents/list");
       })
       .catch((err) => {
         alert("Upload failed: " + (err?.error || err));
@@ -162,6 +163,9 @@ const Letters = () => {
   );
 
   return (
+    <>
+  <ToastContainer position="top-center" autoClose={2000} />
+
     <Box
       sx={{
         backgroundColor: "#f5f6fa",
@@ -172,6 +176,7 @@ const Letters = () => {
         p: 4,
       }}
     >
+        
       <Card sx={{ width: "100%", maxWidth: 700, p: 3, boxShadow: 4 }}>
         <CardContent>
           <Stepper activeStep={activeStep} alternativeLabel>
@@ -189,14 +194,14 @@ const Letters = () => {
                 <Typography variant="h5" fontWeight="bold">
                   Step 1: Upload Bank Passbook
                 </Typography>
-                
+
                 <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
                   Please upload a clear image or PDF of your bank passbook showing your account details
                 </Typography>
 
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 2, alignItems: "center" }}>
-                  <Button 
-                    variant="contained" 
+                  <Button
+                    variant="contained"
                     component="label"
                     sx={{ px: 4, py: 1 }}
                   >
@@ -208,7 +213,7 @@ const Letters = () => {
                       onChange={(e) => handleFileChange(e, "bankPassbook")}
                     />
                   </Button>
-                  
+
                   {formData.bankPassbook && (
                     <Box sx={{ mt: 2, p: 2, border: "1px dashed #ccc", borderRadius: 1, width: "100%" }}>
                       <Typography variant="subtitle1" fontWeight="bold" color="primary">
@@ -222,7 +227,7 @@ const Letters = () => {
                       </Typography>
                     </Box>
                   )}
-                  
+
                   {!formData.bankPassbook && (
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                       No file chosen
@@ -303,7 +308,7 @@ const Letters = () => {
                 <Typography variant="h6" fontWeight="bold">
                   Step 3: Educational Certificates
                 </Typography>
-                
+
                 <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
                   Upload all your educational certificates and marksheets
                 </Typography>
@@ -319,7 +324,7 @@ const Letters = () => {
                       onChange={(e) => handleFileChange(e, "educationFiles")}
                     />
                   </Button>
-                  
+
                   {formData.educationFiles && formData.educationFiles.length > 0 && (
                     <Box sx={{ mt: 2, p: 2, border: "1px dashed #ccc", borderRadius: 1, width: "100%" }}>
                       <Typography variant="subtitle1" fontWeight="bold" color="primary">
@@ -332,7 +337,7 @@ const Letters = () => {
                       ))}
                     </Box>
                   )}
-                  
+
                   {(!formData.educationFiles || formData.educationFiles.length === 0) && (
                     <Typography variant="body2" color="text.secondary">
                       No files chosen
@@ -350,7 +355,7 @@ const Letters = () => {
                 <Typography variant="h6" fontWeight="bold">
                   Step 4: Previous Company Documents
                 </Typography>
-                
+
                 <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
                   Upload documents from your previous employment
                 </Typography>
@@ -366,7 +371,7 @@ const Letters = () => {
                       onChange={(e) => handleFileChange(e, "previousDocs")}
                     />
                   </Button>
-                  
+
                   {formData.previousDocs && formData.previousDocs.length > 0 && (
                     <Box sx={{ mt: 2, p: 2, border: "1px dashed #ccc", borderRadius: 1, width: "100%" }}>
                       <Typography variant="subtitle1" fontWeight="bold" color="primary">
@@ -379,7 +384,7 @@ const Letters = () => {
                       ))}
                     </Box>
                   )}
-                  
+
                   {(!formData.previousDocs || formData.previousDocs.length === 0) && (
                     <Typography variant="body2" color="text.secondary">
                       No files chosen
@@ -403,7 +408,7 @@ const Letters = () => {
 
                 <Box sx={{ textAlign: "left", p: 2, backgroundColor: "#f8f9fa", borderRadius: 1 }}>
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                    📘 Bank Passbook: {formData.bankPassbook?.name || "No file chosen"} 
+                    📘 Bank Passbook: {formData.bankPassbook?.name || "No file chosen"}
                     {formData.bankPassbook && ` (${(formData.bankPassbook.size / 1024 / 1024).toFixed(2)} MB)`}
                   </Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
@@ -448,6 +453,7 @@ const Letters = () => {
         </CardContent>
       </Card>
     </Box>
+    </>
   );
 };
 

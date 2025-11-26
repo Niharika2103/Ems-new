@@ -13,26 +13,46 @@ const EmpInfoDashboard = () => {
   const pathnames = location.pathname.split("/").filter((x) => x);
   // Second-level title
   const secondLevel = "Employee Info";
+  // Get user from localStorage
+  const storedUser = JSON.parse(localStorage.getItem("user"));
+
+  // Get role from redux or localStorage
+  const role =
+    storedUser?.employment_type ||
+    localStorage.getItem("role") ||
+    useSelector((state) => state.adminSlice) ||
+    useSelector((state) => state.authSlice?.role) ||
+    useSelector((state) => state.employeeSlice?.role);
+
+  // admin or freelancer Decide path
+  const getDocumentPath = () => {
+    if (storedUser?.employment_type === "freelancer") {
+      return "/dashboard/freelancer/documents";
+    }
+    if (role === "admin") {
+      return "/documents/employees";
+    }
+    return "/";
+  };
 
   // Current page title
   const currentPage = pathnames[pathnames.length - 1] || "";
   const stats = [
-    // {
-    //   title: "Profile",
-    //   message: "Check your daily attendance",
-    //   icon: AccountCircleIcon,
-    //   iconBg: "bg-sky-100",
-    //   iconColor: "text-sky-600",
-    //   onClick: () => navigate("/profile"),
-    // },
+    {
+      title: "Profile",
+      message: "Check your daily attendance",
+      icon: AccountCircleIcon,
+      iconBg: "bg-sky-100",
+      iconColor: "text-sky-600",
+      // onClick: () => navigate("/profile"),
+    },
     {
       title: "Document",
       message: "View HR announcements",
       icon: DescriptionIcon,
       iconBg: "bg-purple-100",
       iconColor: "text-purple-600",
-      // onClick: () => navigate("/dashboard/freelancer/documents"),//employee,freelancer
-      onClick: () => navigate("/documents/employees")//admin
+      onClick: () => navigate(getDocumentPath()),
     },
     {
       title: "Letters",
@@ -40,9 +60,9 @@ const EmpInfoDashboard = () => {
       icon: MailOutlineIcon,
       iconBg: "bg-pink-100",
       iconColor: "text-pink-600",
-      onClick: () => navigate("/documents/admin/letters"),
-      // onClick: () => navigate("/employee/letters"),
-      
+      // onClick: () => navigate("/documents/admin/letters"),
+      onClick: () => navigate("/employee/letters"),
+
     },
     {
       title: "Probation",

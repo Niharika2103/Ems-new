@@ -413,18 +413,17 @@ const JobPost = () => {
               </Grid>
 
               <Grid item xs={12} sm={6}>
-                <FormLabel>Cover Letter *</FormLabel>
+                <FormLabel>Cover Letter (Optional)</FormLabel>
                 <TextField
                   type="file"
                   name="coverLetter"
                   fullWidth
-                  required
                   inputProps={{ accept: ".pdf,.doc,.docx" }}
                   onChange={handleChange}
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6}>
+              {/* <Grid item xs={12} sm={6}>
                 <FormLabel>Documents</FormLabel>
                 <TextField
                   type="file"
@@ -433,7 +432,7 @@ const JobPost = () => {
                   inputProps={{ accept: ".pdf,.jpg,.png,.doc,.docx" }}
                   onChange={handleChange}
                 />
-              </Grid>
+              </Grid> */}
 
               <Grid item xs={12}>
                 <Button type="submit" fullWidth variant="contained" sx={{ py: 1.5 }}>

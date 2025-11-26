@@ -55,10 +55,12 @@ import ReferCandidatePage from "../pages/Referral/ReferCandidatePage";
 import AdminReferralDashboard from '../pages/Referral/AdminReferralDashboard';
 import SalaryStructure from '../pages/Accounts/SalaryStructure';
 import EmpTypeFreelancerDashboard from '../pages/dashbaord/EmpTypeFreelancerDashboard';
-import JobList from "../pages/JobPosting/JobList";
+import CreateJobList from "../pages/JobPosting/CreateJobList";
 import JobPostDashboard from "../pages/dashbaord/JobPostDashboard";
 import JobPosts from "../pages/JobPosting/JobPosts"; 
 import ApplyJob from "../components/ApplyJob";
+import PublishedJobs from "../pages/JobPosting/PublishedJobs";
+import JobApplicationTracking from "../pages/JobPosting/JobApplicationTracking";
 
 function AppRoutes() {
   return (
@@ -153,7 +155,7 @@ function AppRoutes() {
         <Route path="/job-postings"
          element={
            <ProtectedRoute allowedRoles={[ "admin"]}>
-              <JobList />
+              <CreateJobList />
             </ProtectedRoute>
           }
         />
@@ -180,7 +182,21 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-       
+       <Route path="/published-jobs"
+        element={
+           <ProtectedRoute allowedRoles={["admin"]}>
+              <PublishedJobs />
+            </ProtectedRoute>
+          }
+        />
+        
+       <Route
+          path="/employee/application-tracking"
+          element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <JobApplicationTracking />
+             </ProtectedRoute>}
+        />
 
 
         <Route
