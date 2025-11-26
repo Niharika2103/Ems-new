@@ -746,10 +746,17 @@ export const getEmployees = async (req, res) => {
   const client = await pool.connect();
   try {
     // Fetch all users with role in ['admin', 'superadmin', 'employee']
+    // const query = `
+    //   SELECT *
+    //   FROM ${USERS_TABLE}
+    //   WHERE role IN ('admin', 'superadmin', 'employee');
+    // `;
     const query = `
       SELECT *
       FROM ${USERS_TABLE}
-      WHERE role IN ('admin', 'superadmin', 'employee');
+      WHERE 
+        role IN ('admin', 'superadmin')
+        OR (role = 'employee' AND employment_type = 'fulltime');
     `;
 
     const { rows } = await client.query(query);
