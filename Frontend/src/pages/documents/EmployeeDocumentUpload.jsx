@@ -23,14 +23,15 @@ import {
   People,
   BusinessCenter,
   DesignServices,
-  LocalAtm
+  LocalAtm, Description,
+  ArrowForward
 } from "@mui/icons-material";
 
 const EmployeeDocumentUpload = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const list = useSelector((state) => state.employeeDetails.list);
-
+console.log(list,"list")
   // Pagination states
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -92,10 +93,54 @@ const EmployeeDocumentUpload = () => {
           textAlign: "center",
         }}
       >
-        Employee Documents
+        Upload Employee Documents
       </Typography>
 
       {/* RESPONSIVE TABLE WRAPPER */}
+          <Box sx={{ mb: 3, display: "flex", justifyContent: "flex-end" }}>
+    <Button
+          variant="contained"
+          startIcon={<Description />}
+          endIcon={<ArrowForward />}
+          onClick={() => navigate("/employee/documents/list")}
+          sx={{
+            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            color: "white",
+            fontWeight: "bold",
+            px: 4,
+            py: 1.5,
+            borderRadius: 3,
+            textTransform: "none",
+            fontSize: "16px",
+            boxShadow: "0 4px 15px rgba(102, 126, 234, 0.4)",
+            position: "relative",
+            overflow: "hidden",
+            "&:hover": {
+              background: "linear-gradient(135deg, #764ba2 0%, #667eea 100%)",
+              transform: "translateY(-2px)",
+              boxShadow: "0 6px 20px rgba(102, 126, 234, 0.6)",
+            },
+            "&::before": {
+              content: '""',
+              position: "absolute",
+              top: 0,
+              left: "-100%",
+              width: "100%",
+              height: "100%",
+              background: "rgba(255, 255, 255, 0.2)",
+              transition: "left 0.5s ease",
+            },
+            "&:hover::before": {
+              left: "100%",
+            },
+          }}
+        >
+          List Of Uploaded Documents
+        </Button>
+      </Box>
+
+      {/* RESPONSIVE TABLE WRAPPER */}
+     
       <TableContainer
         component={Paper}
         elevation={3}
@@ -112,7 +157,13 @@ const EmployeeDocumentUpload = () => {
                 Employee Name
               </TableCell>
               <TableCell sx={{ color: "black", fontWeight: "bold", py: 2 }}>
+                Email
+              </TableCell>
+              <TableCell sx={{ color: "black", fontWeight: "bold", py: 2 }}>
                 Department
+              </TableCell>
+               <TableCell sx={{ color: "black", fontWeight: "bold", py: 2 }}>
+                Status
               </TableCell>
               <TableCell
                 sx={{
@@ -164,6 +215,15 @@ const EmployeeDocumentUpload = () => {
                           </Typography>
                         </Box>
                       </TableCell>
+                      <TableCell sx={{ py: 2 }}>
+                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                        
+
+                          <Typography variant="subtitle1" fontWeight="600">
+                            {employee.email}
+                          </Typography>
+                        </Box>
+                      </TableCell>
 
                       <TableCell sx={{ py: 2 }}>
                         <Chip
@@ -177,6 +237,15 @@ const EmployeeDocumentUpload = () => {
                             "& .MuiChip-icon": { color: "white" },
                           }}
                         />
+                      </TableCell>
+                        <TableCell sx={{ py: 2 }}>
+                        <Box sx={{ display: "flex", alignItems: "center" }}>
+                        
+
+                          <Typography variant="subtitle1" fontWeight="600">
+                            {employee.status}
+                          </Typography>
+                        </Box>
                       </TableCell>
 
                       <TableCell sx={{ py: 2, textAlign: "center" }}>
