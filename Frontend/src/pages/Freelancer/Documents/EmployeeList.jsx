@@ -74,7 +74,7 @@ const EmployeeList = () => {
   // 🔹 Table Columns
   const columns = [
     { field: "id", headerName: "ID", width: 80 },
-    { field: "name", headerName: "Employee Name", width: 220 },
+    { field: "name", headerName: " Name", width: 220 },
     { field: "email", headerName: "Email", width: 260 },
 
     {
@@ -116,7 +116,7 @@ const EmployeeList = () => {
     <Box p={3}>
       <Card sx={{ p: 3 }}>
         <Typography variant="h5" fontWeight="bold" mb={2}>
-          Employee Document Verification
+          Freelancer Document Verification
         </Typography>
 
         <div style={{ height: 500 }}>
