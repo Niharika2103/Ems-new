@@ -17,6 +17,7 @@ app.use(express.json());
 
 app.use("/admin", adminRoutes);
 
+
 // Test PostgreSQL connection on startup
 (async () => {
   try {
