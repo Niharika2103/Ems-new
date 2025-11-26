@@ -60,7 +60,7 @@ public class AttendanceResponseDTO {
         this.year = year;
         this.gender = gender;
         this.employeeId = employeeId;
-        this.setEmployeeName(employeeName);
+        this.employeeName = employeeName;
         this.employeeGender = employeeGender;
         this.projectId = projectId;
         this.projectName = projectName;
@@ -72,12 +72,4 @@ public class AttendanceResponseDTO {
         this.maternityLeave = maternityLeave;
         this.remainingLeaves = remainingLeaves;
     }
-
-	public String getEmployeeName() {
-		return employeeName;
-	}
-
-	public void setEmployeeName(String employeeName) {
-		this.employeeName = employeeName;
-	}
 }

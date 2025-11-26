@@ -101,8 +101,6 @@ export default function MonthlyTimesheet({ onBack }) {
 
   // Approval status state for monthly timesheet
   const [approvalStatus, setApprovalStatus] = useState({});
-
-  const leaveTypes = ["EL", "SL", "PL", "WFH", "Extra Milar", "Paternity Leave", "Maternity Leave"];
   const formatDate = (date) =>
     `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
 
@@ -264,6 +262,30 @@ const isRowRejected = (row) => {
   };
 
   const { attendanceData, loading } = useSelector((state) => state.attendance);
+  const { profile, error } = useSelector((state) => state.employeeDetails);
+  const gender = (profile?.gender || "").trim().toLowerCase();
+
+// Basic leave types (no parental)
+const baseLeaveTypes = [
+  "EL",
+  "SL",
+  "WFH",
+  "Extra Milar",
+  "Optional Holidays",
+  "Holidays"
+];
+
+// Add parental leave only based on gender
+let finalLeaveTypes = [...baseLeaveTypes];
+
+if (gender === "female") {
+  finalLeaveTypes.push("Maternity Leave");
+} else if (gender === "male") {
+  finalLeaveTypes.push("Paternity Leave");
+}
+
+// replace your current leaveTypes with this
+const leaveTypes = finalLeaveTypes;
   const [projectDetails, setProjectDetails] = useState(null);
 
   const projectName = projectDetails?.projectName;
@@ -504,6 +526,24 @@ useEffect(() => {
     setMonthStart(new Date(date.getFullYear(), date.getMonth(), 1));
     setCalendarAnchor(null);
   };
+  const isWeekReleasedAndNotEditable = () => {
+  let hasYellowOrGreen = false;
+  let hasRed = false;
+
+  for (let i = 0; i < 7; i++) {
+    const color = getStatusColor(i);
+
+    if (color === "#FFF59D" || color === "#A5D6A7") hasYellowOrGreen = true; // Yellow / Green
+    if (color === "#d3323fff") hasRed = true; // Red
+  }
+
+  // 🔥 Disable when any Yellow or Green exists
+  if (hasYellowOrGreen) return true;
+
+  // 🔥 Enable when only Red or White exists
+  return false;
+};
+
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -672,6 +712,7 @@ useEffect(() => {
               onChange={(e) => setLeaveType(e.target.value)}
               label="Leave Type"
               className="w-40"
+              disabled={isWeekReleasedAndNotEditable()} 
             >
               {leaveTypes.map((lt) => (
                 <MenuItem key={lt} value={lt}>
@@ -680,7 +721,7 @@ useEffect(() => {
               ))}
             </Select>
           </FormControl>
-          <Button variant="contained" color="primary" onClick={handleAddActivity}>
+          <Button variant="contained" color="primary" onClick={handleAddActivity} disabled={isWeekReleasedAndNotEditable()} >
             Add Activity
           </Button>
         </div>

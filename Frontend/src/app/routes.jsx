@@ -47,12 +47,18 @@ import FreelancerAttendance from  "../pages/Freelancer/FreelancerAttendance";
 import FreelancerHolidayList from  "../pages/Freelancer/FreelancerHolidayList";
 import FreelancerProjectTable from  "../pages/Freelancer/FreelancerProjectTable";
 import FreelancerDocuments from  "../pages/Freelancer/FreelancerDocuments";
+import EmployeeList from '../pages/Freelancer/Documents/EmployeeList';
 import FreelancerAssignProjectpage from  "../pages/Freelancer/FreelancerAssignProjectpage";
 import TimesheetApprovalList from '../pages/Freelancer/Attendance/TimesheetApprovalList';
+import ContractManager from "../pages/Freelancer/ContractManager";
 import ReferCandidatePage from "../pages/Referral/ReferCandidatePage";
 import AdminReferralDashboard from '../pages/Referral/AdminReferralDashboard';
 import SalaryStructure from '../pages/Accounts/SalaryStructure';
 import EmpTypeFreelancerDashboard from '../pages/dashbaord/EmpTypeFreelancerDashboard';
+import JobList from "../pages/JobPosting/JobList";
+import JobPostDashboard from "../pages/dashbaord/JobPostDashboard";
+import JobPosts from "../pages/JobPosting/JobPosts"; 
+import ApplyJob from "../components/ApplyJob";
 
 function AppRoutes() {
   return (
@@ -125,6 +131,15 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
+        <Route path="/admin/freelancer-documents" 
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+              <EmployeeList />
+            </ProtectedRoute>
+          }
+        />
+        
         <Route
           path="/accounts/salary-structure"
           element={
@@ -133,6 +148,39 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
+        
+        <Route path="/job-postings"
+         element={
+           <ProtectedRoute allowedRoles={[ "admin"]}>
+              <JobList />
+            </ProtectedRoute>
+          }
+        />
+
+       <Route path="/dashboard/JobPostDashboard"
+         element={
+           <ProtectedRoute allowedRoles={["employee", "admin"]}>
+              <JobPostDashboard />
+            </ProtectedRoute>
+          }
+        />
+          <Route path="/job-posts" 
+          element={
+           <ProtectedRoute allowedRoles={["employee"]}>
+              <JobPosts />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route path="/apply-job" 
+        element={
+           <ProtectedRoute allowedRoles={["employee"]}>
+              <ApplyJob />
+            </ProtectedRoute>
+          }
+        />
+       
 
 
         <Route
@@ -187,6 +235,12 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route path="/freelancer/contract-manager"
+         element={
+           <ProtectedRoute allowedRoles={["employee", "admin"]}>
+              <ContractManager />
+            </ProtectedRoute>
+         } />
 
         {/* Superadmin routes */}
         <Route
@@ -207,6 +261,8 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
+        
 
         <Route
           path="/dashboard/freelancer/info"
