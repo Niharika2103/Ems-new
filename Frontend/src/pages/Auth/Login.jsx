@@ -18,7 +18,7 @@ import {
   Link,
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
-import { employeeLogin } from "../../features/auth/employeeSlice";
+import { employeeLogin,employeeForgotPassword } from "../../features/auth/employeeSlice";
 import PersonIcon from "@mui/icons-material/Person";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -167,36 +167,55 @@ export default function Login() {
     }
   };
 
+  // const handleForgotPasswordSubmit = (e) => {
+  //   e.preventDefault();
+
+  //   if (!formData.email) {
+  //     toast.error("Please enter your email address");
+  //     return;
+  //   }
+
+  //   if (!newPasswordData.newPassword || !newPasswordData.confirmPassword) {
+  //     toast.error("Please enter both new password and confirm password");
+  //     return;
+  //   }
+
+  //   if (newPasswordData.newPassword !== newPasswordData.confirmPassword) {
+  //     toast.error("Passwords do not match");
+  //     return;
+  //   }
+
+  //   if (newPasswordData.newPassword.length > 16) {
+  //     toast.error("Password cannot exceed 16 characters");
+  //     return;
+  //   }
+
+  //   // Here you would typically make an API call to reset the password
+  //   toast.success("Password reset instructions sent to your email");
+
+  //   // Reset the form and go back to login
+  //   setForgotPassword(false);
+  //   setNewPasswordData({ newPassword: "", confirmPassword: "" });
+  // };
   const handleForgotPasswordSubmit = (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!formData.email) {
-      toast.error("Please enter your email address");
-      return;
-    }
+  if (!formData.email) {
+    toast.error("Please enter your email");
+    return;
+  }
 
-    if (!newPasswordData.newPassword || !newPasswordData.confirmPassword) {
-      toast.error("Please enter both new password and confirm password");
-      return;
-    }
+  dispatch(employeeForgotPassword({ email: formData.email }))
+    .unwrap()
+    .then((res) => {
+      toast.success(res.message || "Password reset link sent to your email");
+      setForgotPassword(false);
+    })
+    .catch((err) => {
+      toast.error(err.error || "Failed to send reset link");
+    });
+};
 
-    if (newPasswordData.newPassword !== newPasswordData.confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
-
-    if (newPasswordData.newPassword.length > 16) {
-      toast.error("Password cannot exceed 16 characters");
-      return;
-    }
-
-    // Here you would typically make an API call to reset the password
-    toast.success("Password reset instructions sent to your email");
-
-    // Reset the form and go back to login
-    setForgotPassword(false);
-    setNewPasswordData({ newPassword: "", confirmPassword: "" });
-  };
 
   // Enable Login button only if fields are valid
   const isStep1Valid = formData.email.trim() !== "" && formData.password.trim() !== "" &&
@@ -386,91 +405,41 @@ export default function Login() {
               ) : (
                 <Box component="form" onSubmit={handleForgotPasswordSubmit} noValidate>
 
-                  {/* <TextField
-                    label="Email"
-                    name="email"
-                    type="email"
-                    fullWidth
-                    size="small"
-                    margin="normal"
-                    variant="outlined"
-                    value={formData.email}
-                    onChange={handleChange}
-                    error={!!errors.email}
-                    helperText={errors.email}
-                    required
-                  /> */}
+  <TextField
+    label="Enter your Email"
+    name="email"
+    type="email"
+    fullWidth
+    size="small"
+    margin="normal"
+    variant="outlined"
+    value={formData.email}
+    onChange={handleChange}
+    required
+  />
 
-                  <TextField
-                    label="New Password"
-                    name="newPassword"
-                    type={showPassword ? "text" : "password"}
-                    fullWidth
-                    size="small"
-                    margin="normal"
-                    variant="outlined"
-                    value={newPasswordData.newPassword}
-                    onChange={handleNewPasswordChange}
-                    error={!!errors.newPassword}
-                    helperText={errors.newPassword}
-                    required
-                    inputProps={{ maxLength: 16 }}
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            edge="end"
-                            onClick={() => setShowPassword((prev) => !prev)}
-                            aria-label={showPassword ? "Hide password" : "Show password"}
-                          >
-                            {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
-                          </IconButton>
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
+  <Box sx={{ display: "flex", gap: 1, mt: 3 }}>
+    <Button
+      fullWidth
+      variant="outlined"
+      size="small"
+      onClick={() => setForgotPassword(false)}
+    >
+      Back to Login
+    </Button>
 
-                  <TextField
-                    label="Confirm Password"
-                    name="confirmPassword"
-                    type={showPassword ? "text" : "password"}
-                    fullWidth
-                    size="small"
-                    margin="normal"
-                    variant="outlined"
-                    value={newPasswordData.confirmPassword}
-                    onChange={handleNewPasswordChange}
-                    error={!!errors.confirmPassword}
-                    helperText={errors.confirmPassword}
-                    required
-                    inputProps={{ maxLength: 16 }}
-                  />
+    <Button
+      fullWidth
+      variant="contained"
+      size="small"
+      type="submit"
+    >
+      Send Reset Link
+    </Button>
+  </Box>
 
-                  <Box sx={{ display: "flex", gap: 1, mt: 3 }}>
-                    <Button
-                      fullWidth
-                      variant="outlined"
-                      size="small"
-                      sx={{ py: 1.2 }}
-                      onClick={() => {
-                        setForgotPassword(false);
-                        setNewPasswordData({ newPassword: "", confirmPassword: "" });
-                      }}
-                    >
-                      Back to Login
-                    </Button>
-                    <Button
-                      fullWidth
-                      variant="contained"
-                      size="small"
-                      type="submit"
-                      sx={{ py: 1.2 }}
-                      disabled={!isResetPasswordValid}
-                    >
-                      Reset Password
-                    </Button>
-                  </Box>
-                </Box>
+</Box>
+
               )}
             </CardContent>
           </Card>
