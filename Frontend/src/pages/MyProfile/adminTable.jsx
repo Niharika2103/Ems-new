@@ -396,7 +396,7 @@ export default function AdminTable() {
       </div>
 
       {/* Edit Modal */}
-      <ReusableModal
+      {/* <ReusableModal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title="Edit Employee Details"
@@ -580,7 +580,297 @@ export default function AdminTable() {
             </Grid>
           </Box>
         </Box>
-      </ReusableModal>
+      </ReusableModal> */}
+      <ReusableModal
+  open={isModalOpen}
+  onClose={() => setIsModalOpen(false)}
+  title="Edit Employee Details"
+>
+  <Box
+    sx={{
+      padding: 2,
+      background: "#f5f7fa",
+      borderRadius: "12px",
+    }}
+  >
+    <Box
+      component="form"
+      onSubmit={handleSubmit}
+      sx={{
+        background: "white",
+        padding: "24px",
+        borderRadius: "12px",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+        border: "1px solid #e5e7eb",
+      }}
+    >
+      <Grid container spacing={3}>
+        {/* ---- Section Header ---- */}
+        <Grid item xs={12}>
+          <h3
+            style={{
+              margin: "0 0 16px 0",
+              fontSize: "18px",
+              fontWeight: "600",
+              color: "#374151",
+              borderBottom: "2px solid #e5e7eb",
+              paddingBottom: "6px",
+            }}
+          >
+            Personal Information
+          </h3>
+        </Grid>
+
+        {/* Name */}
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="Full Name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            fullWidth
+            size="small"
+            margin="normal"
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: "10px",
+                background: "#fafafa",
+              },
+            }}
+          />
+        </Grid>
+
+        {/* Email */}
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="Email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            fullWidth
+            size="small"
+            margin="normal"
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: "10px",
+                background: "#fafafa",
+              },
+            }}
+          />
+        </Grid>
+
+        {/* Gender */}
+        <Grid item xs={12}>
+          <FormLabel component="legend" sx={{ fontWeight: 600 }}>
+            Gender
+          </FormLabel>
+          <RadioGroup
+            row
+            name="gender"
+            value={formData.gender}
+            onChange={handleChange}
+          >
+            <FormControlLabel value="Male" control={<Radio />} label="Male" />
+            <FormControlLabel
+              value="Female"
+              control={<Radio />}
+              label="Female"
+            />
+          </RadioGroup>
+        </Grid>
+
+        {/* DOB & DOJ */}
+        <Grid item xs={12} sm={6}>
+          <TextField
+            type="date"
+            label="Date of Birth"
+            name="dob"
+            value={formData.dob}
+            onChange={handleChange}
+            fullWidth
+            size="small"
+            margin="normal"
+            InputLabelProps={{ shrink: true }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: "10px",
+              },
+            }}
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6}>
+          <TextField
+            type="date"
+            label="Date of Joining"
+            name="date_of_joining"
+            value={formData.date_of_joining}
+            onChange={handleChange}
+            fullWidth
+            size="small"
+            margin="normal"
+            InputLabelProps={{ shrink: true }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                borderRadius: "10px",
+              },
+            }}
+          />
+        </Grid>
+
+        {/* ---- Contact Section ---- */}
+        <Grid item xs={12}>
+          <h3
+            style={{
+              margin: "8px 0 16px 0",
+              fontSize: "18px",
+              fontWeight: "600",
+              color: "#374151",
+              borderBottom: "2px solid #e5e7eb",
+              paddingBottom: "6px",
+            }}
+          >
+            Contact Details
+          </h3>
+        </Grid>
+
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="Phone"
+            name="phone"
+            value={formData.phone}
+            onChange={handleChange}
+            fullWidth
+            size="small"
+            margin="normal"
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="Emergency Contact"
+            name="emergency_contact"
+            value={formData.emergency_contact}
+            onChange={handleChange}
+            fullWidth
+            size="small"
+            margin="normal"
+          />
+        </Grid>
+
+        {/* Addresses */}
+        <Grid item xs={12}>
+          <TextField
+            label="Address"
+            name="address"
+            value={formData.address}
+            onChange={handleChange}
+            fullWidth
+            size="small"
+            margin="normal"
+            multiline
+            rows={2}
+          />
+        </Grid>
+
+        <Grid item xs={12}>
+          <TextField
+            label="Permanent Address"
+            name="permanent_address"
+            value={formData.permanent_address}
+            onChange={handleChange}
+            fullWidth
+            size="small"
+            margin="normal"
+            multiline
+            rows={2}
+          />
+        </Grid>
+
+        {/* ---- Job Section ---- */}
+        <Grid item xs={12}>
+          <h3
+            style={{
+              margin: "12px 0 16px 0",
+              fontSize: "18px",
+              fontWeight: "600",
+              color: "#374151",
+              borderBottom: "2px solid #e5e7eb",
+              paddingBottom: "6px",
+            }}
+          >
+            Job Details
+          </h3>
+        </Grid>
+
+        <Grid item xs={12} sm={6}>
+          <TextField
+            select
+            label="Department"
+            name="department"
+            value={formData.department}
+            onChange={handleChange}
+            fullWidth
+            size="small"
+            margin="normal"
+          >
+            <MenuItem value="HR">HR</MenuItem>
+            <MenuItem value="Finance">Finance</MenuItem>
+            <MenuItem value="IT">IT</MenuItem>
+            <MenuItem value="Sales">Sales</MenuItem>
+          </TextField>
+        </Grid>
+
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="Designation"
+            name="designation"
+            value={formData.designation}
+            onChange={handleChange}
+            fullWidth
+            size="small"
+            margin="normal"
+          />
+        </Grid>
+
+        <Grid item xs={12} sm={6}>
+          <TextField
+            select
+            label="Employment Type"
+            name="employment_type"
+            value={formData.employment_type}
+            onChange={handleChange}
+            fullWidth
+            size="small"
+            margin="normal"
+          >
+            <MenuItem value="fulltime">Full Time</MenuItem>
+            <MenuItem value="contract">Contract</MenuItem>
+            <MenuItem value="freelancer">Freelancer</MenuItem>
+          </TextField>
+        </Grid>
+
+        {/* Submit */}
+        <Grid item xs={12}>
+          <Button
+            htmlType="submit"
+            type="primary"
+            block
+            loading={loading}
+            style={{
+              marginTop: "10px",
+              height: "40px",
+              fontWeight: "600",
+            }}
+          >
+            Update Employee
+          </Button>
+        </Grid>
+      </Grid>
+    </Box>
+  </Box>
+</ReusableModal>
+
     </>
   );
 }
