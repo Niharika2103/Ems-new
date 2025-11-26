@@ -259,8 +259,8 @@ export const validateEmployeeEdit = (formData) => {
   // Name
   if (!formData.name?.trim()) {
     errors.name = "Full name is required";
-  } else if (!/^[a-zA-Z\s]{1,15}$/.test(formData.name.trim())) {
-    errors.name = "Only letters and spaces allowed, max 15 characters";
+  } else if (!/^[a-zA-Z\s]{1,50}$/.test(formData.name.trim())) {
+    errors.name = "Only letters and spaces allowed, max 50 characters";
   }
 
   // Email
@@ -302,10 +302,10 @@ export const validateEmployeeEdit = (formData) => {
   }
 
   const validTypes = ["freelancer", "contract", "fulltime"];
-  if (!formData.employmentType) {
-    errors.employmentType = "Employment Type is required";
-  } else if (!validTypes.includes(formData.employmentType)) {
-    errors.employmentType =
+  if (!formData.employment_type) {
+    errors.employment_type = "Employment Type is required";
+  } else if (!validTypes.includes(formData.employment_type)) {
+    errors.employment_type =
       "Employment Type must be fulltime, contract, or freelancer";
   }
 

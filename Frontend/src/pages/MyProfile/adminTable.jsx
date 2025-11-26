@@ -140,8 +140,13 @@ export default function AdminTable() {
 
     setLoading(true);
     try {
+        const payload = {
+      ...formData,
+      date_of_joining: formData.date_of_joining || null,
+      dob: formData.dob || null,
+    };
       const res = await dispatch(
-        updateEmployeebyAdmin({ id: editingRecord?.id, data: formData })
+        updateEmployeebyAdmin({ id: editingRecord?.id, data: payload })
       ).unwrap();
 
       toast.success(res?.message || "Employee updated successfully");
