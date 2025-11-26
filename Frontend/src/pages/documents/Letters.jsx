@@ -11,8 +11,7 @@ import {
 } from "@mui/material";
 import { useDispatch } from "react-redux";
 import { uploadEmployeeDocuments } from "../../features/auth/adminSlice";
-import { useSearchParams, useNavigate } from "react-router-dom";
-
+import { useLocation, useNavigate } from "react-router-dom";
 const steps = [
   "Bank Passbook Upload",
   "Aadhaar & PAN Upload",
@@ -24,9 +23,10 @@ const steps = [
 const Letters = () => {
   const [activeStep, setActiveStep] = useState(0);
   const dispatch = useDispatch();
-  const [searchParams] = useSearchParams();
-  const employeeId = searchParams.get("employeeId");
-  const navigate = useNavigate();
+ const location = useLocation();
+  const employeeId = location.state?.employeeId;
+
+  console.log("Employee ID:", employeeId);
 
   const [formData, setFormData] = useState({
     bankPassbook: null,
@@ -82,7 +82,7 @@ const Letters = () => {
       .then(() => {
         alert("Documents uploaded successfully!");
         // Navigate to employee documents list table
-        // navigate("/employee/documents/list");
+        navigate("/employee/documents/list");
       })
       .catch((err) => {
         alert("Upload failed: " + (err?.error || err));

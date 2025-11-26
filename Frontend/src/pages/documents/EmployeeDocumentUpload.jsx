@@ -68,7 +68,7 @@ const EmployeeDocumentUpload = () => {
   const handleUploadDocuments = (employee) => {
     navigate("/documents/letters", {
       state: {
-        employee: employee,
+         employeeId: employee,
       },
     });
   };
@@ -183,7 +183,7 @@ const EmployeeDocumentUpload = () => {
                         <Button
                           variant="contained"
                           startIcon={<Visibility />}
-                          onClick={() => handleUploadDocuments(employee)}
+                           onClick={() => handleUploadDocuments(employee.id)}
                           sx={{
                             backgroundColor: "primary.main",
                             color: "white",
