@@ -99,6 +99,18 @@ export const sendVerifyEmailAdmin = () =>
 export const promoteEmployeeApi = (employeeId) =>
   adminClient.post(`${AUTH_API.ADMIN}/promote/${employeeId}`)
 
+// ================= Admin Job Posts =================
+
+// CREATE Job Post (Admin)
+export const createAdminJobPostApi = (data) =>
+  adminClient.post(`${AUTH_API.ADMIN}/admin/job-posts`, data);
+
+export const getPublishedJobPostsApi = (data) =>
+  adminClient.get(`${AUTH_API.ADMIN}/jobs`, data);
+
+
+
+
 
 
 // ======== Letter Generation API ========

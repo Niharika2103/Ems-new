@@ -61,7 +61,7 @@ import JobPosts from "../pages/JobPosting/JobPosts";
 import ApplyJob from "../components/ApplyJob";
 import PublishedJobs from "../pages/JobPosting/PublishedJobs";
 import JobApplicationTracking from "../pages/JobPosting/JobApplicationTracking";
-import VendorApplication from "../pages/PayrollHub/VendorApplication";
+
 
 function AppRoutes() {
   return (
