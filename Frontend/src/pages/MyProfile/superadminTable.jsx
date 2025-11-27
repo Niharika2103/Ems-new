@@ -83,8 +83,6 @@ export default function SuperAadminTable() {
       },
       render: (_registrations, record) => {
         const isApproved = record.is_approved ?? record.registrations?.[0]?.is_approved;
-
-
         return (
           <Space>
             {isApproved ? (
