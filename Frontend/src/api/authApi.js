@@ -123,6 +123,15 @@ export const getPublishedJobPostsApi = () =>
 export const applyForJobApi = (formData) =>
   adminClient.post(`${AUTH_API.ADMIN}/applications/apply`, formData);
 
+export const getAllApplicationsApi = () =>
+  adminClient.get(`${AUTH_API.ADMIN}/applications/all`);
+
+// Update application status
+export const updateApplicationStatusApi = (application_id, status) =>
+  adminClient.put(
+    `${AUTH_API.ADMIN}/applications/status/${application_id}`,
+    { status }        
+  );
 
 
 
