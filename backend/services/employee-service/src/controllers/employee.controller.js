@@ -666,7 +666,7 @@ export const bulkInsertEmployees = async (req, res) => {
             address: emp.address,
             department: emp.department,
             designation:emp.designation,
-            employmentType:emp.employmentType,
+            employment_type:emp.employmentType,
             date_of_joining: emp.dateOfJoining,
             access_flag: "y",
           },
@@ -687,7 +687,7 @@ export const bulkInsertEmployees = async (req, res) => {
     for (const emp of employeesPrepared) {
       const result = await client.query(
         `INSERT INTO ${USERS_TABLE} 
-          (employee_id, name, email, password, role, phone, address, date_of_joining,department,designation ,employmentType, access_flag)
+          (employee_id, name, email, password, role, phone, address, date_of_joining,department,designation ,employment_type, access_flag)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
          RETURNING id, email, name`,
         [
@@ -701,7 +701,7 @@ export const bulkInsertEmployees = async (req, res) => {
           emp.user.date_of_joining,
           emp.user.department,
           emp.user.designation,
-          emp.user.employmentType,
+          emp.user.employment_type,
           emp.user.access_flag,
         ]
       );
