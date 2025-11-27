@@ -1,0 +1,23 @@
+[33m93bc867a[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdev/new-feature[m[33m, [m[1;31morigin/dev/new-feature[m[33m)[m HEAD@{0}: commit: changes
+[33m2a595170[m HEAD@{1}: reset: moving to 2a595170
+[33m1247b866[m HEAD@{2}: checkout: moving from dev/new-feature to dev/new-feature
+[33m1247b866[m HEAD@{3}: reset: moving to HEAD
+[33m1247b866[m HEAD@{4}: pull --tags origin dev/new-feature: Merge made by the 'ort' strategy.
+[33md8bc5c39[m HEAD@{5}: commit: application tracking
+[33m2db0fcc7[m HEAD@{6}: pull origin dev/new-feature: Fast-forward
+[33mb0b601fa[m HEAD@{7}: commit: json
+[33mc8180651[m HEAD@{8}: commit (merge): Merge branch 'dev/new-feature' of github.com:VanisriMurugan-31/EMSPROJECT1.O into dev/new-feature
+[33m2a595170[m HEAD@{9}: commit: published job visible to candidates and submit application integretion
+[33md81114e1[m HEAD@{10}: pull --tags origin dev/new-feature: Merge made by the 'ort' strategy.
+[33mc8027cd1[m HEAD@{11}: commit: creation of joblist integration
+[33ma386618a[m HEAD@{12}: pull origin dev/new-feature: Fast-forward
+[33maaf5eccc[m HEAD@{13}: pull origin dev/new-feature: Fast-forward
+[33m4c06119b[m HEAD@{14}: pull origin dev/new-feature: Fast-forward
+[33m613c34ec[m HEAD@{15}: pull origin dev/new-feature: Fast-forward
+[33m8eaacdad[m HEAD@{16}: pull origin dev/new-feature: Fast-forward
+[33m65f15eff[m HEAD@{17}: commit (merge): freelancer
+[33m0d88cb62[m HEAD@{18}: commit: freelancer-service updated
+[33mcc4e52fb[m HEAD@{19}: pull --tags origin dev/new-feature: Merge made by the 'ort' strategy.
+[33m4819a8be[m HEAD@{20}: commit: Freelancer-service backend done
+[33m56bbfaf1[m HEAD@{21}: checkout: moving from master to dev/new-feature
+[33mf5effd2a[m[33m ([m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmaster[m[33m)[m HEAD@{22}: clone: from github.com:VanisriMurugan-31/EMSPROJECT1.O.git

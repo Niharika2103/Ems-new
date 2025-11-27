@@ -299,7 +299,7 @@ export default function Login() {
                     <TextField
                       label="Password"
                       name="password"
-                      type={showPassword ? "text" : "password"}
+                      type={showPassword ? "password" : "text"}
                       fullWidth
                       size="small"
                       margin="normal"
