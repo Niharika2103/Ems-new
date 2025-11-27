@@ -54,6 +54,8 @@ export default function EmployeePreviewTable({
                 <TableCell>Address</TableCell>
                 <TableCell>Date of Joining</TableCell>
                 <TableCell>Department</TableCell>
+                <TableCell>Designation</TableCell>
+                <TableCell>EmployementType</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -127,6 +129,25 @@ export default function EmployeePreviewTable({
                           />
                         </TableCell>
                         <TableCell>
+                          <TextField
+                            value={editRow.designation || ""}
+                            onChange={(e) => handleChangeRow("designation", e.target.value)}
+                            error={!!errorObj.designation}
+                            helperText={errorObj.designation}
+                          />
+                        </TableCell>
+
+                        {/*  EMPLOYMENT TYPE */}
+                        <TableCell>
+                          <TextField
+                            value={editRow.employmentType || ""}
+                            onChange={(e) => handleChangeRow("employmentType", e.target.value)}
+                            error={!!errorObj.employmentType}
+                            helperText={errorObj.employmentType}
+                          />
+                        </TableCell>
+                        
+                        <TableCell>
                           <IconButton onClick={() => handleSave(index)}>
                             <Save />
                           </IconButton>
@@ -140,6 +161,8 @@ export default function EmployeePreviewTable({
                         <TableCell>{safeValue(emp.address)}</TableCell>
                         <TableCell>{safeValue(emp.dateOfJoining)}</TableCell>
                         <TableCell>{safeValue(emp.department)}</TableCell>
+                        <TableCell>{safeValue(emp.designation)}</TableCell>
+                        <TableCell>{safeValue(emp.employmentType)}</TableCell>
                         <TableCell>
                           <IconButton onClick={() => handleEdit(index, emp)}>
                             <Edit />

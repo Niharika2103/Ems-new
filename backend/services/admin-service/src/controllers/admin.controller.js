@@ -1921,6 +1921,56 @@ export const uploadEmployeeDocuments = async (req, res) => {
     client.release();
   }
 };
+
+// export const getUploadedEmployeeDocuments = async (req, res) => {
+//   const client = await pool.connect();
+
+//   try {
+//     const user = getUserFromToken(req);
+
+//     if (!user) {
+//       return res.status(401).json({ error: "Unauthorized" });
+//     }
+
+//     // CASE 1 → role = employee & role2 = employee
+//     if (user.role === "employee" && user.role2 === "employee") {
+//       const result = await client.query(
+//         `SELECT * 
+//          FROM user_employees_master
+//          WHERE status = 'uploaded'
+//          ORDER BY updated_at DESC`
+//       );
+
+//       return res.json(result.rows);
+//     }
+
+//     // CASE 2 → admin, superadmin, or employee with another role2
+//     if (
+//       user.role === "admin" ||
+//       user.role === "superadmin" ||
+//       (user.role === "employee" && user.role2 !== "employee")
+//     ) {
+//       const result = await client.query(
+//         `SELECT * 
+//          FROM user_employees_master
+//          WHERE status = 'uploaded'
+//          ORDER BY updated_at DESC`
+//       );
+
+//       return res.json(result.rows);
+//     }
+
+//     return res.status(403).json({ error: "Invalid role" });
+
+//   } catch (error) {
+//     console.error("Error fetching uploaded documents:", error.message);
+//     return res.status(500).json({ error: error.message });
+//   } finally {
+//     client.release();
+//   }
+// };
+
+
 // DELETE /letters/:employeeId/:filename
 export const deleteLetter = async (req, res) => {
   const client = await pool.connect();

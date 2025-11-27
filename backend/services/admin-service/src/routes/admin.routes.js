@@ -30,7 +30,8 @@ getEmployeeLetters,
 documentUpload,
 uploadEmployeeDocuments,
 deleteLetter,
-sendLetterEmail
+sendLetterEmail,
+// getUploadedEmployeeDocuments
 } from "../controllers/admin.controller.js";
 //import for jobpost
 
@@ -98,7 +99,7 @@ router.post(
   documentUpload,
   uploadEmployeeDocuments
 );
-
+// router.get("/fetch/status" ,getUploadedEmployeeDocuments);
 router.delete("/letters/:employeeId/:filename", deleteLetter);
 
 router.post("/letters/send-email", sendLetterEmail);
