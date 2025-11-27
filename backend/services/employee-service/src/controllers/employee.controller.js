@@ -1362,8 +1362,11 @@ export const getMyReferrals = async (req, res) => {
   const client = await pool.connect();
 
   try {
-    const user = getUserFromToken(req);
-    const employeeId = user.id;
+    const employeeId = req.params.employeeId;  // ⬅️ No token, using query param
+
+    if (!employeeId) {
+      return res.status(400).json({ error: "employeeId is required" });
+    }
 
     const query = `
       SELECT 
@@ -1376,7 +1379,7 @@ export const getMyReferrals = async (req, res) => {
         referred_at,
         work_exp,
         resume
-      FROM ${REFERRALS_TABLE}
+      FROM referrals
       WHERE referred_by = $1
       ORDER BY referred_at DESC
     `;
@@ -1395,5 +1398,3 @@ export const getMyReferrals = async (req, res) => {
     client.release();
   }
 };
-
-
