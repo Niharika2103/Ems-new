@@ -2,6 +2,9 @@ import { Routes, Route } from "react-router-dom";
 import Layout from "../components/Layout";
 import ProtectedRoute from "../components/Layout/ProtectedRoute";
 
+
+
+
 // Pages
 import LandingPage from "../pages/Auth/LandingPage";
 import Login from "../pages/Auth/Login";
@@ -64,6 +67,12 @@ import JobApplicationTracking from "../pages/JobPosting/JobApplicationTracking";
 import ReportsDashboard from "../pages/dashbaord/ReportsDashboard";
 import PanelFeedback from "../pages/JobPosting/PanelFeedback";
 import OfferStatusFlow from "../pages/JobPosting/OfferStatusFlow";
+import HRAnalytics from "../pages/Reports/HRAnalytics";
+import PayrollAnalytics from "../pages/Reports/PayrollAnalytics";
+import ComplianceReports from "../pages/Reports/ComplianceReports";
+import FreelancerROI from "../pages/Reports/FreelancerROI";
+import CustomReports from "../pages/Reports/CustomReports";
+import PanelManagement from "../pages/JobPosting/PanelManagement";
 
 
 
@@ -504,7 +513,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-        {/* <Route path="/reports/hr" 
+        <Route path="/reports/hr" 
         element={
              <ProtectedRoute allowedRoles={["admin"]}>
               < HRAnalytics />
@@ -542,7 +551,8 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />  
-       */}
+         <Route path="/recruitment/panel-management" element={<PanelManagement />} />
+      
          
       </Route>
 

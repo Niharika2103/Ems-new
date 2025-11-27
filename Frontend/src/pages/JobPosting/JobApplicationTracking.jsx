@@ -13,7 +13,7 @@ import { DataGrid } from "@mui/x-data-grid";
 
 const steps = ["Applied", "Screening", "Interview", "Decision"];
 
-const dummyApplications = [
+const initialApplications = [
   {
     id: 1,
     jobTitle: "Frontend Developer",
@@ -48,20 +48,43 @@ const getStatusIndex = (status) => steps.indexOf(status);
 
 export default function ApplicationTrackingTable() {
   const [open, setOpen] = useState(false);
+  const [applications, setApplications] = useState(initialApplications);
   const [selectedRow, setSelectedRow] = useState(null);
 
   const handleOpen = (row) => {
-    setSelectedRow(row);
+    setSelectedRow({ ...row }); // avoid mutating original
     setOpen(true);
+  };
+
+  // ---- UPDATE STATUS ----
+  const updateStatus = (direction) => {
+    const currentIndex = getStatusIndex(selectedRow.status);
+    let newIndex = currentIndex;
+
+    if (direction === "next" && currentIndex < steps.length - 1) {
+      newIndex++;
+    } else if (direction === "prev" && currentIndex > 0) {
+      newIndex--;
+    }
+
+    const updatedStatus = steps[newIndex];
+
+    // Update inside modal
+    const updatedRow = { ...selectedRow, status: updatedStatus };
+    setSelectedRow(updatedRow);
+
+    // Update in table list
+    setApplications((prev) =>
+      prev.map((app) =>
+        app.id === selectedRow.id ? { ...app, status: updatedStatus } : app
+      )
+    );
   };
 
   const columns = [
     { field: "id", headerName: "ID", width: 70 },
-
     { field: "jobTitle", headerName: "Job Title", width: 200 },
-
     { field: "company", headerName: "Company", width: 180 },
-
     { field: "appliedOn", headerName: "Applied On", width: 150 },
 
     {
@@ -105,14 +128,14 @@ export default function ApplicationTrackingTable() {
   return (
     <Box p={3}>
       <Typography variant="h5" fontWeight="bold" mb={2}>
-        Job Application Tracking 
+        Job Application Tracking
       </Typography>
 
       <Box sx={{ height: 400, bgcolor: "#fff" }}>
-        <DataGrid rows={dummyApplications} columns={columns} pageSize={5} />
+        <DataGrid rows={applications} columns={columns} pageSize={5} />
       </Box>
 
-      {/* Modal for Stage Progress */}
+      {/* Modal */}
       <Modal open={open} onClose={() => setOpen(false)}>
         <Box
           sx={{
@@ -124,12 +147,11 @@ export default function ApplicationTrackingTable() {
             mt: "10%",
           }}
         >
-          <Typography variant="h6" mb={2} fontWeight="bold">
-            Application Progress
-          </Typography>
-
           {selectedRow && (
             <>
+              <Typography variant="h6" mb={1} fontWeight="bold">
+                Application Progress
+              </Typography>
               <Typography variant="subtitle1">
                 {selectedRow.jobTitle} — {selectedRow.company}
               </Typography>
@@ -147,6 +169,27 @@ export default function ApplicationTrackingTable() {
                   </Step>
                 ))}
               </Stepper>
+
+              {/* ADMIN CONTROLS */}
+              <Box display="flex" justifyContent="space-between" mt={3}>
+                <Button
+                  variant="outlined"
+                  disabled={getStatusIndex(selectedRow.status) === 0}
+                  onClick={() => updateStatus("prev")}
+                >
+                  Previous Step
+                </Button>
+
+                <Button
+                  variant="contained"
+                  disabled={
+                    getStatusIndex(selectedRow.status) === steps.length - 1
+                  }
+                  onClick={() => updateStatus("next")}
+                >
+                  Next Step
+                </Button>
+              </Box>
 
               <Box textAlign="right" mt={3}>
                 <Button variant="contained" onClick={() => setOpen(false)}>
