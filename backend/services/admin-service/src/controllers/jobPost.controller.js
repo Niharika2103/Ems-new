@@ -1,150 +1,159 @@
+// application.controller.js
 import pool from "../config/db.js";
 
-// Create job
-export const createJobPost = async (req, res) => {
+// ================= APPLY FOR JOB =================
+export const applyForJob = async (req, res) => {
   try {
-    const {
-      job_title,
-      company,
-      experience,
-      description,
-      requirements,
-      salary_range,
-      location,
-      created_by,
-      department,
-      employment_type,
-      status
-    } = req.body;
+    const { job_id, candidate_name, email, phone } = req.body;
+    const resume_url = req.file ? req.file.filename : null;
 
-    const result = await pool.query(
-      `INSERT INTO job_posts
-       (job_title, company, experience_level, description, requirements, salary_range,
-        location, department, employment_type, created_by, posted_date, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), $11)
-       RETURNING *`,
-      [
-        job_title,
-        company,
-        experience,
-        description,
-        requirements,
-        salary_range,
-        location,
-        department,
-        employment_type,
-        created_by,
-        status || "DRAFT"
-      ]
-    );
+    const query = `
+      INSERT INTO applications (
+        job_id,
+        candidate_name,
+        email,
+        phone,
+        resume_url,
+        status,
+        applied_date
+      )
+      VALUES ($1, $2, $3, $4, $5, 'APPLIED', NOW())
+      RETURNING *
+    `;
 
-    res.status(201).json({ success: true, job: result.rows[0] });
+    const values = [job_id, candidate_name, email, phone, resume_url];
+    const result = await pool.query(query, values);
 
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({
-      success: false,
-      message: "Error creating job",
-      error: err.message
+    res.json({
+      success: true,
+      message: "Application submitted successfully",
+      data: result.rows[0],
     });
-  }
-};
-
-
-// Get all jobs — Admin (including drafts)
-export const getAdminJobPosts = async (req, res) => {
-  try {
-    const result = await pool.query(`SELECT * FROM job_posts ORDER BY created_at DESC`);
-    res.json({ success: true, jobs: result.rows });
-  } catch (err) {
-    res.status(500).json({ message: "Error loading jobs" });
-  }
-};
-
-// Get Published jobs — Candidates
-export const getPublishedJobPosts = async (req, res) => {
-  try {
-    const result = await pool.query(`SELECT * FROM job_posts WHERE status = 'PUBLISHED' ORDER BY created_at DESC`);
-    res.json({ success: true, jobs: result.rows });
-  } catch (err) {
-    res.status(500).json({ message: "Error loading jobs" });
-  }
-};
-
-// Unpublished jobs (Admin view)
-export const getUnpublishedJobPosts = async (req, res) => {
-  try {
-    const result = await pool.query(
-      "SELECT * FROM job_posts WHERE status = 'UNPUBLISHED' ORDER BY created_at DESC"
-    );
-    res.json({ success: true, jobs: result.rows });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Error fetching unpublished jobs" });
+    console.error("Apply Job Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
-// Archived jobs (Admin view)
-export const getArchivedJobPosts = async (req, res) => {
+// ================= GET ALL APPLICATIONS (WITH JOB INFO) =================
+export const getAllApplications = async (req, res) => {
   try {
-    const result = await pool.query(
-      "SELECT * FROM job_posts WHERE status = 'ARCHIVED' ORDER BY created_at DESC"
-    );
-    res.json({ success: true, jobs: result.rows });
+    const query = `
+      SELECT
+        a.application_id,
+        a.job_id,
+        a.candidate_name,
+        a.email,
+        a.phone,
+        a.resume_url,
+        a.applied_date,
+        a.status,
+
+        -- ALIAS THESE TO AVOID NULL ISSUES
+        COALESCE(j.job_title, 'Unknown Title') AS job_title,
+        COALESCE(j.company, 'Unknown Company') AS company
+
+      FROM applications a
+      LEFT JOIN job_posts j
+        ON a.job_id = j.job_id
+      ORDER BY a.applied_date DESC
+    `;
+
+    const result = await pool.query(query);
+
+    res.json({
+      success: true,
+      applications: result.rows,
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Error fetching archived jobs" });
+    console.error("GetAllApplications Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
-// Edit job
-export const updateJobPost = async (req, res) => {
+// ================= GET APPLICATIONS BY JOB =================
+export const getApplicationsByJob = async (req, res) => {
   try {
-    const id = req.params.id;
-    const { job_title, description, requirements, salary_range, location, updated_by } = req.body;
+    const jobId = req.params.jobId;
 
-    const result = await pool.query(
-      `UPDATE job_posts SET 
-        job_title = $1,
-        description = $2,
-        requirements = $3,
-        salary_range = $4,
-        location = $5,
-        updated_by = $6,
-        updated_at = NOW()
-      WHERE job_id = $7 RETURNING *`,
-      [job_title, description, requirements, salary_range, location, updated_by, id]
-    );
+    const query = `
+      SELECT
+        a.application_id,
+        a.job_id,
+        a.candidate_name,
+        a.email,
+        a.phone,
+        a.resume_url,
+        a.applied_date,
+        a.status,
 
-    res.json({ success: true, job: result.rows[0] });
-  } catch (err) {
-    res.status(500).json({ message: "Error updating job" });
-  }
-};
+        COALESCE(j.job_title, 'Unknown Title') AS job_title,
+        COALESCE(j.company, 'Unknown Company') AS company
 
-// Update job status (publish/unpublish/archive)
-export const updateJobStatus = async (req, res) => {
-  try {
-    const id = req.params.id;
-    const { status, updated_by } = req.body;
+      FROM applications a
+      LEFT JOIN job_posts j
+        ON a.job_id = j.job_id
+      WHERE a.job_id = $1
+      ORDER BY a.applied_date DESC
+    `;
 
-    const result = await pool.query(
-      `UPDATE job_posts SET status = $1, updated_by = $2, updated_at = NOW()
-       WHERE job_id = $3 RETURNING *`,
-      [status, updated_by, id]
-    );
+    const result = await pool.query(query, [jobId]);
 
-    res.json({ success: true, job: result.rows[0] });
-  } catch (err) {
-    res.status(500).json({ message: "Error updating status" });
-  }
-};
-//to get draft job for admin
-export const getDraftJobPosts = async (req, res) => {
-  try {
-    const result = await pool.query(
-      "SELECT * FROM job_posts WHERE status = 'DRAFT' ORDER BY created_at DESC"
-    );
-    res.json({ success: true, jobs: result.rows });
+    res.json({
+      success: true,
+      applications: result.rows,
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Error fetching draft jobs" });
+    console.error("GetApplicationsByJob Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+// ================= UPDATE APPLICATION STATUS =================
+export const updateApplicationStatus = async (req, res) => {
+  try {
+    const { application_id } = req.params;
+    const { status } = req.body;
+
+    const allowedStatuses = [
+      "APPLIED",
+      "SCREENING",
+      "INTERVIEW",
+      "DECISION",
+      "HIRED",
+      "REJECTED",
+    ];
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid status value",
+      });
+    }
+
+    const query = `
+      UPDATE applications
+      SET status = $1
+      WHERE application_id = $2
+      RETURNING *
+    `;
+
+    const result = await pool.query(query, [status, application_id]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Application not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Application status updated successfully",
+      data: result.rows[0],
+    });
+  } catch (error) {
+    console.error("Status Update Error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
