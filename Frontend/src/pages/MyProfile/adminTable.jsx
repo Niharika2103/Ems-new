@@ -120,6 +120,11 @@ export default function AdminTable() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+     if (name === "phone" || name==="emergency_contact") {
+    if (!/^[0-9]*$/.test(value)) return;  // block letters
+    if (value.length > 10) return;        // max 10 digits
+  }
     if (name === "date_of_joining") {
       if (value && !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
         return;

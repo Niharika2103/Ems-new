@@ -31,6 +31,7 @@ documentUpload,
 uploadEmployeeDocuments,
 deleteLetter,
 sendLetterEmail,
+// getUploadedEmployeeDocuments
 getAllReferralsAdmin,
 getReferralByIdAdmin,
 updateReferralStatusAdmin
@@ -114,7 +115,7 @@ router.post(
   documentUpload,
   uploadEmployeeDocuments
 );
-
+// router.get("/fetch/status" ,getUploadedEmployeeDocuments);
 router.delete("/letters/:employeeId/:filename", deleteLetter);
 
 router.post("/letters/send-email", sendLetterEmail);
