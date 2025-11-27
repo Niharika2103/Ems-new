@@ -101,12 +101,18 @@ export const promoteEmployeeApi = (employeeId) =>
 
 // ================= Admin Job Posts =================
 
-// CREATE Job Post (Admin)
 export const createAdminJobPostApi = (data) =>
   adminClient.post(`${AUTH_API.ADMIN}/admin/job-posts`, data);
 
-export const getPublishedJobPostsApi = (data) =>
-  adminClient.get(`${AUTH_API.ADMIN}/jobs`, data);
+export const getAdminJobPostsApi = () =>
+  adminClient.get(`${AUTH_API.ADMIN}/admin/job-posts`);
+
+
+export const updateJobStatusApi = (id, status) =>
+  adminClient.patch(`${AUTH_API.ADMIN}/admin/job-posts/${id}/status`, {
+    status,
+    updated_by: "ADMIN_ID_HERE"
+  });
 
 
 

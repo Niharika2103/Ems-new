@@ -14,15 +14,14 @@ export const createJobPost = async (req, res) => {
       created_by,
       department,
       employment_type,
-      posted_on,
       status
     } = req.body;
 
     const result = await pool.query(
       `INSERT INTO job_posts
-       (job_title, company, experience, description, requirements, salary_range,
-        location, department, employment_type, created_by, posted_on, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+       (job_title, company, experience_level, description, requirements, salary_range,
+        location, department, employment_type, created_by, posted_date, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), $11)
        RETURNING *`,
       [
         job_title,
@@ -35,8 +34,7 @@ export const createJobPost = async (req, res) => {
         department,
         employment_type,
         created_by,
-        posted_on,
-        status || "DRAFT"  // default if not sent
+        status || "DRAFT"
       ]
     );
 
