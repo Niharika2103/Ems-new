@@ -22,7 +22,6 @@ import {
   applyForJobApi,
 } from "../../api/authApi";
 
-
 // ================= JOB CARD COMPONENT =================
 const JobCard = ({ job, onClick }) => (
   <Card
@@ -69,7 +68,6 @@ const JobCard = ({ job, onClick }) => (
   </Card>
 );
 
-
 // ================= MAIN COMPONENT =================
 const JobPost = () => {
   const [jobs, setJobs] = useState([]);
@@ -99,22 +97,22 @@ const JobPost = () => {
       const jobList = res.data.jobs || [];
 
       const formatted = jobList.map((job) => {
-        let salaryMin = 0,
-          salaryMax = 0;
+        let salaryMin = 0, salaryMax = 0;
 
-          if (job.salary_range && job.salary_range.includes("-")) {
-         const parts = job.salary_range.split("-");
-         const cleanMin = parts[0].replace(/[^0-9.]/g, "").trim();
-         const cleanMax = parts[1].replace(/[^0-9.]/g, "").trim();
+        if (job.salary_range && job.salary_range.includes("-")) {
+          const parts = job.salary_range.split("-");
+          const cleanMin = parts[0].replace(/[^0-9.]/g, "").trim();
+          const cleanMax = parts[1].replace(/[^0-9.]/g, "").trim();
 
-    salaryMin = Number(cleanMin) * 100000;
-    salaryMax = Number(cleanMax) * 100000;
-  }
+          salaryMin = Number(cleanMin) * 100000;
+          salaryMax = Number(cleanMax) * 100000;
+        }
 
         return {
-          id: job.job_id,
+          id: job.job_id,              // DataGrid key (UI)
+          job_id: job.job_id,          // REAL job ID for backend
           title: job.job_title,
-          company: job.company,
+          company: job.company || "—",
           salaryMin,
           salaryMax,
           description: job.description,
@@ -153,7 +151,7 @@ const JobPost = () => {
     e.preventDefault();
 
     const formDataToSend = new FormData();
-    formDataToSend.append("job_id", selectedJob.id);
+    formDataToSend.append("job_id", selectedJob.job_id); // FIXED
     formDataToSend.append("candidate_name", formData.fullName);
     formDataToSend.append("email", formData.email);
     formDataToSend.append("phone", formData.phone);
@@ -184,6 +182,7 @@ const JobPost = () => {
   return (
     <Box sx={{ width: "100%", minHeight: "100vh", bgcolor: "#f5f7fa", py: 4 }}>
       <Container maxWidth="xl" sx={{ display: "flex", gap: 3 }}>
+
         {/* LEFT FILTERS */}
         <Box
           sx={{
