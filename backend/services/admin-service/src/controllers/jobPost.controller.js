@@ -108,6 +108,7 @@ export const getApplicationsByJob = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+<<<<<<< HEAD
 
 // ================= UPDATE APPLICATION STATUS =================
 export const updateApplicationStatus = async (req, res) => {
@@ -157,3 +158,6 @@ export const updateApplicationStatus = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+=======
+//
+>>>>>>> 93bc867aac2196926f6050da9c3f99398f2989e4
