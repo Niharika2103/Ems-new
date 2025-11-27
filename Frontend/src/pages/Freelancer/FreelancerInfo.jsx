@@ -57,6 +57,14 @@ const FreelancerDashboard = () => {
       iconColor: "text-green-600",
     //   onClick: () => navigate("/referrals"),
     },
+     {
+      title: "Contracts",
+      message: "View Contracts & Agreements",
+      icon: DescriptionIcon,
+      iconBg: "bg-purple-100",
+      iconColor: "text-purple-600",
+      onClick: () => navigate("/freelancer/contract-manager"),
+    },
   ];
 
   return (

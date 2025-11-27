@@ -32,6 +32,9 @@ uploadEmployeeDocuments,
 deleteLetter,
 sendLetterEmail,
 // getUploadedEmployeeDocuments
+getAllReferralsAdmin,
+getReferralByIdAdmin,
+updateReferralStatusAdmin
 } from "../controllers/admin.controller.js";
 //import for jobpost
 
@@ -45,7 +48,20 @@ import {
   updateJobStatus,
    getDraftJobPosts 
 } from "../controllers/jobPost.controller.js";
+
+//Job Application Controllers and status tracking 
+
+import {
+  applyForJob,
+  getAllApplications,
+  updateApplicationStatus,
+  getApplicationsByJob
+} from "../controllers/application.controller.js";
+
+import { uploadResume } from "../middleware/uploadResume.js";
+
 const router = Router();
+
 // Admin Register and login
 router.post("/register", adminRegister);
 
@@ -104,6 +120,15 @@ router.delete("/letters/:employeeId/:filename", deleteLetter);
 
 router.post("/letters/send-email", sendLetterEmail);
 
+// Get all referrals
+router.get("/referrals", getAllReferralsAdmin);
+
+// Get a referral by referral_id
+router.get("/referrals/:referral_id", getReferralByIdAdmin);
+
+// Update referral status (Shortlisted / Interview / Hired / Rejected)
+router.put("/referrals/status/:id", updateReferralStatusAdmin);
+
 // ================= Job Posting Module =================
 
 // Create job post
@@ -130,4 +155,23 @@ router.patch("/admin/job-posts/:id/status", updateJobStatus);
 
 //get only draft job for admin
 router.get("/admin/job-posts/draft", getDraftJobPosts);
+
+// JOB APPLICATION MODULE
+
+// Candidate apply for job
+router.post(
+  "/applications/apply",
+  uploadResume.single("resume"),
+  applyForJob
+);
+
+// Admin: Get ALL applications
+router.get("/applications/all", getAllApplications);
+
+// Admin: Get applications for specific job
+router.get("/applications/job/:jobId", getApplicationsByJob);
+
+// Admin: Update application status (APPLIED → SCREENING → INTERVIEW → DECISION)
+router.put("/applications/status/:application_id", updateApplicationStatus);
+
 export default router;

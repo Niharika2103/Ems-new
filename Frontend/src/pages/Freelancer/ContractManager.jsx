@@ -1,210 +1,147 @@
 import React, { useState } from "react";
+import {
+  Box,
+  Card,
+  Typography,
+  TextField,
+  MenuItem,
+  Grid,
+  Button,
+  Divider,
+  Chip,
+} from "@mui/material";
 
-const ContractManager = () => {
-  // --------------- CONTRACT TEMPLATES -----------------
-  const contractTemplates = {
-    employment: [
-      { name: "employeeName", label: "Employee Name", type: "text" },
-      { name: "designation", label: "Designation", type: "text" },
-      { name: "joiningDate", label: "Joining Date", type: "date" },
-      { name: "salary", label: "Salary", type: "number" },
-    ],
-    internship: [
-      { name: "internName", label: "Intern Name", type: "text" },
-      { name: "duration", label: "Duration (Months)", type: "number" },
-      { name: "startDate", label: "Start Date", type: "date" },
-    ],
-    vendor: [
-      { name: "vendorName", label: "Vendor Name", type: "text" },
-      { name: "serviceType", label: "Service Type", type: "text" },
-      { name: "contractStart", label: "Contract Start Date", type: "date" },
-      { name: "contractEnd", label: "Contract End Date", type: "date" },
-    ],
-  };
+const contractTypes = [
+  "Service Contract",
+  "Employment Contract",
+  "Vendor Contract",
+  "NDA Contract",
+];
 
-  // ------------------ STATES --------------------------
-  const [selectedType, setSelectedType] = useState("");
+export default function ContractManager() {
+  const [contractType, setContractType] = useState("");
   const [formData, setFormData] = useState({});
-  const [status, setStatus] = useState("Draft"); // Draft | Pending | Approved | Rejected
+  const [status, setStatus] = useState("Draft");
 
-  // ------------------ HANDLE FIELD CHANGE -------------
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+  // Dynamic fields based on selected contract type
+  const getFields = () => {
+    switch (contractType) {
+      case "Service Contract":
+        return [
+          "Service Provider",
+          "Scope of Work",
+          "Start Date",
+          "End Date",
+          "Payment Terms",
+        ];
+
+      case "Employment Contract":
+        return [
+          "Employee Name",
+          "Department",
+          "Role",
+          "Salary",
+          "Joining Date",
+        ];
+
+      case "Vendor Contract":
+        return [
+          "Vendor Name",
+          "Business Type",
+          "License Number",
+          "Start Date",
+          "End Date",
+        ];
+
+      case "NDA Contract":
+        return [
+          "Party Name",
+          "Confidential Terms",
+          "Start Date",
+        ];
+
+      default:
+        return [];
+    }
   };
 
-  // ------------------ SUBMIT FOR APPROVAL -------------
-  const submitForApproval = () => {
-    setStatus("Pending");
-  };
-
-  // ------------------ APPROVE / REJECT ----------------
-  const handleApproval = (state) => {
-    setStatus(state);
-  };
-
-  // ------------------ PDF GENERATION -------------------
-  const generatePDF = () => {
-    alert("PDF generation API will be called here.");
+  const handleChange = (field, value) => {
+    setFormData({ ...formData, [field]: value });
   };
 
   return (
-    <div style={styles.container}>
-      <h2 style={styles.heading}>Contract Management</h2>
+    <Box p={3}>
+      <Card sx={{ p: 3, maxWidth: 900, margin: "0 auto" }}>
+        <Typography variant="h5" fontWeight="bold">
+          Contract Manager
+        </Typography>
 
-      {/* ---------------- SELECT CONTRACT TYPE ---------------- */}
-      <div style={styles.section}>
-        <label style={styles.label}>Select Contract Type</label>
-        <select
-          style={styles.input}
-          value={selectedType}
-          onChange={(e) => {
-            setSelectedType(e.target.value);
-            setFormData({});
-          }}
+        <Divider sx={{ my: 2 }} />
+
+        {/* Contract Type Selector */}
+        <TextField
+          fullWidth
+          select
+          label="Select Contract Type"
+          value={contractType}
+          onChange={(e) => setContractType(e.target.value)}
         >
-          <option value="">-- Select --</option>
-          <option value="employment">Employment Contract</option>
-          <option value="internship">Internship Contract</option>
-          <option value="vendor">Vendor Agreement</option>
-        </select>
-      </div>
-
-      {/* ---------------- DYNAMIC FORM FIELDS ---------------- */}
-      {selectedType && (
-        <div style={styles.section}>
-          <h3 style={styles.subHeading}>Fill Contract Data</h3>
-
-          {contractTemplates[selectedType].map((field) => (
-            <div key={field.name} style={styles.fieldRow}>
-              <label style={styles.label}>{field.label}</label>
-              <input
-                type={field.type}
-                name={field.name}
-                value={formData[field.name] || ""}
-                onChange={handleChange}
-                style={styles.input}
-              />
-            </div>
+          {contractTypes.map((type) => (
+            <MenuItem key={type} value={type}>
+              {type}
+            </MenuItem>
           ))}
+        </TextField>
 
-          {/* Submit Button */}
-          {status === "Draft" && (
-            <button style={styles.buttonPrimary} onClick={submitForApproval}>
-              Submit for Approval
-            </button>
-          )}
-        </div>
-      )}
+        {/* Dynamic Fields */}
+        <Grid container spacing={2} mt={2}>
+          {getFields().map((field) => (
+            <Grid item xs={12} md={6} key={field}>
+              <TextField
+                label={field}
+                fullWidth
+                onChange={(e) => handleChange(field, e.target.value)}
+              />
+            </Grid>
+          ))}
+        </Grid>
 
-      {/* ---------------- APPROVAL WORKFLOW ---------------- */}
-      {selectedType && (
-        <div style={styles.section}>
-          <h3 style={styles.subHeading}>Approval Status</h3>
+        <Divider sx={{ my: 3 }} />
 
-          <p style={styles.status(status)}>{status}</p>
+        {/* Workflow Status */}
+        <Chip label={`Status: ${status}`} color="info" sx={{ mb: 2 }} />
 
-          {status === "Pending" && (
-            <div style={styles.buttonRow}>
-              <button
-                style={styles.buttonApprove}
-                onClick={() => handleApproval("Approved")}
-              >
-                Approve
-              </button>
-              <button
-                style={styles.buttonReject}
-                onClick={() => handleApproval("Rejected")}
-              >
-                Reject
-              </button>
-            </div>
-          )}
-        </div>
-      )}
+        {/* Action Buttons */}
+        <Box display="flex" gap={2}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => setStatus("Submitted for Approval")}
+          >
+            Submit for Approval
+          </Button>
 
-      {/* ---------------- PDF GENERATION ---------------- */}
-      {status === "Approved" && (
-        <div style={styles.section}>
-          <h3 style={styles.subHeading}>Final PDF</h3>
+          <Button
+            variant="contained"
+            color="success"
+            onClick={() => setStatus("Approved")}
+          >
+            Approve
+          </Button>
 
-          <button style={styles.buttonPrimary} onClick={generatePDF}>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={() => setStatus("Rejected")}
+          >
+            Reject
+          </Button>
+
+          <Button variant="outlined" color="secondary">
             Generate PDF
-          </button>
-        </div>
-      )}
-    </div>
+          </Button>
+        </Box>
+      </Card>
+    </Box>
   );
-};
-
-export default ContractManager;
-
-// ------------------ INLINE STYLES --------------------
-const styles = {
-  container: {
-    width: "60%",
-    margin: "auto",
-    padding: 20,
-    background: "#fff",
-    borderRadius: 8,
-    boxShadow: "0 0 10px #ccc",
-    fontFamily: "Arial",
-  },
-  heading: { textAlign: "center", marginBottom: 20 },
-  subHeading: { marginBottom: 10, color: "#444" },
-  section: {
-    marginBottom: 25,
-    paddingBottom: 10,
-    borderBottom: "1px solid #ddd",
-  },
-  fieldRow: { marginBottom: 12 },
-  label: { display: "block", marginBottom: 4 },
-  input: {
-    width: "100%",
-    padding: 8,
-    borderRadius: 4,
-    border: "1px solid #aaa",
-  },
-  buttonPrimary: {
-    padding: "10px 20px",
-    background: "#0066ff",
-    color: "#fff",
-    border: "none",
-    borderRadius: 4,
-    cursor: "pointer",
-  },
-  buttonRow: {
-    display: "flex",
-    gap: 12,
-    marginTop: 10,
-  },
-  buttonApprove: {
-    padding: "10px 20px",
-    background: "green",
-    color: "#fff",
-    border: "none",
-    borderRadius: 4,
-    cursor: "pointer",
-  },
-  buttonReject: {
-    padding: "10px 20px",
-    background: "red",
-    color: "#fff",
-    border: "none",
-    borderRadius: 4,
-    cursor: "pointer",
-  },
-  status: (state) => ({
-    fontWeight: "bold",
-    color:
-      state === "Approved"
-        ? "green"
-        : state === "Rejected"
-        ? "red"
-        : state === "Pending"
-        ? "orange"
-        : "black",
-  }),
-};
+}

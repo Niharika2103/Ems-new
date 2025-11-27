@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Freelancer Contract</title>
+
+  <style>
+    body { 
+      font-family: Arial, sans-serif; 
+      padding: 40px;
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      font-size: 22px;
+    }
+
+    .section-title {
+      font-weight: bold;
+      margin-top: 20px;
+      text-decoration: underline;
+    }
+
+    .details-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    .details-table td {
+      padding: 6px;
+      vertical-align: top;
+    }
+
+    .signature {
+      margin-top: 60px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h2>Freelancer Agreement</h2>
+
+  <p>Date: <strong>{{contract_date}}</strong></p>
+
+  <p>
+    This Freelancer Agreement is made between 
+    <strong>{{company_name}}</strong> (“Company”) and 
+    <strong>{{name}}</strong> (“Freelancer”) to provide services 
+    based on the agreed terms below.
+  </p>
+
+  <!-- FREELANCER DETAILS -->
+  <div class="section-title">Freelancer Details</div>
+  <table class="details-table">
+    <tr><td><b>Name</b></td><td>{{name}}</td></tr>
+    <tr><td><b>Email</b></td><td>{{email}}</td></tr>
+    <tr><td><b>Designation / Role</b></td><td>{{designation}}</td></tr>
+    <tr><td><b>Address</b></td><td>{{address}}</td></tr>
+    <tr><td><b>Permanent Address</b></td><td>{{permanent_address}}</td></tr>
+    <tr><td><b>PAN Number</b></td><td>{{pan_number}}</td></tr>
+  </table>
+
+  <!-- CONTRACT DETAILS -->
+  <div class="section-title">Contract Details</div>
+  <table class="details-table">
+    <tr><td><b>Contract Start Date</b></td><td>{{start_date}}</td></tr>
+    <tr><td><b>Contract End Date</b></td><td>{{end_date}}</td></tr>
+    <tr><td><b>Work Location</b></td><td>{{location}}</td></tr>
+    <tr><td><b>Payment Terms</b></td><td>{{payment_terms}}</td></tr>
+  </table>
+
+  <!-- PAYMENT STRUCTURE -->
+  <div class="section-title">Payment Structure</div>
+  <table class="details-table">
+    <tr><td><b>Basic Pay</b></td><td>{{basic_pay}}</td></tr>
+    <tr><td><b>Special Allowance</b></td><td>{{special_allowance}}</td></tr>
+    <tr><td><b>Other Allowances</b></td><td>{{other_allowances}}</td></tr>
+    <tr><td><b>Gross Salary</b></td><td><strong>{{gross_salary}}</strong></td></tr>
+    <tr><td><b>Net Salary</b></td><td><strong>{{net_salary}}</strong></td></tr>
+    <tr><td><b>Bank Name</b></td><td>{{bank_name}}</td></tr>
+    <tr><td><b>Account Number</b></td><td>{{account_number}}</td></tr>
+    <tr><td><b>IFSC Code</b></td><td>{{ifsc_code}}</td></tr>
+  </table>
+
+  <div class="section-title">Terms & Conditions</div>
+
+  <p>
+    1. The Freelancer shall render services independently and is not considered an employee of the Company.
+  </p>
+  <p>
+    2. Payment will be issued as per delivery milestones or monthly basis.
+  </p>
+  <p>
+    3. All company information must remain confidential.
+  </p>
+  <p>
+    4. Either party may terminate this agreement with a 7-day written notice.
+  </p>
+
+  <div class="signature">
+    <p><strong>For {{company_name}}</strong></p><br><br>
+    ___________________________<br>
+    Authorized Signatory
+  </div>
+
+  <div class="signature">
+    <p><strong>Freelancer</strong></p><br><br>
+    ___________________________<br>
+    {{name}}
+  </div>
+
+</body>
+</html>
+

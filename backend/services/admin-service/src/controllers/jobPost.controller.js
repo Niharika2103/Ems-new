@@ -3,21 +3,55 @@ import pool from "../config/db.js";
 // Create job
 export const createJobPost = async (req, res) => {
   try {
-    const { job_title, description, requirements, salary_range, location, created_by , department, employment_type} = req.body;
+    const {
+      job_title,
+      company,
+      experience,
+      description,
+      requirements,
+      salary_range,
+      location,
+      created_by,
+      department,
+      employment_type,
+      posted_on,
+      status
+    } = req.body;
 
     const result = await pool.query(
       `INSERT INTO job_posts
-       (job_title, description, requirements, salary_range, location, status, created_by , department, employment_type)
-       VALUES ($1, $2, $3, $4, $5, 'DRAFT', $6 , $7 , $8)
+       (job_title, company, experience, description, requirements, salary_range,
+        location, department, employment_type, created_by, posted_on, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
        RETURNING *`,
-      [job_title, description, requirements, salary_range, location, created_by ,department , employment_type]
+      [
+        job_title,
+        company,
+        experience,
+        description,
+        requirements,
+        salary_range,
+        location,
+        department,
+        employment_type,
+        created_by,
+        posted_on,
+        status || "DRAFT"  // default if not sent
+      ]
     );
 
     res.status(201).json({ success: true, job: result.rows[0] });
+
   } catch (err) {
-    res.status(500).json({ success: false, message: "Error creating job", error: err });
+    console.error(err);
+    res.status(500).json({
+      success: false,
+      message: "Error creating job",
+      error: err.message
+    });
   }
 };
+
 
 // Get all jobs — Admin (including drafts)
 export const getAdminJobPosts = async (req, res) => {

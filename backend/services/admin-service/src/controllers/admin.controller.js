@@ -19,6 +19,7 @@ import puppeteer from "puppeteer";
 const USER_MASTER_TABLE = "user_employees_master";
 const REGISTRATIONS_TABLE = "registrations";
 const SUPERADMINS_TABLE = "super_admins";
+const REFERRALS_TABLE = "referrals";
 
 // ================== Multer Config ==================
 const uploadDir = path.join(process.cwd(), "src/uploads");
@@ -2072,6 +2073,194 @@ export const sendLetterEmail = async (req, res) => {
   } catch (err) {
     console.error("Send Letter Email Error:", err);
     return res.status(500).json({ error: "Failed to send email with attachment" });
+  } finally {
+    client.release();
+  }
+};
+
+export const getAllReferralsAdmin = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const query = `
+      SELECT 
+        r.id,
+        r.referral_id,
+        r.candidate_name,
+        r.candidate_email,
+        r.phone_number,
+        r.position,
+        r.work_exp,
+        r.resume,
+        r.status,
+        r.referred_at,
+        u.employee_id AS referrer_employee_id,
+        u.name AS referrer_name,
+        u.email AS referrer_email
+      FROM ${REFERRALS_TABLE} r
+      LEFT JOIN ${USER_MASTER_TABLE} u
+      ON r.referred_by = u.id
+      ORDER BY r.referred_at DESC
+    `;
+
+    const result = await client.query(query);
+
+    return res.status(200).json({
+      total: result.rowCount,
+      referrals: result.rows,
+    });
+
+  } catch (err) {
+    console.error("Get All Referrals (Admin) Error:", err.message);
+    return res.status(500).json({ error: "Internal server error." });
+  } finally {
+    client.release();
+  }
+};
+
+export const getReferralByIdAdmin = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { referral_id } = req.params;
+
+    const query = `
+      SELECT r.*, u.employee_id, u.name AS referrer_name, u.email AS referrer_email
+      FROM ${REFERRALS_TABLE} r
+      LEFT JOIN ${USER_MASTER_TABLE} u ON r.referred_by = u.id
+      WHERE r.referral_id = $1
+    `;
+
+    const result = await client.query(query, [referral_id]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Referral not found." });
+    }
+
+    return res.status(200).json(result.rows[0]);
+
+  } catch (err) {
+    console.error("Get Referral By ID Error:", err.message);
+    return res.status(500).json({ error: "Internal server error." });
+  } finally {
+    client.release();
+  }
+};
+
+export const updateReferralStatusAdmin = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { id } = req.params; // referral UUID (DB ID)
+    const { status } = req.body;
+
+    const VALID_STATUSES = ["Shortlisted", "Interview", "Hired", "Rejected"];
+
+    if (!VALID_STATUSES.includes(status)) {
+      return res.status(400).json({ error: "Invalid status." });
+    }
+
+    // Get referral details
+    const selectQuery = `
+      SELECT r.*, u.email AS referrer_email, u.name AS referrer_name
+      FROM ${REFERRALS_TABLE} r
+      LEFT JOIN ${USER_MASTER_TABLE} u ON r.referred_by = u.id
+      WHERE r.id = $1
+    `;
+
+    const result = await client.query(selectQuery, [id]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Referral not found." });
+    }
+
+    const referral = result.rows[0];
+
+    // Update status
+    const updateQuery = `
+      UPDATE ${REFERRALS_TABLE}
+      SET status = $1, updated_by = 'Admin', updated_at = NOW()
+      WHERE id = $2
+      RETURNING *
+    `;
+
+    const updateRes = await client.query(updateQuery, [status, id]);
+
+
+
+    // ======================================================
+    // 📧 1. EMAIL TO EMPLOYEE (Referrer)
+    // ======================================================
+    await sendEmail(
+      referral.referrer_email,
+      `Referral Status Update - ${status}`,
+      `
+        <h2>Your Referral Status Updated</h2>
+        <p><strong>Candidate:</strong> ${referral.candidate_name}</p>
+        <p><strong>Referral ID:</strong> ${referral.referral_id}</p>
+        <p><strong>New Status:</strong> ${status}</p>
+      `
+    );
+
+
+
+    // ======================================================
+    // 📧 2. EMAIL TO CANDIDATE BASED ON STATUS
+    // ======================================================
+
+    // INTERVIEW EMAIL
+    if (status === "Interview") {
+      await sendEmail(
+        referral.candidate_email,
+        "Interview Scheduled",
+        `
+          <h2>Your Interview is Scheduled</h2>
+          <p>Dear ${referral.candidate_name},</p>
+          <p>Your profile has been shortlisted and your interview has been scheduled.</p>
+          <p>Our HR team will contact you with further details.</p>
+        `
+      );
+    }
+
+    // HIRED EMAIL
+    if (status === "Hired") {
+      await sendEmail(
+        referral.candidate_email,
+        "Congratulations! You Are Hired",
+        `
+          <h2>Congratulations 🎉</h2>
+          <p>Dear ${referral.candidate_name},</p>
+          <p>We are pleased to inform you that you have been <strong>selected</strong> for the position of <strong>${referral.position}</strong>.</p>
+          <p>Our HR team will contact you shortly with the onboarding details.</p>
+        `
+      );
+    }
+
+    // REJECTION EMAIL
+    if (status === "Rejected") {
+      await sendEmail(
+        referral.candidate_email,
+        "Application Status - Not Selected",
+        `
+          <h2>Thank You For Your Interest</h2>
+          <p>Dear ${referral.candidate_name},</p>
+          <p>We appreciate the time and effort you invested in the interview process.</p>
+          <p>After careful review, we regret to inform you that you were not selected for the position of <strong>${referral.position}</strong>.</p>
+          <p>We wish you the best in your future career opportunities.</p>
+        `
+      );
+    }
+
+
+
+    return res.status(200).json({
+      message: "Status updated successfully.",
+      updated_referral: updateRes.rows[0],
+    });
+
+  } catch (err) {
+    console.error("Update Referral Status Error:", err.message);
+    return res.status(500).json({ error: "Internal server error." });
   } finally {
     client.release();
   }

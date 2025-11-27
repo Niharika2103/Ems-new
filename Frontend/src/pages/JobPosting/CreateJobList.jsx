@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { createAdminJobPostApi } from "../../api/authApi";
+
 import {
   Box,
   Card,
@@ -104,31 +106,45 @@ const getCurrentDate = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
 
-    // Simulate API call
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Here you would typically make an API call to save the job
-      console.log("Job Published:", form);
-      
-      // Show success message
-      setOpenSnackbar(true);
-      
-      // Navigate after a short delay
-      setTimeout(() => {
-        navigate("/published-jobs");
-      }, 1000);
-      
-    } catch (error) {
-      console.error("Error publishing job:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    // CORRECT PAYLOAD (matching your backend)
+    const payload = {
+      job_title: form.title,
+      company: form.company,
+      experience: form.experience,
+      description: form.description,
+      requirements: form.skills,
+      salary_range: `${form.salaryMin} - ${form.salaryMax} LPA`,
+      location: form.location,
+      created_by: "ADMIN_ID_HERE",
+      department: form.department,
+      employment_type: form.type,
+      posted_on: form.postedOn,
+      status: "PUBLISHED",  // 🔥 Must include this
+    };
+
+    const res = await createAdminJobPostApi(payload);
+
+    console.log("Job Created:", res.data);
+
+    setOpenSnackbar(true);
+
+    setTimeout(() => {
+      navigate("/published-jobs");
+    }, 1000);
+
+  } catch (error) {
+    console.error("Error creating job:", error);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   const handleCloseSnackbar = () => {
     setOpenSnackbar(false);

@@ -62,6 +62,7 @@ import ApplyJob from "../components/ApplyJob";
 import PublishedJobs from "../pages/JobPosting/PublishedJobs";
 import JobApplicationTracking from "../pages/JobPosting/JobApplicationTracking";
 
+
 function AppRoutes() {
   return (
     <Routes>
@@ -476,6 +477,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+         
       </Route>
 
     </Routes>
