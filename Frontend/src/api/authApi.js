@@ -107,12 +107,21 @@ export const createAdminJobPostApi = (data) =>
 export const getAdminJobPostsApi = () =>
   adminClient.get(`${AUTH_API.ADMIN}/admin/job-posts`);
 
-
 export const updateJobStatusApi = (id, status) =>
   adminClient.patch(`${AUTH_API.ADMIN}/admin/job-posts/${id}/status`, {
     status,
     updated_by: "ADMIN_ID_HERE"
   });
+
+
+// Fetch only published jobs (for employee dashboard)
+export const getPublishedJobPostsApi = () =>
+  adminClient.get(`${AUTH_API.ADMIN}/jobs`);
+
+
+export const applyForJobApi = (formData) =>
+  adminClient.post(`${AUTH_API.ADMIN}/applications/apply`, formData);
+
 
 
 
