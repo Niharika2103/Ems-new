@@ -71,9 +71,9 @@ const OfferStatusFlow = () => {
     },
     { 
       value: 'Rejected', 
-      label: 'Offer Declined', 
+      label: 'Offer rejected', 
       icon: <CancelOutlined />,
-      description: 'Candidate has declined the offer',
+      description: 'Candidate has rejected the offer',
       timeframe: 'Closed'
     }
   ];

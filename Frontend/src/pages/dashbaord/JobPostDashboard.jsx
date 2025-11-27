@@ -21,6 +21,14 @@ const JobPostDashboard = () => {
       icon: GroupIcon,
       iconBg: "bg-sky-100",
       iconColor: "text-sky-600",
+      onClick: () => navigate("/published-jobs"),
+    },
+    {
+      title: "Create Jobs",
+      message: "Add, update, or remove employees",
+      icon: AssignmentIcon,
+      iconBg: "bg-sky-100",
+      iconColor: "text-sky-600",
       onClick: () => navigate("/job-postings"),
     },
     {
