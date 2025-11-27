@@ -56,7 +56,7 @@ const Sidebar = ({ isOpen, handleClose }) => {
       { name: "Attendance", icon: <Calendar size={20} />, path: "/dashboard/attendance" },
       { name: "Freelancer", icon: <CheckSquare size={20} />, path: "/dashboard/freelancer" },
       { name: "Accounts", icon: <Calendar size={20} />, path: "/accounts" },
-       { name: "Reports", icon: <BarChart3 size={20} />, path: "/reports" },
+       { name: "Reports", icon: <BarChart3 size={20} />, path: "/dashboard/reports" },
       { name: "Settings", icon: <Settings size={20} />, path: "/settings" },
     ],
     superadmin: [

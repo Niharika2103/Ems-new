@@ -61,6 +61,9 @@ import JobPosts from "../pages/JobPosting/JobPosts";
 import ApplyJob from "../components/ApplyJob";
 import PublishedJobs from "../pages/JobPosting/PublishedJobs";
 import JobApplicationTracking from "../pages/JobPosting/JobApplicationTracking";
+import ReportsDashboard from "../pages/dashbaord/ReportsDashboard";
+import PanelFeedback from "../pages/JobPosting/PanelFeedback";
+
 
 
 function AppRoutes() {
@@ -477,6 +480,24 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route path="/dashboard/reports" 
+        element={
+            <ProtectedRoute allowedRoles={["admin", "employee"]}>
+              < ReportsDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+          <Route 
+          path="/candidate/feedback"
+         element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              < PanelFeedback />
+            </ProtectedRoute>
+          }
+        />
+        
+      
          
       </Route>
 
