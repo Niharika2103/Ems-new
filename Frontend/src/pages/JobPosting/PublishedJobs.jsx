@@ -27,7 +27,7 @@ const PublishedJobs = () => {
       const res = await getPublishedJobPostsApi();
       const jobList = res?.data?.jobs || [];
 
-      // 🔥 CORRECT MAPPING (matching your DB columns)
+      // Format job object
       const formatted = jobList.map((job) => ({
         id: job.job_id,
         title: job.job_title,
@@ -49,6 +49,7 @@ const PublishedJobs = () => {
     }
   };
 
+  // Search Filter
   const filteredJobs = useMemo(() => {
     const searchLower = search.toLowerCase();
     return jobs.filter((job) =>
@@ -58,6 +59,7 @@ const PublishedJobs = () => {
     );
   }, [search, jobs]);
 
+  // Table Columns
   const columns = [
     { title: "Job Title", dataIndex: "title", key: "title" },
     { title: "Company", dataIndex: "company", key: "company" },
@@ -76,25 +78,89 @@ const PublishedJobs = () => {
       dataIndex: "status",
       key: "status",
       render: (status) => (
-        <Tag color={status === "PUBLISHED" ? "green" : "orange"}>
+        <Tag
+          color={
+            status === "PUBLISHED"
+              ? "green"
+              : status === "UNPUBLISHED"
+              ? "orange"
+              : "red"
+          }
+        >
           {status}
         </Tag>
       ),
     },
+
+    // ✅ ACTION BUTTONS
     {
       title: "Actions",
       key: "actions",
-      render: (_, record) => (
-        <Space>
-          <Button
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() =>
-              setJobs((prev) => prev.filter((j) => j.id !== record.id))
-            }
-          />
-        </Space>
-      ),
+      render: (_, record) => {
+        const { status } = record;
+
+        const handlePublish = () => {
+          message.success("Job Published");
+          setJobs((prev) =>
+            prev.map((job) =>
+              job.id === record.id ? { ...job, status: "PUBLISHED" } : job
+            )
+          );
+        };
+
+        const handleUnpublish = () => {
+          message.warning("Job Unpublished");
+          setJobs((prev) =>
+            prev.map((job) =>
+              job.id === record.id ? { ...job, status: "UNPUBLISHED" } : job
+            )
+          );
+        };
+
+        const handleArchive = () => {
+          message.error("Job Archived");
+          setJobs((prev) =>
+            prev.map((job) =>
+              job.id === record.id ? { ...job, status: "ARCHIVED" } : job
+            )
+          );
+        };
+
+        return (
+          <Space>
+
+            {/* Publish Button (visible for UNPUBLISHED + ARCHIVED) */}
+            {(status === "UNPUBLISHED" || status === "ARCHIVED") && (
+              <Button type="primary" onClick={handlePublish}>
+                Publish
+              </Button>
+            )}
+
+            {/* Unpublish Button (visible only for PUBLISHED) */}
+            {status === "PUBLISHED" && (
+              <Button onClick={handleUnpublish}>
+                Unpublish
+              </Button>
+            )}
+
+            {/* Archive Button (hidden if already archived) */}
+            {status !== "ARCHIVED" && (
+              <Button danger onClick={handleArchive}>
+                Archive
+              </Button>
+            )}
+
+            {/* Delete button (optional) */}
+            <Button
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() =>
+                setJobs((prev) => prev.filter((j) => j.id !== record.id))
+              }
+            />
+          </Space>
+        );
+      },
     },
   ];
 
