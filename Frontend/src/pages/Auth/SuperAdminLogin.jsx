@@ -197,6 +197,10 @@ export default function SuperAdminLogin() {
                 size="small"
                 margin="normal"
                 variant="outlined"
+                onCopy={(e) => e.preventDefault()}
+                onPaste={(e) => e.preventDefault()}
+                onCut={(e) => e.preventDefault()}
+                onContextMenu={(e) => e.preventDefault()}
                 error={!!errors.password}
                 helperText={errors.password}
                 required

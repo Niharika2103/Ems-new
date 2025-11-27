@@ -88,8 +88,8 @@ export const validateEmployeeRegistration = (formData) => {
   if (!formData.department) {
     errors.department = "Department is required";
   }
-if (!formData.designation || formData.designation.trim().length < 2) {
-    errors.designation = "Designation must be at least 2 characters";
+if (!formData.designation ) {
+    errors.designation = "Designation is required";
   }
 
   
@@ -277,6 +277,7 @@ export const validateEmployeeEdit = (formData) => {
     errors.phone = "Phone number must be 10 digits";
   }
 
+  
   // Address
   if (!formData.address?.trim()) {
     errors.address = "Address is required";

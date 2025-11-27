@@ -29,8 +29,11 @@ generateLetter,
 getEmployeeLetters,
 documentUpload,
 uploadEmployeeDocuments,
+getAllEmployeesWithDocs,
+downloadEmployeeDocument,
 deleteLetter,
 sendLetterEmail,
+// getUploadedEmployeeDocuments
 getAllReferralsAdmin,
 getReferralByIdAdmin,
 updateReferralStatusAdmin
@@ -115,6 +118,14 @@ router.post(
   uploadEmployeeDocuments
 );
 
+router.get("/employees-with-docs", getAllEmployeesWithDocs);
+// Single file (no index)
+router.get("/download/:employeeId/:docType", downloadEmployeeDocument);
+
+// Multiple files (with index)
+router.get("/download/:employeeId/:docType/:index", downloadEmployeeDocument);
+
+// router.get("/fetch/status" ,getUploadedEmployeeDocuments);
 router.delete("/letters/:employeeId/:filename", deleteLetter);
 
 router.post("/letters/send-email", sendLetterEmail);

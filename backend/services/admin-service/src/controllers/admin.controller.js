@@ -1922,6 +1922,81 @@ export const uploadEmployeeDocuments = async (req, res) => {
     client.release();
   }
 };
+
+
+
+export const getAllEmployeesWithDocs = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const result = await client.query(`
+      SELECT 
+        id,
+        name,
+        email,
+        phone,
+        department,
+        designation,
+        employment_type,
+        date_of_joining,
+        document_url,
+        status
+      FROM user_employees_master
+      WHERE status = 'uploaded'
+      ORDER BY created_at DESC
+    `);
+
+    return res.json({
+      success: true,
+      total: result.rows.length,
+      employees: result.rows
+    });
+
+  } catch (err) {
+    console.error("Error fetching employees with documents:", err);
+    return res.status(500).json({ error: "Internal Server Error" });
+  } finally {
+    client.release();
+  }
+};
+
+
+export const downloadEmployeeDocument = async (req, res) => {
+  const { employeeId, docType, index } = req.params;
+  const client = await pool.connect();
+
+  try {
+    const result = await client.query(
+      "SELECT document_url FROM user_employees_master WHERE id = $1",
+      [employeeId]
+    );
+
+    if (!result.rows[0]) return res.status(404).json({ error: "Employee not found" });
+
+    const docs = result.rows[0].document_url || {};
+    let filename;
+
+    if (docType === "educational_docs" || docType === "experience_docs") {
+      filename = docs[docType] ? docs[docType][parseInt(index)] : null;
+    } else {
+      filename = docs[docType];
+    }
+
+    if (!filename) return res.status(404).json({ error: "File not found" });
+
+    const filePath = path.resolve(`./src/uploads/${filename}`);
+    return res.download(filePath);  // <-- triggers browser download
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal Server Error" });
+  } finally {
+    client.release();
+  }
+};
+
+
+
+
 // DELETE /letters/:employeeId/:filename
 export const deleteLetter = async (req, res) => {
   const client = await pool.connect();

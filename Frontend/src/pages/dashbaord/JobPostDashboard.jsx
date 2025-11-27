@@ -29,8 +29,8 @@ const JobPostDashboard = () => {
     icon: PersonIcon,
     iconBg: "bg-sky-100",
     iconColor: "text-sky-600",
-    onClick: () => navigate("/job-posts"),
-    // onClick: () => navigate("/employee/application-tracking"),
+    // onClick: () => navigate("/job-posts"),
+    onClick: () => navigate("/employee/application-tracking"),
 
   },
 //   {
@@ -75,12 +75,12 @@ const JobPostDashboard = () => {
     },
 
      {
-      title: "Audits & logs",
-      message: "Manage accounts and transactions",
+      title: "Panel Feedback",
+      message: "Manage Candidate FeedBack",
       icon: BarChartIcon,
       iconBg: "bg-yellow-100",
       iconColor: "text-yellow-600",
-    //   onClick: () => navigate("/dashboard/audit-logs"),
+      onClick: () => navigate("/candidate/feedback"),
     },
   ];
 

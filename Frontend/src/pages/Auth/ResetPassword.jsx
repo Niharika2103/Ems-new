@@ -191,6 +191,10 @@ export default function ResetPassword() {
                   variant="outlined"
                   value={formData.newPassword}
                   onChange={handleChange}
+                  onCopy={(e) => e.preventDefault()}
+                  onPaste={(e) => e.preventDefault()}
+                  onCut={(e) => e.preventDefault()}
+                  onContextMenu={(e) => e.preventDefault()}
                   required
                   InputProps={{
                     endAdornment: (
@@ -210,6 +214,10 @@ export default function ResetPassword() {
                   size="small"
                   margin="normal"
                   variant="outlined"
+                  onCopy={(e) => e.preventDefault()}
+                  onPaste={(e) => e.preventDefault()}
+                  onCut={(e) => e.preventDefault()}
+                  onContextMenu={(e) => e.preventDefault()}
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   error={!!formError}
