@@ -29,34 +29,28 @@ const JobPostDashboard = () => {
     icon: PersonIcon,
     iconBg: "bg-sky-100",
     iconColor: "text-sky-600",
-    // onClick: () => navigate("/job-posts"),
-    onClick: () => navigate("/employee/application-tracking"),
-
+    // onClick: () => navigate("/job-posts"),//employee, freelancer
+    onClick: () => navigate("/employee/application-tracking"),//admin
   },
-//   {
-//     title: "Attendance",
-//     message: "Check your daily attendance records",
-//     icon: AccessTimeIcon,
-//     iconBg: "bg-orange-100",
-//     iconColor: "text-orange-600",
-//     onClick: () => navigate("/dashboard/attendance"),
-//   },
-//   {
-//     title: "Projects",
-//     message: "View all assigned and active projects",
-//     icon: AssignmentIcon,
-//     iconBg: "bg-green-100",
-//     iconColor: "text-green-600",
-//     onClick: () => navigate("/dashboard/fetch_project"),
-//   },
-//     {
-//       title: "Freelancer",
-//       message: "3rd party Employees reports",
-//       icon: BarChartIcon,
-//       iconBg: "bg-purple-100",
-//       iconColor: "text-purple-600",
-//       onClick: () => navigate("/dashboard/freelancer"),
-//     },
+
+  {
+      title: "Manage Offers",
+      message: "Offer jobs to employees",
+      icon: GroupIcon,
+      iconBg: "bg-sky-100",
+      iconColor: "text-sky-600",
+      onClick: () => navigate("/offers/status"),
+    },
+
+  {
+      title: "Panel Feedback",
+      message: "Manage Candidate FeedBack",
+      icon: BarChartIcon,
+      iconBg: "bg-yellow-100",
+      iconColor: "text-yellow-600",
+      onClick: () => navigate("/candidate/feedback"),
+    },
+
     {
       title: "Settings",
       message: "Configure system settings",
@@ -74,14 +68,7 @@ const JobPostDashboard = () => {
     //   onClick: () => navigate("/accounts/salary-structure"),
     },
 
-     {
-      title: "Panel Feedback",
-      message: "Manage Candidate FeedBack",
-      icon: BarChartIcon,
-      iconBg: "bg-yellow-100",
-      iconColor: "text-yellow-600",
-      onClick: () => navigate("/candidate/feedback"),
-    },
+     
   ];
 
   return (
