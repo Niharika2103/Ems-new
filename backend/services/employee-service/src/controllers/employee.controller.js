@@ -603,8 +603,10 @@ export const uploadExcel = async (req, res) => {
           email: row.getCell(2).value,      // Column B → Email
           phone: row.getCell(3).value,      // Column C → Phone
           address: row.getCell(4).value,    // Column D → Address
-          department: row.getCell(5).value, // Column E → Department
-          date_of_joining: row.getCell(6).value?.toISOString?.() || row.getCell(6).value,
+          date_of_joining: row.getCell(5).value?.toISOString?.() || row.getCell(5).value,
+          department: row.getCell(6).value, // Column E → Department
+          designation:row.getCell(7).value,
+          employmentType:row.getCell(8).value,
         });
       });
     }
@@ -663,6 +665,8 @@ export const bulkInsertEmployees = async (req, res) => {
             phone: emp.phone,
             address: emp.address,
             department: emp.department,
+            designation:emp.designation,
+            employment_type:emp.employmentType,
             date_of_joining: emp.dateOfJoining,
             access_flag: "y",
           },
@@ -683,8 +687,8 @@ export const bulkInsertEmployees = async (req, res) => {
     for (const emp of employeesPrepared) {
       const result = await client.query(
         `INSERT INTO ${USERS_TABLE} 
-          (employee_id, name, email, password, role, phone, address, department, date_of_joining, access_flag)
-         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+          (employee_id, name, email, password, role, phone, address, date_of_joining,department,designation ,employment_type, access_flag)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
          RETURNING id, email, name`,
         [
           emp.user.employee_id,
@@ -694,8 +698,10 @@ export const bulkInsertEmployees = async (req, res) => {
           emp.user.role,
           emp.user.phone,
           emp.user.address,
-          emp.user.department,
           emp.user.date_of_joining,
+          emp.user.department,
+          emp.user.designation,
+          emp.user.employment_type,
           emp.user.access_flag,
         ]
       );
@@ -1362,8 +1368,11 @@ export const getMyReferrals = async (req, res) => {
   const client = await pool.connect();
 
   try {
-    const user = getUserFromToken(req);
-    const employeeId = user.id;
+    const employeeId = req.params.employeeId;  // ⬅️ No token, using query param
+
+    if (!employeeId) {
+      return res.status(400).json({ error: "employeeId is required" });
+    }
 
     const query = `
       SELECT 
@@ -1376,7 +1385,7 @@ export const getMyReferrals = async (req, res) => {
         referred_at,
         work_exp,
         resume
-      FROM ${REFERRALS_TABLE}
+      FROM referrals
       WHERE referred_by = $1
       ORDER BY referred_at DESC
     `;
@@ -1395,5 +1404,3 @@ export const getMyReferrals = async (req, res) => {
     client.release();
   }
 };
-
-

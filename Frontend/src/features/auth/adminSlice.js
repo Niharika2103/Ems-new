@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { adminRegisterApi, adminLoginApi, adminVerifyOtpApi, DeleteAdminApi, uploadEmployeeDocumentsApi } from "../../api/authApi";
+import { adminRegisterApi, adminLoginApi, adminVerifyOtpApi, DeleteAdminApi, uploadEmployeeDocumentsApi, getAllReferralsAdminApi, getReferralByIdAdminApi, updateReferralStatusAdminApi, } from "../../api/authApi";
 
 export const adminRegister = createAsyncThunk("admin/register", async (data, thunkAPI) => {
   try {
@@ -53,6 +53,45 @@ export const uploadEmployeeDocuments = createAsyncThunk(
   }
 );
 
+// Get all referrals (Admin)
+export const getAllReferralsAdmin = createAsyncThunk(
+  "admin/getAllReferrals",
+  async (_, thunkAPI) => {
+    try {
+      const response = await getAllReferralsAdminApi();
+      return response.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+
+// Get referral by ID (Admin)
+export const getReferralByIdAdmin = createAsyncThunk(
+  "admin/getReferralById",
+  async (referral_id, thunkAPI) => {
+    try {
+      const response = await getReferralByIdAdminApi(referral_id);
+      return response.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+
+// Update referral status (Admin)
+export const updateReferralStatusAdmin = createAsyncThunk(
+  "admin/updateReferralStatus",
+  async ({ id, status }, thunkAPI) => {
+    try {
+      const response = await updateReferralStatusAdminApi(id, status);
+      return response.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+
 
 const adminSlice = createSlice({
   name: "admin",
@@ -62,6 +101,10 @@ const adminSlice = createSlice({
     role: localStorage.getItem("role") || null,
     loading: false,
     error: null,
+    allReferrals: [],          // for referral list
+  selectedReferral: null,    // for detail view
+  referralsLoading: false,   // for list/detail loading
+  referralActionLoading: false,
   },
   reducers: {
     logout: (state) => {
@@ -146,7 +189,58 @@ const adminSlice = createSlice({
 .addCase(uploadEmployeeDocuments.rejected, (state, action) => {
     state.loading = false;
     state.error = action.payload || "Document upload failed";
-});
+})
+
+// Get All Referrals
+.addCase(getAllReferralsAdmin.pending, (state) => {
+  state.referralsLoading = true;
+  state.error = null;
+})
+.addCase(getAllReferralsAdmin.fulfilled, (state, action) => {
+  state.referralsLoading = false;
+  state.allReferrals = action.payload.referrals || [];
+})
+.addCase(getAllReferralsAdmin.rejected, (state, action) => {
+  state.referralsLoading = false;
+  state.error = action.payload;
+})
+
+// Get Referral By ID
+.addCase(getReferralByIdAdmin.pending, (state) => {
+  state.referralsLoading = true;
+  state.error = null;
+  state.selectedReferral = null;
+})
+.addCase(getReferralByIdAdmin.fulfilled, (state, action) => {
+  state.referralsLoading = false;
+  state.selectedReferral = action.payload;
+})
+.addCase(getReferralByIdAdmin.rejected, (state, action) => {
+  state.referralsLoading = false;
+  state.error = action.payload;
+})
+
+// Update Referral Status
+.addCase(updateReferralStatusAdmin.pending, (state) => {
+  state.referralActionLoading = true;
+  state.error = null;
+})
+.addCase(updateReferralStatusAdmin.fulfilled, (state, action) => {
+  state.referralActionLoading = false;
+  // ✅ Optimistically update the list
+  const updatedReferral = action.payload.updated_referral;
+  state.allReferrals = state.allReferrals.map(ref =>
+    ref.id === updatedReferral.id ? updatedReferral : ref
+  );
+  // ✅ Also update selectedReferral if open
+  if (state.selectedReferral && state.selectedReferral.id === updatedReferral.id) {
+    state.selectedReferral = updatedReferral;
+  }
+})
+.addCase(updateReferralStatusAdmin.rejected, (state, action) => {
+  state.referralActionLoading = false;
+  state.error = action.payload;
+})
   },
 });
 

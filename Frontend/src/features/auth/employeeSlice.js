@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import {
   employeeRegisterApi, employeeLoginApi, employeeResetPasswordApi, employeeForgotPasswordApi, employeeUploadExcelApi,
-  employeeBulkInsertApi,
+  employeeBulkInsertApi, createReferralApi,  getMyReferralsApi,
 } from "../../api/authApi";
 
 export const employeeRegister = createAsyncThunk("employee/register", async (data, thunkAPI) => {
@@ -63,6 +63,36 @@ export const employeeUploadExcel = createAsyncThunk(
   }
 );
 
+// Create a new referral
+export const createReferral = createAsyncThunk(
+  "employee/createReferral",
+  async (formData, thunkAPI) => {
+    try {
+      const response = await createReferralApi(formData);
+      return response.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+
+// Get my referrals
+export const getMyReferrals = createAsyncThunk(
+  "employee/getMyReferrals",
+  async (employeeId, thunkAPI) => {
+    try {
+      if (!employeeId) {
+        return thunkAPI.rejectWithValue("Employee ID missing");
+      }
+
+      const response = await getMyReferralsApi(employeeId);
+      return response.data;
+
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
 const employeeSlice = createSlice({
   name: "employee",
   initialState: {
@@ -75,6 +105,10 @@ const employeeSlice = createSlice({
     error: null,
     preview: [],
     is_temp_admin: false,
+    myReferrals: [],          
+  referralLoading: false,   
+  referralError: null,      
+  referralSuccess: false,
   },
   reducers: {
     logout: (state) => {
@@ -181,6 +215,9 @@ const employeeSlice = createSlice({
             address: emp.address || "",
             department: emp.department || "",
             dateOfJoining: emp.dateOfJoining || emp.date_of_joining || "",
+           designation: emp.designation || "",
+        employmentType: emp.employmentType || "",
+
           }))
           : [];
       })
@@ -202,6 +239,37 @@ const employeeSlice = createSlice({
       .addCase(employeeBulkInsert.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+
+      // Create Referral
+      .addCase(createReferral.pending, (state) => {
+        state.referralLoading = true;
+        state.referralError = null;
+        state.referralSuccess = false;
+      })
+      .addCase(createReferral.fulfilled, (state, action) => {
+        state.referralLoading = false;
+        state.referralSuccess = true;
+        
+      })
+      .addCase(createReferral.rejected, (state, action) => {
+        state.referralLoading = false;
+        state.referralError = action.payload;
+        state.referralSuccess = false;
+      })
+      
+      // Get My Referrals
+      .addCase(getMyReferrals.pending, (state) => {
+        state.referralLoading = true;
+        state.referralError = null;
+      })
+      .addCase(getMyReferrals.fulfilled, (state, action) => {
+        state.referralLoading = false;
+        state.myReferrals = action.payload.referrals || [];
+      })
+      .addCase(getMyReferrals.rejected, (state, action) => {
+        state.referralLoading = false;
+        state.referralError = action.payload;
       })
   },
 });

@@ -18,7 +18,7 @@ import {
   Link,
 } from "@mui/material";
 import { useDispatch, useSelector } from "react-redux";
-import { employeeLogin,employeeForgotPassword } from "../../features/auth/employeeSlice";
+import { employeeLogin, employeeForgotPassword } from "../../features/auth/employeeSlice";
 import PersonIcon from "@mui/icons-material/Person";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -121,22 +121,30 @@ export default function Login() {
         .then((response) => {
           if (response.firstLogin) {
             localStorage.setItem("resetToken", response.resetToken);
-            navigate("/login/reset-password");
+            toast.success("Password Reseted successfully!")
+            setTimeout(() => {
+              navigate("/login/reset-password");
+            }, 700)
           } else if (response.otpRequired) {
             setStep(2);
             setOtp("");
             toast.info(response.message);
           } else {
             localStorage.setItem("token", response.token);
-            const decoded = decodeToken();                     
+            const decoded = decodeToken();
             console.log("Decoded after login:", decoded.employment_type);
-           if(decoded.employment_type==="freelancer"){
-          navigate("/freelancer_dashboard", { replace: true });
+            if (decoded.employment_type === "freelancer") {
+              toast.success("Login successfully!")
+              setTimeout(() => {
+                navigate("/freelancer_dashboard", { replace: true });
+              }, 700)
 
-          }else{
-          navigate("/dashboard", { replace: true });
-
-          }
+            } else {
+              toast.success("Login successfully!")
+              setTimeout(() => {
+                navigate("/dashboard", { replace: true });
+              }, 700)
+            }
             window.onpopstate = null;
           }
         })
@@ -150,16 +158,19 @@ export default function Login() {
       dispatch(employeeLogin({ email: formData.email, password: formData.password, employment_type: formData.employment_type, otp }))
         .unwrap()
         .then((response) => {
-          toast.success(response.message);
+
           localStorage.setItem("token", response.token);
           const decoded = decodeToken();
-          console.log("Decoded after login:", decoded.employment_type);
-          if(decoded.employment_type==="freelancer"){
-          navigate("/freelancer_dashboard", { replace: true });
-
-          }else{
-          navigate("/dashboard", { replace: true });
-
+          if (decoded.employment_type === "freelancer") {
+            toast.success("Login Successfully!");
+            setTimeout(() => {
+              navigate("/freelancer_dashboard", { replace: true });
+            }, 700)
+          } else {
+            toast.success(response.message);
+            setTimeout(() => {
+              navigate("/dashboard", { replace: true });
+            }, 700)
           }
           window.onpopstate = null;
         })
@@ -198,23 +209,23 @@ export default function Login() {
   //   setNewPasswordData({ newPassword: "", confirmPassword: "" });
   // };
   const handleForgotPasswordSubmit = (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  if (!formData.email) {
-    toast.error("Please enter your email");
-    return;
-  }
+    if (!formData.email) {
+      toast.error("Please enter your email");
+      return;
+    }
 
-  dispatch(employeeForgotPassword({ email: formData.email }))
-    .unwrap()
-    .then((res) => {
-      toast.success(res.message || "Password reset link sent to your email");
-      setForgotPassword(false);
-    })
-    .catch((err) => {
-      toast.error(err.error || "Failed to send reset link");
-    });
-};
+    dispatch(employeeForgotPassword({ email: formData.email }))
+      .unwrap()
+      .then((res) => {
+        toast.success(res.message || "Password reset link sent to your email");
+        setForgotPassword(false);
+      })
+      .catch((err) => {
+        toast.error(err.error || "Failed to send reset link");
+      });
+  };
 
 
   // Enable Login button only if fields are valid
@@ -229,222 +240,228 @@ export default function Login() {
     newPasswordData.confirmPassword.trim() !== "";
 
   return (
-    <div className="login-page">
+    <>
       <ToastContainer position="top-right" autoClose={2000} />
+      <div className="login-page">
 
-      <div className="top-carousel login-top">
-        <Swiper
-          modules={[Autoplay, EffectCoverflow]}
-          effect="coverflow"
-          centeredSlides={true}
-          slidesPerView={3}
-          loop={true}
-          autoplay={{ delay: 2500, disableOnInteraction: false }}
-          coverflowEffect={{ rotate: 0, stretch: 0, depth: 120, modifier: 1.1 }}
-          className="login-strip-swiper"
-        >
-          <SwiperSlide><img src={company} className="strip-img" alt="company" /></SwiperSlide>
-          <SwiperSlide><img src={company1} className="strip-img" alt="company1" /></SwiperSlide>
-          <SwiperSlide><img src={company2} className="strip-img" alt="company2" /></SwiperSlide>
-          <SwiperSlide><img src={company} className="strip-img" alt="repeat" /></SwiperSlide>
-          <SwiperSlide><img src={company1} className="strip-img" alt="repeat" /></SwiperSlide>
-          <SwiperSlide><img src={company2} className="strip-img" alt="repeat" /></SwiperSlide>
-        </Swiper>
-      </div>
+        <div className="top-carousel login-top">
+          <Swiper
+            modules={[Autoplay, EffectCoverflow]}
+            effect="coverflow"
+            centeredSlides={true}
+            slidesPerView={3}
+            loop={true}
+            autoplay={{ delay: 2500, disableOnInteraction: false }}
+            coverflowEffect={{ rotate: 0, stretch: 0, depth: 120, modifier: 1.1 }}
+            className="login-strip-swiper"
+          >
+            <SwiperSlide><img src={company} className="strip-img" alt="company" /></SwiperSlide>
+            <SwiperSlide><img src={company1} className="strip-img" alt="company1" /></SwiperSlide>
+            <SwiperSlide><img src={company2} className="strip-img" alt="company2" /></SwiperSlide>
+            <SwiperSlide><img src={company} className="strip-img" alt="repeat" /></SwiperSlide>
+            <SwiperSlide><img src={company1} className="strip-img" alt="repeat" /></SwiperSlide>
+            <SwiperSlide><img src={company2} className="strip-img" alt="repeat" /></SwiperSlide>
+          </Swiper>
+        </div>
 
-      <div className="bottom-area login-bottom" />
+        <div className="bottom-area login-bottom" />
 
-      <div className="login-card">
-        <div className="login-inner">
-          <Card sx={{ borderRadius: 3, boxShadow: 6, width: "100%" }}>
-            <CardContent>
-              <Box textAlign="center" mb={2}>
-                <PersonIcon className="admin-icon" sx={{ fontSize: { xs: 35, sm: 40 } }} />
-                <Typography variant="h6" fontWeight="bold" mt={1} fontSize={{ xs: "1rem", sm: "1.2rem" }}>
-                  {forgotPassword ? "Reset Password" : "Login"}
-                </Typography>
-              </Box>
+        <div className="login-card">
+          <div className="login-inner">
+            <Card sx={{ borderRadius: 3, boxShadow: 6, width: "100%" }}>
+              <CardContent>
+                <Box textAlign="center" mb={2}>
+                  <PersonIcon className="admin-icon" sx={{ fontSize: { xs: 35, sm: 40 } }} />
+                  <Typography variant="h6" fontWeight="bold" mt={1} fontSize={{ xs: "1rem", sm: "1.2rem" }}>
+                    {forgotPassword ? "Reset Password" : "Login"}
+                  </Typography>
+                </Box>
 
-              <Divider sx={{ mb: 2 }} />
+                <Divider sx={{ mb: 2 }} />
 
-              {!forgotPassword ? (
-                <Box component="form" onSubmit={handleLoginSubmit} noValidate>
-                  <TextField
-                    label="Email"
-                    name="email"
-                    type="email"
-                    fullWidth
-                    size="small"
-                    margin="normal"
-                    variant="outlined"
-                    value={formData.email}
-                    onChange={handleChange}
-                    error={!!errors.email}
-                    helperText={errors.email}
-                    required
-                  />
-
-                  <TextField
-                    label="Password"
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    fullWidth
-                    size="small"
-                    margin="normal"
-                    variant="outlined"
-                    value={formData.password}
-                    onChange={handleChange}
-                    error={!!errors.password}
-                    helperText={errors.password}
-                    required
-                    inputProps={{ maxLength: 16 }}
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            edge="end"
-                            onClick={() => setShowPassword((prev) => !prev)}
-                            aria-label={showPassword ? "Hide password" : "Show password"}
-                          >
-                            {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
-                          </IconButton>
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
-
-                  {/* Forgot Password Link - Better positioned */}
-                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: -0.5, mb: 1 }}>
-                    <Link
-                      component="button"
-                      type="button"
-                      variant="body2"
-                      sx={{
-                        fontSize: '0.8rem',
-                        textDecoration: 'none',
-                        color: 'primary.main',
-                        fontWeight: 500,
-                        '&:hover': {
-                          textDecoration: 'underline',
-                          color: 'primary.dark',
-                        },
-                      }}
-                      onClick={() => setForgotPassword(true)}
-                    >
-                      Forgot Password?
-                    </Link>
-                  </Box>
-
-                  <TextField
-                    select
-                    fullWidth
-                    size="small"
-                    margin="normal"
-                    name="employment_type"
-                    label="Employee Type"
-                    value={formData.employment_type}
-                    onChange={(e) =>
-                      setFormData({ ...formData, employment_type: e.target.value })
-                    }
-                    SelectProps={{
-                      MenuProps: {
-                        disablePortal: false,
-                        anchorOrigin: {
-                          vertical: 'bottom',
-                          horizontal: 'left',
-                        },
-                        transformOrigin: {
-                          vertical: 'top',
-                          horizontal: 'left',
-                        },
-                        PaperProps: {
-                          style: {
-                            maxHeight: 300,
-                            marginTop: 4,
-                          },
-                        },
-                      },
-                    }}
-                  >
-                    <MenuItem value="">Select</MenuItem>
-                    <MenuItem value="fulltime">Full-time</MenuItem>
-                    <MenuItem value="contract">Contract</MenuItem>
-                    <MenuItem value="freelancer">Freelancer</MenuItem>
-
-                  </TextField>
-
-                  {step === 2 && (
+                {!forgotPassword ? (
+                  <Box component="form" onSubmit={handleLoginSubmit} noValidate>
                     <TextField
-                      label="Enter OTP"
-                      name="otp"
+                      label="Email"
+                      name="email"
+                      type="email"
                       fullWidth
-                      margin="normal"
                       size="small"
-                      value={otp}
-                      onChange={(e) => setOtp(e.target.value)}
+                      margin="normal"
+                      variant="outlined"
+                      value={formData.email}
+                      onChange={handleChange}
+                      error={!!errors.email}
+                      helperText={errors.email}
                       required
                     />
-                  )}
 
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    size="small"
-                    className="!px-1 !py-1 !text-md admin-button"
-                    sx={{
-                      mt: 2,
-                      fontSize: { xs: "0.9rem", sm: "1rem" },
-                      py: 1.2
-                    }}
-                    type="submit"
-                    disabled={isButtonDisabled}
-                  >
-                    {loading ? "Logging in..." : "Log In"}
-                  </Button>
-                </Box>
-              ) : (
-                <Box component="form" onSubmit={handleForgotPasswordSubmit} noValidate>
+                    <TextField
+                      label="Password"
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      fullWidth
+                      size="small"
+                      margin="normal"
+                      variant="outlined"
+                      onCopy={(e) => e.preventDefault()}
+                      onPaste={(e) => e.preventDefault()}
+                      onCut={(e) => e.preventDefault()}
+                      onContextMenu={(e) => e.preventDefault()}
+                      value={formData.password}
+                      onChange={handleChange}
+                      error={!!errors.password}
+                      helperText={errors.password}
+                      required
+                      inputProps={{ maxLength: 16 }}
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              edge="end"
+                              onClick={() => setShowPassword((prev) => !prev)}
+                              aria-label={showPassword ? "Hide password" : "Show password"}
+                            >
+                              {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
 
-  <TextField
-    label="Enter your Email"
-    name="email"
-    type="email"
-    fullWidth
-    size="small"
-    margin="normal"
-    variant="outlined"
-    value={formData.email}
-    onChange={handleChange}
-    required
-  />
+                    {/* Forgot Password Link - Better positioned */}
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: -0.5, mb: 1 }}>
+                      <Link
+                        component="button"
+                        type="button"
+                        variant="body2"
+                        sx={{
+                          fontSize: '0.8rem',
+                          textDecoration: 'none',
+                          color: 'primary.main',
+                          fontWeight: 500,
+                          '&:hover': {
+                            textDecoration: 'underline',
+                            color: 'primary.dark',
+                          },
+                        }}
+                        onClick={() => setForgotPassword(true)}
+                      >
+                        Forgot Password?
+                      </Link>
+                    </Box>
 
-  <Box sx={{ display: "flex", gap: 1, mt: 3 }}>
-    <Button
-      fullWidth
-      variant="outlined"
-      size="small"
-      onClick={() => setForgotPassword(false)}
-    >
-      Back to Login
-    </Button>
+                    <TextField
+                      select
+                      fullWidth
+                      size="small"
+                      margin="normal"
+                      name="employment_type"
+                      label="Employee Type"
+                      value={formData.employment_type}
+                      onChange={(e) =>
+                        setFormData({ ...formData, employment_type: e.target.value })
+                      }
+                      SelectProps={{
+                        MenuProps: {
+                          disablePortal: false,
+                          anchorOrigin: {
+                            vertical: 'bottom',
+                            horizontal: 'left',
+                          },
+                          transformOrigin: {
+                            vertical: 'top',
+                            horizontal: 'left',
+                          },
+                          PaperProps: {
+                            style: {
+                              maxHeight: 300,
+                              marginTop: 4,
+                            },
+                          },
+                        },
+                      }}
+                    >
+                      <MenuItem value="">Select</MenuItem>
+                      <MenuItem value="fulltime">Full-time</MenuItem>
+                      <MenuItem value="contract">Contract</MenuItem>
+                      <MenuItem value="freelancer">Freelancer</MenuItem>
 
-    <Button
-      fullWidth
-      variant="contained"
-      size="small"
-      type="submit"
-    >
-      Send Reset Link
-    </Button>
-  </Box>
+                    </TextField>
 
-</Box>
+                    {step === 2 && (
+                      <TextField
+                        label="Enter OTP"
+                        name="otp"
+                        fullWidth
+                        margin="normal"
+                        size="small"
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value)}
+                        required
+                      />
+                    )}
 
-              )}
-            </CardContent>
-          </Card>
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      size="small"
+                      className="!px-1 !py-1 !text-md admin-button"
+                      sx={{
+                        mt: 2,
+                        fontSize: { xs: "0.9rem", sm: "1rem" },
+                        py: 1.2
+                      }}
+                      type="submit"
+                      disabled={isButtonDisabled}
+                    >
+                      {loading ? "Logging in..." : "Log In"}
+                    </Button>
+                  </Box>
+                ) : (
+                  <Box component="form" onSubmit={handleForgotPasswordSubmit} noValidate>
+
+                    <TextField
+                      label="Enter your Email"
+                      name="email"
+                      type="email"
+                      fullWidth
+                      size="small"
+                      margin="normal"
+                      variant="outlined"
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
+                    />
+
+                    <Box sx={{ display: "flex", gap: 1, mt: 3 }}>
+                      <Button
+                        fullWidth
+                        variant="outlined"
+                        size="small"
+                        onClick={() => setForgotPassword(false)}
+                      >
+                        Back to Login
+                      </Button>
+
+                      <Button
+                        fullWidth
+                        variant="contained"
+                        size="small"
+                        type="submit"
+                      >
+                        Send Reset Link
+                      </Button>
+                    </Box>
+
+                  </Box>
+
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

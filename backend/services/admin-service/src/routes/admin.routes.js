@@ -29,8 +29,14 @@ generateLetter,
 getEmployeeLetters,
 documentUpload,
 uploadEmployeeDocuments,
+getAllEmployeesWithDocs,
+downloadEmployeeDocument,
 deleteLetter,
-sendLetterEmail
+sendLetterEmail,
+// getUploadedEmployeeDocuments
+getAllReferralsAdmin,
+getReferralByIdAdmin,
+updateReferralStatusAdmin
 } from "../controllers/admin.controller.js";
 //import for jobpost
 
@@ -112,9 +118,26 @@ router.post(
   uploadEmployeeDocuments
 );
 
+router.get("/employees-with-docs", getAllEmployeesWithDocs);
+// Single file (no index)
+router.get("/download/:employeeId/:docType", downloadEmployeeDocument);
+
+// Multiple files (with index)
+router.get("/download/:employeeId/:docType/:index", downloadEmployeeDocument);
+
+// router.get("/fetch/status" ,getUploadedEmployeeDocuments);
 router.delete("/letters/:employeeId/:filename", deleteLetter);
 
 router.post("/letters/send-email", sendLetterEmail);
+
+// Get all referrals
+router.get("/referrals", getAllReferralsAdmin);
+
+// Get a referral by referral_id
+router.get("/referrals/:referral_id", getReferralByIdAdmin);
+
+// Update referral status (Shortlisted / Interview / Hired / Rejected)
+router.put("/referrals/status/:id", updateReferralStatusAdmin);
 
 // ================= Job Posting Module =================
 

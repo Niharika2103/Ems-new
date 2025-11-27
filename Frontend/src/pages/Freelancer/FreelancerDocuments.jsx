@@ -104,7 +104,7 @@ const FreelancerDocuments = () => {
         "Aadhaar number should be clearly visible",
         "Image should be clear and not blurry",
         "Ensure all personal details are readable",
-      ],
+      ],    
     },
     panCard: {
       formats: ".jpg, .jpeg, .png, .pdf",

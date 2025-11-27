@@ -101,12 +101,18 @@ export const promoteEmployeeApi = (employeeId) =>
 
 // ================= Admin Job Posts =================
 
-// CREATE Job Post (Admin)
 export const createAdminJobPostApi = (data) =>
   adminClient.post(`${AUTH_API.ADMIN}/admin/job-posts`, data);
 
-export const getPublishedJobPostsApi = (data) =>
-  adminClient.get(`${AUTH_API.ADMIN}/jobs`, data);
+export const getAdminJobPostsApi = () =>
+  adminClient.get(`${AUTH_API.ADMIN}/admin/job-posts`);
+
+
+export const updateJobStatusApi = (id, status) =>
+  adminClient.patch(`${AUTH_API.ADMIN}/admin/job-posts/${id}/status`, {
+    status,
+    updated_by: "ADMIN_ID_HERE"
+  });
 
 
 
@@ -474,3 +480,22 @@ export const uploadFreelancerDocsApi = (data) => {
 export const getFreelancerDocsApi = (id) => {
   return freelancerClient.get(`${AUTH_API.FREELANCER}/${id}`);
 };
+// ============== Referral (Employee) ======================
+export const createReferralApi = (formData) => {
+  return employeeClient.post(`${AUTH_API.EMPLOYEE}/refer-candidate`, formData);
+  
+};
+
+export const getMyReferralsApi = (employeeId) => {
+  return employeeClient.get(`${AUTH_API.EMPLOYEE}/my-referrals/${employeeId}`);
+};
+
+// =============== Referral Management (Admin) ===============
+export const getAllReferralsAdminApi = () =>
+  adminClient.get(`${AUTH_API.ADMIN}/referrals`);
+
+export const getReferralByIdAdminApi = (referral_id) =>
+  adminClient.get(`${AUTH_API.ADMIN}/referrals/${referral_id}`);
+
+export const updateReferralStatusAdminApi = (id, status) =>
+  adminClient.put(`${AUTH_API.ADMIN}/referrals/status/${id}`, { status });

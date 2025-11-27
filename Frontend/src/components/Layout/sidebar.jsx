@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { Home, Users, Calendar, Settings, LogOut, CheckSquare,Briefcase } from "lucide-react";
+import { Home, Users, Calendar, Settings, LogOut, CheckSquare,Briefcase,BarChart3 } from "lucide-react";
 import { useSelector } from "react-redux";
 
 const Sidebar = ({ isOpen, handleClose }) => {
@@ -22,6 +22,8 @@ const Sidebar = ({ isOpen, handleClose }) => {
       { name: "Attendance", icon: <Calendar size={20} />, path: "/freelancer/attendance" },
       { name: "Tasks", icon: <CheckSquare size={20} />, path: "/freelancer/tasks" },
       { name: "Payments", icon: <Users size={20} />, path: "/freelancer/payments" },
+      { name: "Reports", icon: <BarChart3 size={20} />, path: "/reports" },
+
     ];
   } else if (employment_type === "contract") {
     employeeMenus = [
@@ -29,6 +31,8 @@ const Sidebar = ({ isOpen, handleClose }) => {
       { name: "Attendance", icon: <Calendar size={20} />, path: "/contract/attendance" },
       { name: "HR", icon: <CheckSquare size={20} />, path: "/contract/hr" },
       { name: "Payslip", icon: <Users size={20} />, path: "/contract/payslip" },
+      { name: "Reports", icon: <BarChart3 size={20} />, path: "/reports" },
+
     ];
   } else {
     //  Full time employee
@@ -38,6 +42,8 @@ const Sidebar = ({ isOpen, handleClose }) => {
       { name: "Attendance", icon: <Calendar size={20} />, path: "/dashboard/emp_attendance" },
       { name: "HR", icon: <CheckSquare size={20} />, path: "/hr" },
       { name: "Payslip", icon: <Users size={20} />, path: "/slip" },
+      { name: "Reports", icon: <BarChart3 size={20} />, path: "/reports" },
+
     ];
   }
 
@@ -50,6 +56,7 @@ const Sidebar = ({ isOpen, handleClose }) => {
       { name: "Attendance", icon: <Calendar size={20} />, path: "/dashboard/attendance" },
       { name: "Freelancer", icon: <CheckSquare size={20} />, path: "/dashboard/freelancer" },
       { name: "Accounts", icon: <Calendar size={20} />, path: "/accounts" },
+       { name: "Reports", icon: <BarChart3 size={20} />, path: "/dashboard/reports" },
       { name: "Settings", icon: <Settings size={20} />, path: "/settings" },
     ],
     superadmin: [
@@ -59,6 +66,7 @@ const Sidebar = ({ isOpen, handleClose }) => {
       { name: "System Config", icon: <Settings size={20} />, path: "/system-config" },
       { name: "Audit Logs", icon: <CheckSquare size={20} />, path: "/audit-logs" },
       { name: "Accounts", icon: <Calendar size={20} />, path: "/accounts" },
+       { name: "Reports", icon: <BarChart3 size={20} />, path: "/reports" },
       { name: "Settings", icon: <Settings size={20} />, path: "/settings" },
     ],
   };

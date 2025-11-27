@@ -61,6 +61,11 @@ import JobPosts from "../pages/JobPosting/JobPosts";
 import ApplyJob from "../components/ApplyJob";
 import PublishedJobs from "../pages/JobPosting/PublishedJobs";
 import JobApplicationTracking from "../pages/JobPosting/JobApplicationTracking";
+import ReportsDashboard from "../pages/dashbaord/ReportsDashboard";
+import PanelFeedback from "../pages/JobPosting/PanelFeedback";
+import OfferStatusFlow from "../pages/JobPosting/OfferStatusFlow";
+
+
 
 
 function AppRoutes() {
@@ -198,7 +203,13 @@ function AppRoutes() {
             <JobApplicationTracking />
              </ProtectedRoute>}
         />
-
+       <Route 
+          path="/offers/status" 
+          element={ <ProtectedRoute allowedRoles={["admin"]}>
+            <OfferStatusFlow />
+             </ProtectedRoute>}
+        />
+    
 
         <Route
           path="/attendance/projects"
@@ -477,6 +488,61 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route path="/dashboard/reports" 
+        element={
+            <ProtectedRoute allowedRoles={["admin", "employee"]}>
+              < ReportsDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+          <Route 
+          path="/candidate/feedback"
+         element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              < PanelFeedback />
+            </ProtectedRoute>
+          }
+        />
+        {/* <Route path="/reports/hr" 
+        element={
+             <ProtectedRoute allowedRoles={["admin"]}>
+              < HRAnalytics />
+            </ProtectedRoute>
+          }
+        />
+
+       
+
+        <Route path="/reports/payroll"
+         element={
+             <ProtectedRoute allowedRoles={["admin"]}>
+              < PayrollAnalytics />
+            </ProtectedRoute>
+          }
+        /> 
+        <Route path="/reports/compliance" 
+         element={
+             <ProtectedRoute allowedRoles={["admin"]}>
+              < ComplianceReports />
+            </ProtectedRoute>
+          }
+        /> 
+        <Route path="/reports/freelancer-roi"
+        element={
+             <ProtectedRoute allowedRoles={["admin"]}>
+              < FreelancerROI />
+            </ProtectedRoute>
+          }
+        />  
+        <Route path="/reports/custom"
+         element={
+             <ProtectedRoute allowedRoles={["admin"]}>
+              < CustomReports />
+            </ProtectedRoute>
+          }
+        />  
+       */}
          
       </Route>
 
