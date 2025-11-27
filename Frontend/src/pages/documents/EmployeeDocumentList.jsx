@@ -1,201 +1,221 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow, 
-  Paper, 
-  Button, 
-  Dialog, 
-  DialogTitle, 
-  DialogContent, 
+import React, { useState, useEffect } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
   DialogActions,
   Typography,
   Box,
   Chip,
   IconButton,
-  Tooltip
-} from '@mui/material';
-import { 
-  Visibility, 
-  Download, 
-  Person 
-} from '@mui/icons-material';
-
-// Mock data - replace with actual API call
-const mockEmployees = [
-  {
-    id: 1,
-    name: 'John Doe',
-    employeeId: 'EMP001',
-    department: 'Engineering',
-    uploadedDocuments: [
-      { type: 'bankPassBook', name: 'bank_statement.pdf', uploadedAt: '2024-01-15' },
-      { type: 'aadhar', name: 'aadhar_card.pdf', uploadedAt: '2024-01-15' },
-      { type: 'pan', name: 'pan_card.pdf', uploadedAt: '2024-01-15' }
-    ]
-  },
-  {
-    id: 2,
-    name: 'Jane Smith',
-    employeeId: 'EMP002',
-    department: 'HR',
-    uploadedDocuments: [
-      { type: 'educational', name: 'degree_certificate.pdf', uploadedAt: '2024-01-14' },
-      { type: 'previousCompany', name: 'experience_letter.pdf', uploadedAt: '2024-01-14' },
-      { type: 'aadhar', name: 'aadhar_card.pdf', uploadedAt: '2024-01-14' },
-      { type: 'pan', name: 'pan_card.pdf', uploadedAt: '2024-01-14' }
-    ]
-  },
-  {
-    id: 3,
-    name: 'Mike Johnson',
-    employeeId: 'EMP003',
-    department: 'Sales',
-    uploadedDocuments: [
-      { type: 'bankPassBook', name: 'passbook.pdf', uploadedAt: '2024-01-13' },
-      { type: 'aadhar', name: 'aadhar.pdf', uploadedAt: '2024-01-13' }
-    ]
-  }
-];
-
+  Tooltip,
+} from "@mui/material";
+import { Visibility, Download } from "@mui/icons-material";
+import { employeeUploadDocFecth } from "../../features/employeesDetails/employeesSlice";
+import { useDispatch, useSelector } from "react-redux";
+import {employeeDocDownloadbyAdminApi} from "../../api/authApi"
 const documentTypes = {
-  bankPassBook: { label: 'Bank Pass Book', color: 'primary' },
-  aadhar: { label: 'Aadhar Card', color: 'secondary' },
-  pan: { label: 'PAN Card', color: 'success' },
-  previousCompany: { label: 'Previous Company', color: 'warning' },
-  educational: { label: 'Educational Certificates', color: 'info' }
+  bankPassBook: { label: "Bank Pass Book", color: "primary" },
+  aadhar: { label: "Aadhar Card", color: "secondary" },
+  pan: { label: "PAN Card", color: "success" },
+  previousCompany: { label: "Previous Company Docs", color: "warning" },
+  educational: { label: "Educational Docs", color: "info" },
 };
 
 const EmployeeDocumentList = () => {
+  const dispatch = useDispatch();
+
+  const { doclist = [], loading: sliceLoading = false } = useSelector(
+    (state) => state.employeeDetails
+  );
+
   const [employees, setEmployees] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate API call
-    const fetchEmployees = async () => {
-      try {
-        setLoading(true);
-        // Replace with actual API call
-        // const response = await fetch('/api/employees/documents');
-        // const data = await response.json();
-        
-        setTimeout(() => {
-          setEmployees(mockEmployees);
-          setLoading(false);
-        }, 1000);
-      } catch (error) {
-        console.error('Error fetching employees:', error);
-        setLoading(false);
-      }
-    };
+    dispatch(employeeUploadDocFecth());
+  }, [dispatch]);
 
-    fetchEmployees();
-  }, []);
+  // ✅ Transform backend → UI format
+  useEffect(() => {
+    if (!doclist?.employees) return;
+
+    const transformed = doclist.employees.map((emp) => {
+      const docs = [];
+      const d = emp.document_url || {};
+      // inside your useEffect that transforms doclist.employees -> transformed
+      if (d.pan)
+        docs.push({
+          type: "pan",
+          name: d.pan,
+          uploadedAt: emp.date_of_joining,
+          url: d.pan,
+          docKey: "pan",       // backend expects 'pan'
+        });
+
+      if (d.aadhaar)
+        docs.push({
+          type: "aadhar",
+          name: d.aadhaar,
+          uploadedAt: emp.date_of_joining,
+          url: d.aadhaar,
+          docKey: "aadhaar",
+        });
+
+      if (d.passbook)
+        docs.push({
+          type: "bankPassBook",
+          name: d.passbook,
+          uploadedAt: emp.date_of_joining,
+          url: d.passbook,
+          docKey: "passbook",
+        });
+
+      // experience_docs (array) — include index
+      (d.experience_docs || []).forEach((file, idx) =>
+        docs.push({
+          type: "previousCompany",
+          name: file,
+          uploadedAt: emp.date_of_joining,
+          url: file,
+          docKey: "experience_docs",
+          index: idx,
+        })
+      );
+
+      // educational_docs (array) — include index
+      (d.educational_docs || []).forEach((file, idx) =>
+        docs.push({
+          type: "educational",
+          name: file,
+          uploadedAt: emp.date_of_joining,
+          url: file,
+          docKey: "educational_docs",
+          index: idx,
+        })
+      );
+
+
+      return {
+        id: emp.id,
+        name: emp.name,
+        department: emp.department || "N/A",
+        status: emp.status,
+        date_of_joining: emp.date_of_joining,
+        email: emp.email,
+        uploadedDocuments: docs,
+
+      };
+    });
+
+    setEmployees(transformed);
+  }, [doclist]);
 
   const handleViewDocuments = (employee) => {
+    console.log(employee, 'employee')
     setSelectedEmployee(employee);
     setViewDialogOpen(true);
   };
 
   const handleCloseDialog = () => {
-    setViewDialogOpen(false);
     setSelectedEmployee(null);
+    setViewDialogOpen(false);
   };
 
-  const handleDownloadDocument = (document) => {
-    // Implement download functionality
-    console.log('Downloading:', document);
-    // Add your download logic here
-  };
+ const handleDownloadDocument = async (doc) => {
+  try {
+    const response = await employeeDocDownloadbyAdminApi(
+      selectedEmployee.id,
+      doc.docKey,
+      doc.index
+    );
 
-  const getDocumentCount = (employee) => {
-    return employee.uploadedDocuments.length;
-  };
+    const fileURL = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement("a");
 
-  const getDocumentTypeCount = (employee, docType) => {
-    return employee.uploadedDocuments.filter(doc => doc.type === docType).length;
-  };
+    link.href = fileURL;
+    link.download = doc.name; // file name from DB
+    link.click();
+    window.URL.revokeObjectURL(fileURL);
 
-  if (loading) {
+  } catch (error) {
+    console.error("Download failed:", error);
+    alert("Error downloading file");
+  }
+};
+
+  const getDocumentCount = (emp) => emp.uploadedDocuments.length;
+
+  if (sliceLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-        <Typography>Loading employees...</Typography>
+      <Box display="flex" justifyContent="center" mt={5}>
+        <Typography>Loading employee documents...</Typography>
       </Box>
     );
   }
-
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h4" gutterBottom sx={{ mb: 3 }}>
+      <Typography variant="h4" gutterBottom>
         Employee Documents
       </Typography>
 
+      {/* Table */}
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
-            <TableRow sx={{ backgroundColor: 'primary.main' }}>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Employee ID</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Name</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Department</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Documents Uploaded</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Actions</TableCell>
+            <TableRow sx={{ backgroundColor: "primary.main" }}>
+              <TableCell sx={{ color: "white" }}>Name</TableCell>
+              <TableCell sx={{ color: "white" }}>Department</TableCell>
+              <TableCell sx={{ color: "white" }}>Status</TableCell>
+              <TableCell sx={{ color: "white" }}>Date of Joining</TableCell>
+              <TableCell sx={{ color: "white" }}>Documents</TableCell>
+              <TableCell sx={{ color: "white" }}>Actions</TableCell>
             </TableRow>
           </TableHead>
+
           <TableBody>
-            {employees.map((employee) => (
-              <TableRow key={employee.id} hover>
+            {employees.map((emp) => (
+              <TableRow key={emp.id}>
+                <TableCell>{emp.name}</TableCell>
+
                 <TableCell>
-                  <Box display="flex" alignItems="center">
-                    <Person sx={{ mr: 1, color: 'primary.main' }} />
-                    {employee.employeeId}
-                  </Box>
+                  <Chip label={emp.department} variant="outlined" />
                 </TableCell>
+
                 <TableCell>
-                  <Typography variant="subtitle1" fontWeight="medium">
-                    {employee.name}
-                  </Typography>
-                </TableCell>
-                <TableCell>
-                  <Chip 
-                    label={employee.department} 
-                    size="small" 
-                    variant="outlined" 
+                  <Chip
+                    label={emp.status}
+                    color={emp.status === "uploaded" ? "success" : "warning"}
+                    size="small"
                   />
                 </TableCell>
+
                 <TableCell>
-                  <Box display="flex" gap={1} flexWrap="wrap">
-                    <Chip 
-                      label={`${getDocumentCount(employee)} docs`}
-                      color="primary"
-                      size="small"
-                    />
-                    {Object.keys(documentTypes).map(docType => {
-                      const count = getDocumentTypeCount(employee, docType);
-                      if (count > 0) {
-                        // return (
-                        //   <Chip
-                        //     key={docType}
-                        //     label={`${documentTypes[docType].label}: ${count}`}
-                        //     size="small"
-                        //     variant="outlined"
-                        //   />
-                        // );
-                      }
-                      return null;
-                    })}
-                  </Box>
+                  {emp.date_of_joining
+                    ? new Date(emp.date_of_joining).toLocaleDateString()
+                    : "---"}
                 </TableCell>
+
+                <TableCell>
+                  <Chip
+                    label={`${getDocumentCount(emp)} docs`}
+                    color="primary"
+                    size="small"
+                  />
+                </TableCell>
+
                 <TableCell>
                   <Tooltip title="View Documents">
-                    <IconButton
-                      color="primary"
-                      onClick={() => handleViewDocuments(employee)}
-                    >
+                    <IconButton onClick={() => handleViewDocuments(emp)}>
                       <Visibility />
                     </IconButton>
                   </Tooltip>
@@ -207,8 +227,8 @@ const EmployeeDocumentList = () => {
       </TableContainer>
 
       {/* View Documents Dialog */}
-      <Dialog 
-        open={viewDialogOpen} 
+      <Dialog
+        open={viewDialogOpen}
         onClose={handleCloseDialog}
         maxWidth="md"
         fullWidth
@@ -220,12 +240,12 @@ const EmployeeDocumentList = () => {
           {selectedEmployee && (
             <Box sx={{ mt: 2 }}>
               <Typography variant="subtitle1" gutterBottom>
-                Employee ID: {selectedEmployee.employeeId}
+                Employee Email: {selectedEmployee.email}
               </Typography>
               <Typography variant="subtitle2" color="textSecondary" gutterBottom>
                 Department: {selectedEmployee.department}
               </Typography>
-              
+
               <Box sx={{ mt: 3 }}>
                 <Typography variant="h6" gutterBottom>
                   Uploaded Documents:

@@ -1,5 +1,6 @@
 import { superadminClient,employeeClient,adminClient,ProjectClient,AttendanceClient,SalaryStructureClient } from "./axiosClient";
 import { AUTH_API } from "../utils/constants";
+import { RestaurantMenuSharp } from "@mui/icons-material";
 
 
 // ================= SuperAdmin =================
@@ -441,6 +442,24 @@ export const createSalaryStructureApi=(formData)=>{
 export const fetchsalarybgidApi=(id)=>{
   return SalaryStructureClient.get(`${AUTH_API.SALARYSTRUCTURE}/last/${id}`)
 }
+//================Admin upload Employee Doc ===================
+
+export const employeeUploadDocFecthApi=()=>{
+  return adminClient.get(`${AUTH_API.ADMIN}/employees-with-docs`)
+}
+ 
+export const employeeDocDownloadbyAdminApi = (employeeId, docKey, index, onDownloadProgress) => {
+  const url = index !== undefined && index !== null
+    ? `${AUTH_API.ADMIN}/download/${employeeId}/${docKey}/${index}`
+    : `${AUTH_API.ADMIN}/download/${employeeId}/${docKey}`;
+
+  return adminClient.get(url, {
+    responseType: "blob",
+    onDownloadProgress,
+  });
+};
+
+
 
 // ============== Referral (Employee) ======================
 export const createReferralApi = (formData) => {
