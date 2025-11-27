@@ -27,7 +27,7 @@ const EmpInfoDashboard = () => {
   // admin or freelancer Decide path
   const getDocumentPath = () => {
     if (storedUser?.employment_type === "freelancer") {
-      // return "/dashboard/freelancer/documents";
+      return "/dashboard/freelancer/documents";
     }
     if (role === "admin") {
       return "/documents/employees";

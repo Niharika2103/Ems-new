@@ -42,4 +42,5 @@ export const employeeClient = createAxiosClient(API_BASES.EMPLOYEE);
 export const ProjectClient = createAxiosClient(API_BASES.PROJECT);
 export const AttendanceClient = createAxiosClient(API_BASES.ATTENDANCE);
 export const SalaryStructureClient = createAxiosClient(API_BASES.SALARYSTRUCTURE);
+export const freelancerClient = createAxiosClient(API_BASES.FREELANCER);
 

@@ -111,7 +111,6 @@ const handleSubmit = async (e) => {
   setLoading(true);
 
   try {
-    // CORRECT PAYLOAD (matching your backend)
     const payload = {
       job_title: form.title,
       company: form.company,
@@ -123,8 +122,7 @@ const handleSubmit = async (e) => {
       created_by: "ADMIN_ID_HERE",
       department: form.department,
       employment_type: form.type,
-      posted_on: form.postedOn,
-      status: "PUBLISHED",  // 🔥 Must include this
+      status: form.status,  // 🔥 Must include this
     };
 
     const res = await createAdminJobPostApi(payload);
@@ -506,7 +504,7 @@ const handleSubmit = async (e) => {
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
-                          <CalendarToday sx={{ color: "#6b7280", fontSize: 20 }} />
+                          <CalendarToday sx={{ color: "#5d6b87ff", fontSize: 20 }} />
                         </InputAdornment>
                       ),
                     }}
