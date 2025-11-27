@@ -10,6 +10,8 @@ import {
   CardContent,
   TextField,
 } from "@mui/material";
+import { uploadFreelancerDocsApi } from "../../api/authApi";
+import { decodeToken } from "../../api/decodeToekn"; // 
 
 const steps = [
   "Bank Passbook Upload",
@@ -31,6 +33,10 @@ const FreelancerDocuments = () => {
     gstReturns: null,
   });
 
+  //  // ✅ Get employeeId from decoded JWT token
+  const decoded = decodeToken();
+  const employeeId = decoded?.id; 
+
   const handleNext = () => {
     if (activeStep < steps.length - 1) setActiveStep((prev) => prev + 1);
   };
@@ -42,7 +48,10 @@ const FreelancerDocuments = () => {
   const handleFileChange = (e, key) => {
     const files = e.target.files;
     if (files) {
-      setFormData({ ...formData, [key]: files.length > 1 ? Array.from(files) : files[0] });
+      setFormData({
+        ...formData,
+        [key]: files.length > 1 ? Array.from(files) : files[0],
+      });
     }
   };
 
@@ -51,12 +60,32 @@ const FreelancerDocuments = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = () => {
-    alert("All documents submitted successfully!");
-    console.log(formData);
+  // ✅ Handle submit with employeeId check
+  const handleSubmit = async () => {
+    if (!employeeId) {
+      console.error("❌ Employee ID not found. Cannot submit documents.");
+      return;
+    }
+
+    const payload = {
+       id: employeeId,
+      gstNumber: formData.gstNumber,
+      bankPassbook: formData.bankPassbook,
+      aadhaarCard: formData.aadhaarCard,
+      panCard: formData.panCard,
+      gstCertificate: formData.gstCertificate,
+      gstReturns: formData.gstReturns,
+    };
+
+    try {
+      const response = await uploadFreelancerDocsApi(payload);
+      console.log("UPLOAD SUCCESS", response.data);
+    } catch (error) {
+      console.log("UPLOAD ERROR", error);
+    }
   };
 
-  // File requirements configuration
+  // File requirements
   const fileRequirements = {
     bankPassbook: {
       formats: ".jpg, .jpeg, .png, .pdf",
@@ -64,8 +93,8 @@ const FreelancerDocuments = () => {
       requirements: [
         "Ensure all details are clearly visible",
         "File should show account holder name, account number, and IFSC code",
-        "Image should be clear and not blurry"
-      ]
+        "Image should be clear and not blurry",
+      ],
     },
     aadhaarCard: {
       formats: ".jpg, .jpeg, .png, .pdf",
@@ -74,8 +103,8 @@ const FreelancerDocuments = () => {
         "Both front and back sides required",
         "Aadhaar number should be clearly visible",
         "Image should be clear and not blurry",
-        "Ensure all personal details are readable"
-      ]
+        "Ensure all personal details are readable",
+      ],    
     },
     panCard: {
       formats: ".jpg, .jpeg, .png, .pdf",
@@ -84,8 +113,8 @@ const FreelancerDocuments = () => {
         "PAN number should be clearly visible",
         "Name on PAN should match your legal name",
         "Image should be clear and not blurry",
-        "Full card should be visible in the image"
-      ]
+        "Full card should be visible in the image",
+      ],
     },
     gstCertificate: {
       formats: ".jpg, .jpeg, .png, .pdf",
@@ -94,8 +123,8 @@ const FreelancerDocuments = () => {
         "GST registration certificate required",
         "Certificate should be clearly readable",
         "All details including GSTIN should be visible",
-        "Ensure the document is valid and not expired"
-      ]
+        "Ensure the document is valid and not expired",
+      ],
     },
     gstReturns: {
       formats: ".pdf",
@@ -104,11 +133,10 @@ const FreelancerDocuments = () => {
         "Upload GST returns for the last 6 months",
         "Files should be in PDF format",
         "All pages should be included",
-        "Returns should be properly signed and verified"
-      ]
-    }
+        "Returns should be properly signed and verified",
+      ],
+    },
   };
-
   const FileRequirementsBox = ({ type }) => (
     <Box sx={{ mt: 3, p: 2, backgroundColor: "#f8f9fa", borderRadius: 1 }}>
       <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 1 }}>
