@@ -215,6 +215,9 @@ const employeeSlice = createSlice({
             address: emp.address || "",
             department: emp.department || "",
             dateOfJoining: emp.dateOfJoining || emp.date_of_joining || "",
+           designation: emp.designation || "",
+        employmentType: emp.employmentType || "",
+
           }))
           : [];
       })

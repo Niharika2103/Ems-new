@@ -207,6 +207,10 @@ export default function SuperAdminRegister() {
                   size="small"
                   error={!!errors.password}
                   helperText={errors.password}
+                  onCopy={(e) => e.preventDefault()}
+                  onPaste={(e) => e.preventDefault()}
+                  onCut={(e) => e.preventDefault()}
+                  onContextMenu={(e) => e.preventDefault()}
                   required
                   InputProps={{
                     endAdornment: (
@@ -232,6 +236,10 @@ export default function SuperAdminRegister() {
                   size="small"
                   error={!!errors.confirmPassword}
                   helperText={errors.confirmPassword}
+                  onCopy={(e) => e.preventDefault()}
+                  onPaste={(e) => e.preventDefault()}
+                  onCut={(e) => e.preventDefault()}
+                  onContextMenu={(e) => e.preventDefault()}
                   required
                   InputProps={{
                     endAdornment: (

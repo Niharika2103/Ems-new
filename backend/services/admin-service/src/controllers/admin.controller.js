@@ -1923,53 +1923,78 @@ export const uploadEmployeeDocuments = async (req, res) => {
   }
 };
 
-// export const getUploadedEmployeeDocuments = async (req, res) => {
-//   const client = await pool.connect();
 
-//   try {
-//     const user = getUserFromToken(req);
 
-//     if (!user) {
-//       return res.status(401).json({ error: "Unauthorized" });
-//     }
+export const getAllEmployeesWithDocs = async (req, res) => {
+  const client = await pool.connect();
 
-//     // CASE 1 → role = employee & role2 = employee
-//     if (user.role === "employee" && user.role2 === "employee") {
-//       const result = await client.query(
-//         `SELECT * 
-//          FROM user_employees_master
-//          WHERE status = 'uploaded'
-//          ORDER BY updated_at DESC`
-//       );
+  try {
+    const result = await client.query(`
+      SELECT 
+        id,
+        name,
+        email,
+        phone,
+        department,
+        designation,
+        employment_type,
+        date_of_joining,
+        document_url,
+        status
+      FROM user_employees_master
+      WHERE status = 'uploaded'
+      ORDER BY created_at DESC
+    `);
 
-//       return res.json(result.rows);
-//     }
+    return res.json({
+      success: true,
+      total: result.rows.length,
+      employees: result.rows
+    });
 
-//     // CASE 2 → admin, superadmin, or employee with another role2
-//     if (
-//       user.role === "admin" ||
-//       user.role === "superadmin" ||
-//       (user.role === "employee" && user.role2 !== "employee")
-//     ) {
-//       const result = await client.query(
-//         `SELECT * 
-//          FROM user_employees_master
-//          WHERE status = 'uploaded'
-//          ORDER BY updated_at DESC`
-//       );
+  } catch (err) {
+    console.error("Error fetching employees with documents:", err);
+    return res.status(500).json({ error: "Internal Server Error" });
+  } finally {
+    client.release();
+  }
+};
 
-//       return res.json(result.rows);
-//     }
 
-//     return res.status(403).json({ error: "Invalid role" });
+export const downloadEmployeeDocument = async (req, res) => {
+  const { employeeId, docType, index } = req.params;
+  const client = await pool.connect();
 
-//   } catch (error) {
-//     console.error("Error fetching uploaded documents:", error.message);
-//     return res.status(500).json({ error: error.message });
-//   } finally {
-//     client.release();
-//   }
-// };
+  try {
+    const result = await client.query(
+      "SELECT document_url FROM user_employees_master WHERE id = $1",
+      [employeeId]
+    );
+
+    if (!result.rows[0]) return res.status(404).json({ error: "Employee not found" });
+
+    const docs = result.rows[0].document_url || {};
+    let filename;
+
+    if (docType === "educational_docs" || docType === "experience_docs") {
+      filename = docs[docType] ? docs[docType][parseInt(index)] : null;
+    } else {
+      filename = docs[docType];
+    }
+
+    if (!filename) return res.status(404).json({ error: "File not found" });
+
+    const filePath = path.resolve(`./src/uploads/${filename}`);
+    return res.download(filePath);  // <-- triggers browser download
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Internal Server Error" });
+  } finally {
+    client.release();
+  }
+};
+
+
 
 
 // DELETE /letters/:employeeId/:filename

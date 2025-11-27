@@ -119,7 +119,7 @@ export default function AdminLogin() {
   // Handle forgot password submit
   const handleForgotPasswordSubmit = (e) => {
     e.preventDefault();
-    
+
     const validationErrors = {};
 
     if (!forgotPasswordData.newPassword.trim()) {
@@ -138,7 +138,7 @@ export default function AdminLogin() {
 
     if (Object.keys(validationErrors).length === 0) {
       setForgotPasswordLoading(true);
-      
+
       // Simulate API call to reset password
       setTimeout(() => {
         toast.success("Password reset successfully!");
@@ -190,22 +190,22 @@ export default function AdminLogin() {
       {/* Login Card - Reduced Size */}
       <div className="login-card">
         <div className="login-inner">
-          <Card sx={{ 
-            borderRadius: 3, 
-            boxShadow: 6, 
+          <Card sx={{
+            borderRadius: 3,
+            boxShadow: 6,
             width: "100%",
             maxWidth: "400px",
             margin: "0 auto",
             minHeight: showForgotPassword ? "420px" : "auto",
             transition: "all 0.3s ease-in-out"
           }}>
-            <CardContent sx={{ 
+            <CardContent sx={{
               p: 2,
-              '&:last-child': { 
-                pb: 2 
-              } 
+              '&:last-child': {
+                pb: 2
+              }
             }}>
-              
+
               {/* Back Button for Forgot Password */}
               {showForgotPassword && (
                 <Box sx={{ mb: 1 }}>
@@ -248,7 +248,7 @@ export default function AdminLogin() {
 
               {/* Login Form */}
               <Fade in={!showForgotPassword} timeout={300}>
-                <Box component="form" onSubmit={handleLoginSubmit} noValidate sx={{ 
+                <Box component="form" onSubmit={handleLoginSubmit} noValidate sx={{
                   display: showForgotPassword ? 'none' : 'block'
                 }}>
                   {/* Email */}
@@ -275,6 +275,10 @@ export default function AdminLogin() {
                     fullWidth
                     margin="dense"
                     size="small"
+                    onCopy={(e) => e.preventDefault()}
+                    onPaste={(e) => e.preventDefault()}
+                    onCut={(e) => e.preventDefault()}
+                    onContextMenu={(e) => e.preventDefault()}
                     variant="outlined"
                     value={formData.password}
                     onChange={handleChange}
@@ -353,7 +357,7 @@ export default function AdminLogin() {
                     variant="contained"
                     size="small"
                     className="!px-1 !py-1 !text-md admin-button"
-                    sx={{ 
+                    sx={{
                       mt: 1.5,
                       fontSize: "0.9rem",
                       py: 0.75
@@ -371,7 +375,7 @@ export default function AdminLogin() {
                 <Box component="form" onSubmit={handleForgotPasswordSubmit} noValidate sx={{
                   display: showForgotPassword ? 'block' : 'none'
                 }}>
-                  
+
                   {/* New Password */}
                   <TextField
                     label="New Password"
@@ -447,10 +451,10 @@ export default function AdminLogin() {
                   />
 
                   {/* Password Requirements */}
-                  <Box sx={{ 
+                  <Box sx={{
                     mt: 1.5,
                     p: 1,
-                    backgroundColor: 'grey.50', 
+                    backgroundColor: 'grey.50',
                     borderRadius: 1,
                     border: '1px solid',
                     borderColor: 'grey.200'
@@ -471,7 +475,7 @@ export default function AdminLogin() {
                     fullWidth
                     variant="contained"
                     size="small"
-                    sx={{ 
+                    sx={{
                       mt: 2,
                       fontSize: "0.9rem",
                       py: 0.75

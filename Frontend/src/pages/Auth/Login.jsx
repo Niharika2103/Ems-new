@@ -123,8 +123,8 @@ export default function Login() {
             localStorage.setItem("resetToken", response.resetToken);
             toast.success("Password Reseted successfully!")
             setTimeout(() => {
-            navigate("/login/reset-password");
-            },700)
+              navigate("/login/reset-password");
+            }, 700)
           } else if (response.otpRequired) {
             setStep(2);
             setOtp("");
@@ -136,14 +136,14 @@ export default function Login() {
             if (decoded.employment_type === "freelancer") {
               toast.success("Login successfully!")
               setTimeout(() => {
-              navigate("/freelancer_dashboard", { replace: true });
-              },700)
+                navigate("/freelancer_dashboard", { replace: true });
+              }, 700)
 
             } else {
-               toast.success("Login successfully!")
+              toast.success("Login successfully!")
               setTimeout(() => {
-              navigate("/dashboard", { replace: true });
-              },700)
+                navigate("/dashboard", { replace: true });
+              }, 700)
             }
             window.onpopstate = null;
           }
@@ -163,14 +163,14 @@ export default function Login() {
           const decoded = decodeToken();
           if (decoded.employment_type === "freelancer") {
             toast.success("Login Successfully!");
-             setTimeout(() => {
-            navigate("/freelancer_dashboard", { replace: true });
-             },700)
+            setTimeout(() => {
+              navigate("/freelancer_dashboard", { replace: true });
+            }, 700)
           } else {
             toast.success(response.message);
-             setTimeout(() => {
-            navigate("/dashboard", { replace: true });
-             },700)
+            setTimeout(() => {
+              navigate("/dashboard", { replace: true });
+            }, 700)
           }
           window.onpopstate = null;
         })
@@ -304,6 +304,10 @@ export default function Login() {
                       size="small"
                       margin="normal"
                       variant="outlined"
+                      onCopy={(e) => e.preventDefault()}
+                      onPaste={(e) => e.preventDefault()}
+                      onCut={(e) => e.preventDefault()}
+                      onContextMenu={(e) => e.preventDefault()}
                       value={formData.password}
                       onChange={handleChange}
                       error={!!errors.password}

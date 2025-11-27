@@ -9,13 +9,19 @@ import {
   message,
 } from "antd";
 import { DeleteOutlined, SearchOutlined } from "@ant-design/icons";
-import { getPublishedJobPostsApi } from "../../api/authApi";
+
+// IMPORT CORRECT APIS
+import {
+  getAdminJobPostsApi,
+  updateJobStatusApi,
+} from "../../api/authApi";
 
 const PublishedJobs = () => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
 
+  // Load all job posts
   useEffect(() => {
     fetchJobs();
   }, []);
@@ -24,10 +30,9 @@ const PublishedJobs = () => {
     try {
       setLoading(true);
 
-      const res = await getPublishedJobPostsApi();
+      const res = await getAdminJobPostsApi();
       const jobList = res?.data?.jobs || [];
 
-      // Format job object
       const formatted = jobList.map((job) => ({
         id: job.job_id,
         title: job.job_title,
@@ -36,7 +41,8 @@ const PublishedJobs = () => {
         salary: job.salary_range,
         type: job.employment_type,
         department: job.department,
-        postedOn: job.posted_on,
+        experience: job.experience_level,
+        postedOn: job.posted_date,
         status: job.status,
       }));
 
@@ -46,6 +52,24 @@ const PublishedJobs = () => {
       message.error("Failed to load jobs.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Update status API
+  const updateStatus = async (jobId, newStatus) => {
+    try {
+      await updateJobStatusApi(jobId, newStatus);
+
+      message.success(`Job status updated to ${newStatus}`);
+
+      setJobs((prev) =>
+        prev.map((job) =>
+          job.id === jobId ? { ...job, status: newStatus } : job
+        )
+      );
+    } catch (err) {
+      console.error(err);
+      message.error("Failed to update status");
     }
   };
 
@@ -66,13 +90,16 @@ const PublishedJobs = () => {
     { title: "Location", dataIndex: "location", key: "location" },
     { title: "Department", dataIndex: "department", key: "department" },
     { title: "Job Type", dataIndex: "type", key: "type" },
+    { title: "Experience", dataIndex: "experience", key: "experience" },
     { title: "Salary", dataIndex: "salary", key: "salary" },
+
     {
       title: "Posted On",
       dataIndex: "postedOn",
       key: "postedOn",
       render: (date) => new Date(date).toLocaleDateString(),
     },
+
     {
       title: "Status",
       dataIndex: "status",
@@ -84,6 +111,8 @@ const PublishedJobs = () => {
               ? "green"
               : status === "UNPUBLISHED"
               ? "orange"
+              : status === "DRAFT"
+              ? "blue"
               : "red"
           }
         >
@@ -92,65 +121,44 @@ const PublishedJobs = () => {
       ),
     },
 
-    // ✅ ACTION BUTTONS
     {
       title: "Actions",
       key: "actions",
       render: (_, record) => {
         const { status } = record;
 
-        const handlePublish = () => {
-          message.success("Job Published");
-          setJobs((prev) =>
-            prev.map((job) =>
-              job.id === record.id ? { ...job, status: "PUBLISHED" } : job
-            )
-          );
-        };
-
-        const handleUnpublish = () => {
-          message.warning("Job Unpublished");
-          setJobs((prev) =>
-            prev.map((job) =>
-              job.id === record.id ? { ...job, status: "UNPUBLISHED" } : job
-            )
-          );
-        };
-
-        const handleArchive = () => {
-          message.error("Job Archived");
-          setJobs((prev) =>
-            prev.map((job) =>
-              job.id === record.id ? { ...job, status: "ARCHIVED" } : job
-            )
-          );
-        };
-
         return (
           <Space>
-
-            {/* Publish Button (visible for UNPUBLISHED + ARCHIVED) */}
-            {(status === "UNPUBLISHED" || status === "ARCHIVED") && (
-              <Button type="primary" onClick={handlePublish}>
+            {/* Publish */}
+            {status !== "PUBLISHED" && (
+              <Button
+                type="primary"
+                onClick={() => updateStatus(record.id, "PUBLISHED")}
+              >
                 Publish
               </Button>
             )}
 
-            {/* Unpublish Button (visible only for PUBLISHED) */}
+            {/* Unpublish */}
             {status === "PUBLISHED" && (
-              <Button onClick={handleUnpublish}>
+              <Button
+                onClick={() => updateStatus(record.id, "UNPUBLISHED")}
+              >
                 Unpublish
               </Button>
             )}
 
-            {/* Archive Button (hidden if already archived) */}
+            {/* Archive */}
             {status !== "ARCHIVED" && (
-              <Button danger onClick={handleArchive}>
+              <Button
+                danger
+                onClick={() => updateStatus(record.id, "ARCHIVED")}
+              >
                 Archive
               </Button>
             )}
 
-            {/* Delete button (optional) */}
+            {/* Delete local only */}
             <Button
               danger
               icon={<DeleteOutlined />}
@@ -166,7 +174,7 @@ const PublishedJobs = () => {
 
   return (
     <div style={{ padding: 30, background: "#f5f7fa", minHeight: "100vh" }}>
-      <h1>Published Job Posts</h1>
+      <h1>All Job Posts</h1>
 
       <Card style={{ marginBottom: 20, padding: 20 }}>
         <Input
