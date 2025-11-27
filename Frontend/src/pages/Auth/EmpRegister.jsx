@@ -179,7 +179,9 @@ export default function EmployeeRegisterForm() {
     const updatedRow = {
       ...editRow,
       email: normalizeEmail(editRow.email),
-      dateOfJoining: editRow.dateOfJoining ? formatDate(editRow.dateOfJoining) : null,
+      // dateOfJoining: editRow.dateOfJoining ? formatDate(editRow.dateOfJoining) : null,
+      dateOfJoining: editRow.dateOfJoining || null,
+
     };
 
     dispatch(updatePreviewRow({ index, updatedRow })); // save to redux preview
