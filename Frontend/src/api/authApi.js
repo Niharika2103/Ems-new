@@ -1,5 +1,6 @@
-import { superadminClient,employeeClient,adminClient,ProjectClient,AttendanceClient,SalaryStructureClient } from "./axiosClient";
+import { superadminClient,employeeClient,adminClient,ProjectClient,AttendanceClient,SalaryStructureClient, freelancerClient  } from "./axiosClient";
 import { AUTH_API } from "../utils/constants";
+import { RestaurantMenuSharp } from "@mui/icons-material";
 
 
 // ================= SuperAdmin =================
@@ -107,12 +108,21 @@ export const createAdminJobPostApi = (data) =>
 export const getAdminJobPostsApi = () =>
   adminClient.get(`${AUTH_API.ADMIN}/admin/job-posts`);
 
-
 export const updateJobStatusApi = (id, status) =>
   adminClient.patch(`${AUTH_API.ADMIN}/admin/job-posts/${id}/status`, {
     status,
     updated_by: "ADMIN_ID_HERE"
   });
+
+
+// Fetch only published jobs (for employee dashboard)
+export const getPublishedJobPostsApi = () =>
+  adminClient.get(`${AUTH_API.ADMIN}/jobs`);
+
+
+export const applyForJobApi = (formData) =>
+  adminClient.post(`${AUTH_API.ADMIN}/applications/apply`, formData);
+
 
 
 
@@ -447,7 +457,57 @@ export const createSalaryStructureApi=(formData)=>{
 export const fetchsalarybgidApi=(id)=>{
   return SalaryStructureClient.get(`${AUTH_API.SALARYSTRUCTURE}/last/${id}`)
 }
+//================Admin upload Employee Doc ===================
 
+export const employeeUploadDocFecthApi=()=>{
+  return adminClient.get(`${AUTH_API.ADMIN}/employees-with-docs`)
+}
+ 
+export const employeeDocDownloadbyAdminApi = (employeeId, docKey, index, onDownloadProgress) => {
+  const url = index !== undefined && index !== null
+    ? `${AUTH_API.ADMIN}/download/${employeeId}/${docKey}/${index}`
+    : `${AUTH_API.ADMIN}/download/${employeeId}/${docKey}`;
+
+  return adminClient.get(url, {
+    responseType: "blob",
+    onDownloadProgress,
+  });
+};
+
+
+
+
+// Upload freelancer documents
+export const uploadFreelancerDocsApi = (data) => {
+  const formData = new FormData();
+
+  // Single files
+  if (data.bankPassbook) formData.append("bankPassbook", data.bankPassbook);
+  if (data.aadhaarCard) formData.append("aadhaarCard", data.aadhaarCard);
+  if (data.panCard) formData.append("panCard", data.panCard);
+  if (data.gstCertificate) formData.append("gstCertificate", data.gstCertificate);
+  if (data.photo) formData.append("photo", data.photo);
+
+  // Multiple GST files
+  if (data.gstReturns && data.gstReturns.length > 0) {
+    data.gstReturns.forEach((file) => {
+      formData.append("gstReturns", file);
+    });
+  }
+
+  // Other fields
+  if (data.gstNumber) formData.append("gstNumber", data.gstNumber);
+  if (data.id) formData.append("id", data.id);
+
+   return freelancerClient.post(`${AUTH_API.FREELANCER}/upload`,
+    formData
+      );
+};
+
+//GetAPI
+export const getFreelancerDocsApi = (id) => {
+  return freelancerClient.get(`${AUTH_API.FREELANCER}/${id}`);
+};
 // ============== Referral (Employee) ======================
 export const createReferralApi = (formData) => {
   return employeeClient.post(`${AUTH_API.EMPLOYEE}/refer-candidate`, formData);

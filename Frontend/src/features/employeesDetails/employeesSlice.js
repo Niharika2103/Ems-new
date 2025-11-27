@@ -3,6 +3,7 @@ import {
   getProfileApi, editProfileApi, employeeFetchApi,
   employeeDeleteApi, getAdminProfileApi, getSuperadminProfileApi,
   updateAdminProfileApi, updateSuperAdminProfileApi, adminUpdateEmployeeApi,fetchallemployeeApi,
+  employeeUploadDocFecthApi
 } from "../../api/authApi";
 
 // Fetch Employee profile by EMail
@@ -131,6 +132,19 @@ export const updateEmployeebyAdmin = createAsyncThunk(
   }
 );
 
+//doc fetch api
+export const employeeUploadDocFecth = createAsyncThunk(
+  "employee/docfetch",
+  async (_, thunkAPI) => {
+    try {
+      const response = await employeeUploadDocFecthApi();
+      return response.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+
 
 
 const empDetailsSlice = createSlice({
@@ -142,6 +156,7 @@ const empDetailsSlice = createSlice({
     loading: false,
     error: null,
     success: false,
+    doclist:[],
   },
   reducers: {
     clearEmployeeState: (state) => {
@@ -293,7 +308,18 @@ const empDetailsSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-   
+   .addCase(employeeUploadDocFecth.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(employeeUploadDocFecth.fulfilled, (state, action) => {
+        state.loading = false;
+        state.doclist = action.payload;
+      })
+      .addCase(employeeUploadDocFecth.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
   },
 });
 
