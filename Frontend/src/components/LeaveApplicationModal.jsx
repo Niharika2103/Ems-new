@@ -2,7 +2,12 @@ import  { useState } from "react";
 import { Modal, Box, Typography, TextField, Button } from "@mui/material";
 
 const LeaveApplicationModal = ({ open, onClose, leaveType, onSubmit }) => {
-  const [startDate, setStartDate] = useState("");
+  // const [startDate, setStartDate] = useState("");
+  const [startDate, setStartDate] = useState(() => {
+  const today = new Date();
+  return today.toISOString().split("T")[0]; // YYYY-MM-DD
+});
+
 
   const handleSubmit = () => {
     if (startDate) {

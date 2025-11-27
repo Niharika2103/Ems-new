@@ -22,4 +22,5 @@ export interface User {
   rcre_id?: string;
   rcre_date?: string; // date
   access_flag: 'y' | 'n';
+  status?: string;
 }

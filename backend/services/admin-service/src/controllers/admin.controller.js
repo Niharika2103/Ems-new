@@ -39,9 +39,9 @@ const storage = multer.diskStorage({
 // Export upload so routes can use it
 export const upload = multer({ storage });
 // Helper to issue JWT
-function issueJwt({ email, role, is_temp_admin = false, id ,name}) {
+function issueJwt({ email, role, is_temp_admin = false, id, name }) {
   return jwt.sign(
-    { email, role, is_temp_admin, id ,name},
+    { email, role, is_temp_admin, id, name },
     process.env.JWT_SECRET,
     { expiresIn: "1h" }
   );
@@ -1073,8 +1073,8 @@ export const getPendingWeeklyApprovals = async (req, res) => {
         error: "Missing required query parameters (employeeId, from, to)",
       });
     }
-    
-    
+
+
     const query = `
       SELECT a.*, u.id AS user_id, u.name, u.email
       FROM attendance a
@@ -1086,18 +1086,18 @@ export const getPendingWeeklyApprovals = async (req, res) => {
 
     const result = await client.query(query, [employeeId, from, to]);
 
-    
+
 
     // ✅ Format the date to remove time (YYYY-MM-DD)
     const formattedData = result.rows.map(row => {
-  if (!row.date) return row;
-  const localDate = new Date(row.date);
-  const dateOnly = new Date(localDate.getTime() - localDate.getTimezoneOffset() * 60000)
-    .toISOString()
-    .split("T")[0];
-  return { ...row, date: dateOnly };
-});
-    
+      if (!row.date) return row;
+      const localDate = new Date(row.date);
+      const dateOnly = new Date(localDate.getTime() - localDate.getTimezoneOffset() * 60000)
+        .toISOString()
+        .split("T")[0];
+      return { ...row, date: dateOnly };
+    });
+
     res.status(200).json({
       message: "Pending weekly approvals fetched successfully",
       count: formattedData.length,
@@ -1441,16 +1441,16 @@ export const rejectWeeklyApproval = async (req, res) => {
 
     const { rows } = await pool.query(query, [status, employeeId, from, to]);
 
-    
+
 
     res.status(200).json({
-  message: `Weekly attendance ${status} successfully`,
-  updated_count: rows.length,
-  data: rows.map(r => ({
-    ...r,
-    date: r.formatted_date, // ✅ Pure YYYY-MM-DD from DB
-  })),
-});
+      message: `Weekly attendance ${status} successfully`,
+      updated_count: rows.length,
+      data: rows.map(r => ({
+        ...r,
+        date: r.formatted_date, // ✅ Pure YYYY-MM-DD from DB
+      })),
+    });
   } catch (err) {
     console.error("Reject Weekly Status Error:", err.message);
     res.status(500).json({ error: "Failed to reject weekly attendance" });
@@ -1521,15 +1521,15 @@ export const approveParentalLeave = async (req, res) => {
     const updateData =
       action === "approve"
         ? {
-            weekly_status: "approved",
-            monthly_status: "approved",
-            maternity_leave: leave_type === "maternity" ? leaveDays : 0,
-            paternity_leave: leave_type === "paternity" ? leaveDays : 0,
-          }
+          weekly_status: "approved",
+          monthly_status: "approved",
+          maternity_leave: leave_type === "maternity" ? leaveDays : 0,
+          paternity_leave: leave_type === "paternity" ? leaveDays : 0,
+        }
         : {
-            weekly_status: "rejected",
-            monthly_status: "rejected",
-          };
+          weekly_status: "rejected",
+          monthly_status: "rejected",
+        };
 
     const updateQuery = `
       UPDATE attendance
@@ -1716,9 +1716,9 @@ export const generateLetter = async (req, res) => {
       return res.status(400).json({ error: "Invalid letter type selected" });
 
     const templateContent = loadTemplate(selectedTemplate);
-if (!templateContent) {
-  return res.status(500).json({ error: "Template file missing" });
-}
+    if (!templateContent) {
+      return res.status(500).json({ error: "Template file missing" });
+    }
 
     // Prepare placeholder data
     const data = {
@@ -1902,7 +1902,9 @@ export const uploadEmployeeDocuments = async (req, res) => {
     //  Save merged JSON back to DB
     await client.query(
       `UPDATE user_employees_master 
-       SET document_url = $1 
+       SET document_url = $1,
+       status = 'uploaded',
+           updated_at = NOW()
        WHERE id = $2`,
       [updatedDocuments, employeeId]
     );
