@@ -74,7 +74,8 @@ import CustomReports from "../pages/Reports/CustomReports";
 import PanelManagement from "../pages/JobPosting/PanelManagement";
 import AuditLogsPage from "../pages/Auditlogs/AuditLogsPage";
 import ContractManagement from "../pages/contracter/ContractManagement";
-
+import AccountsDashboard from "../pages/dashbaord/AccountsDashboard";
+import PayrollSystem from "../pages/Accounts/PayrollSystem";
 
 
 
@@ -166,7 +167,14 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-
+      <Route path="/accounts/payroll" 
+      element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+              <PayrollSystem />
+            </ProtectedRoute>
+          }
+        />
+      
         
         <Route path="/job-postings"
          element={
@@ -416,6 +424,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <ProjectDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/accounts"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AccountsDashboard/>
             </ProtectedRoute>
           }
         />
