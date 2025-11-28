@@ -11,6 +11,7 @@ import { promoteEmployeeApi } from "../../api/authApi";
 import ReusableModal from "../../components/MyProfile/ReusableModal";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import moment from 'moment';
 
 import {
   TextField,
@@ -41,8 +42,8 @@ export default function FreelancerTable() {
   const [selectedFreelancer, setSelectedFreelancer] = useState(null);
   const [contractForm, setContractForm] = useState({
     contract_title: "",
-    start_date: null,
-    end_date: null,
+    start_date: moment(),
+    end_date:moment(),
     payment_type: "",
     payment_amount: "",
     payment_terms: "",
@@ -150,8 +151,8 @@ export default function FreelancerTable() {
     setSelectedFreelancer(record);
     setContractForm({
       contract_title: "",
-      start_date: null,
-      end_date: null,
+      start_date: moment(),
+      end_date: moment(),
       payment_type: "",
       payment_amount: "",
       payment_terms: "",

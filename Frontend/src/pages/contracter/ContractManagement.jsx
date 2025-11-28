@@ -3,15 +3,11 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
-  Button,
   Paper,
   IconButton,
   Tooltip,
   Chip,
   Alert,
-  Card,
-  CardContent,
-  Grid,
   TextField,
   MenuItem,
   FormControl,
@@ -21,11 +17,10 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Divider,
-  Stack
+  Button,
+  Divider
 } from '@mui/material';
 import {
-  Add as AddIcon,
   Visibility as ViewIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
@@ -87,14 +82,6 @@ const ContractManagement = () => {
       scopeOfWork: ''
     });
     setErrors({});
-  };
-
-  // Open dialog for create
-  const handleCreate = () => {
-    resetForm();
-    setIsEditing(false);
-    setIsViewing(false);
-    setDialogOpen(true);
   };
 
   // Open dialog for edit
@@ -167,16 +154,6 @@ const ContractManagement = () => {
       setContracts(updatedContracts);
       localStorage.setItem('contracts', JSON.stringify(updatedContracts));
       setSuccessMessage('Contract updated successfully!');
-    } else {
-      // Create new contract
-      const newContract = {
-        ...formData,
-        id: Date.now()
-      };
-      const updatedContracts = [...contractsData, newContract];
-      setContracts(updatedContracts);
-      localStorage.setItem('contracts', JSON.stringify(updatedContracts));
-      setSuccessMessage('Contract created successfully!');
     }
 
     // Auto-close after success
@@ -223,12 +200,6 @@ const ContractManagement = () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  };
-
-  // Get employee name
-  const getEmployeeName = (employeeId) => {
-    const employee = employees.find(emp => emp.id === parseInt(employeeId));
-    return employee ? employee.name : 'Unknown Employee';
   };
 
   // Get payment type color
@@ -354,13 +325,6 @@ const ContractManagement = () => {
     }
   ];
 
-  // Statistics
-  const stats = {
-    total: contracts.length,
-    active: contracts.filter(c => new Date(c.endDate) > new Date()).length,
-    expired: contracts.filter(c => new Date(c.endDate) <= new Date()).length
-  };
-
   const getSelectedEmployee = () => {
     return employees.find(emp => emp.id === parseInt(formData.employeeId));
   };
@@ -368,79 +332,22 @@ const ContractManagement = () => {
   return (
     <Box sx={{ p: 3 }}>
       {/* Header */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
-        <Box>
-          <Typography variant="h4" gutterBottom fontWeight="bold">
-            Contract Management
-          </Typography>
-          <Typography variant="subtitle1" color="text.secondary">
-            Manage all employee contracts in one place
-          </Typography>
-        </Box>
-        {/* <Button
-          onClick={handleCreate}
-          variant="contained"
-          startIcon={<AddIcon />}
-          size="large"
-        >
-          Create New Contract
-        </Button> */}
+      <Box mb={4}>
+        <Typography variant="h4" gutterBottom fontWeight="bold">
+          Contract Management
+        </Typography>
+        <Typography variant="subtitle1" color="text.secondary">
+          View, update, delete, and download employee contracts
+        </Typography>
       </Box>
-
-      {/* Statistics Cards */}
-      <Grid container spacing={3} mb={4}>
-        <Grid item xs={12} sm={4}>
-          <Card>
-            <CardContent>
-              <Typography color="text.secondary" gutterBottom>
-                Total Contracts
-              </Typography>
-              <Typography variant="h4" component="div" color="primary">
-                {stats.total}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <Card>
-            <CardContent>
-              <Typography color="text.secondary" gutterBottom>
-                Active Contracts
-              </Typography>
-              <Typography variant="h4" component="div" color="success.main">
-                {stats.active}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={4}>
-          <Card>
-            <CardContent>
-              <Typography color="text.secondary" gutterBottom>
-                Expired Contracts
-              </Typography>
-              <Typography variant="h4" component="div" color="error.main">
-                {stats.expired}
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
 
       {/* Contracts Table */}
       <Paper elevation={2} sx={{ width: '100%' }}>
         {contracts.length === 0 ? (
           <Box p={4} textAlign="center">
-            <Alert severity="info" sx={{ mb: 2 }}>
-              No contracts found. Create your first contract to get started.
+            <Alert severity="info">
+              No contracts found.
             </Alert>
-            <Button
-              onClick={handleCreate}
-              variant="contained"
-              startIcon={<AddIcon />}
-            >
-              Create First Contract
-            </Button>
           </Box>
         ) : (
           <DataGrid
@@ -468,15 +375,12 @@ const ContractManagement = () => {
       <Dialog 
         open={dialogOpen} 
         onClose={handleCloseDialog}
-        maxWidth="lg"
+        maxWidth="md"
         fullWidth
       >
         <DialogTitle>
           <Typography variant="h5" fontWeight="bold">
-            {isViewing ? 'View Contract' : isEditing ? 'Edit Contract' : 'Create New Contract'}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {isViewing ? 'View contract details' : isEditing ? 'Update existing contract' : 'Create a new employee contract'}
+            {isViewing ? 'View Contract' : 'Edit Contract'}
           </Typography>
         </DialogTitle>
 
@@ -487,173 +391,140 @@ const ContractManagement = () => {
             </Alert>
           )}
 
-          <Grid container spacing={3} sx={{ mt: 1 }}>
-            {/* Form Section */}
-            <Grid item xs={12} md={8}>
-              <form onSubmit={handleSubmit}>
-                <Grid container spacing={3}>
-                  {/* Employee Selection */}
-                  <Grid item xs={12}>
-                    <FormControl fullWidth error={!!errors.employeeId}>
-                      <InputLabel>Employee *</InputLabel>
-                      <Select
-                        name="employeeId"
-                        value={formData.employeeId}
-                        onChange={handleInputChange}
-                        label="Employee *"
-                        disabled={isViewing}
-                      >
-                        {employees.map(employee => (
-                          <MenuItem key={employee.id} value={employee.id}>
-                            {employee.name} - {employee.position} ({employee.department})
-                          </MenuItem>
-                        ))}
-                      </Select>
-                      {errors.employeeId && (
-                        <Typography variant="caption" color="error">
-                          {errors.employeeId}
-                        </Typography>
-                      )}
-                    </FormControl>
-                  </Grid>
+          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+            <Box display="flex" gap={3}>
+              {/* Left Column - Form */}
+              <Box flex={1}>
+                {/* Employee Selection */}
+                <FormControl fullWidth error={!!errors.employeeId} sx={{ mb: 2 }}>
+                  <InputLabel>Employee</InputLabel>
+                  <Select
+                    name="employeeId"
+                    value={formData.employeeId}
+                    onChange={handleInputChange}
+                    label="Employee"
+                    disabled={isViewing}
+                  >
+                    {employees.map(employee => (
+                      <MenuItem key={employee.id} value={employee.id}>
+                        {employee.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
 
-                  {/* Contract Title */}
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      label="Contract Title *"
-                      name="contractTitle"
-                      value={formData.contractTitle}
+                {/* Contract Title */}
+                <TextField
+                  fullWidth
+                  label="Contract Title"
+                  name="contractTitle"
+                  value={formData.contractTitle}
+                  onChange={handleInputChange}
+                  error={!!errors.contractTitle}
+                  helperText={errors.contractTitle}
+                  disabled={isViewing}
+                  sx={{ mb: 2 }}
+                />
+
+                {/* Dates */}
+                <Box display="flex" gap={2} sx={{ mb: 2 }}>
+                  <TextField
+                    fullWidth
+                    label="Start Date"
+                    name="startDate"
+                    type="date"
+                    value={formData.startDate}
+                    onChange={handleInputChange}
+                    error={!!errors.startDate}
+                    helperText={errors.startDate}
+                    disabled={isViewing}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                  <TextField
+                    fullWidth
+                    label="End Date"
+                    name="endDate"
+                    type="date"
+                    value={formData.endDate}
+                    onChange={handleInputChange}
+                    error={!!errors.endDate}
+                    helperText={errors.endDate}
+                    disabled={isViewing}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </Box>
+
+                {/* Payment Information */}
+                <Box display="flex" gap={2} sx={{ mb: 2 }}>
+                  <FormControl fullWidth error={!!errors.paymentType}>
+                    <InputLabel>Payment Type</InputLabel>
+                    <Select
+                      name="paymentType"
+                      value={formData.paymentType}
                       onChange={handleInputChange}
-                      error={!!errors.contractTitle}
-                      helperText={errors.contractTitle}
+                      label="Payment Type"
                       disabled={isViewing}
-                    />
-                  </Grid>
+                    >
+                      <MenuItem value="Hourly">Hourly</MenuItem>
+                      <MenuItem value="Monthly">Monthly</MenuItem>
+                      <MenuItem value="Fixed">Fixed</MenuItem>
+                    </Select>
+                  </FormControl>
+                  <TextField
+                    fullWidth
+                    label="Payment Amount ($)"
+                    name="paymentAmount"
+                    type="number"
+                    value={formData.paymentAmount}
+                    onChange={handleInputChange}
+                    error={!!errors.paymentAmount}
+                    helperText={errors.paymentAmount}
+                    disabled={isViewing}
+                  />
+                </Box>
 
-                  {/* Dates */}
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      label="Start Date *"
-                      name="startDate"
-                      type="date"
-                      value={formData.startDate}
-                      onChange={handleInputChange}
-                      error={!!errors.startDate}
-                      helperText={errors.startDate}
-                      disabled={isViewing}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      label="End Date *"
-                      name="endDate"
-                      type="date"
-                      value={formData.endDate}
-                      onChange={handleInputChange}
-                      error={!!errors.endDate}
-                      helperText={errors.endDate}
-                      disabled={isViewing}
-                      InputLabelProps={{ shrink: true }}
-                    />
-                  </Grid>
+                {/* Payment Terms */}
+                <FormControl fullWidth error={!!errors.paymentTerms} sx={{ mb: 2 }}>
+                  <InputLabel>Payment Terms</InputLabel>
+                  <Select
+                    name="paymentTerms"
+                    value={formData.paymentTerms}
+                    onChange={handleInputChange}
+                    label="Payment Terms"
+                    disabled={isViewing}
+                  >
+                    <MenuItem value="Net 7">Net 7</MenuItem>
+                    <MenuItem value="Net 15">Net 15</MenuItem>
+                    <MenuItem value="Net 30">Net 30</MenuItem>
+                    <MenuItem value="Milestone Based">Milestone Based</MenuItem>
+                  </Select>
+                </FormControl>
 
-                  {/* Payment Information */}
-                  <Grid item xs={12} sm={6}>
-                    <FormControl fullWidth error={!!errors.paymentType}>
-                      <InputLabel>Payment Type *</InputLabel>
-                      <Select
-                        name="paymentType"
-                        value={formData.paymentType}
-                        onChange={handleInputChange}
-                        label="Payment Type *"
-                        disabled={isViewing}
-                      >
-                        <MenuItem value="Hourly">Hourly</MenuItem>
-                        <MenuItem value="Monthly">Monthly</MenuItem>
-                        <MenuItem value="Fixed">Fixed</MenuItem>
-                      </Select>
-                      {errors.paymentType && (
-                        <Typography variant="caption" color="error">
-                          {errors.paymentType}
-                        </Typography>
-                      )}
-                    </FormControl>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth
-                      label="Payment Amount ($) *"
-                      name="paymentAmount"
-                      type="number"
-                      value={formData.paymentAmount}
-                      onChange={handleInputChange}
-                      error={!!errors.paymentAmount}
-                      helperText={errors.paymentAmount}
-                      disabled={isViewing}
-                      InputProps={{
-                        startAdornment: <Typography sx={{ mr: 1 }}>$</Typography>,
-                      }}
-                    />
-                  </Grid>
+                {/* Scope of Work */}
+                <TextField
+                  fullWidth
+                  label="Scope of Work"
+                  name="scopeOfWork"
+                  value={formData.scopeOfWork}
+                  onChange={handleInputChange}
+                  multiline
+                  rows={4}
+                  disabled={isViewing}
+                  placeholder="Describe the scope of work..."
+                />
+              </Box>
 
-                  {/* Payment Terms */}
-                  <Grid item xs={12}>
-                    <FormControl fullWidth error={!!errors.paymentTerms}>
-                      <InputLabel>Payment Terms *</InputLabel>
-                      <Select
-                        name="paymentTerms"
-                        value={formData.paymentTerms}
-                        onChange={handleInputChange}
-                        label="Payment Terms *"
-                        disabled={isViewing}
-                      >
-                        <MenuItem value="Net 7">Net 7</MenuItem>
-                        <MenuItem value="Net 15">Net 15</MenuItem>
-                        <MenuItem value="Net 30">Net 30</MenuItem>
-                        <MenuItem value="Milestone Based">Milestone Based</MenuItem>
-                      </Select>
-                      {errors.paymentTerms && (
-                        <Typography variant="caption" color="error">
-                          {errors.paymentTerms}
-                        </Typography>
-                      )}
-                    </FormControl>
-                  </Grid>
-
-                  {/* Scope of Work */}
-                  <Grid item xs={12}>
-                    <TextField
-                      fullWidth
-                      label="Scope of Work"
-                      name="scopeOfWork"
-                      value={formData.scopeOfWork}
-                      onChange={handleInputChange}
-                      multiline
-                      rows={4}
-                      disabled={isViewing}
-                      placeholder="Describe the scope of work, responsibilities, deliverables, and any other relevant details..."
-                    />
-                  </Grid>
-                </Grid>
-              </form>
-            </Grid>
-
-            {/* Sidebar Information */}
-            <Grid item xs={12} md={4}>
-              <Card variant="outlined">
-                <CardContent>
+              {/* Right Column - Employee Info */}
+              <Box width={200}>
+                <Box sx={{ p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
                   <Typography variant="h6" gutterBottom fontWeight="bold">
-                    Employee Information
+                    Employee Info
                   </Typography>
                   <Divider sx={{ mb: 2 }} />
                   
                   {getSelectedEmployee() ? (
                     <Box>
-                      <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                      <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
                         {getSelectedEmployee().name}
                       </Typography>
                       <Typography variant="body2" color="text.secondary" gutterBottom>
@@ -663,58 +534,24 @@ const ContractManagement = () => {
                         label={getSelectedEmployee().department} 
                         size="small" 
                         variant="outlined"
-                        sx={{ mb: 2 }}
+                        sx={{ mb: 1 }}
                       />
-                      <Typography variant="body2" gutterBottom>
-                        <strong>Email:</strong> {getSelectedEmployee().email}
+                      <Typography variant="caption" display="block">
+                        {getSelectedEmployee().email}
                       </Typography>
                     </Box>
                   ) : (
                     <Typography variant="body2" color="text.secondary" fontStyle="italic">
-                      Select an employee to view details
+                      Select employee
                     </Typography>
                   )}
-                </CardContent>
-              </Card>
-
-              {/* Quick Actions */}
-              {isViewing && (
-                <Card variant="outlined" sx={{ mt: 2 }}>
-                  <CardContent>
-                    <Typography variant="h6" gutterBottom fontWeight="bold">
-                      Quick Actions
-                    </Typography>
-                    <Divider sx={{ mb: 2 }} />
-                    <Stack spacing={1}>
-                      <Button
-                        variant="contained"
-                        startIcon={<DownloadIcon />}
-                        onClick={() => generatePdf(formData)}
-                        fullWidth
-                        size="small"
-                      >
-                        Download PDF
-                      </Button>
-                      <Button
-                        onClick={() => {
-                          setIsViewing(false);
-                          setIsEditing(true);
-                        }}
-                        variant="outlined"
-                        fullWidth
-                        size="small"
-                      >
-                        Edit Contract
-                      </Button>
-                    </Stack>
-                  </CardContent>
-                </Card>
-              )}
-            </Grid>
-          </Grid>
+                </Box>
+              </Box>
+            </Box>
+          </Box>
         </DialogContent>
 
-        <DialogActions sx={{ p: 3, gap: 1 }}>
+        <DialogActions sx={{ p: 3 }}>
           <Button
             onClick={handleCloseDialog}
             startIcon={<CancelIcon />}
@@ -728,7 +565,7 @@ const ContractManagement = () => {
               variant="contained"
               startIcon={<SaveIcon />}
             >
-              {isEditing ? 'Update Contract' : 'Create Contract'}
+              Update Contract
             </Button>
           )}
         </DialogActions>
