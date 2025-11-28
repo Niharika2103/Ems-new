@@ -53,7 +53,6 @@ import FreelancerDocuments from  "../pages/Freelancer/FreelancerDocuments";
 import EmployeeList from '../pages/Freelancer/Documents/EmployeeList';
 import FreelancerAssignProjectpage from  "../pages/Freelancer/FreelancerAssignProjectpage";
 import TimesheetApprovalList from '../pages/Freelancer/Attendance/TimesheetApprovalList';
-import ContractManager from "../pages/Freelancer/ContractManager";
 import ReferCandidatePage from "../pages/Referral/ReferCandidatePage";
 import AdminReferralDashboard from '../pages/Referral/AdminReferralDashboard';
 import SalaryStructure from '../pages/Accounts/SalaryStructure';
@@ -73,6 +72,7 @@ import ComplianceReports from "../pages/Reports/ComplianceReports";
 import FreelancerROI from "../pages/Reports/FreelancerROI";
 import CustomReports from "../pages/Reports/CustomReports";
 import PanelManagement from "../pages/JobPosting/PanelManagement";
+import AuditLogsPage from "../pages/Auditlogs/AuditLogsPage";
 
 
 
@@ -272,13 +272,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-        <Route path="/freelancer/contract-manager"
-         element={
-           <ProtectedRoute allowedRoles={["employee", "admin"]}>
-              <ContractManager />
-            </ProtectedRoute>
-         } />
-
+       
         {/* Superadmin routes */}
         <Route
           path="/dashboard/superadmin_requestTable"
@@ -552,6 +546,17 @@ function AppRoutes() {
           }
         />  
          <Route path="/recruitment/panel-management" element={<PanelManagement />} />
+
+         <Route path="/audits-and-logs"
+          element={
+             <ProtectedRoute allowedRoles={["admin"]}>
+              < AuditLogsPage />
+            </ProtectedRoute>
+          }
+        /> 
+        
+      
+     
       
          
       </Route>
