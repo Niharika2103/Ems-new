@@ -46,7 +46,7 @@ import {
   getAllContracts,
   getContractsByFreelancer,
   getContractById,
-  getFreelancers
+ 
 } from "../controllers/admin.controller.js";
 
 // Job post imports
@@ -171,7 +171,7 @@ router.get("/freelancer-contract/all", getAllContracts);
 router.get("/freelancer-contract/freelancer/:freelancer_id", getContractsByFreelancer);
 router.get("/freelancer-contract/:contract_id", getContractById);
 
-router.get("/employees/freelancers", getFreelancers);
+// router.get("/employees/freelancers", getFreelancers);
 
 
 export default router;

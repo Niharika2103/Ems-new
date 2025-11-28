@@ -27,7 +27,7 @@ import {
 import { fetchAllFreelancer } from "../../features/freelancer/freelancerSlice";
 import { decodeToken } from "../../api/decodeToekn";
 import { validateEmployeeEdit } from "../../utils/validation";
-
+import { createFreelancerContractApi } from "../../api/authApi";
 const { Search } = Input;
 
 export default function FreelancerTable() {
@@ -176,43 +176,44 @@ export default function FreelancerTable() {
     }));
   };
 
-  const handleContractSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Convert moment objects to strings for validation
-    const startDateStr = contractForm.start_date ? contractForm.start_date.format('YYYY-MM-DD') : "";
-    const endDateStr = contractForm.end_date ? contractForm.end_date.format('YYYY-MM-DD') : "";
 
-    // Basic validation
-    if (!contractForm.contract_title || !startDateStr || !endDateStr || !contractForm.payment_type || !contractForm.payment_amount) {
-      toast.error("Please fill all required fields");
-      return;
-    }
 
-    setLoading(true);
-    try {
-      const contractData = {
-        ...contractForm,
-        start_date: startDateStr,
-        end_date: endDateStr,
-        freelancer_id: selectedFreelancer.id,
-        freelancer_name: selectedFreelancer.name,
-        freelancer_email: selectedFreelancer.email
-      };
+const handleContractSubmit = async (e) => {
+  e.preventDefault();
 
-      console.log("Contract Data:", contractData);
-      
-      // Replace this with your actual API call
-      // const response = await createContractApi(contractData);
-      
-      toast.success("Contract created successfully!");
-      setIsContractModalOpen(false);
-    } catch (error) {
-      toast.error("Failed to create contract");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const startDateStr = contractForm.start_date ? contractForm.start_date.format('YYYY-MM-DD') : "";
+  const endDateStr = contractForm.end_date ? contractForm.end_date.format('YYYY-MM-DD') : "";
+
+  if (!contractForm.contract_title || !startDateStr || !endDateStr || !contractForm.payment_type || !contractForm.payment_amount) {
+    toast.error("Please fill all required fields");
+    return;
+  }
+
+  setLoading(true);
+  try {
+    const contractData = {
+      freelancer_id: selectedFreelancer.id,
+      contract_title: contractForm.contract_title,
+      contract_start_date: startDateStr,
+      contract_end_date: endDateStr,
+      payment_type: contractForm.payment_type,
+      payment_amount: contractForm.payment_amount,
+      payment_terms: contractForm.payment_terms,
+      scope_of_work: contractForm.scope_of_work
+    };
+
+    const response = await createFreelancerContractApi(contractData);
+
+    toast.success("Contract created successfully!");
+    setIsContractModalOpen(false);
+
+  } catch (error) {
+    toast.error(error?.response?.data?.error || "Failed to create contract");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   // Table Columns
   const columns = [
