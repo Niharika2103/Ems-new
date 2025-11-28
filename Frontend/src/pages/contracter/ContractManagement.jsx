@@ -1,13 +1,16 @@
-// components/ContractManagement.js
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
+  Button,
   Paper,
   IconButton,
   Tooltip,
   Chip,
   Alert,
+  Card,
+  CardContent,
+  Grid,
   TextField,
   MenuItem,
   FormControl,
@@ -17,557 +20,447 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Button,
-  Divider
-} from '@mui/material';
+  Divider,
+} from "@mui/material";
 import {
   Visibility as ViewIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  Download as DownloadIcon,
+  Add as AddIcon,
   Save as SaveIcon,
-  Cancel as CancelIcon
-} from '@mui/icons-material';
-import { DataGrid } from '@mui/x-data-grid';
-import { format } from 'date-fns';
+  Cancel as CancelIcon,
+} from "@mui/icons-material";
+import { DataGrid } from "@mui/x-data-grid";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from "react-toastify";
+
+import {
+  fetchAllFreelancerContractsApi,
+  fetchFreelancerContractByIdApi,
+  createFreelancerContractApi,
+  updateFreelancerContractApi,
+  cancelFreelancerContractApi,
+  renewFreelancerContractApi,
+} from "../../api/authApi";
+
+import { fetchAllFreelancer } from "../../features/freelancer/freelancerSlice";
 
 const ContractManagement = () => {
-  // State management
-  const [contracts, setContracts] = useState([]);
-  const [employees] = useState([
-    { id: 1, name: 'John Doe', position: 'Software Engineer', department: 'IT', email: 'john.doe@company.com' },
-    { id: 2, name: 'Jane Smith', position: 'Project Manager', department: 'Management', email: 'jane.smith@company.com' },
-    { id: 3, name: 'Mike Johnson', position: 'UI/UX Designer', department: 'Design', email: 'mike.johnson@company.com' },
-    { id: 4, name: 'Sarah Wilson', position: 'QA Engineer', department: 'Testing', email: 'sarah.wilson@company.com' },
-    { id: 5, name: 'David Brown', position: 'DevOps Engineer', department: 'Operations', email: 'david.brown@company.com' }
-  ]);
+  const dispatch = useDispatch();
 
-  const [formData, setFormData] = useState({
-    id: '',
-    employeeId: '',
-    contractTitle: '',
-    startDate: '',
-    endDate: '',
-    paymentType: '',
-    paymentAmount: '',
-    paymentTerms: '',
-    scopeOfWork: ''
-  });
+  const freelancers = useSelector((s) => s.freelancerInfo.freelancerlist);
+
+  const [contracts, setContracts] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [isViewing, setIsViewing] = useState(false);
-  const [errors, setErrors] = useState({});
-  const [successMessage, setSuccessMessage] = useState('');
 
-  // Load contracts from localStorage
+  const [formData, setFormData] = useState({
+    id: "",
+    freelancer_id: "",
+    contract_title: "",
+    contract_start_date: "",
+    contract_end_date: "",
+    payment_type: "",
+    payment_amount: "",
+    payment_terms: "",
+    scope_of_work: "",
+  });
+
+  const [errors, setErrors] = useState({});
+
+  // Load freelancers + contracts
   useEffect(() => {
-    const savedContracts = localStorage.getItem('contracts');
-    if (savedContracts) {
-      setContracts(JSON.parse(savedContracts));
-    }
+    dispatch(fetchAllFreelancer());
+    loadContracts();
   }, []);
 
-  // Reset form
+  const loadContracts = async () => {
+    try {
+      const res = await fetchAllFreelancerContractsApi();
+      setContracts(res.data);
+    } catch (err) {
+      toast.error("Failed to load contracts");
+    }
+  };
+
   const resetForm = () => {
     setFormData({
-      id: '',
-      employeeId: '',
-      contractTitle: '',
-      startDate: '',
-      endDate: '',
-      paymentType: '',
-      paymentAmount: '',
-      paymentTerms: '',
-      scopeOfWork: ''
+      id: "",
+      freelancer_id: "",
+      contract_title: "",
+      contract_start_date: "",
+      contract_end_date: "",
+      payment_type: "",
+      payment_amount: "",
+      payment_terms: "",
+      scope_of_work: "",
     });
     setErrors({});
   };
 
-  // Open dialog for edit
-  const handleEdit = (contract) => {
-    setFormData(contract);
-    setIsEditing(true);
-    setIsViewing(false);
-    setDialogOpen(true);
-  };
-
-  // Open dialog for view
-  const handleView = (contract) => {
-    setFormData(contract);
-    setIsViewing(true);
+  // Create new contract
+  const handleCreate = () => {
+    resetForm();
     setIsEditing(false);
     setDialogOpen(true);
   };
 
-  // Close dialog
-  const handleCloseDialog = () => {
-    setDialogOpen(false);
-    resetForm();
-    setSuccessMessage('');
-  };
-
-  // Handle form input changes
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
+  // Edit contract
+  const handleEdit = async (row) => {
+    try {
+      const res = await fetchFreelancerContractByIdApi(row.id);
+      setFormData(res.data);
+      setIsEditing(true);
+      setDialogOpen(true);
+    } catch {
+      toast.error("Cannot load contract details");
     }
   };
 
-  // Validate form
-  const validateForm = () => {
+  // Cancel contract
+  const handleCancelContract = async (row) => {
+    if (!window.confirm("Cancel this contract?")) return;
+
+    try {
+      await cancelFreelancerContractApi(row.id);
+      toast.success("Contract cancelled");
+      loadContracts();
+    } catch {
+      toast.error("Failed to cancel contract");
+    }
+  };
+
+  // Renew contract
+  const handleRenew = async (row) => {
+    const newDate = prompt("Enter new end date (YYYY-MM-DD):");
+    if (!newDate) return;
+
+    try {
+      await renewFreelancerContractApi(row.id, newDate);
+      toast.success("Contract renewed");
+      loadContracts();
+    } catch {
+      toast.error("Failed to renew");
+    }
+  };
+
+  // SUBMIT (Create / Update)
+  const handleSubmit = async () => {
     const newErrors = {};
-    if (!formData.employeeId) newErrors.employeeId = 'Employee is required';
-    if (!formData.contractTitle) newErrors.contractTitle = 'Contract title is required';
-    if (!formData.startDate) newErrors.startDate = 'Start date is required';
-    if (!formData.endDate) newErrors.endDate = 'End date is required';
-    if (!formData.paymentType) newErrors.paymentType = 'Payment type is required';
-    if (!formData.paymentAmount) newErrors.paymentAmount = 'Payment amount is required';
-    if (!formData.paymentTerms) newErrors.paymentTerms = 'Payment terms are required';
+
+    if (!formData.freelancer_id) newErrors.freelancer_id = "Freelancer required";
+    if (!formData.contract_title) newErrors.contract_title = "Title required";
+    if (!formData.contract_start_date) newErrors.contract_start_date = "Start Date required";
+    if (!formData.contract_end_date) newErrors.contract_end_date = "End Date required";
+    if (!formData.payment_type) newErrors.payment_type = "Payment Type required";
+    if (!formData.payment_amount) newErrors.payment_amount = "Amount required";
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+    if (Object.keys(newErrors).length) return;
 
-  // Handle form submission
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    if (!validateForm()) return;
+    try {
+      setLoading(true);
 
-    const contractsData = JSON.parse(localStorage.getItem('contracts') || '[]');
-    
-    if (isEditing) {
-      // Update existing contract
-      const updatedContracts = contractsData.map(contract =>
-        contract.id === formData.id ? formData : contract
-      );
-      setContracts(updatedContracts);
-      localStorage.setItem('contracts', JSON.stringify(updatedContracts));
-      setSuccessMessage('Contract updated successfully!');
-    }
+      if (isEditing) {
+        await updateFreelancerContractApi(formData.id, formData);
+        toast.success("Contract updated");
+      } else {
+        await createFreelancerContractApi(formData);
+        toast.success("Contract created");
+      }
 
-    // Auto-close after success
-    setTimeout(() => {
-      handleCloseDialog();
-    }, 1500);
-  };
-
-  // Delete contract
-  const handleDelete = (contract) => {
-    if (window.confirm(`Are you sure you want to delete the contract "${contract.contractTitle}"?`)) {
-      const updatedContracts = contracts.filter(c => c.id !== contract.id);
-      setContracts(updatedContracts);
-      localStorage.setItem('contracts', JSON.stringify(updatedContracts));
+      setDialogOpen(false);
+      loadContracts();
+    } catch {
+      toast.error("Failed to save contract");
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Generate PDF
-  const generatePdf = (contract) => {
-    const employee = employees.find(e => e.id === parseInt(contract.employeeId));
-    const pdfContent = `
-      CONTRACT AGREEMENT
-      =================
-      
-      Employee: ${employee?.name || 'N/A'}
-      Position: ${employee?.position || 'N/A'}
-      Contract Title: ${contract.contractTitle}
-      Start Date: ${contract.startDate}
-      End Date: ${contract.endDate}
-      Payment Type: ${contract.paymentType}
-      Payment Amount: $${contract.paymentAmount}
-      Payment Terms: ${contract.paymentTerms}
-      
-      Scope of Work:
-      ${contract.scopeOfWork}
-    `;
+  // VIEW PDF
+  const handleViewPdf = (row) => {
+  if (!row.pdf_url) {
+    toast.error("No PDF available");
+    return;
+  }
+  window.open(row.pdf_url, "_blank");
+};
 
-    const blob = new Blob([pdfContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `contract-${contract.contractTitle}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
 
-  // Get payment type color
-  const getPaymentTypeColor = (type) => {
-    switch (type) {
-      case 'Hourly': return 'primary';
-      case 'Monthly': return 'secondary';
-      case 'Fixed': return 'success';
-      default: return 'default';
-    }
-  };
 
-  // DataGrid columns
+  // DataGrid Columns
   const columns = [
     {
-      field: 'employee',
-      headerName: 'EMPLOYEE',
+      field: "freelancer_id",
+      headerName: "Freelancer",
       width: 200,
       renderCell: (params) => {
-        const employee = employees.find(emp => emp.id === parseInt(params.row.employeeId));
-        return (
-          <Box>
-            <Typography variant="subtitle2" fontWeight="bold">
-              {employee?.name}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {employee?.position}
-            </Typography>
-          </Box>
-        );
-      }
+        const f = freelancers.find((x) => x.id === params.value);
+        return f ? f.name : "Unknown";
+      },
     },
     {
-      field: 'contractTitle',
-      headerName: 'CONTRACT TITLE',
-      width: 200,
-      renderCell: (params) => (
-        <Typography variant="body2" fontWeight="medium">
-          {params.value}
-        </Typography>
-      )
+      field: "contract_title",
+      headerName: "Title",
+      width: 180,
     },
     {
-      field: 'startDate',
-      headerName: 'START DATE',
-      width: 120,
-      renderCell: (params) => format(new Date(params.value), 'MMM dd, yyyy')
-    },
-    {
-      field: 'endDate',
-      headerName: 'END DATE',
-      width: 120,
-      renderCell: (params) => format(new Date(params.value), 'MMM dd, yyyy')
-    },
-    {
-      field: 'paymentType',
-      headerName: 'PAYMENT TYPE',
+      field: "contract_start_date",
+      headerName: "Start",
       width: 130,
-      renderCell: (params) => (
-        <Chip 
-          label={params.value} 
-          color={getPaymentTypeColor(params.value)}
-          size="small"
-          variant="outlined"
-        />
-      )
     },
     {
-      field: 'paymentAmount',
-      headerName: 'AMOUNT',
+      field: "contract_end_date",
+      headerName: "End",
+      width: 130,
+    },
+    {
+      field: "payment_amount",
+      headerName: "Amount",
       width: 120,
-      renderCell: (params) => (
-        <Typography variant="body2" fontWeight="bold">
-          ${parseFloat(params.value).toLocaleString()}
-        </Typography>
-      )
     },
     {
-      field: 'actions',
-      headerName: 'ACTIONS',
-      width: 250,
-      sortable: false,
+      field: "contract_status",
+      headerName: "Status",
+      width: 140,
+      renderCell: (params) => (
+        <Chip
+          label={params.value}
+          color={
+            params.value === "Active"
+              ? "success"
+              : params.value === "Cancelled"
+              ? "warning"
+              : params.value === "Expired"
+              ? "error"
+              : "default"
+          }
+        />
+      ),
+    },
+    {
+      field: "actions",
+      headerName: "Actions",
+      width: 230,
       renderCell: (params) => (
         <Box>
-          <Tooltip title="View Contract">
-            <IconButton
-              onClick={() => handleView(params.row)}
-              color="info"
-              size="small"
-            >
-              <ViewIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Edit Contract">
-            <IconButton
-              onClick={() => handleEdit(params.row)}
-              color="primary"
-              size="small"
-            >
+         {/* View PDF */}
+<Tooltip title="View PDF">
+  <IconButton
+    size="small"
+    onClick={() => {
+      if (!params.row.pdf_url) {
+        toast.error("PDF not available");
+        return;
+      }
+      window.open(params.row.pdf_url, "_blank");
+    }}
+  >
+    <ViewIcon />
+  </IconButton>
+</Tooltip>
+
+
+          {/* Edit */}
+          <Tooltip title="Edit">
+            <IconButton size="small" onClick={() => handleEdit(params.row)}>
               <EditIcon />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Delete Contract">
+
+          {/* Cancel */}
+          <Tooltip title="Cancel Contract">
             <IconButton
-              onClick={() => handleDelete(params.row)}
-              color="error"
               size="small"
+              color="error"
+              onClick={() => handleCancelContract(params.row)}
             >
               <DeleteIcon />
             </IconButton>
           </Tooltip>
-          <Tooltip title="Download PDF">
+
+          {/* Renew */}
+          <Tooltip title="Renew">
             <IconButton
-              onClick={() => generatePdf(params.row)}
-              color="success"
               size="small"
+              color="primary"
+              onClick={() => handleRenew(params.row)}
             >
-              <DownloadIcon />
+              <AddIcon />
             </IconButton>
           </Tooltip>
         </Box>
-      )
-    }
+      ),
+    },
   ];
-
-  const getSelectedEmployee = () => {
-    return employees.find(emp => emp.id === parseInt(formData.employeeId));
-  };
 
   return (
     <Box sx={{ p: 3 }}>
       {/* Header */}
-      <Box mb={4}>
-        <Typography variant="h4" gutterBottom fontWeight="bold">
-          Contract Management
+      <Box display="flex" justifyContent="space-between" mb={3}>
+        <Typography variant="h4" fontWeight="bold">
+          Freelancer Contract Management
         </Typography>
-        <Typography variant="subtitle1" color="text.secondary">
-          View, update, delete, and download employee contracts
-        </Typography>
+
+       
       </Box>
 
-      {/* Contracts Table */}
-      <Paper elevation={2} sx={{ width: '100%' }}>
-        {contracts.length === 0 ? (
-          <Box p={4} textAlign="center">
-            <Alert severity="info">
-              No contracts found.
-            </Alert>
-          </Box>
-        ) : (
-          <DataGrid
-            rows={contracts}
-            columns={columns}
-            initialState={{
-              pagination: {
-                paginationModel: { page: 0, pageSize: 10 },
-              },
-            }}
-            pageSizeOptions={[5, 10, 25]}
-            sx={{
-              border: 0,
-              '& .MuiDataGrid-cell:hover': {
-                backgroundColor: 'action.hover',
-              },
-            }}
-            autoHeight
-            disableRowSelectionOnClick
-          />
-        )}
+      {/* Table */}
+      <Paper>
+        <DataGrid
+          rows={contracts}
+          getRowId={(row) => row.id}
+          columns={columns}
+          autoHeight
+          pageSizeOptions={[5, 10, 20]}
+        />
       </Paper>
 
-      {/* Contract Form Dialog */}
-      <Dialog 
-        open={dialogOpen} 
-        onClose={handleCloseDialog}
-        maxWidth="md"
-        fullWidth
-      >
+      {/* Dialog (Create / Edit) */}
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>
-          <Typography variant="h5" fontWeight="bold">
-            {isViewing ? 'View Contract' : 'Edit Contract'}
-          </Typography>
+          {isEditing ? "Edit Contract" : "Create Contract"}
         </DialogTitle>
 
         <DialogContent>
-          {successMessage && (
-            <Alert severity="success" sx={{ mb: 2 }}>
-              {successMessage}
-            </Alert>
-          )}
+          <Grid container spacing={2} mt={1}>
+            <Grid item xs={12} sm={6}>
+              <FormControl fullWidth error={!!errors.freelancer_id}>
+                <InputLabel>Freelancer *</InputLabel>
+                <Select
+                  value={formData.freelancer_id}
+                  label="Freelancer"
+                  onChange={(e) =>
+                    setFormData({ ...formData, freelancer_id: e.target.value })
+                  }
+                >
+                  {freelancers?.map((f) => (
+                    <MenuItem key={f.id} value={f.id}>
+                      {f.name} ({f.email})
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
 
-          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
-            <Box display="flex" gap={3}>
-              {/* Left Column - Form */}
-              <Box flex={1}>
-                {/* Employee Selection */}
-                <FormControl fullWidth error={!!errors.employeeId} sx={{ mb: 2 }}>
-                  <InputLabel>Employee</InputLabel>
-                  <Select
-                    name="employeeId"
-                    value={formData.employeeId}
-                    onChange={handleInputChange}
-                    label="Employee"
-                    disabled={isViewing}
-                  >
-                    {employees.map(employee => (
-                      <MenuItem key={employee.id} value={employee.id}>
-                        {employee.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Contract Title *"
+                fullWidth
+                value={formData.contract_title}
+                onChange={(e) =>
+                  setFormData({ ...formData, contract_title: e.target.value })
+                }
+                error={!!errors.contract_title}
+              />
+            </Grid>
 
-                {/* Contract Title */}
-                <TextField
-                  fullWidth
-                  label="Contract Title"
-                  name="contractTitle"
-                  value={formData.contractTitle}
-                  onChange={handleInputChange}
-                  error={!!errors.contractTitle}
-                  helperText={errors.contractTitle}
-                  disabled={isViewing}
-                  sx={{ mb: 2 }}
-                />
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Start Date *"
+                type="date"
+                fullWidth
+                value={formData.contract_start_date}
+                onChange={(e) =>
+                  setFormData({ ...formData, contract_start_date: e.target.value })
+                }
+                InputLabelProps={{ shrink: true }}
+                error={!!errors.contract_start_date}
+              />
+            </Grid>
 
-                {/* Dates */}
-                <Box display="flex" gap={2} sx={{ mb: 2 }}>
-                  <TextField
-                    fullWidth
-                    label="Start Date"
-                    name="startDate"
-                    type="date"
-                    value={formData.startDate}
-                    onChange={handleInputChange}
-                    error={!!errors.startDate}
-                    helperText={errors.startDate}
-                    disabled={isViewing}
-                    InputLabelProps={{ shrink: true }}
-                  />
-                  <TextField
-                    fullWidth
-                    label="End Date"
-                    name="endDate"
-                    type="date"
-                    value={formData.endDate}
-                    onChange={handleInputChange}
-                    error={!!errors.endDate}
-                    helperText={errors.endDate}
-                    disabled={isViewing}
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </Box>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="End Date *"
+                type="date"
+                fullWidth
+                value={formData.contract_end_date}
+                onChange={(e) =>
+                  setFormData({ ...formData, contract_end_date: e.target.value })
+                }
+                InputLabelProps={{ shrink: true }}
+                error={!!errors.contract_end_date}
+              />
+            </Grid>
 
-                {/* Payment Information */}
-                <Box display="flex" gap={2} sx={{ mb: 2 }}>
-                  <FormControl fullWidth error={!!errors.paymentType}>
-                    <InputLabel>Payment Type</InputLabel>
-                    <Select
-                      name="paymentType"
-                      value={formData.paymentType}
-                      onChange={handleInputChange}
-                      label="Payment Type"
-                      disabled={isViewing}
-                    >
-                      <MenuItem value="Hourly">Hourly</MenuItem>
-                      <MenuItem value="Monthly">Monthly</MenuItem>
-                      <MenuItem value="Fixed">Fixed</MenuItem>
-                    </Select>
-                  </FormControl>
-                  <TextField
-                    fullWidth
-                    label="Payment Amount ($)"
-                    name="paymentAmount"
-                    type="number"
-                    value={formData.paymentAmount}
-                    onChange={handleInputChange}
-                    error={!!errors.paymentAmount}
-                    helperText={errors.paymentAmount}
-                    disabled={isViewing}
-                  />
-                </Box>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                select
+                label="Payment Type *"
+                fullWidth
+                value={formData.payment_type}
+                onChange={(e) =>
+                  setFormData({ ...formData, payment_type: e.target.value })
+                }
+                error={!!errors.payment_type}
+              >
+                <MenuItem value="Hourly">Hourly</MenuItem>
+                <MenuItem value="Monthly">Monthly</MenuItem>
+                <MenuItem value="Fixed">Fixed</MenuItem>
+              </TextField>
+            </Grid>
 
-                {/* Payment Terms */}
-                <FormControl fullWidth error={!!errors.paymentTerms} sx={{ mb: 2 }}>
-                  <InputLabel>Payment Terms</InputLabel>
-                  <Select
-                    name="paymentTerms"
-                    value={formData.paymentTerms}
-                    onChange={handleInputChange}
-                    label="Payment Terms"
-                    disabled={isViewing}
-                  >
-                    <MenuItem value="Net 7">Net 7</MenuItem>
-                    <MenuItem value="Net 15">Net 15</MenuItem>
-                    <MenuItem value="Net 30">Net 30</MenuItem>
-                    <MenuItem value="Milestone Based">Milestone Based</MenuItem>
-                  </Select>
-                </FormControl>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                label="Payment Amount *"
+                fullWidth
+                type="number"
+                value={formData.payment_amount}
+                onChange={(e) =>
+                  setFormData({ ...formData, payment_amount: e.target.value })
+                }
+                error={!!errors.payment_amount}
+              />
+            </Grid>
 
-                {/* Scope of Work */}
-                <TextField
-                  fullWidth
-                  label="Scope of Work"
-                  name="scopeOfWork"
-                  value={formData.scopeOfWork}
-                  onChange={handleInputChange}
-                  multiline
-                  rows={4}
-                  disabled={isViewing}
-                  placeholder="Describe the scope of work..."
-                />
-              </Box>
+            <Grid item xs={12}>
+              <TextField
+                select
+                label="Payment Terms"
+                fullWidth
+                value={formData.payment_terms}
+                onChange={(e) =>
+                  setFormData({ ...formData, payment_terms: e.target.value })
+                }
+              >
+                <MenuItem value="Net 7">Net 7</MenuItem>
+                <MenuItem value="Net 15">Net 15</MenuItem>
+                <MenuItem value="Net 30">Net 30</MenuItem>
+                <MenuItem value="Milestone Based">Milestone Based</MenuItem>
+              </TextField>
+            </Grid>
 
-              {/* Right Column - Employee Info */}
-              <Box width={200}>
-                <Box sx={{ p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
-                  <Typography variant="h6" gutterBottom fontWeight="bold">
-                    Employee Info
-                  </Typography>
-                  <Divider sx={{ mb: 2 }} />
-                  
-                  {getSelectedEmployee() ? (
-                    <Box>
-                      <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
-                        {getSelectedEmployee().name}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" gutterBottom>
-                        {getSelectedEmployee().position}
-                      </Typography>
-                      <Chip 
-                        label={getSelectedEmployee().department} 
-                        size="small" 
-                        variant="outlined"
-                        sx={{ mb: 1 }}
-                      />
-                      <Typography variant="caption" display="block">
-                        {getSelectedEmployee().email}
-                      </Typography>
-                    </Box>
-                  ) : (
-                    <Typography variant="body2" color="text.secondary" fontStyle="italic">
-                      Select employee
-                    </Typography>
-                  )}
-                </Box>
-              </Box>
-            </Box>
-          </Box>
+            <Grid item xs={12}>
+              <TextField
+                label="Scope of Work"
+                fullWidth
+                multiline
+                rows={3}
+                value={formData.scope_of_work}
+                onChange={(e) =>
+                  setFormData({ ...formData, scope_of_work: e.target.value })
+                }
+              />
+            </Grid>
+          </Grid>
         </DialogContent>
 
-        <DialogActions sx={{ p: 3 }}>
-          <Button
-            onClick={handleCloseDialog}
-            startIcon={<CancelIcon />}
-            color="inherit"
-          >
-            {isViewing ? 'Close' : 'Cancel'}
+        <DialogActions>
+          <Button startIcon={<CancelIcon />} onClick={() => setDialogOpen(false)}>
+            Cancel
           </Button>
-          {!isViewing && (
-            <Button
-              onClick={handleSubmit}
-              variant="contained"
-              startIcon={<SaveIcon />}
-            >
-              Update Contract
-            </Button>
-          )}
+
+          <Button
+            variant="contained"
+            startIcon={<SaveIcon />}
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            {isEditing ? "Update Contract" : "Create Contract"}
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

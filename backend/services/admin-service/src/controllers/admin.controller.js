@@ -2607,6 +2607,8 @@ export const renewContract = async (req, res) => {
 
 export const getAllContracts = async (req, res) => {
   try {
+    const serverUrl = process.env.SERVER_URL || "http://localhost:5002";
+
     const result = await pool.query(`
       SELECT c.*, u.name AS freelancer_name, u.email AS freelancer_email
       FROM freelancer_contracts c
@@ -2614,32 +2616,50 @@ export const getAllContracts = async (req, res) => {
       ORDER BY c.created_at DESC
     `);
 
-    res.json(result.rows);
+    const updated = result.rows.map(row => ({
+      ...row,
+      pdf_url: row.pdf_file
+        ? `${serverUrl}/uploads/contracts/${row.pdf_file}`
+        : null
+    }));
+
+    res.json(updated);
   } catch (err) {
     console.error("Fetch Contracts Error:", err);
     res.status(500).json({ error: "Failed to fetch contracts" });
   }
 };
 
+
 export const getContractsByFreelancer = async (req, res) => {
   try {
     const { freelancer_id } = req.params;
+    const serverUrl = process.env.SERVER_URL || "http://localhost:5002";
 
     const result = await pool.query(
       `SELECT * FROM freelancer_contracts WHERE freelancer_id=$1 ORDER BY created_at DESC`,
       [freelancer_id]
     );
 
-    res.json(result.rows);
+    const updated = result.rows.map(row => ({
+      ...row,
+      pdf_url: row.pdf_file
+        ? `${serverUrl}/uploads/contracts/${row.pdf_file}`
+        : null
+    }));
+
+    res.json(updated);
   } catch (err) {
     console.error("Fetch Freelancer Contracts Error:", err);
     res.status(500).json({ error: "Failed to fetch freelancer contracts" });
   }
 };
 
+
 export const getContractById = async (req, res) => {
   try {
     const { contract_id } = req.params;
+    const serverUrl = process.env.SERVER_URL || "http://localhost:5002";
 
     const result = await pool.query(
       `SELECT * FROM freelancer_contracts WHERE id=$1`,
@@ -2650,29 +2670,37 @@ export const getContractById = async (req, res) => {
       return res.status(404).json({ error: "Contract not found" });
     }
 
-    res.json(result.rows[0]);
+    const contract = result.rows[0];
+
+    contract.pdf_url = contract.pdf_file
+      ? `${serverUrl}/uploads/contracts/${contract.pdf_file}`
+      : null;
+
+    res.json(contract);
+
   } catch (err) {
     console.error("Get Contract Error:", err);
     res.status(500).json({ error: "Failed to fetch contract" });
   }
 };
 
-export const getFreelancers = async (req, res) => {
-  try {
-    const result = await pool.query(
-      `SELECT id, name, email, phone, designation, department 
-       FROM user_employees_master
-       WHERE employment_type = 'freelancer'
-       ORDER BY created_at DESC`
-    );
 
-    return res.json({
-      count: result.rows.length,
-      freelancers: result.rows
-    });
+// export const getFreelancers = async (req, res) => {
+//   try {
+//     const result = await pool.query(
+//       `SELECT id, name, email, phone, designation, department 
+//        FROM user_employees_master
+//        WHERE employment_type = 'freelancer'
+//        ORDER BY created_at DESC`
+//     );
 
-  } catch (err) {
-    console.error("Get Freelancers Error:", err.message);
-    return res.status(500).json({ error: "Failed to fetch freelancers" });
-  }
-};
+//     return res.json({
+//       count: result.rows.length,
+//       freelancers: result.rows
+//     });
+
+//   } catch (err) {
+//     console.error("Get Freelancers Error:", err.message);
+//     return res.status(500).json({ error: "Failed to fetch freelancers" });
+//   }
+// };
