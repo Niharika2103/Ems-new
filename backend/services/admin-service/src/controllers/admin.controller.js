@@ -2177,8 +2177,15 @@ export const updateReferralStatusAdmin = async (req, res) => {
   const client = await pool.connect();
 
   try {
-    const { id } = req.params; // referral UUID (DB ID)
-    const { status } = req.body;
+    const { id } = req.params; // referral UUID
+    const {
+      status,
+      interview_date,
+      interview_time,
+      meeting_link,
+      interview_round,
+      interviewers = []
+    } = req.body;
 
     const VALID_STATUSES = ["Shortlisted", "Interview", "Hired", "Rejected"];
 
@@ -2186,14 +2193,13 @@ export const updateReferralStatusAdmin = async (req, res) => {
       return res.status(400).json({ error: "Invalid status." });
     }
 
-    // Get referral details
+    // Fetch referral
     const selectQuery = `
       SELECT r.*, u.email AS referrer_email, u.name AS referrer_name
       FROM ${REFERRALS_TABLE} r
       LEFT JOIN ${USER_MASTER_TABLE} u ON r.referred_by = u.id
       WHERE r.id = $1
     `;
-
     const result = await client.query(selectQuery, [id]);
 
     if (result.rowCount === 0) {
@@ -2202,20 +2208,52 @@ export const updateReferralStatusAdmin = async (req, res) => {
 
     const referral = result.rows[0];
 
-    // Update status
+    // ======================================
+    // INTERVIEW STATUS → append new round
+    // ======================================
+    let updatedInterviewDetails = referral.inteview_details || [];
+
+    if (status === "Interview") {
+      if (!interview_date || !interview_time || !meeting_link || !interview_round) {
+        return res.status(400).json({
+          error: "Interview date, time, meeting link, and round are required for Interview status."
+        });
+      }
+
+      const newRound = {
+        round_name: interview_round,
+        date: interview_date,
+        time: interview_time,
+        interviewers,
+        meeting_link
+      };
+
+      updatedInterviewDetails.push(newRound);
+    }
+
+    // -----------------------------------
+    // Update referral
+    // -----------------------------------
     const updateQuery = `
       UPDATE ${REFERRALS_TABLE}
-      SET status = $1, updated_by = 'Admin', updated_at = NOW()
-      WHERE id = $2
+      SET status = $1,
+          inteview_details = $2::jsonb,
+          updated_by = 'Admin',
+          updated_at = NOW()
+      WHERE id = $3
       RETURNING *
     `;
 
-    const updateRes = await client.query(updateQuery, [status, id]);
+    const updateRes = await client.query(updateQuery, [
+  status,
+  JSON.stringify(updatedInterviewDetails),   // <-- FIX
+  id
+]);
 
-
+    const updatedReferral = updateRes.rows[0];
 
     // ======================================================
-    // 📧 1. EMAIL TO EMPLOYEE (Referrer)
+    // EMAIL 1 → EMPLOYEE (Referrer)
     // ======================================================
     await sendEmail(
       referral.referrer_email,
@@ -2228,22 +2266,28 @@ export const updateReferralStatusAdmin = async (req, res) => {
       `
     );
 
-
-
     // ======================================================
-    // 📧 2. EMAIL TO CANDIDATE BASED ON STATUS
+    // EMAIL 2 → Candidate (latest interview round only)
     // ======================================================
-
-    // INTERVIEW EMAIL
     if (status === "Interview") {
+      const latestRound = updatedInterviewDetails[updatedInterviewDetails.length - 1];
+
       await sendEmail(
         referral.candidate_email,
-        "Interview Scheduled",
+        `Interview Scheduled - ${latestRound.round_name}`,
         `
           <h2>Your Interview is Scheduled</h2>
           <p>Dear ${referral.candidate_name},</p>
-          <p>Your profile has been shortlisted and your interview has been scheduled.</p>
-          <p>Our HR team will contact you with further details.</p>
+          <p>Your <strong>${latestRound.round_name}</strong> has been scheduled.</p>
+
+          <p><strong>Date:</strong> ${latestRound.date}</p>
+          <p><strong>Time:</strong> ${latestRound.time}</p>
+          <p><strong>Meeting Link:</strong> <a href="${latestRound.meeting_link}">Join Meeting</a></p>
+
+          <p><strong>Interviewers:</strong></p>
+          <ul>
+            ${latestRound.interviewers.map(i => `<li>${i}</li>`).join("")}
+          </ul>
         `
       );
     }
@@ -2256,32 +2300,28 @@ export const updateReferralStatusAdmin = async (req, res) => {
         `
           <h2>Congratulations 🎉</h2>
           <p>Dear ${referral.candidate_name},</p>
-          <p>We are pleased to inform you that you have been <strong>selected</strong> for the position of <strong>${referral.position}</strong>.</p>
-          <p>Our HR team will contact you shortly with the onboarding details.</p>
+          <p>You have been selected for <strong>${referral.position}</strong>.</p>
+          <p>Our HR team will contact you with onboarding details.</p>
         `
       );
     }
 
-    // REJECTION EMAIL
+    // REJECTED EMAIL
     if (status === "Rejected") {
       await sendEmail(
         referral.candidate_email,
         "Application Status - Not Selected",
         `
-          <h2>Thank You For Your Interest</h2>
+          <h2>Thank You For Your Time</h2>
           <p>Dear ${referral.candidate_name},</p>
-          <p>We appreciate the time and effort you invested in the interview process.</p>
-          <p>After careful review, we regret to inform you that you were not selected for the position of <strong>${referral.position}</strong>.</p>
-          <p>We wish you the best in your future career opportunities.</p>
+          <p>We regret to inform you that you were not selected for the position of <strong>${referral.position}</strong>.</p>
         `
       );
     }
 
-
-
     return res.status(200).json({
       message: "Status updated successfully.",
-      updated_referral: updateRes.rows[0],
+      updated_referral: updatedReferral
     });
 
   } catch (err) {
