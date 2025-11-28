@@ -37,8 +37,9 @@ const STATUS_COLOR = {
   REJECTED: "error",
 };
 
-// Step index helper
-const getStatusIndex = (status) => STATUS_STEPS.indexOf(status || "APPLIED");
+// Step index helper (FIXED)
+const getStatusIndex = (status) =>
+  STATUS_STEPS.indexOf((status || "APPLIED").toUpperCase());
 
 export default function ApplicationTrackingTable() {
   const [open, setOpen] = useState(false);
@@ -52,28 +53,14 @@ export default function ApplicationTrackingTable() {
         const res = await getAllApplicationsApi();
         const list = res.data.applications || [];
 
-        const rows = list.map((app) => ({
-          id: app.application_id,
-
-          // 🟩 FIXED — Job title fallback
-          jobTitle:
-            app.job_title !== null &&
-            app.job_title !== undefined &&
-            app.job_title.trim() !== ""
-              ? app.job_title
-              : "Unknown Title",
-
-          // 🟩 FIXED — Company fallback
-          company:
-            app.company !== null &&
-            app.company !== undefined &&
-            app.company.trim() !== ""
-              ? app.company
-              : "Unknown Company",
-
+        const rows = list.map((app, index) => ({
+          id: index + 1, // SERIAL NUMBER
+          appId: app.application_id, // REAL DB ID
+          jobTitle: app.job_title?.trim() ? app.job_title : "Unknown Title",
           appliedOn: app.applied_date || "Not Provided",
 
-          status: app.status || "APPLIED",
+          // FIXED: convert DB status to uppercase
+          status: (app.status || "APPLIED").toUpperCase(),
         }));
 
         setApplications(rows);
@@ -105,18 +92,18 @@ export default function ApplicationTrackingTable() {
       newIndex--;
     }
 
-    const newStatus = STATUS_STEPS[newIndex];
+    const newStatus = STATUS_STEPS[newIndex]; // Already uppercase
 
     try {
-      await updateApplicationStatusApi(selectedRow.id, newStatus);
+      // FIXED: send uppercase status to backend
+      await updateApplicationStatusApi(selectedRow.appId, newStatus.toUpperCase());
 
-      // Update inside UI
       const updatedRow = { ...selectedRow, status: newStatus };
       setSelectedRow(updatedRow);
 
       setApplications((prev) =>
         prev.map((app) =>
-          app.id === selectedRow.id ? { ...app, status: newStatus } : app
+          app.appId === selectedRow.appId ? { ...app, status: newStatus } : app
         )
       );
     } catch (err) {
@@ -127,10 +114,9 @@ export default function ApplicationTrackingTable() {
 
   // ================= TABLE COLUMNS =================
   const columns = [
-    { field: "id", headerName: "ID", width: 70 },
+    { field: "id", headerName: "Serial_No", width: 110 },
     { field: "jobTitle", headerName: "Job Title", width: 220 },
-    { field: "company", headerName: "Company", width: 180 },
-    { field: "appliedOn", headerName: "Applied On", width: 180 },
+    { field: "appliedOn", headerName: "Applied On", width: 200 },
 
     {
       field: "status",
@@ -151,9 +137,13 @@ export default function ApplicationTrackingTable() {
     {
       field: "actions",
       headerName: "Actions",
-      width: 150,
+      width: 140,
       renderCell: (params) => (
-        <Button variant="contained" size="small" onClick={() => handleOpen(params.row)}>
+        <Button
+          variant="contained"
+          size="small"
+          onClick={() => handleOpen(params.row)}
+        >
           View
         </Button>
       ),
@@ -166,8 +156,8 @@ export default function ApplicationTrackingTable() {
         Job Application Tracking
       </Typography>
 
-      <Box sx={{ height: 450, bgcolor: "#fff" }}>
-        <DataGrid rows={applications} columns={columns} pageSize={5} />
+      <Box sx={{ height: 480, bgcolor: "#fff" }}>
+        <DataGrid rows={applications} columns={columns} pageSize={8} />
       </Box>
 
       {/* ================= MODAL ================= */}
@@ -189,7 +179,7 @@ export default function ApplicationTrackingTable() {
               </Typography>
 
               <Typography variant="subtitle1">
-                {selectedRow.jobTitle} — {selectedRow.company}
+                {selectedRow.jobTitle}
               </Typography>
 
               <Typography variant="body2" color="text.secondary" mb={2}>

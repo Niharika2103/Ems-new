@@ -16,13 +16,12 @@ import {
 
 import { LocationOn, AttachMoney } from "@mui/icons-material";
 
-// API IMPORTS
 import {
   getPublishedJobPostsApi,
   applyForJobApi,
 } from "../../api/authApi";
 
-// ================= JOB CARD COMPONENT =================
+// ================= JOB CARD =================
 const JobCard = ({ job, onClick }) => (
   <Card
     onClick={onClick}
@@ -46,7 +45,9 @@ const JobCard = ({ job, onClick }) => (
 
     <Box sx={{ display: "flex", alignItems: "center", mt: 1 }}>
       <AttachMoney sx={{ fontSize: 18, color: "#1e8449", mr: 1 }} />
-      <Typography>{`₹${job.salaryMin / 100000}L - ₹${job.salaryMax / 100000}L`}</Typography>
+      <Typography>
+        ₹{job.salaryMin / 100000}L - ₹{job.salaryMax / 100000}L
+      </Typography>
     </Box>
 
     <Chip label={job.type} size="small" sx={{ mt: 2 }} />
@@ -83,10 +84,9 @@ const JobPost = () => {
     email: "",
     phone: "",
     resume: null,
-    coverLetter: null,
   });
 
-  // ---------------- FETCH JOBS FROM BACKEND ----------------
+  // ================= LOAD PUBLISHED JOBS =================
   useEffect(() => {
     loadPublishedJobs();
   }, []);
@@ -97,20 +97,26 @@ const JobPost = () => {
       const jobList = res.data.jobs || [];
 
       const formatted = jobList.map((job) => {
-        let salaryMin = 0, salaryMax = 0;
+        // ===== Salary Parsing =====
+        let salaryMin = 0,
+          salaryMax = 0;
 
-        if (job.salary_range && job.salary_range.includes("-")) {
+        if (job.salary_range?.includes("-")) {
           const parts = job.salary_range.split("-");
-          const cleanMin = parts[0].replace(/[^0-9.]/g, "").trim();
-          const cleanMax = parts[1].replace(/[^0-9.]/g, "").trim();
-
-          salaryMin = Number(cleanMin) * 100000;
-          salaryMax = Number(cleanMax) * 100000;
+          salaryMin = Number(parts[0].replace(/\D/g, "")) * 100000;
+          salaryMax = Number(parts[1].replace(/\D/g, "")) * 100000;
         }
 
+        // ===== Posted days ago =====
+        const postedDate = new Date(job.posted_date);
+        const today = new Date();
+        const diffDays = Math.floor(
+          (today - postedDate) / (1000 * 60 * 60 * 24)
+        );
+
         return {
-          id: job.job_id,              // DataGrid key (UI)
-          job_id: job.job_id,          // REAL job ID for backend
+          id: job.job_id,
+          job_id: job.job_id,
           title: job.job_title,
           company: job.company || "—",
           salaryMin,
@@ -119,8 +125,8 @@ const JobPost = () => {
           location: job.location,
           experience: job.experience_level,
           type: job.employment_type,
-          postedDaysAgo: 1,
-          skills: job.requirements?.split(",") || [],
+          postedDaysAgo: diffDays,
+          skills: job.requirements?.split(",").map((s) => s.trim()) || [],
         };
       });
 
@@ -130,18 +136,19 @@ const JobPost = () => {
     }
   };
 
-  // ---------------- FILTER HANDLING ----------------
+  // ================= FILTER JOBS =================
   const filteredJobs = jobs.filter((job) => {
-    if (dateFilter === "24" && job.postedDaysAgo > 1) return false;
-    if (dateFilter === "3" && job.postedDaysAgo > 3) return false;
-    if (dateFilter === "7" && job.postedDaysAgo > 7) return false;
+    if (dateFilter !== "all") {
+      let limit = parseInt(dateFilter);
+      if (job.postedDaysAgo > limit) return false;
+    }
 
     if (job.salaryMin < minSalary * 100000) return false;
 
     return true;
   });
 
-  // ---------------- APPLY FORM HANDLING ----------------
+  // ================= APPLY FORM =================
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     setFormData({ ...formData, [name]: files ? files[0] : value });
@@ -150,47 +157,33 @@ const JobPost = () => {
   const handleApplySubmit = async (e) => {
     e.preventDefault();
 
-    const formDataToSend = new FormData();
-    formDataToSend.append("job_id", selectedJob.job_id); // FIXED
-    formDataToSend.append("candidate_name", formData.fullName);
-    formDataToSend.append("email", formData.email);
-    formDataToSend.append("phone", formData.phone);
-    formDataToSend.append("resume", formData.resume);
+    const fd = new FormData();
+    fd.append("job_id", selectedJob.job_id);
+    fd.append("candidate_name", formData.fullName);
+    fd.append("email", formData.email);
+    fd.append("phone", formData.phone);
+    fd.append("resume", formData.resume);
 
     try {
-      await applyForJobApi(formDataToSend);
+      await applyForJobApi(fd);
       alert("Application submitted successfully!");
       setApplyOpen(false);
       setOpen(false);
     } catch (err) {
-      console.log(err);
       alert("Failed to submit application");
     }
-  };
-
-  // ---------------- MODAL HANDLING ----------------
-  const handleOpen = (job) => {
-    setSelectedJob(job);
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setSelectedJob(null);
-    setOpen(false);
   };
 
   return (
     <Box sx={{ width: "100%", minHeight: "100vh", bgcolor: "#f5f7fa", py: 4 }}>
       <Container maxWidth="xl" sx={{ display: "flex", gap: 3 }}>
-
-        {/* LEFT FILTERS */}
+        {/* ================= FILTERS ================= */}
         <Box
           sx={{
             width: 280,
             background: "#fff",
             borderRadius: 3,
             p: 3,
-            height: "fit-content",
             position: "sticky",
             top: 20,
             boxShadow: "0 4px 18px rgba(0,0,0,0.07)",
@@ -200,7 +193,6 @@ const JobPost = () => {
             Filters
           </Typography>
 
-          {/* DATE FILTER */}
           <Typography fontWeight={600} mb={1}>
             Date Posted
           </Typography>
@@ -209,47 +201,42 @@ const JobPost = () => {
             <label>
               <input
                 type="radio"
-                name="date"
                 checked={dateFilter === "all"}
                 onChange={() => setDateFilter("all")}
-              />
+              />{" "}
               All
             </label>
 
             <label>
               <input
                 type="radio"
-                name="date"
-                checked={dateFilter === "24"}
-                onChange={() => setDateFilter("24")}
-              />
+                checked={dateFilter === "1"}
+                onChange={() => setDateFilter("1")}
+              />{" "}
               Last 24 hours
             </label>
 
             <label>
               <input
                 type="radio"
-                name="date"
                 checked={dateFilter === "3"}
                 onChange={() => setDateFilter("3")}
-              />
+              />{" "}
               Last 3 days
             </label>
 
             <label>
               <input
                 type="radio"
-                name="date"
                 checked={dateFilter === "7"}
                 onChange={() => setDateFilter("7")}
-              />
+              />{" "}
               Last 7 days
             </label>
           </Box>
 
           <Divider sx={{ my: 3 }} />
 
-          {/* SALARY FILTER */}
           <Typography fontWeight={600} mb={1}>
             Minimum Salary (Lakhs)
           </Typography>
@@ -259,23 +246,19 @@ const JobPost = () => {
             onChange={(e, val) => setMinSalary(val)}
             step={1}
             min={0}
-            max={30}
+            max={50}
             valueLabelDisplay="auto"
           />
-
-          <Typography mt={1} color="gray">
-            Selected: ₹{minSalary} Lakhs
-          </Typography>
         </Box>
 
-        {/* RIGHT JOB LIST */}
+        {/* ================= JOB LIST ================= */}
         <Box sx={{ flex: 1, height: "85vh", overflowY: "scroll", pr: 2 }}>
           <Typography variant="h5" fontWeight={700} mb={3}>
             Jobs — Filtered Results
           </Typography>
 
           {filteredJobs.map((job) => (
-            <JobCard key={job.id} job={job} onClick={() => handleOpen(job)} />
+            <JobCard key={job.id} job={job} onClick={() => setOpen(true) || setSelectedJob(job)} />
           ))}
 
           {filteredJobs.length === 0 && (
@@ -284,8 +267,8 @@ const JobPost = () => {
         </Box>
       </Container>
 
-      {/* JOB DETAILS MODAL */}
-      <Modal open={open} onClose={handleClose}>
+      {/* ================= JOB DETAILS MODAL ================= */}
+      <Modal open={open} onClose={() => setOpen(false)}>
         <Box
           sx={{
             background: "white",
@@ -305,12 +288,11 @@ const JobPost = () => {
               <Typography color="gray">{selectedJob.company}</Typography>
               <Divider sx={{ my: 2 }} />
 
-              <Typography>
-                📍 <b>Location:</b> {selectedJob.location}
-              </Typography>
+              <Typography>📍 Location: {selectedJob.location}</Typography>
 
               <Typography>
-                💰 <b>Salary:</b> ₹{selectedJob.salaryMin / 100000}L - ₹
+                💰 Salary: ₹
+                {selectedJob.salaryMin / 100000}L - ₹
                 {selectedJob.salaryMax / 100000}L
               </Typography>
 
@@ -342,7 +324,7 @@ const JobPost = () => {
         </Box>
       </Modal>
 
-      {/* APPLY FORM MODAL */}
+      {/* ================= APPLY FORM MODAL ================= */}
       <Modal open={applyOpen} onClose={() => setApplyOpen(false)}>
         <Box
           sx={{
@@ -406,12 +388,7 @@ const JobPost = () => {
               </Grid>
 
               <Grid item xs={12}>
-                <Button
-                  type="submit"
-                  fullWidth
-                  variant="contained"
-                  sx={{ py: 1.5 }}
-                >
+                <Button type="submit" fullWidth variant="contained" sx={{ py: 1.5 }}>
                   Submit Application
                 </Button>
               </Grid>

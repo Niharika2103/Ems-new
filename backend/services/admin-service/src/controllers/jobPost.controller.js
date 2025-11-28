@@ -1,6 +1,6 @@
 import pool from "../config/db.js";
 
-
+/* ================= CREATE JOB POST ================= */
 export const createJobPost = async (req, res) => {
   try {
     const {
@@ -38,7 +38,7 @@ export const createJobPost = async (req, res) => {
       department,
       employment_type,
       created_by,
-      status || "draft"
+      (status || "draft").toLowerCase()
     ];
 
     const result = await pool.query(query, values);
@@ -56,25 +56,28 @@ export const createJobPost = async (req, res) => {
     });
   }
 };
-//GET ALL JOB POSTS (ADMIN)
- 
+
+/* ================= GET ALL JOB POSTS (ADMIN) ================= */
 export const getAdminJobPosts = async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT * FROM job_posts ORDER BY posted_date DESC
+      SELECT * FROM job_posts
+      ORDER BY posted_date DESC
     `);
 
-    res.json({ success: true, jobPosts: result.rows });
+    res.json({ success: true, jobs: result.rows });
+
   } catch (err) {
     console.error("GetAdminJobPosts Error:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
-//  GET PUBLISHED JOB POSTS (CANDIDATE)
+
+/* ================= GET PUBLISHED JOB POSTS ================= */
 export const getPublishedJobPosts = async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT * FROM job_posts 
+      SELECT * FROM job_posts
       WHERE LOWER(status) = 'published'
       ORDER BY posted_date DESC
     `);
@@ -85,8 +88,8 @@ export const getPublishedJobPosts = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
-//  GET UNPUBLISHED JOB POSTS
- 
+
+/* ================= GET UNPUBLISHED JOB POSTS ================= */
 export const getUnpublishedJobPosts = async (req, res) => {
   try {
     const result = await pool.query(`
@@ -102,7 +105,7 @@ export const getUnpublishedJobPosts = async (req, res) => {
   }
 };
 
-//  GET ARCHIVED JOB POSTS
+/* ================= GET ARCHIVED JOB POSTS ================= */
 export const getArchivedJobPosts = async (req, res) => {
   try {
     const result = await pool.query(`
@@ -117,7 +120,8 @@ export const getArchivedJobPosts = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
-//  UPDATE JOB POST DATA
+
+/* ================= UPDATE JOB POST ================= */
 export const updateJobPost = async (req, res) => {
   try {
     const { id } = req.params;
@@ -168,7 +172,7 @@ export const updateJobPost = async (req, res) => {
   }
 };
 
-//  UPDATE JOB STATUS (PUBLISH / UNPUBLISH / ARCHIVE)
+/* ================= UPDATE JOB STATUS ================= */
 export const updateJobStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -183,14 +187,15 @@ export const updateJobStatus = async (req, res) => {
       });
     }
 
-    const query = `
+    const result = await pool.query(
+      `
       UPDATE job_posts
-      SET status = $1, updated_at = NOW()
-      WHERE job_id = $2
+      SET status=$1, updated_at=NOW()
+      WHERE job_id=$2
       RETURNING *
-    `;
-
-    const result = await pool.query(query, [status.toLowerCase(), id]);
+    `,
+      [status.toLowerCase(), id]
+    );
 
     res.json({
       success: true,
@@ -202,11 +207,12 @@ export const updateJobStatus = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
-//  GET ONLY DRAFT JOBS
+
+/* ================= GET ONLY DRAFT JOB POSTS ================= */
 export const getDraftJobPosts = async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT * FROM job_posts 
+      SELECT * FROM job_posts
       WHERE LOWER(status) = 'draft'
       ORDER BY posted_date DESC
     `);
