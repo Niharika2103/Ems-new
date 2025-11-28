@@ -51,15 +51,36 @@ const FreelancerDocuments = () => {
     if (activeStep > 0) setActiveStep((prev) => prev - 1);
   };
 
+  // const handleFileChange = (e, key) => {
+  //   const files = e.target.files;
+  //   if (files) {
+  //     setFormData({
+  //       ...formData,
+  //       [key]: files.length > 1 ? Array.from(files) : files[0],
+  //     });
+  //   }
+  // };
+
   const handleFileChange = (e, key) => {
-    const files = e.target.files;
-    if (files) {
-      setFormData({
-        ...formData,
-        [key]: files.length > 1 ? Array.from(files) : files[0],
-      });
-    }
-  };
+  const files = e.target.files;
+  if (!files) return;
+
+  // ✅ Fix ONLY for GST Returns (must always be an array)
+  if (key === "gstReturns") {
+    setFormData({
+      ...formData,
+      gstReturns: Array.from(files), // ALWAYS array
+    });
+    return;
+  }
+
+  // ✅ All other file fields
+  setFormData({
+    ...formData,
+    [key]: files.length > 1 ? Array.from(files) : files[0],
+  });
+};
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
