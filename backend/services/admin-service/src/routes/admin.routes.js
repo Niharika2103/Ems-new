@@ -5,11 +5,11 @@ import {
   verifyAdminMfaSetup,
   getAdminById,
   updateAdminProfile,
-   upload,
+  upload,
   deleteAdmin,
   getAllAdmins,
-   approveAdmin, 
-   grantTempAdminAccess,
+  approveAdmin, 
+  grantTempAdminAccess,
   revokeTempAdminAccess,
   listTempAdmins,
   sendEmailVerification,
@@ -22,24 +22,34 @@ import {
   adminUpdateWorkedHours,
   rejectWeeklyApproval,
   rejectMonthlyApproval,
-   approveParentalLeave,
-getPendingParentalLeaves,
-getAuditLogs,
-generateLetter,
-getEmployeeLetters,
-documentUpload,
-uploadEmployeeDocuments,
-getAllEmployeesWithDocs,
-downloadEmployeeDocument,
-deleteLetter,
-sendLetterEmail,
-// getUploadedEmployeeDocuments
-getAllReferralsAdmin,
-getReferralByIdAdmin,
-updateReferralStatusAdmin
-} from "../controllers/admin.controller.js";
-//import for jobpost
+  approveParentalLeave,
+  getPendingParentalLeaves,
+  getAuditLogs,
+  generateLetter,
+  getEmployeeLetters,
+  documentUpload,
+  uploadEmployeeDocuments,
+  getAllEmployeesWithDocs,
+  downloadEmployeeDocument,
+  deleteLetter,
+  sendLetterEmail,
+  getAllReferralsAdmin,
+  getReferralByIdAdmin,
+  updateReferralStatusAdmin,
 
+  // === FREELANCER CONTRACT FUNCTIONS ===
+  createFreelancerContract,
+  updateContract,
+  cancelContract,
+  updateContractStatus,
+  renewContract,
+  getAllContracts,
+  getContractsByFreelancer,
+  getContractById,
+ 
+} from "../controllers/admin.controller.js";
+
+// Job post imports
 import {
   createJobPost,
   getAdminJobPosts,
@@ -48,11 +58,10 @@ import {
   getArchivedJobPosts,
   updateJobPost,
   updateJobStatus,
-   getDraftJobPosts 
+  getDraftJobPosts
 } from "../controllers/jobPost.controller.js";
 
-//Job Application Controllers and status tracking 
-
+// Applications
 import {
   applyForJob,
   getAllApplications,
@@ -64,18 +73,16 @@ import { uploadResume } from "../middleware/uploadResume.js";
 
 const router = Router();
 
-// Admin Register and login
+// ================= Admin Register/Login =================
 router.post("/register", adminRegister);
-
 router.post("/verify-mfa", verifyAdminMfaSetup);
-
-// Admin Login
 router.post("/login", adminLogin);
-// ========== Admin CRUD Routes ==========
-router.get("/fetchall",getAllAdmins);
+
+// ========== Admin CRUD ==========
+router.get("/fetchall", getAllAdmins);
 router.put("/status/:id", deleteAdmin);
 router.patch("/approve/:id", approveAdmin);
-router.get("/get/:id", getAdminById); // Get admin by ID
+router.get("/get/:id", getAdminById);
 
 router.put(
   "/adminprofile-update/:id",
@@ -86,32 +93,41 @@ router.put(
   updateAdminProfile
 );
 
-// ========== Temporary Admin Management Routes ==========
-router.post("/grant-temp", grantTempAdminAccess);        // Grant temp admin to employee
-router.delete("/revoke-temp/:email", revokeTempAdminAccess); // Revoke by email
-router.get("/temp-admins", listTempAdmins);              // List all active temp admins
+// ========== Temporary Admin Management ==========
+router.post("/grant-temp", grantTempAdminAccess);
+router.delete("/revoke-temp/:email", revokeTempAdminAccess);
+router.get("/temp-admins", listTempAdmins);
 
-// Email Verification
+// Email verification
 router.post("/send-email-verification", sendEmailVerification);
 router.post("/verify-email", verifyEmail);
 router.post("/promote/:employeeId", promoteEmployee);
 
+// ===== Attendance Approval =====
 router.get("/attendance/pending-weekly", getPendingWeeklyApprovals);
 router.put("/attendance/weekly/approve", updateWeeklyApprovalStatus);
+router.post("/attendance/weekly/reject", rejectWeeklyApproval);
+
 router.get("/attendance/pending-monthly", getPendingMonthlyApprovals);
 router.put("/attendance/monthly/approve", updateMonthlyApprovalStatus);
-router.put("/attendance/update-worked-hours", adminUpdateWorkedHours);
-router.post("/attendance/weekly/reject", rejectWeeklyApproval);
 router.post("/attendance/monthly/reject", rejectMonthlyApproval);
 
+router.put("/attendance/update-worked-hours", adminUpdateWorkedHours);
+
+// Parental leaves
 router.put("/attendance/approve-parental", approveParentalLeave);
 router.get("/attendance/pending-parental", getPendingParentalLeaves);
 
+// Audit logs
 router.get("/audit-logs", getAuditLogs);
 
+// ===== Letters =====
 router.post("/letters/generate", generateLetter);
 router.get("/letters/:employeeId", getEmployeeLetters);
+router.delete("/letters/:employeeId/:filename", deleteLetter);
+router.post("/letters/send-email", sendLetterEmail);
 
+// ===== Employee Document Upload =====
 router.post(
   "/employees/:id/upload-documents",
   documentUpload,
@@ -119,69 +135,43 @@ router.post(
 );
 
 router.get("/employees-with-docs", getAllEmployeesWithDocs);
-// Single file (no index)
 router.get("/download/:employeeId/:docType", downloadEmployeeDocument);
-
-// Multiple files (with index)
 router.get("/download/:employeeId/:docType/:index", downloadEmployeeDocument);
 
-// router.get("/fetch/status" ,getUploadedEmployeeDocuments);
-router.delete("/letters/:employeeId/:filename", deleteLetter);
-
-router.post("/letters/send-email", sendLetterEmail);
-
-// Get all referrals
+// ===== Referrals =====
 router.get("/referrals", getAllReferralsAdmin);
-
-// Get a referral by referral_id
 router.get("/referrals/:referral_id", getReferralByIdAdmin);
-
-// Update referral status (Shortlisted / Interview / Hired / Rejected)
 router.put("/referrals/status/:id", updateReferralStatusAdmin);
 
-// ================= Job Posting Module =================
-
-// Create job post
+// ================= Job Posting =================
 router.post("/admin/job-posts", createJobPost);
-
-// Get all job posts (Admin view — Draft + Published + Archived)
 router.get("/admin/job-posts", getAdminJobPosts);
-
-// Get only published job posts (Candidate view)
 router.get("/jobs", getPublishedJobPosts);
-
-//Get only unpublished job posts(Admin view)
 router.get("/admin/job-posts/unpublished", getUnpublishedJobPosts);
-
-//Get only archived job posts(Admin view)
 router.get("/admin/job-posts/archived", getArchivedJobPosts);
-
-
-// Edit job post
 router.put("/admin/job-posts/:id", updateJobPost);
-
-// Update job status (Publish / Unpublish / Archive)
 router.patch("/admin/job-posts/:id/status", updateJobStatus);
-
-//get only draft job for admin
 router.get("/admin/job-posts/draft", getDraftJobPosts);
 
-// JOB APPLICATION MODULE
-
-// Candidate apply for job
-router.post(
-  "/applications/apply",
-  uploadResume.single("resume"),
-  applyForJob
-);
-
-// Admin: Get ALL applications
+// ================= Job Applications =================
+router.post("/applications/apply", uploadResume.single("resume"), applyForJob);
 router.get("/applications/all", getAllApplications);
-
-// Admin: Get applications for specific job
 router.get("/applications/job/:jobId", getApplicationsByJob);
-
-// Admin: Update application status (APPLIED → SCREENING → INTERVIEW → DECISION)
 router.put("/applications/status/:application_id", updateApplicationStatus);
+
+/* -------------------------------------------------------------------------- */
+/*                       FREELANCER CONTRACT ROUTES                           */
+/* -------------------------------------------------------------------------- */
+router.post("/freelancer-contract/create", createFreelancerContract);
+router.put("/freelancer-contract/update/:contract_id", updateContract);
+router.patch("/freelancer-contract/cancel/:contract_id", cancelContract);
+router.patch("/freelancer-contract/status/:contract_id", updateContractStatus);
+router.patch("/freelancer-contract/renew/:contract_id", renewContract);
+router.get("/freelancer-contract/all", getAllContracts);
+router.get("/freelancer-contract/freelancer/:freelancer_id", getContractsByFreelancer);
+router.get("/freelancer-contract/:contract_id", getContractById);
+
+// router.get("/employees/freelancers", getFreelancers);
+
 
 export default router;

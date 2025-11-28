@@ -6,6 +6,7 @@ import DescriptionIcon from "@mui/icons-material/Description";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
+import CreditCardIcon from "@mui/icons-material/CreditCard";
 
 const EmpInfoDashboard = () => {
   const navigate = useNavigate();
@@ -60,8 +61,8 @@ const EmpInfoDashboard = () => {
       icon: MailOutlineIcon,
       iconBg: "bg-pink-100",
       iconColor: "text-pink-600",
-      // onClick: () => navigate("/documents/admin/letters"),
-      onClick: () => navigate("/employee/letters"),
+      onClick: () => navigate("/documents/admin/letters"),
+      // onClick: () => navigate("/employee/letters"),
 
     },
     {
@@ -80,6 +81,14 @@ const EmpInfoDashboard = () => {
       iconColor: "text-green-600",
       // onClick: () => navigate("/dashboard/emp_info/referral"),
       onClick: () => navigate("/admin/referrals"),
+    },
+    {
+      title: "Invoice",
+      message: "View Contracts & Agreements",
+      icon: CreditCardIcon,
+      iconBg: "bg-purple-100",
+      iconColor: "text-purple-600",
+      // onClick: () => navigate("/manage"),
     },
   ];
 

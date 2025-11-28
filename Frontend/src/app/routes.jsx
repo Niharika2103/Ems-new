@@ -49,7 +49,6 @@ import FreelancerDocuments from "../pages/Freelancer/FreelancerDocuments";
 import EmployeeList from '../pages/Freelancer/Documents/EmployeeList';
 import FreelancerAssignProjectpage from "../pages/Freelancer/FreelancerAssignProjectpage";
 import TimesheetApprovalList from '../pages/Freelancer/Attendance/TimesheetApprovalList';
-import ContractManager from "../pages/Freelancer/ContractManager";
 import ReferCandidatePage from "../pages/Referral/ReferCandidatePage";
 import AdminReferralDashboard from '../pages/Referral/AdminReferralDashboard';
 import SalaryStructure from '../pages/Accounts/SalaryStructure';
@@ -73,6 +72,13 @@ import VendorFormSystem from "../pages/Vendor/index";
 import MoUGenerationSystem from "../pages/Vendor/mou_generation_system";
 import VendorPanel from "../pages/Vendor/VendorPanel";
 import AdminPanel from "../pages/Vendor/AdminPanel";
+import AuditLogsPage from "../pages/Auditlogs/AuditLogsPage";
+import ContractManagement from "../pages/contracter/ContractManagement";
+import AccountsDashboard from "../pages/dashbaord/AccountsDashboard";
+import PayrollSystem from "../pages/Accounts/PayrollSystem";
+
+
+
 function AppRoutes() {
   return (
     <Routes>
@@ -169,8 +175,15 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-
-
+      <Route path="/accounts/payroll" 
+      element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+              <PayrollSystem />
+            </ProtectedRoute>
+          }
+        />
+      
+        
         <Route path="/job-postings"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
@@ -428,6 +441,14 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/dashboard/accounts"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AccountsDashboard/>
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/dashboard/audit-logs"
@@ -554,10 +575,21 @@ function AppRoutes() {
               < CustomReports />
             </ProtectedRoute>
           }
-        />
-        <Route path="/recruitment/panel-management" element={<PanelManagement />} />
+        />  
+         <Route path="/recruitment/panel-management" element={<PanelManagement />} />
 
-
+         <Route path="/audits-and-logs"
+          element={
+             <ProtectedRoute allowedRoles={["admin"]}>
+              < AuditLogsPage />
+            </ProtectedRoute>
+          }
+        /> 
+        
+        <Route path="/manage" element={<ContractManagement />} />
+     
+      
+         
       </Route>
 
     </Routes>

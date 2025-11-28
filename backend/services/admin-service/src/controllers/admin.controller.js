@@ -1657,7 +1657,8 @@ const templateFileMap = {
   "Confirmation Letter": "confirmationLetter.html",
   "Promotion Letter": "promotionLetter.html",
   "Salary Increment Letter": "salaryIncrementLetter.html",
-  "Warning Letter": "warningLetter.html"
+  "Warning Letter": "warningLetter.html",
+  "freelancer contract":"freelancerContract.html" 
 };
 
 // Replace {{placeholders}}
@@ -2176,8 +2177,15 @@ export const updateReferralStatusAdmin = async (req, res) => {
   const client = await pool.connect();
 
   try {
-    const { id } = req.params; // referral UUID (DB ID)
-    const { status } = req.body;
+    const { id } = req.params; // referral UUID
+    const {
+      status,
+      interview_date,
+      interview_time,
+      meeting_link,
+      interview_round,
+      interviewers = []
+    } = req.body;
 
     const VALID_STATUSES = ["Shortlisted", "Interview", "Hired", "Rejected"];
 
@@ -2185,14 +2193,13 @@ export const updateReferralStatusAdmin = async (req, res) => {
       return res.status(400).json({ error: "Invalid status." });
     }
 
-    // Get referral details
+    // Fetch referral
     const selectQuery = `
       SELECT r.*, u.email AS referrer_email, u.name AS referrer_name
       FROM ${REFERRALS_TABLE} r
       LEFT JOIN ${USER_MASTER_TABLE} u ON r.referred_by = u.id
       WHERE r.id = $1
     `;
-
     const result = await client.query(selectQuery, [id]);
 
     if (result.rowCount === 0) {
@@ -2201,20 +2208,52 @@ export const updateReferralStatusAdmin = async (req, res) => {
 
     const referral = result.rows[0];
 
-    // Update status
+    // ======================================
+    // INTERVIEW STATUS → append new round
+    // ======================================
+    let updatedInterviewDetails = referral.inteview_details || [];
+
+    if (status === "Interview") {
+      if (!interview_date || !interview_time || !meeting_link || !interview_round) {
+        return res.status(400).json({
+          error: "Interview date, time, meeting link, and round are required for Interview status."
+        });
+      }
+
+      const newRound = {
+        round_name: interview_round,
+        date: interview_date,
+        time: interview_time,
+        interviewers,
+        meeting_link
+      };
+
+      updatedInterviewDetails.push(newRound);
+    }
+
+    // -----------------------------------
+    // Update referral
+    // -----------------------------------
     const updateQuery = `
       UPDATE ${REFERRALS_TABLE}
-      SET status = $1, updated_by = 'Admin', updated_at = NOW()
-      WHERE id = $2
+      SET status = $1,
+          inteview_details = $2::jsonb,
+          updated_by = 'Admin',
+          updated_at = NOW()
+      WHERE id = $3
       RETURNING *
     `;
 
-    const updateRes = await client.query(updateQuery, [status, id]);
+    const updateRes = await client.query(updateQuery, [
+  status,
+  JSON.stringify(updatedInterviewDetails),   // <-- FIX
+  id
+]);
 
-
+    const updatedReferral = updateRes.rows[0];
 
     // ======================================================
-    // 📧 1. EMAIL TO EMPLOYEE (Referrer)
+    // EMAIL 1 → EMPLOYEE (Referrer)
     // ======================================================
     await sendEmail(
       referral.referrer_email,
@@ -2227,22 +2266,28 @@ export const updateReferralStatusAdmin = async (req, res) => {
       `
     );
 
-
-
     // ======================================================
-    // 📧 2. EMAIL TO CANDIDATE BASED ON STATUS
+    // EMAIL 2 → Candidate (latest interview round only)
     // ======================================================
-
-    // INTERVIEW EMAIL
     if (status === "Interview") {
+      const latestRound = updatedInterviewDetails[updatedInterviewDetails.length - 1];
+
       await sendEmail(
         referral.candidate_email,
-        "Interview Scheduled",
+        `Interview Scheduled - ${latestRound.round_name}`,
         `
           <h2>Your Interview is Scheduled</h2>
           <p>Dear ${referral.candidate_name},</p>
-          <p>Your profile has been shortlisted and your interview has been scheduled.</p>
-          <p>Our HR team will contact you with further details.</p>
+          <p>Your <strong>${latestRound.round_name}</strong> has been scheduled.</p>
+
+          <p><strong>Date:</strong> ${latestRound.date}</p>
+          <p><strong>Time:</strong> ${latestRound.time}</p>
+          <p><strong>Meeting Link:</strong> <a href="${latestRound.meeting_link}">Join Meeting</a></p>
+
+          <p><strong>Interviewers:</strong></p>
+          <ul>
+            ${latestRound.interviewers.map(i => `<li>${i}</li>`).join("")}
+          </ul>
         `
       );
     }
@@ -2255,32 +2300,28 @@ export const updateReferralStatusAdmin = async (req, res) => {
         `
           <h2>Congratulations 🎉</h2>
           <p>Dear ${referral.candidate_name},</p>
-          <p>We are pleased to inform you that you have been <strong>selected</strong> for the position of <strong>${referral.position}</strong>.</p>
-          <p>Our HR team will contact you shortly with the onboarding details.</p>
+          <p>You have been selected for <strong>${referral.position}</strong>.</p>
+          <p>Our HR team will contact you with onboarding details.</p>
         `
       );
     }
 
-    // REJECTION EMAIL
+    // REJECTED EMAIL
     if (status === "Rejected") {
       await sendEmail(
         referral.candidate_email,
         "Application Status - Not Selected",
         `
-          <h2>Thank You For Your Interest</h2>
+          <h2>Thank You For Your Time</h2>
           <p>Dear ${referral.candidate_name},</p>
-          <p>We appreciate the time and effort you invested in the interview process.</p>
-          <p>After careful review, we regret to inform you that you were not selected for the position of <strong>${referral.position}</strong>.</p>
-          <p>We wish you the best in your future career opportunities.</p>
+          <p>We regret to inform you that you were not selected for the position of <strong>${referral.position}</strong>.</p>
         `
       );
     }
 
-
-
     return res.status(200).json({
       message: "Status updated successfully.",
-      updated_referral: updateRes.rows[0],
+      updated_referral: updatedReferral
     });
 
   } catch (err) {
@@ -2291,3 +2332,415 @@ export const updateReferralStatusAdmin = async (req, res) => {
   }
 };
 
+
+
+
+// function fillTemplate(template, data) {
+//   return template.replace(/{{(.*?)}}/g, (_, key) => data[key.trim()] || "");
+// }
+
+// async function generatePDF(htmlContent, outputPath) {
+//   const browser = await puppeteer.launch({
+//     headless: "new",
+//     args: ["--no-sandbox", "--disable-setuid-sandbox"],
+//   });
+
+//   const page = await browser.newPage();
+//   await page.setContent(htmlContent, { waitUntil: "networkidle0" });
+
+//   await page.pdf({
+//     path: outputPath,
+//     format: "A4",
+//     printBackground: true,
+//   });
+
+//   await browser.close();
+// }
+
+export const createFreelancerContract = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const {
+      freelancer_id,
+      contract_title,
+      contract_start_date,
+      contract_end_date,
+      payment_type,
+      payment_amount,
+      payment_terms,
+      scope_of_work
+    } = req.body;
+
+    // Validate freelancer
+    const freelancerResult = await client.query(
+      `SELECT * FROM user_employees_master WHERE id=$1`,
+      [freelancer_id]
+    );
+
+    if (freelancerResult.rowCount === 0) {
+      return res.status(404).json({ error: "Freelancer not found" });
+    }
+
+    const freelancer = freelancerResult.rows[0];
+
+    if (freelancer.employment_type !== "freelancer") {
+      return res.status(400).json({ error: "User is not a freelancer" });
+    }
+
+    // Get salary details
+    const salaryRes = await client.query(
+      `SELECT * FROM salary_structure WHERE employee_id=$1 ORDER BY created_at DESC LIMIT 1`,
+      [freelancer_id]
+    );
+
+    const salary = salaryRes.rows[0] || {};
+
+    // Template
+    const htmlTemplate = loadTemplate("freelancerContract.html");
+
+    const data = {
+      name: freelancer.name,
+      email: freelancer.email,
+      phone: freelancer.phone,
+      gst: freelancer.gst,
+      designation: freelancer.designation,
+      address: freelancer.address,
+      permanent_address: freelancer.permanent_address,
+      date_of_joining: freelancer.date_of_joining,
+
+      payment_method: salary.payment_method,
+      bank_name: salary.bank_name,
+      account_number: salary.account_number,
+      ifsc_code: salary.ifsc_code,
+      pan_number: salary.pan_number,
+      location: salary.location,
+      gross_salary: salary.gross_salary,
+      net_salary: salary.net_salary,
+
+      contract_title,
+      contract_start_date,
+      contract_end_date,
+      payment_type,
+      payment_amount,
+      payment_terms,
+      scope_of_work
+    };
+
+    const filledHTML = fillTemplate(htmlTemplate, data);
+
+    // PDF path
+    const dir = path.join(process.cwd(), "src/uploads/contracts");
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+
+    const fileName = `Contract_${freelancer_id}_${Date.now()}.pdf`;
+    const filePath = path.join(dir, fileName);
+
+    await generatePDF(filledHTML, filePath);
+
+    // Insert record
+    await client.query(
+      `
+        INSERT INTO freelancer_contracts (
+        freelancer_id, contract_title, contract_start_date, contract_end_date,
+        payment_type, payment_amount, payment_terms, scope_of_work,
+        pdf_file, version
+        )
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,1)
+      `,
+      [
+        freelancer_id,
+        contract_title,
+        contract_start_date,
+        contract_end_date,
+        payment_type,
+        payment_amount,
+        payment_terms,
+        scope_of_work,
+        fileName
+      ]
+    );
+
+    res.json({
+      message: "Contract created successfully",
+      pdf_url: `/uploads/contracts/${fileName}`
+    });
+
+  } catch (err) {
+    console.error("Contract Create Error:", err);
+    res.status(500).json({ error: "Failed to create contract" });
+  } finally {
+    client.release();
+  }
+};
+
+export const updateContract = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { contract_id } = req.params;
+
+    const existing = await client.query(
+      `SELECT * FROM freelancer_contracts WHERE id=$1`,
+      [contract_id]
+    );
+
+    if (existing.rowCount === 0) {
+      return res.status(404).json({ error: "Contract not found" });
+    }
+
+    const old = existing.rows[0];
+    const newVersion = old.version + 1;
+
+    const {
+      contract_title,
+      contract_start_date,
+      contract_end_date,
+      payment_type,
+      payment_amount,
+      payment_terms,
+      scope_of_work
+    } = req.body;
+
+    // Fetch freelancer
+    const freelancerRes = await client.query(
+      `SELECT * FROM user_employees_master WHERE id=$1`,
+      [old.freelancer_id]
+    );
+    const freelancer = freelancerRes.rows[0];
+
+    // Salary details
+    const salaryRes = await client.query(
+      `SELECT * FROM salary_structure WHERE employee_id=$1 ORDER BY created_at DESC LIMIT 1`,
+      [old.freelancer_id]
+    );
+    const salary = salaryRes.rows[0] || {};
+
+    // HTML
+    const htmlTemplate = loadTemplate("freelancerContract.html");
+    const filled = fillTemplate(htmlTemplate, {
+      ...freelancer,
+      ...salary,
+      contract_title,
+      contract_start_date,
+      contract_end_date,
+      payment_type,
+      payment_amount,
+      payment_terms,
+      scope_of_work
+    });
+
+    // PDF path
+    const dir = path.join(process.cwd(), "src/uploads/contracts");
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+
+    const fileName = `Contract_${old.freelancer_id}_V${newVersion}_${Date.now()}.pdf`;
+    const filePath = path.join(dir, fileName);
+
+    await generatePDF(filled, filePath);
+
+    // Update contract
+    await client.query(
+      `
+        UPDATE freelancer_contracts
+        SET contract_title=$1, contract_start_date=$2, contract_end_date=$3,
+            payment_type=$4, payment_amount=$5, payment_terms=$6, scope_of_work=$7,
+            pdf_file=$8, version=$9, contract_status='Active', updated_at=NOW()
+        WHERE id=$10
+      `,
+      [
+        contract_title,
+        contract_start_date,
+        contract_end_date,
+        payment_type,
+        payment_amount,
+        payment_terms,
+        scope_of_work,
+        fileName,
+        newVersion,
+        contract_id
+      ]
+    );
+
+    res.json({
+      message: "Contract updated successfully",
+      version: newVersion,
+      pdf_url: `/uploads/contracts/${fileName}`
+    });
+
+  } catch (err) {
+    console.error("Update Contract Error:", err);
+    res.status(500).json({ error: "Failed to update contract" });
+  } finally {
+    client.release();
+  }
+};
+
+export const cancelContract = async (req, res) => {
+  try {
+    const { contract_id } = req.params;
+
+    await pool.query(
+      `UPDATE freelancer_contracts 
+       SET contract_status='Cancelled', updated_at=NOW()
+       WHERE id=$1`,
+      [contract_id]
+    );
+
+    res.json({ message: "Contract cancelled successfully" });
+  } catch (err) {
+    console.error("Cancel Contract Error:", err);
+    res.status(500).json({ error: "Failed to cancel contract" });
+  }
+};
+
+export const updateContractStatus = async (req, res) => {
+  try {
+    const { contract_id } = req.params;
+    const { status } = req.body;
+
+    await pool.query(
+      `UPDATE freelancer_contracts 
+       SET contract_status=$1, updated_at=NOW()
+       WHERE id=$2`,
+      [status, contract_id]
+    );
+
+    res.json({ message: "Status updated successfully" });
+  } catch (err) {
+    console.error("Status Update Error:", err);
+    res.status(500).json({ error: "Failed to update status" });
+  }
+};
+
+export const renewContract = async (req, res) => {
+  try {
+    const { contract_id } = req.params;
+    const { new_end_date } = req.body;
+
+    const existing = await pool.query(
+      `SELECT * FROM freelancer_contracts WHERE id=$1`,
+      [contract_id]
+    );
+
+    if (existing.rowCount === 0) {
+      return res.status(404).json({ error: "Contract not found" });
+    }
+
+    const old = existing.rows[0];
+
+    const newVersion = old.version + 1;
+
+    await pool.query(
+      `UPDATE freelancer_contracts 
+       SET version=$1, contract_end_date=$2, contract_status='Renewed', updated_at=NOW()
+       WHERE id=$3`,
+      [newVersion, new_end_date, contract_id]
+    );
+
+    res.json({ message: "Contract renewed successfully", version: newVersion });
+  } catch (err) {
+    console.error("Renew Contract Error:", err);
+    res.status(500).json({ error: "Failed to renew contract" });
+  }
+};
+
+export const getAllContracts = async (req, res) => {
+  try {
+    const serverUrl = process.env.SERVER_URL || "http://localhost:5002";
+
+    const result = await pool.query(`
+      SELECT c.*, u.name AS freelancer_name, u.email AS freelancer_email
+      FROM freelancer_contracts c
+      LEFT JOIN user_employees_master u ON u.id = c.freelancer_id
+      ORDER BY c.created_at DESC
+    `);
+
+    const updated = result.rows.map(row => ({
+      ...row,
+      pdf_url: row.pdf_file
+        ? `${serverUrl}/uploads/contracts/${row.pdf_file}`
+        : null
+    }));
+
+    res.json(updated);
+  } catch (err) {
+    console.error("Fetch Contracts Error:", err);
+    res.status(500).json({ error: "Failed to fetch contracts" });
+  }
+};
+
+
+export const getContractsByFreelancer = async (req, res) => {
+  try {
+    const { freelancer_id } = req.params;
+    const serverUrl = process.env.SERVER_URL || "http://localhost:5002";
+
+    const result = await pool.query(
+      `SELECT * FROM freelancer_contracts WHERE freelancer_id=$1 ORDER BY created_at DESC`,
+      [freelancer_id]
+    );
+
+    const updated = result.rows.map(row => ({
+      ...row,
+      pdf_url: row.pdf_file
+        ? `${serverUrl}/uploads/contracts/${row.pdf_file}`
+        : null
+    }));
+
+    res.json(updated);
+  } catch (err) {
+    console.error("Fetch Freelancer Contracts Error:", err);
+    res.status(500).json({ error: "Failed to fetch freelancer contracts" });
+  }
+};
+
+
+export const getContractById = async (req, res) => {
+  try {
+    const { contract_id } = req.params;
+    const serverUrl = process.env.SERVER_URL || "http://localhost:5002";
+
+    const result = await pool.query(
+      `SELECT * FROM freelancer_contracts WHERE id=$1`,
+      [contract_id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Contract not found" });
+    }
+
+    const contract = result.rows[0];
+
+    contract.pdf_url = contract.pdf_file
+      ? `${serverUrl}/uploads/contracts/${contract.pdf_file}`
+      : null;
+
+    res.json(contract);
+
+  } catch (err) {
+    console.error("Get Contract Error:", err);
+    res.status(500).json({ error: "Failed to fetch contract" });
+  }
+};
+
+
+// export const getFreelancers = async (req, res) => {
+//   try {
+//     const result = await pool.query(
+//       `SELECT id, name, email, phone, designation, department 
+//        FROM user_employees_master
+//        WHERE employment_type = 'freelancer'
+//        ORDER BY created_at DESC`
+//     );
+
+//     return res.json({
+//       count: result.rows.length,
+//       freelancers: result.rows
+//     });
+
+//   } catch (err) {
+//     console.error("Get Freelancers Error:", err.message);
+//     return res.status(500).json({ error: "Failed to fetch freelancers" });
+//   }
+// };

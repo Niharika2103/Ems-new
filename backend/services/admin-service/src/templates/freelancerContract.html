@@ -1,120 +1,171 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-  <meta charset="UTF-8" />
-  <title>Freelancer Contract</title>
+  <meta charset="utf-8" />
+  <title>Freelancer Contract Agreement</title>
 
   <style>
-    body { 
-      font-family: Arial, sans-serif; 
-      padding: 40px;
+    body {
+      font-family: Arial, sans-serif;
       line-height: 1.6;
-      font-size: 14px;
+      padding: 25px;
+      color: #333;
     }
 
-    h2 {
+    h1, h2, h3 {
       text-align: center;
-      margin-bottom: 20px;
-      text-transform: uppercase;
-      font-size: 22px;
+      margin: 0;
+      padding: 0;
     }
 
     .section-title {
       font-weight: bold;
-      margin-top: 20px;
+      margin-top: 25px;
+      margin-bottom: 10px;
+      font-size: 18px;
       text-decoration: underline;
     }
 
-    .details-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
+    .content {
+      margin-bottom: 15px;
+      text-align: justify;
     }
 
-    .details-table td {
-      padding: 6px;
+    table {
+      width: 100%;
+      margin-top: 10px;
+      border-collapse: collapse;
+    }
+
+    td {
+      padding: 5px;
       vertical-align: top;
     }
 
-    .signature {
-      margin-top: 60px;
+    .signature-box {
+      margin-top: 50px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .sign-block {
+      width: 45%;
+      text-align: center;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 50px;
+      font-size: 12px;
+      color: #777;
     }
   </style>
 </head>
 
 <body>
 
-  <h2>Freelancer Agreement</h2>
+  <h1>FREELANCER CONTRACT AGREEMENT</h1>
+  <h3>{{contract_title}}</h3>
+  <hr />
 
-  <p>Date: <strong>{{contract_date}}</strong></p>
-
-  <p>
-    This Freelancer Agreement is made between 
-    <strong>{{company_name}}</strong> (“Company”) and 
-    <strong>{{name}}</strong> (“Freelancer”) to provide services 
-    based on the agreed terms below.
+  <p class="content">
+    This Freelancer Contract Agreement (“Agreement”) is entered into on
+    <b>{{contract_start_date}}</b> between
+    <b>Company Name</b> (“Company”), and
+    <b>{{name}}</b> (“Freelancer”) residing at
+    <b>{{address}}</b>.
   </p>
 
-  <!-- FREELANCER DETAILS -->
-  <div class="section-title">Freelancer Details</div>
-  <table class="details-table">
+  <!-- Freelancer Details -->
+  <div class="section-title">1. Freelancer Details</div>
+  <table>
     <tr><td><b>Name</b></td><td>{{name}}</td></tr>
     <tr><td><b>Email</b></td><td>{{email}}</td></tr>
-    <tr><td><b>Designation / Role</b></td><td>{{designation}}</td></tr>
-    <tr><td><b>Address</b></td><td>{{address}}</td></tr>
+    <tr><td><b>Phone</b></td><td>{{phone}}</td></tr>
     <tr><td><b>Permanent Address</b></td><td>{{permanent_address}}</td></tr>
-    <tr><td><b>PAN Number</b></td><td>{{pan_number}}</td></tr>
+    <tr><td><b>GST Number</b></td><td>{{gst}}</td></tr>
+    <tr><td><b>Designation / Role</b></td><td>{{designation}}</td></tr>
   </table>
 
-  <!-- CONTRACT DETAILS -->
-  <div class="section-title">Contract Details</div>
-  <table class="details-table">
-    <tr><td><b>Contract Start Date</b></td><td>{{start_date}}</td></tr>
-    <tr><td><b>Contract End Date</b></td><td>{{end_date}}</td></tr>
-    <tr><td><b>Work Location</b></td><td>{{location}}</td></tr>
+  <!-- Contract Duration -->
+  <div class="section-title">2. Contract Duration</div>
+  <p class="content">
+    The contract begins on <b>{{contract_start_date}}</b> and ends on
+    <b>{{contract_end_date}}</b>. Renewal will be as per mutual agreement.
+  </p>
+
+  <!-- Scope of Work -->
+  <div class="section-title">3. Scope of Work</div>
+  <p class="content">
+    {{scope_of_work}}
+  </p>
+
+  <!-- Payment Details -->
+  <div class="section-title">4. Payment Terms</div>
+  <table>
+    <tr><td><b>Payment Type</b></td><td>{{payment_type}}</td></tr>
+    <tr><td><b>Payment Amount</b></td><td>{{payment_amount}}</td></tr>
     <tr><td><b>Payment Terms</b></td><td>{{payment_terms}}</td></tr>
   </table>
 
-  <!-- PAYMENT STRUCTURE -->
-  <div class="section-title">Payment Structure</div>
-  <table class="details-table">
-    <tr><td><b>Basic Pay</b></td><td>{{basic_pay}}</td></tr>
-    <tr><td><b>Special Allowance</b></td><td>{{special_allowance}}</td></tr>
-    <tr><td><b>Other Allowances</b></td><td>{{other_allowances}}</td></tr>
-    <tr><td><b>Gross Salary</b></td><td><strong>{{gross_salary}}</strong></td></tr>
-    <tr><td><b>Net Salary</b></td><td><strong>{{net_salary}}</strong></td></tr>
+  <!-- Bank & Tax Details -->
+  <div class="section-title">5. Freelancer Bank & Tax Details</div>
+  <table>
+    <tr><td><b>Payment Method</b></td><td>{{payment_method}}</td></tr>
     <tr><td><b>Bank Name</b></td><td>{{bank_name}}</td></tr>
     <tr><td><b>Account Number</b></td><td>{{account_number}}</td></tr>
     <tr><td><b>IFSC Code</b></td><td>{{ifsc_code}}</td></tr>
+    <tr><td><b>PAN Number</b></td><td>{{pan_number}}</td></tr>
+    <tr><td><b>Billing Location</b></td><td>{{location}}</td></tr>
   </table>
 
-  <div class="section-title">Terms & Conditions</div>
-
-  <p>
-    1. The Freelancer shall render services independently and is not considered an employee of the Company.
-  </p>
-  <p>
-    2. Payment will be issued as per delivery milestones or monthly basis.
-  </p>
-  <p>
-    3. All company information must remain confidential.
-  </p>
-  <p>
-    4. Either party may terminate this agreement with a 7-day written notice.
+  <!-- Confidentiality -->
+  <div class="section-title">6. Confidentiality</div>
+  <p class="content">
+    The Freelancer agrees not to disclose any confidential or proprietary information belonging to the Company,
+    including but not limited to client data, project documents, source code, business strategies, or financial
+    information.
   </p>
 
-  <div class="signature">
-    <p><strong>For {{company_name}}</strong></p><br><br>
-    ___________________________<br>
-    Authorized Signatory
+  <!-- Termination -->
+  <div class="section-title">7. Termination Policy</div>
+  <p class="content">
+    Either party may terminate this Agreement with a 7-day written notice. The Company may terminate immediately in case
+    of breach of contract, misconduct, or failure to deliver agreed work.
+  </p>
+
+  <!-- Indemnity -->
+  <div class="section-title">8. Liability & Indemnity</div>
+  <p class="content">
+    The Freelancer shall be solely responsible for any damages or losses resulting from their work. The Company shall
+    not be held liable for any disputes, errors, or third-party claims related to the Freelancer’s services.
+  </p>
+
+  <!-- Signatures -->
+  <div class="section-title">9. Acceptance</div>
+  <p class="content">
+    By signing this Agreement, both parties acknowledge that they understand and agree to the terms mentioned above.
+  </p>
+
+  <div class="signature-box">
+    <div class="sign-block">
+      __________________________ <br />
+      <b>Authorized Signatory</b><br />
+      Company Name
+    </div>
+
+    <div class="sign-block">
+      __________________________ <br />
+      <b>{{name}}</b><br />
+      Freelancer
+    </div>
   </div>
 
-  <div class="signature">
-    <p><strong>Freelancer</strong></p><br><br>
-    ___________________________<br>
-    {{name}}
-  </div>
+  <p class="footer">
+    This is a system-generated document. No physical signature required.
+  </p>
 
 </body>
-</html>
 
+</html>

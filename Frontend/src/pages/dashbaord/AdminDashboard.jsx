@@ -70,7 +70,8 @@ const AdminDashboard = () => {
       icon: AccountBalanceIcon,
       iconBg: "bg-yellow-100",
       iconColor: "text-yellow-600",
-      onClick: () => navigate("/accounts/salary-structure"),
+      // onClick: () => navigate("/accounts/salary-structure"),
+      onClick: () => navigate("/dashboard/accounts"),
     },
 
      {
@@ -79,7 +80,7 @@ const AdminDashboard = () => {
       icon: BarChartIcon,
       iconBg: "bg-yellow-100",
       iconColor: "text-yellow-600",
-      onClick: () => navigate("/dashboard/audit-logs"),
+      onClick: () => navigate("/audits-and-logs"),
     },
        {
       title: "Thirdparty Payroll Hub",
