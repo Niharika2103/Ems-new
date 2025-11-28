@@ -10,7 +10,6 @@ import {
 } from "antd";
 import { DeleteOutlined, SearchOutlined } from "@ant-design/icons";
 
-// IMPORT CORRECT APIS
 import {
   getAdminJobPostsApi,
   updateJobStatusApi,
@@ -21,7 +20,7 @@ const PublishedJobs = () => {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
 
-  // Load all job posts
+  // Load ALL job posts (draft + published + unpublished + archived)
   useEffect(() => {
     fetchJobs();
   }, []);
@@ -31,7 +30,16 @@ const PublishedJobs = () => {
       setLoading(true);
 
       const res = await getAdminJobPostsApi();
-      const jobList = res?.data?.jobs || [];
+
+      // 👇 LOG so we can see exactly what backend sends
+      console.log("Admin job-posts response:", res.data);
+
+      // 👇 Handle BOTH possibilities: jobs OR jobPosts
+      const jobList =
+        res?.data?.jobs ||
+        res?.data?.jobPosts ||
+        res?.data?.jobposts ||
+        [];
 
       const formatted = jobList.map((job) => ({
         id: job.job_id,
@@ -43,7 +51,7 @@ const PublishedJobs = () => {
         department: job.department,
         experience: job.experience_level,
         postedOn: job.posted_date,
-        status: job.status,
+        status: (job.status || "").toUpperCase(),
       }));
 
       setJobs(formatted);
@@ -55,16 +63,15 @@ const PublishedJobs = () => {
     }
   };
 
-  // Update status API
   const updateStatus = async (jobId, newStatus) => {
     try {
-      await updateJobStatusApi(jobId, newStatus);
+      await updateJobStatusApi(jobId, newStatus.toLowerCase());
 
       message.success(`Job status updated to ${newStatus}`);
 
       setJobs((prev) =>
         prev.map((job) =>
-          job.id === jobId ? { ...job, status: newStatus } : job
+          job.id === jobId ? { ...job, status: newStatus.toUpperCase() } : job
         )
       );
     } catch (err) {
@@ -73,7 +80,6 @@ const PublishedJobs = () => {
     }
   };
 
-  // Search Filter
   const filteredJobs = useMemo(() => {
     const searchLower = search.toLowerCase();
     return jobs.filter((job) =>
@@ -83,7 +89,6 @@ const PublishedJobs = () => {
     );
   }, [search, jobs]);
 
-  // Table Columns
   const columns = [
     { title: "Job Title", dataIndex: "title", key: "title" },
     { title: "Company", dataIndex: "company", key: "company" },
@@ -92,14 +97,12 @@ const PublishedJobs = () => {
     { title: "Job Type", dataIndex: "type", key: "type" },
     { title: "Experience", dataIndex: "experience", key: "experience" },
     { title: "Salary", dataIndex: "salary", key: "salary" },
-
     {
       title: "Posted On",
       dataIndex: "postedOn",
       key: "postedOn",
-      render: (date) => new Date(date).toLocaleDateString(),
+      render: (date) => (date ? new Date(date).toLocaleDateString() : "-"),
     },
-
     {
       title: "Status",
       dataIndex: "status",
@@ -113,14 +116,15 @@ const PublishedJobs = () => {
               ? "orange"
               : status === "DRAFT"
               ? "blue"
-              : "red"
+              : status === "ARCHIVED"
+              ? "red"
+              : "default"
           }
         >
-          {status}
+          {status || "UNKNOWN"}
         </Tag>
       ),
     },
-
     {
       title: "Actions",
       key: "actions",
@@ -129,7 +133,6 @@ const PublishedJobs = () => {
 
         return (
           <Space>
-            {/* Publish */}
             {status !== "PUBLISHED" && (
               <Button
                 type="primary"
@@ -139,26 +142,18 @@ const PublishedJobs = () => {
               </Button>
             )}
 
-            {/* Unpublish */}
             {status === "PUBLISHED" && (
-              <Button
-                onClick={() => updateStatus(record.id, "UNPUBLISHED")}
-              >
+              <Button onClick={() => updateStatus(record.id, "UNPUBLISHED")}>
                 Unpublish
               </Button>
             )}
 
-            {/* Archive */}
             {status !== "ARCHIVED" && (
-              <Button
-                danger
-                onClick={() => updateStatus(record.id, "ARCHIVED")}
-              >
+              <Button danger onClick={() => updateStatus(record.id, "ARCHIVED")}>
                 Archive
               </Button>
             )}
 
-            {/* Delete local only */}
             <Button
               danger
               icon={<DeleteOutlined />}
@@ -174,7 +169,7 @@ const PublishedJobs = () => {
 
   return (
     <div style={{ padding: 30, background: "#f5f7fa", minHeight: "100vh" }}>
-      <h1>All Job Posts</h1>
+      <h1>All Job Posts (Admin View)</h1>
 
       <Card style={{ marginBottom: 20, padding: 20 }}>
         <Input
