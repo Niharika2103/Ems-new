@@ -73,6 +73,7 @@ import FreelancerROI from "../pages/Reports/FreelancerROI";
 import CustomReports from "../pages/Reports/CustomReports";
 import PanelManagement from "../pages/JobPosting/PanelManagement";
 import AuditLogsPage from "../pages/Auditlogs/AuditLogsPage";
+import ContractManagement from "../pages/contracter/ContractManagement";
 
 
 
@@ -555,7 +556,7 @@ function AppRoutes() {
           }
         /> 
         
-      
+        <Route path="/manage" element={<ContractManagement />} />
      
       
          

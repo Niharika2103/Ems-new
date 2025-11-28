@@ -63,7 +63,7 @@ const FreelancerDashboard = () => {
       icon: DescriptionIcon,
       iconBg: "bg-purple-100",
       iconColor: "text-purple-600",
-      onClick: () => navigate("/contracts"),
+      onClick: () => navigate("/manage"),
     },
   ];
 
