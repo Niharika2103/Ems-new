@@ -25,15 +25,15 @@ const EmpInfoDashboard = () => {
     useSelector((state) => state.employeeSlice?.role);
 
   // admin or freelancer Decide path
-  // const getDocumentPath = () => {
-  //   if (storedUser?.employment_type === "freelancer") {
-  //     return "/dashboard/freelancer/documents";
-  //   }
-  //   if (role === "admin") {
-  //     return "/documents/employees";
-  //   }
-  //   return "/";
-  // };
+  const getDocumentPath = () => {
+    if (storedUser?.employment_type === "freelancer") {
+      return "/dashboard/freelancer/documents";
+    }
+    if (role === "admin") {
+      return "/documents/employees";
+    }
+    return "/";
+  };
 
   // Current page title
   const currentPage = pathnames[pathnames.length - 1] || "";
@@ -52,9 +52,7 @@ const EmpInfoDashboard = () => {
       icon: DescriptionIcon,
       iconBg: "bg-purple-100",
       iconColor: "text-purple-600",
-      //onClick: () => navigate(getDocumentPath()),
-      //  onClick: () => navigate("/documents/employees"),
-         onClick: () => navigate("/dashboard/freelancer/documents"),
+      onClick: () => navigate(getDocumentPath()),
     },
     {
       title: "Letters",

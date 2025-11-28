@@ -9,6 +9,7 @@ import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import PersonIcon from "@mui/icons-material/Person";
 import AssignmentIcon from "@mui/icons-material/Assignment";
+import BusinessIcon from "@mui/icons-material/Business";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -79,6 +80,14 @@ const AdminDashboard = () => {
       iconBg: "bg-yellow-100",
       iconColor: "text-yellow-600",
       onClick: () => navigate("/dashboard/audit-logs"),
+    },
+       {
+      title: "Thirdparty Payroll Hub",
+      message: "Manage Business and transactions",
+      icon: BusinessIcon,
+      iconBg: "bg-yellow-100",
+      iconColor: "text-yellow-600",
+      onClick: () => navigate("/dashboard/admin-panel"),
     },
   ];
 
