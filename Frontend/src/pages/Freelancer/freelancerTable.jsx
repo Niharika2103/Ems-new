@@ -1,12 +1,17 @@
-import { useState,useEffect  } from "react";
-import {Table, Button, Space, Popconfirm } from "antd";
-import { useDispatch } from "react-redux";
-import { deleteEmployee, fetchAllEmployees, updateEmployeebyAdmin, fetchEmployeeProfile } from "../../features/employeesDetails/employeesSlice";
-import EmployeeTable from "../../components/MyProfile/table";
-import {  promoteEmployeeApi } from "../../api/authApi";
+import { useState, useEffect } from "react";
+import { Table, Button, Space, Popconfirm, Input } from "antd";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  deleteEmployee,
+  fetchAllEmployees,
+  updateEmployeebyAdmin,
+  fetchEmployeeProfile,
+} from "../../features/employeesDetails/employeesSlice";
+import { promoteEmployeeApi } from "../../api/authApi";
 import ReusableModal from "../../components/MyProfile/ReusableModal";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
 import {
   TextField,
   Box,
@@ -17,15 +22,42 @@ import {
   FormLabel,
   MenuItem,
 } from "@mui/material";
-import {fetchAllFreelancer} from "../../features/freelancer/freelancerSlice";
+
+import { fetchAllFreelancer } from "../../features/freelancer/freelancerSlice";
 import { decodeToken } from "../../api/decodeToekn";
 import { validateEmployeeEdit } from "../../utils/validation";
-import { useSelector } from "react-redux";
+
+const { Search } = Input;
+
 export default function FreelancerTable() {
   const dispatch = useDispatch();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const freelancers = useSelector(
+    (state) => state.freelancerInfo.freelancerlist
+  );
+
+  useEffect(() => {
+    dispatch(fetchAllFreelancer());
+  }, [dispatch]);
+
+  // SEARCH STATE
+  const [searchText, setSearchText] = useState("");
+
+  // FILTER FREELANCERS
+  const filteredFreelancers = freelancers?.filter((item) => {
+    const search = searchText.toLowerCase();
+    return (
+      item.name?.toLowerCase().includes(search) ||
+      item.email?.toLowerCase().includes(search) ||
+      item.department?.toLowerCase().includes(search) ||
+      item.address?.toLowerCase().includes(search)
+    );
+  });
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -38,15 +70,11 @@ export default function FreelancerTable() {
     gender: "",
     emergency_contact: "",
   });
-  const [loading, setLoading] = useState(false);
- const freelancers = useSelector((state) => state.freelancerInfo.freelancerlist);
-  useEffect(() => {
-  dispatch(fetchAllFreelancer());
-}, [dispatch]);
 
-  //Edit Register Model
+  // Edit Record
   const handleEdit = (record) => {
     setEditingRecord(record);
+
     const formatDate = (isoString) => {
       if (!isoString) return "";
       return isoString.split("T")[0];
@@ -64,30 +92,12 @@ export default function FreelancerTable() {
       emergency_contact: record.emergency_contact || "",
       dob: formatDate(record.dob),
     });
-    setIsModalOpen(true);
-  };
-  const handlePromote = async (record) => {
-    if (!window.confirm(`Promote ${record.name} to Admin?`)) return;
 
-    try {
-      await promoteEmployeeApi(record.id);
-      toast.success(`${record.name} promoted successfully!`);
-      dispatch(fetchAllEmployees()); // optional: refresh list
-    } catch (err) {
-      console.error("Promote error:", err);
-      toast.error("Failed to promote employee");
-    }
+    setIsModalOpen(true);
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === "date_of_joining") {
-      // Optional: reject values that aren't YYYY-MM-DD
-      if (value && !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-        // Don't update if invalid format
-        return;
-      }
-    }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -96,8 +106,7 @@ export default function FreelancerTable() {
 
     const errors = validateEmployeeEdit(formData);
     if (Object.keys(errors).length > 0) {
-      const firstError = Object.values(errors)[0];
-      toast.error(firstError);
+      toast.error(Object.values(errors)[0]);
       return;
     }
 
@@ -109,33 +118,21 @@ export default function FreelancerTable() {
 
       toast.success(res?.message || "Employee updated successfully");
 
-      //If the edited employee is the current user, refresh their profile
-      try {
-        const currentUser = await decodeToken();
-        if (editingRecord?.email === currentUser.email) {
-          dispatch(fetchEmployeeProfile(currentUser.email));
-        }
-      } catch (error) {
-        console.warn("Could not refresh user profile after edit:", error);
+      const currentUser = await decodeToken();
+      if (editingRecord?.email === currentUser.email) {
+        dispatch(fetchEmployeeProfile(currentUser.email));
       }
 
       setIsModalOpen(false);
       dispatch(fetchAllEmployees());
     } catch (err) {
-      console.error("Update error:", err);
-      toast.error(
-        err?.message ||
-        err?.error ||
-        err?.data?.message ||
-        "Failed to update employee"
-      );
+      toast.error(err?.message || "Failed to update employee");
     } finally {
       setLoading(false);
     }
   };
 
-
-  //employee table
+  // Table Columns
   const columns = [
     {
       title: "ID",
@@ -173,15 +170,10 @@ export default function FreelancerTable() {
       onFilter: (value, record) => record.request?.includes(value),
       render: (status, record) => (
         <Space>
-          {/* Edit Button */}
-          <Button
-            type="default"
-            onClick={() => handleEdit(record)}
-          >
+          <Button type="default" onClick={() => handleEdit(record)}>
             Edit
           </Button>
 
-          {/* Delete Button */}
           <Popconfirm
             title={`Are you sure to ${record.is_active ? "deactivate" : "activate"} this admin?`}
             onConfirm={() =>
@@ -197,9 +189,7 @@ export default function FreelancerTable() {
             cancelText="No"
           >
             {record.is_active ? (
-              <Button type="primary">
-                Active
-              </Button>
+              <Button type="primary">Active</Button>
             ) : (
               <Button type="default" danger>
                 Deactivate
@@ -208,28 +198,46 @@ export default function FreelancerTable() {
           </Popconfirm>
         </Space>
       ),
-    }
-
+    },
   ];
 
   return (
     <>
       <ToastContainer position="top-right" autoClose={2000} />
+
       <h1 className="text-xl font-bold mb-4">Freelancer List</h1>
- <Table
+
+      {/* 🔍 SEARCH BAR */}
+      <Search
+        placeholder="Search by name, email, department..."
+        allowClear
+        style={{ width: 300, marginBottom: 16 }}
+        onChange={(e) => setSearchText(e.target.value)}
+      />
+
+      {/* TABLE */}
+      <Table
         columns={columns}
-        dataSource={freelancers}
+        dataSource={filteredFreelancers}
         rowKey="id"
         pagination={{ pageSize: 8 }}
       />
-      {/* <ReusableModal
+
+      {/* MODAL */}
+      <ReusableModal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title="Edit Employee Form"
+        title="Edit Employee Details"
       >
-        <Box className="flex justify-center items-center">
-          <Box component="form" onSubmit={handleSubmit}>
+        <Box sx={{ padding: 2 }}>
+          <Box
+            component="form"
+            onSubmit={handleSubmit}
+            sx={{ background: "white", padding: "24px", borderRadius: "12px" }}
+          >
             <Grid container spacing={2}>
+              {/* Your form fields remain unchanged */}
+              {/* ---- Name ---- */}
               <Grid item xs={12} sm={6}>
                 <TextField
                   label="Full Name"
@@ -240,6 +248,8 @@ export default function FreelancerTable() {
                   size="small"
                 />
               </Grid>
+
+              {/* ---- Email ---- */}
               <Grid item xs={12} sm={6}>
                 <TextField
                   label="Email"
@@ -250,6 +260,8 @@ export default function FreelancerTable() {
                   size="small"
                 />
               </Grid>
+
+              {/* Gender */}
               <Grid item xs={12}>
                 <FormLabel component="legend">Gender</FormLabel>
                 <RadioGroup
@@ -258,33 +270,20 @@ export default function FreelancerTable() {
                   value={formData.gender}
                   onChange={handleChange}
                 >
-                  <FormControlLabel value="Male" control={<Radio />} label="Male" />
-                  <FormControlLabel value="Female" control={<Radio />} label="Female" />
+                  <FormControlLabel
+                    value="Male"
+                    control={<Radio />}
+                    label="Male"
+                  />
+                  <FormControlLabel
+                    value="Female"
+                    control={<Radio />}
+                    label="Female"
+                  />
                 </RadioGroup>
               </Grid>
 
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  type="date"
-                  label="Date of Joining"
-                  name="date_of_joining"
-                  value={formData.date_of_joining}
-                  onChange={handleChange}
-                  fullWidth
-                  size="small"
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Phone"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  fullWidth
-                  size="small"
-                />
-              </Grid>
+              {/* DOB */}
               <Grid item xs={12} sm={6}>
                 <TextField
                   type="date"
@@ -298,6 +297,57 @@ export default function FreelancerTable() {
                 />
               </Grid>
 
+              {/* DOJ */}
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  type="date"
+                  label="Date of Joining"
+                  name="date_of_joining"
+                  value={formData.date_of_joining}
+                  onChange={handleChange}
+                  fullWidth
+                  size="small"
+                  InputLabelProps={{ shrink: true }}
+                />
+              </Grid>
+
+              {/* Phone */}
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  fullWidth
+                  size="small"
+                />
+              </Grid>
+
+              {/* Emergency Contact */}
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Emergency Contact"
+                  name="emergency_contact"
+                  value={formData.emergency_contact}
+                  onChange={handleChange}
+                  fullWidth
+                  size="small"
+                />
+              </Grid>
+
+              {/* Address */}
+              <Grid item xs={12}>
+                <TextField
+                  label="Address"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  fullWidth
+                  size="small"
+                />
+              </Grid>
+
+              {/* Permanent Address */}
               <Grid item xs={12}>
                 <TextField
                   label="Permanent Address"
@@ -309,26 +359,7 @@ export default function FreelancerTable() {
                 />
               </Grid>
 
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Emergency contact"
-                  name="emergency_contact"
-                  value={formData.emergency_contact}
-                  onChange={handleChange}
-                  fullWidth
-                  size="small"
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  label="Address"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleChange}
-                  fullWidth
-                  size="small"
-                />
-              </Grid>
+              {/* Department */}
               <Grid item xs={12} sm={6}>
                 <TextField
                   select
@@ -338,13 +369,6 @@ export default function FreelancerTable() {
                   onChange={handleChange}
                   fullWidth
                   size="small"
-                  sx={{
-                    minWidth: 200, 
-                    "& .MuiSelect-select": {
-                      paddingY: 1.2,
-                    },
-                  }}
-
                 >
                   <MenuItem value="HR">HR</MenuItem>
                   <MenuItem value="Finance">Finance</MenuItem>
@@ -352,310 +376,52 @@ export default function FreelancerTable() {
                   <MenuItem value="Sales">Sales</MenuItem>
                 </TextField>
               </Grid>
+
+              {/* Designation */}
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Designation"
+                  name="designation"
+                  value={formData.designation}
+                  onChange={handleChange}
+                  fullWidth
+                  size="small"
+                />
+              </Grid>
+
+              {/* Job Type */}
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  select
+                  label="Employment Type"
+                  name="employment_type"
+                  value={formData.employment_type}
+                  onChange={handleChange}
+                  fullWidth
+                  size="small"
+                >
+                  <MenuItem value="fulltime">Full Time</MenuItem>
+                  <MenuItem value="contract">Contract</MenuItem>
+                  <MenuItem value="freelancer">Freelancer</MenuItem>
+                </TextField>
+              </Grid>
+
+              {/* Submit */}
               <Grid item xs={12}>
                 <Button
                   htmlType="submit"
                   type="primary"
                   block
                   loading={loading}
+                  style={{ marginTop: "10px" }}
                 >
-                  Save
+                  Update Employee
                 </Button>
               </Grid>
             </Grid>
           </Box>
         </Box>
-      </ReusableModal> */}
-      <ReusableModal
-  open={isModalOpen}
-  onClose={() => setIsModalOpen(false)}
-  title="Edit Employee Details"
->
-  <Box
-    sx={{
-      padding: 2,
-      background: "#f5f7fa",
-      borderRadius: "12px",
-    }}
-  >
-    <Box
-      component="form"
-      onSubmit={handleSubmit}
-      sx={{
-        background: "white",
-        padding: "24px",
-        borderRadius: "12px",
-        boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-        border: "1px solid #e5e7eb",
-      }}
-    >
-      <Grid container spacing={3}>
-        {/* ---- Section Header ---- */}
-        <Grid item xs={12}>
-          <h3
-            style={{
-              margin: "0 0 16px 0",
-              fontSize: "18px",
-              fontWeight: "600",
-              color: "#374151",
-              borderBottom: "2px solid #e5e7eb",
-              paddingBottom: "6px",
-            }}
-          >
-            Personal Information
-          </h3>
-        </Grid>
-
-        {/* Name */}
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Full Name"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            fullWidth
-            size="small"
-            margin="normal"
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                borderRadius: "10px",
-                background: "#fafafa",
-              },
-            }}
-          />
-        </Grid>
-
-        {/* Email */}
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            fullWidth
-            size="small"
-            margin="normal"
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                borderRadius: "10px",
-                background: "#fafafa",
-              },
-            }}
-          />
-        </Grid>
-
-        {/* Gender */}
-        <Grid item xs={12}>
-          <FormLabel component="legend" sx={{ fontWeight: 600 }}>
-            Gender
-          </FormLabel>
-          <RadioGroup
-            row
-            name="gender"
-            value={formData.gender}
-            onChange={handleChange}
-          >
-            <FormControlLabel value="Male" control={<Radio />} label="Male" />
-            <FormControlLabel
-              value="Female"
-              control={<Radio />}
-              label="Female"
-            />
-          </RadioGroup>
-        </Grid>
-
-        {/* DOB & DOJ */}
-        <Grid item xs={12} sm={6}>
-          <TextField
-            type="date"
-            label="Date of Birth"
-            name="dob"
-            value={formData.dob}
-            onChange={handleChange}
-            fullWidth
-            size="small"
-            margin="normal"
-            InputLabelProps={{ shrink: true }}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                borderRadius: "10px",
-              },
-            }}
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={6}>
-          <TextField
-            type="date"
-            label="Date of Joining"
-            name="date_of_joining"
-            value={formData.date_of_joining}
-            onChange={handleChange}
-            fullWidth
-            size="small"
-            margin="normal"
-            InputLabelProps={{ shrink: true }}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                borderRadius: "10px",
-              },
-            }}
-          />
-        </Grid>
-
-        {/* ---- Contact Section ---- */}
-        <Grid item xs={12}>
-          <h3
-            style={{
-              margin: "8px 0 16px 0",
-              fontSize: "18px",
-              fontWeight: "600",
-              color: "#374151",
-              borderBottom: "2px solid #e5e7eb",
-              paddingBottom: "6px",
-            }}
-          >
-            Contact Details
-          </h3>
-        </Grid>
-
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Phone"
-            name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-            fullWidth
-            size="small"
-            margin="normal"
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Emergency Contact"
-            name="emergency_contact"
-            value={formData.emergency_contact}
-            onChange={handleChange}
-            fullWidth
-            size="small"
-            margin="normal"
-          />
-        </Grid>
-
-        {/* Addresses */}
-        <Grid item xs={12}>
-          <TextField
-            label="Address"
-            name="address"
-            value={formData.address}
-            onChange={handleChange}
-            fullWidth
-            size="small"
-            margin="normal"
-            multiline
-            rows={2}
-          />
-        </Grid>
-
-        <Grid item xs={12}>
-          <TextField
-            label="Permanent Address"
-            name="permanent_address"
-            value={formData.permanent_address}
-            onChange={handleChange}
-            fullWidth
-            size="small"
-            margin="normal"
-            multiline
-            rows={2}
-          />
-        </Grid>
-
-        {/* ---- Job Section ---- */}
-        <Grid item xs={12}>
-          <h3
-            style={{
-              margin: "12px 0 16px 0",
-              fontSize: "18px",
-              fontWeight: "600",
-              color: "#374151",
-              borderBottom: "2px solid #e5e7eb",
-              paddingBottom: "6px",
-            }}
-          >
-            Job Details
-          </h3>
-        </Grid>
-
-        <Grid item xs={12} sm={6}>
-          <TextField
-            select
-            label="Department"
-            name="department"
-            value={formData.department}
-            onChange={handleChange}
-            fullWidth
-            size="small"
-            margin="normal"
-          >
-            <MenuItem value="HR">HR</MenuItem>
-            <MenuItem value="Finance">Finance</MenuItem>
-            <MenuItem value="IT">IT</MenuItem>
-            <MenuItem value="Sales">Sales</MenuItem>
-          </TextField>
-        </Grid>
-
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Designation"
-            name="designation"
-            value={formData.designation}
-            onChange={handleChange}
-            fullWidth
-            size="small"
-            margin="normal"
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={6}>
-          <TextField
-            select
-            label="Employment Type"
-            name="employment_type"
-            value={formData.employment_type}
-            onChange={handleChange}
-            fullWidth
-            size="small"
-            margin="normal"
-          >
-            <MenuItem value="fulltime">Full Time</MenuItem>
-            <MenuItem value="contract">Contract</MenuItem>
-            <MenuItem value="freelancer">Freelancer</MenuItem>
-          </TextField>
-        </Grid>
-
-        {/* Submit */}
-        <Grid item xs={12}>
-          <Button
-            htmlType="submit"
-            type="primary"
-            block
-            loading={loading}
-            style={{
-              marginTop: "10px",
-              height: "40px",
-              fontWeight: "600",
-            }}
-          >
-            Update Employee
-          </Button>
-        </Grid>
-      </Grid>
-    </Box>
-  </Box>
-</ReusableModal>
-
+      </ReusableModal>
     </>
   );
 }

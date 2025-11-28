@@ -19,8 +19,8 @@ export const createJobPost = async (req, res) => {
 
     const query = `
       INSERT INTO job_posts
-        (job_title, company, experience_level, description, requirements,
-         salary_range, location, department, employment_type, created_by,
+        (job_title, company, experience_level, description, requirements, 
+         salary_range, location, department, employment_type, created_by, 
          posted_date, status)
       VALUES 
         ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), $11)
@@ -83,7 +83,6 @@ export const getPublishedJobPosts = async (req, res) => {
     `);
 
     res.json({ success: true, jobs: result.rows });
-
   } catch (err) {
     console.error("PublishedJobs Error:", err);
     res.status(500).json({ success: false, message: "Server error" });
@@ -100,7 +99,6 @@ export const getUnpublishedJobPosts = async (req, res) => {
     `);
 
     res.json({ success: true, jobs: result.rows });
-
   } catch (err) {
     console.error("UnpublishedJobs Error:", err);
     res.status(500).json({ success: false, message: "Server error" });
@@ -117,7 +115,6 @@ export const getArchivedJobPosts = async (req, res) => {
     `);
 
     res.json({ success: true, jobs: result.rows });
-
   } catch (err) {
     console.error("ArchivedJobs Error:", err);
     res.status(500).json({ success: false, message: "Server error" });
@@ -169,7 +166,6 @@ export const updateJobPost = async (req, res) => {
       message: "Job updated successfully",
       job: result.rows[0]
     });
-
   } catch (err) {
     console.error("UpdateJobPost Error:", err);
     res.status(500).json({ success: false, message: "Server error" });
@@ -206,7 +202,6 @@ export const updateJobStatus = async (req, res) => {
       message: "Status updated successfully",
       job: result.rows[0]
     });
-
   } catch (err) {
     console.error("UpdateJobStatus Error:", err);
     res.status(500).json({ success: false, message: "Server error" });
@@ -223,7 +218,6 @@ export const getDraftJobPosts = async (req, res) => {
     `);
 
     res.json({ success: true, jobs: result.rows });
-
   } catch (err) {
     console.error("DraftJobs Error:", err);
     res.status(500).json({ success: false, message: "Server error" });
