@@ -76,8 +76,8 @@ import AuditLogsPage from "../pages/Auditlogs/AuditLogsPage";
 import ContractManagement from "../pages/contracter/ContractManagement";
 import AccountsDashboard from "../pages/dashbaord/AccountsDashboard";
 import PayrollSystem from "../pages/Accounts/PayrollSystem";
-
-
+import InvoiceModule from "../pages/invoice/InvoiceModule";
+// import EmailTemplateManager from "../pages/EmailTemplateManager";
 
 function AppRoutes() {
   return (
@@ -573,7 +573,17 @@ function AppRoutes() {
         /> 
         
         <Route path="/manage" element={<ContractManagement />} />
-     
+
+        <Route path="/invoices" 
+        element={
+             <ProtectedRoute allowedRoles={["admin","employee"]}>
+              < InvoiceModule />
+            </ProtectedRoute>
+          }
+        />
+       
+     {/* <Route path="/email-templates" element={<EmailTemplateManager />} /> */}
+
       
          
       </Route>

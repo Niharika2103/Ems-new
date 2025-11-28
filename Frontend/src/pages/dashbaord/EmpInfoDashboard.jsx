@@ -90,7 +90,7 @@ const EmpInfoDashboard = () => {
       icon: CreditCardIcon,
       iconBg: "bg-purple-100",
       iconColor: "text-purple-600",
-      // onClick: () => navigate("/manage"),
+      onClick: () => navigate("/invoices"),
     },
   ];
 
