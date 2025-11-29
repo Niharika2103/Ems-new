@@ -14,9 +14,9 @@ import { DataGrid } from "@mui/x-data-grid";
 import {
   getAllApplicationsApi,
   updateApplicationStatusApi,
+  filterApplicationsApi,
 } from "../../api/authApi";
 
-// Status order
 const STATUS_STEPS = ["APPLIED", "SCREENING", "INTERVIEW", "DECISION"];
 
 const STATUS_LABEL = {
@@ -37,7 +37,6 @@ const STATUS_COLOR = {
   REJECTED: "error",
 };
 
-// Step index helper (FIXED)
 const getStatusIndex = (status) =>
   STATUS_STEPS.indexOf((status || "APPLIED").toUpperCase());
 
@@ -46,40 +45,76 @@ export default function ApplicationTrackingTable() {
   const [applications, setApplications] = useState([]);
   const [selectedRow, setSelectedRow] = useState(null);
 
-  // ================= LOAD DATA =================
+  // ----------------- FILTER STATE -----------------
+  const [filters, setFilters] = useState({
+    status: "",
+    skills: "",
+    experience: "",
+    location: "",
+    startDate: "",
+    endDate: "",
+  });
+
+  // ----------------- APPLY FILTERS -----------------
+  const handleFilter = async () => {
+    try {
+      const res = await filterApplicationsApi(filters);
+      const list = res.data.applications || [];
+
+      const rows = list.map((app, index) => ({
+        id: index + 1,
+        appId: app.application_id,
+        jobTitle: app.job_title?.trim() ? app.job_title : "Unknown Title",
+        appliedOn: app.applied_date || "Not Provided",
+        status: (app.status || "APPLIED").toUpperCase(),
+      }));
+
+      setApplications(rows);
+    } catch (err) {
+      console.error("Filter error:", err);
+      alert("Failed to filter applications");
+    }
+  };
+
+  // ----------------- REMOVE FILTERS -----------------
+  const handleClearFilters = async () => {
+    setFilters({
+      status: "",
+      skills: "",
+      experience: "",
+      location: "",
+      startDate: "",
+      endDate: "",
+    });
+
+    try {
+      const res = await getAllApplicationsApi();
+      const list = res.data.applications || [];
+
+      const rows = list.map((app, index) => ({
+        id: index + 1,
+        appId: app.application_id,
+        jobTitle: app.job_title?.trim() ? app.job_title : "Unknown Title",
+        appliedOn: app.applied_date || "Not Provided",
+        status: (app.status || "APPLIED").toUpperCase(),
+      }));
+
+      setApplications(rows);
+    } catch (err) {
+      console.error("Error loading all applications:", err);
+    }
+  };
+
+  // ---------------- LOAD ALL APPLICATIONS INITIALLY ----------------
   useEffect(() => {
-    const fetchApplications = async () => {
-      try {
-        const res = await getAllApplicationsApi();
-        const list = res.data.applications || [];
-
-        const rows = list.map((app, index) => ({
-          id: index + 1, // SERIAL NUMBER
-          appId: app.application_id, // REAL DB ID
-          jobTitle: app.job_title?.trim() ? app.job_title : "Unknown Title",
-          appliedOn: app.applied_date || "Not Provided",
-
-          // FIXED: convert DB status to uppercase
-          status: (app.status || "APPLIED").toUpperCase(),
-        }));
-
-        setApplications(rows);
-      } catch (err) {
-        console.error("Error loading applications:", err);
-        alert("Failed to load applications");
-      }
-    };
-
-    fetchApplications();
+    handleClearFilters();
   }, []);
 
-  // ================= MODAL OPEN =================
   const handleOpen = (row) => {
     setSelectedRow({ ...row });
     setOpen(true);
   };
 
-  // ================= STATUS UPDATE =================
   const updateStatus = async (direction) => {
     if (!selectedRow) return;
 
@@ -92,10 +127,9 @@ export default function ApplicationTrackingTable() {
       newIndex--;
     }
 
-    const newStatus = STATUS_STEPS[newIndex]; // Already uppercase
+    const newStatus = STATUS_STEPS[newIndex];
 
     try {
-      // FIXED: send uppercase status to backend
       await updateApplicationStatusApi(selectedRow.appId, newStatus.toUpperCase());
 
       const updatedRow = { ...selectedRow, status: newStatus };
@@ -112,7 +146,7 @@ export default function ApplicationTrackingTable() {
     }
   };
 
-  // ================= TABLE COLUMNS =================
+  // ------------------ TABLE COLUMNS ------------------
   const columns = [
     { field: "id", headerName: "Serial_No", width: 110 },
     { field: "jobTitle", headerName: "Job Title", width: 220 },
@@ -156,11 +190,117 @@ export default function ApplicationTrackingTable() {
         Job Application Tracking
       </Typography>
 
+      {/* ---------------- FILTER SECTION ---------------- */}
+      <Box
+        display="flex"
+        gap={2}
+        mb={2}
+        flexWrap="wrap"
+        sx={{ bgcolor: "#fff", p: 2, borderRadius: 2 }}
+      >
+        <select
+          onChange={(e) =>
+            setFilters((prev) => ({ ...prev, status: e.target.value }))
+          }
+          style={{ padding: "8px", borderRadius: "5px" }}
+          value={filters.status}
+        >
+          <option value="">Status</option>
+          <option value="APPLIED">Applied</option>
+          <option value="SCREENING">Screening</option>
+          <option value="INTERVIEW">Interview</option>
+          <option value="DECISION">Decision</option>
+        </select>
+
+        <input
+          type="text"
+          placeholder="Skills"
+          value={filters.skills}
+          onChange={(e) =>
+            setFilters((prev) => ({ ...prev, skills: e.target.value }))
+          }
+          style={{ padding: "8px", borderRadius: "5px" }}
+        />
+
+        <input
+          type="text"
+          placeholder="Location"
+          value={filters.location}
+          onChange={(e) =>
+            setFilters((prev) => ({ ...prev, location: e.target.value }))
+          }
+          style={{ padding: "8px", borderRadius: "5px" }}
+        />
+
+        <input
+          type="text"
+          placeholder="Experience (ex: 1)"
+          value={filters.experience}
+          onChange={(e) =>
+            setFilters((prev) => ({ ...prev, experience: e.target.value }))
+          }
+          style={{ padding: "8px", borderRadius: "5px" }}
+        />
+
+        <input
+          type="date"
+          value={filters.startDate}
+          onChange={(e) =>
+            setFilters((prev) => ({ ...prev, startDate: e.target.value }))
+          }
+          style={{ padding: "8px", borderRadius: "5px" }}
+        />
+
+        <input
+          type="date"
+          value={filters.endDate}
+          onChange={(e) =>
+            setFilters((prev) => ({ ...prev, endDate: e.target.value }))
+          }
+          style={{ padding: "8px", borderRadius: "5px" }}
+        />
+
+        {/* APPLY FILTERS BUTTON */}
+        <Button
+          variant="contained"
+          onClick={handleFilter}
+          sx={{
+            backgroundColor: "#1976d2",
+            color: "white",
+            px: 3,
+            py: 1,
+            fontWeight: "bold",
+            borderRadius: "6px",
+            "&:hover": { backgroundColor: "#115293" },
+          }}
+        >
+          APPLY FILTERS
+        </Button>
+
+        {/* REMOVE FILTERS BUTTON (MATCHING STYLE) */}
+        <Button
+          variant="contained"
+          onClick={handleClearFilters}
+          sx={{
+            backgroundColor: "#d32f2f",
+            color: "white",
+            px: 3,
+            py: 1,
+            fontWeight: "bold",
+            borderRadius: "6px",
+            "&:hover": { backgroundColor: "#9a0007" },
+          }}
+        >
+          REMOVE FILTERS
+        </Button>
+      </Box>
+
+      {/* ------------------ TABLE ------------------ */}
       <Box sx={{ height: 480, bgcolor: "#fff" }}>
         <DataGrid rows={applications} columns={columns} pageSize={8} />
       </Box>
 
-      {/* ================= MODAL ================= */}
+      {/* ------------------ MODAL ------------------ */}
       <Modal open={open} onClose={() => setOpen(false)}>
         <Box
           sx={{
@@ -178,15 +318,16 @@ export default function ApplicationTrackingTable() {
                 Application Progress
               </Typography>
 
-              <Typography variant="subtitle1">
-                {selectedRow.jobTitle}
-              </Typography>
+              <Typography variant="subtitle1">{selectedRow.jobTitle}</Typography>
 
               <Typography variant="body2" color="text.secondary" mb={2}>
                 Applied On: {selectedRow.appliedOn}
               </Typography>
 
-              <Stepper activeStep={getStatusIndex(selectedRow.status)} alternativeLabel>
+              <Stepper
+                activeStep={getStatusIndex(selectedRow.status)}
+                alternativeLabel
+              >
                 {STATUS_STEPS.map((dbStatus) => (
                   <Step key={dbStatus}>
                     <StepLabel>{STATUS_LABEL[dbStatus]}</StepLabel>
@@ -194,7 +335,6 @@ export default function ApplicationTrackingTable() {
                 ))}
               </Stepper>
 
-              {/* BUTTONS */}
               <Box display="flex" justifyContent="space-between" mt={3}>
                 <Button
                   variant="outlined"
@@ -206,7 +346,10 @@ export default function ApplicationTrackingTable() {
 
                 <Button
                   variant="contained"
-                  disabled={getStatusIndex(selectedRow.status) === STATUS_STEPS.length - 1}
+                  disabled={
+                    getStatusIndex(selectedRow.status) ===
+                    STATUS_STEPS.length - 1
+                  }
                   onClick={() => updateStatus("next")}
                 >
                   Next
