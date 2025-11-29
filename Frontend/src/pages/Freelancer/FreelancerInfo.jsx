@@ -6,6 +6,7 @@ import DescriptionIcon from "@mui/icons-material/Description";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
+import CreditCardIcon from "@mui/icons-material/CreditCard";
 
 const FreelancerDashboard = () => {
   const navigate = useNavigate();
@@ -63,8 +64,17 @@ const FreelancerDashboard = () => {
       icon: DescriptionIcon,
       iconBg: "bg-purple-100",
       iconColor: "text-purple-600",
-      onClick: () => navigate("/contracts"),
+      onClick: () => navigate("/manage"),
     },
+    {
+      title: "Invoice",
+      message: "View Contracts & Agreements",
+      icon: CreditCardIcon,
+      iconBg: "bg-purple-100",
+      iconColor: "text-purple-600",
+      // onClick: () => navigate("/manage"),
+    },
+    
   ];
 
   return (

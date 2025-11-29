@@ -547,3 +547,38 @@ export const getReferralByIdAdminApi = (referral_id) =>
 
 export const updateReferralStatusAdminApi = (id, status) =>
   adminClient.put(`${AUTH_API.ADMIN}/referrals/status/${id}`, { status });
+
+
+export const createFreelancerContractApi = (data) => {
+  return adminClient.post(`/admin/freelancer-contract/create`, data);
+};
+
+export const updateFreelancerContractApi = (contractId, data) => {
+  return adminClient.put(`/admin/freelancer-contract/update/${contractId}`, data);
+};
+
+export const cancelFreelancerContractApi = (contractId) => {
+  return adminClient.patch(`/admin/freelancer-contract/cancel/${contractId}`);
+};
+
+export const updateFreelancerContractStatusApi = (contractId, status) => {
+  return adminClient.patch(`/admin/freelancer-contract/status/${contractId}`, { status });
+};
+
+export const renewFreelancerContractApi = (contractId, newEndDate) => {
+  return adminClient.patch(`/admin/freelancer-contract/renew/${contractId}`, {
+    new_end_date: newEndDate
+  });
+};
+
+export const fetchFreelancerContractsApi = (freelancerId) => {
+  return adminClient.get(`/admin/freelancer-contract/freelancer/${freelancerId}`);
+};
+
+export const fetchAllFreelancerContractsApi = () => {
+  return adminClient.get(`/admin/freelancer-contract/all`);
+};
+
+export const fetchFreelancerContractByIdApi = (contractId) => {
+  return adminClient.get(`/admin/freelancer-contract/${contractId}`);
+};

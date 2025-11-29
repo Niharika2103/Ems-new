@@ -23,6 +23,8 @@ const AdminLetterGenerator = () => {
     { id: 'Promotion Letter', name: 'Promotion Letter', icon: '📈' },
     { id: 'Salary Increment Letter', name: 'Salary Increment Letter', icon: '💰' },
     { id: 'Warning Letter', name: 'Warning Letter', icon: '⚠️' },
+    { id: 'Form16', name: 'Form 16', icon: '📑' },
+    { id: 'Form16A', name: 'Form 16A', icon: '📊' },
   ];
 
   // Fetch all employees on mount

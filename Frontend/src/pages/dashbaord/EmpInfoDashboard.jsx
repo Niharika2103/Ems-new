@@ -6,6 +6,7 @@ import DescriptionIcon from "@mui/icons-material/Description";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
+import CreditCardIcon from "@mui/icons-material/CreditCard";
 
 const EmpInfoDashboard = () => {
   const navigate = useNavigate();
@@ -25,15 +26,15 @@ const EmpInfoDashboard = () => {
     useSelector((state) => state.employeeSlice?.role);
 
   // admin or freelancer Decide path
-  // const getDocumentPath = () => {
-  //   if (storedUser?.employment_type === "freelancer") {
-  //     return "/dashboard/freelancer/documents";
-  //   }
-  //   if (role === "admin") {
-  //     return "/documents/employees";
-  //   }
-  //   return "/";
-  // };
+  const getDocumentPath = () => {
+    if (storedUser?.employment_type === "freelancer") {
+      return "/dashboard/freelancer/documents";
+    }
+    if (role === "admin") {
+      return "/documents/employees";
+    }
+    return "/";
+  };
 
   // Current page title
   const currentPage = pathnames[pathnames.length - 1] || "";
@@ -52,9 +53,7 @@ const EmpInfoDashboard = () => {
       icon: DescriptionIcon,
       iconBg: "bg-purple-100",
       iconColor: "text-purple-600",
-      //onClick: () => navigate(getDocumentPath()),
-      //  onClick: () => navigate("/documents/employees"),
-         onClick: () => navigate("/dashboard/freelancer/documents"),
+      onClick: () => navigate(getDocumentPath()),
     },
     {
       title: "Letters",
@@ -62,8 +61,8 @@ const EmpInfoDashboard = () => {
       icon: MailOutlineIcon,
       iconBg: "bg-pink-100",
       iconColor: "text-pink-600",
-      // onClick: () => navigate("/documents/admin/letters"),
-      onClick: () => navigate("/employee/letters"),
+      onClick: () => navigate("/documents/admin/letters"),
+      // onClick: () => navigate("/employee/letters"),
 
     },
     {
@@ -82,6 +81,14 @@ const EmpInfoDashboard = () => {
       iconColor: "text-green-600",
       // onClick: () => navigate("/dashboard/emp_info/referral"),
       onClick: () => navigate("/admin/referrals"),
+    },
+    {
+      title: "Invoice",
+      message: "View Contracts & Agreements",
+      icon: CreditCardIcon,
+      iconBg: "bg-purple-100",
+      iconColor: "text-purple-600",
+      onClick: () => navigate("/invoices"),
     },
   ];
 

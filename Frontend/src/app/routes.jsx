@@ -1,10 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import Layout from "../components/Layout";
 import ProtectedRoute from "../components/Layout/ProtectedRoute";
-
-
-
-
 // Pages
 import LandingPage from "../pages/Auth/LandingPage";
 import Login from "../pages/Auth/Login";
@@ -43,15 +39,15 @@ import MaternityPaternityLeaveTable from "../pages/Attendance/MaternityPaternity
 import EmpAttendanceDashboard from "../pages/dashbaord/EmpAttendanceDashboard";
 import AuditLogsTable from "../pages/Attendance/AuditLogs";
 import EmployeeHolidayList from "../pages/Attendance/EmployeeHolidayList";
-import FreelancerDashboard from  "../pages/dashbaord/FreelancerDashboard";
-import FreelancerInfo from  "../pages/Freelancer/FreelancerInfo";
-import FreelancerTable from  "../pages/Freelancer/freelancerTable";
-import FreelancerAttendance from  "../pages/Freelancer/FreelancerAttendance";
-import FreelancerHolidayList from  "../pages/Freelancer/FreelancerHolidayList";
-import FreelancerProjectTable from  "../pages/Freelancer/FreelancerProjectTable";
-import FreelancerDocuments from  "../pages/Freelancer/FreelancerDocuments";
+import FreelancerDashboard from "../pages/dashbaord/FreelancerDashboard";
+import FreelancerInfo from "../pages/Freelancer/FreelancerInfo";
+import FreelancerTable from "../pages/Freelancer/freelancerTable";
+import FreelancerAttendance from "../pages/Freelancer/FreelancerAttendance";
+import FreelancerHolidayList from "../pages/Freelancer/FreelancerHolidayList";
+import FreelancerProjectTable from "../pages/Freelancer/FreelancerProjectTable";
+import FreelancerDocuments from "../pages/Freelancer/FreelancerDocuments";
 import EmployeeList from '../pages/Freelancer/Documents/EmployeeList';
-import FreelancerAssignProjectpage from  "../pages/Freelancer/FreelancerAssignProjectpage";
+import FreelancerAssignProjectpage from "../pages/Freelancer/FreelancerAssignProjectpage";
 import TimesheetApprovalList from '../pages/Freelancer/Attendance/TimesheetApprovalList';
 import ReferCandidatePage from "../pages/Referral/ReferCandidatePage";
 import AdminReferralDashboard from '../pages/Referral/AdminReferralDashboard';
@@ -59,7 +55,7 @@ import SalaryStructure from '../pages/Accounts/SalaryStructure';
 import EmpTypeFreelancerDashboard from '../pages/dashbaord/EmpTypeFreelancerDashboard';
 import CreateJobList from "../pages/JobPosting/CreateJobList";
 import JobPostDashboard from "../pages/dashbaord/JobPostDashboard";
-import JobPosts from "../pages/JobPosting/JobPosts"; 
+import JobPosts from "../pages/JobPosting/JobPosts";
 import ApplyJob from "../components/ApplyJob";
 import PublishedJobs from "../pages/JobPosting/PublishedJobs";
 import JobApplicationTracking from "../pages/JobPosting/JobApplicationTracking";
@@ -72,10 +68,16 @@ import ComplianceReports from "../pages/Reports/ComplianceReports";
 import FreelancerROI from "../pages/Reports/FreelancerROI";
 import CustomReports from "../pages/Reports/CustomReports";
 import PanelManagement from "../pages/JobPosting/PanelManagement";
+import VendorFormSystem from "../pages/Vendor/index";
+import MoUGenerationSystem from "../pages/Vendor/mou_generation_system";
+import VendorPanel from "../pages/Vendor/VendorPanel";
+import AdminPanel from "../pages/Vendor/AdminPanel";
 import AuditLogsPage from "../pages/Auditlogs/AuditLogsPage";
-
-
-
+import ContractManagement from "../pages/contracter/ContractManagement";
+import AccountsDashboard from "../pages/dashbaord/AccountsDashboard";
+import PayrollSystem from "../pages/Accounts/PayrollSystem";
+import InvoiceModule from "../pages/invoice/InvoiceModule";
+// import EmailTemplateManager from "../pages/EmailTemplateManager";
 
 function AppRoutes() {
   return (
@@ -88,10 +90,18 @@ function AppRoutes() {
       <Route path="/superadmin/login" element={<SuperAdminLogin />} />
       <Route path="/superadmin/register" element={<SuperAdminRegister />} />
       <Route path="/login/reset-password" element={<ResetPassword />} />
-
+      <Route path="/vendor/registration" element={<VendorPanel />} />
+      <Route path="/dashboard/admin-panel" element={
+        <ProtectedRoute allowedRoles={["employee", "admin"]}>
+          <AdminPanel />
+        </ProtectedRoute>
+      } />
 
       <Route path="/attendance/emptimesheet" element={<EmpTimesheet />} />
       <Route path="/attendance/timesheet" element={<Timesheet />} />
+      <Route path="/vendor" element={<VendorFormSystem />} />
+      <Route path="/moutemplate" element={<MoUGenerationSystem />} />
+
       <Route path='/dashboard/timesheet/monthly'
         element={
           <ProtectedRoute allowedRoles={["employee"]}>
@@ -149,14 +159,14 @@ function AppRoutes() {
           }
         />
 
-        <Route path="/admin/freelancer-documents" 
-        element={
-          <ProtectedRoute allowedRoles={["admin"]}>
+        <Route path="/admin/freelancer-documents"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
               <EmployeeList />
             </ProtectedRoute>
           }
         />
-        
+
         <Route
           path="/accounts/salary-structure"
           element={
@@ -165,60 +175,67 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-
+      <Route path="/accounts/payroll" 
+      element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+              <PayrollSystem />
+            </ProtectedRoute>
+          }
+        />
+      
         
         <Route path="/job-postings"
-         element={
-           <ProtectedRoute allowedRoles={[ "admin"]}>
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
               <CreateJobList />
             </ProtectedRoute>
           }
         />
 
-       <Route path="/dashboard/JobPostDashboard"
-         element={
-           <ProtectedRoute allowedRoles={["employee", "admin"]}>
+        <Route path="/dashboard/JobPostDashboard"
+          element={
+            <ProtectedRoute allowedRoles={["employee", "admin"]}>
               <JobPostDashboard />
             </ProtectedRoute>
           }
         />
-          <Route path="/job-posts" 
+        <Route path="/job-posts"
           element={
-           <ProtectedRoute allowedRoles={["employee"]}>
+            <ProtectedRoute allowedRoles={["employee"]}>
               <JobPosts />
             </ProtectedRoute>
           }
         />
 
-        <Route path="/apply-job" 
-        element={
-           <ProtectedRoute allowedRoles={["employee"]}>
+        <Route path="/apply-job"
+          element={
+            <ProtectedRoute allowedRoles={["employee"]}>
               <ApplyJob />
             </ProtectedRoute>
           }
         />
-       <Route path="/published-jobs"
-        element={
-           <ProtectedRoute allowedRoles={["admin"]}>
+        <Route path="/published-jobs"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
               <PublishedJobs />
             </ProtectedRoute>
           }
         />
-        
-       <Route
+
+        <Route
           path="/employee/application-tracking"
           element={
-          <ProtectedRoute allowedRoles={["admin"]}>
-            <JobApplicationTracking />
-             </ProtectedRoute>}
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <JobApplicationTracking />
+            </ProtectedRoute>}
         />
-       <Route 
-          path="/offers/status" 
-          element={ <ProtectedRoute allowedRoles={["admin"]}>
+        <Route
+          path="/offers/status"
+          element={<ProtectedRoute allowedRoles={["admin"]}>
             <OfferStatusFlow />
-             </ProtectedRoute>}
+          </ProtectedRoute>}
         />
-    
+
 
         <Route
           path="/attendance/projects"
@@ -264,7 +281,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-         <Route
+        <Route
           path="/dashboard/freelancer/holiday"
           element={
             <ProtectedRoute allowedRoles={["employee", "admin"]}>
@@ -272,7 +289,13 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-       
+        <Route path="/freelancer/contract-manager"
+          element={
+            <ProtectedRoute allowedRoles={["employee", "admin"]}>
+              <ContractManager />
+            </ProtectedRoute>
+          } />
+
         {/* Superadmin routes */}
         <Route
           path="/dashboard/superadmin_requestTable"
@@ -293,7 +316,7 @@ function AppRoutes() {
           }
         />
 
-        
+
 
         <Route
           path="/dashboard/freelancer/info"
@@ -365,13 +388,13 @@ function AppRoutes() {
         />
 
         <Route path="/admin/referrals"
-         element={
-              <ProtectedRoute allowedRoles={["admin"]}>
-          <AdminReferralDashboard/>
-          </ProtectedRoute>
-        }
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminReferralDashboard />
+            </ProtectedRoute>
+          }
         />
-         
+
 
 
 
@@ -418,6 +441,14 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/dashboard/accounts"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AccountsDashboard/>
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/dashboard/audit-logs"
@@ -452,18 +483,18 @@ function AppRoutes() {
           }
         />
 
-        
-          <Route path="/employee/documents/list" 
+
+        <Route path="/employee/documents/list"
           element={
-          <ProtectedRoute allowedRoles={["admin"]}>
-              <EmployeeDocumentList  />
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <EmployeeDocumentList />
             </ProtectedRoute>
           }
         />
-        
-        <Route path="/employee/letters" 
-        element={
-          <ProtectedRoute allowedRoles={["employee"]}>
+
+        <Route path="/employee/letters"
+          element={
+            <ProtectedRoute allowedRoles={["employee"]}>
               <LettersDownload />
             </ProtectedRoute>
           }
@@ -491,56 +522,56 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-        <Route path="/dashboard/reports" 
-        element={
+        <Route path="/dashboard/reports"
+          element={
             <ProtectedRoute allowedRoles={["admin", "employee"]}>
               < ReportsDashboard />
             </ProtectedRoute>
           }
         />
 
-          <Route 
+        <Route
           path="/candidate/feedback"
-         element={
+          element={
             <ProtectedRoute allowedRoles={["admin"]}>
               < PanelFeedback />
             </ProtectedRoute>
           }
         />
-        <Route path="/reports/hr" 
-        element={
-             <ProtectedRoute allowedRoles={["admin"]}>
+        <Route path="/reports/hr"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
               < HRAnalytics />
             </ProtectedRoute>
           }
         />
 
-       
+
 
         <Route path="/reports/payroll"
-         element={
-             <ProtectedRoute allowedRoles={["admin"]}>
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
               < PayrollAnalytics />
             </ProtectedRoute>
           }
-        /> 
-        <Route path="/reports/compliance" 
-         element={
-             <ProtectedRoute allowedRoles={["admin"]}>
+        />
+        <Route path="/reports/compliance"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
               < ComplianceReports />
             </ProtectedRoute>
           }
-        /> 
+        />
         <Route path="/reports/freelancer-roi"
-        element={
-             <ProtectedRoute allowedRoles={["admin"]}>
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
               < FreelancerROI />
             </ProtectedRoute>
           }
-        />  
+        />
         <Route path="/reports/custom"
-         element={
-             <ProtectedRoute allowedRoles={["admin"]}>
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
               < CustomReports />
             </ProtectedRoute>
           }
@@ -555,8 +586,18 @@ function AppRoutes() {
           }
         /> 
         
-      
-     
+        <Route path="/manage" element={<ContractManagement />} />
+
+        <Route path="/invoices" 
+        element={
+             <ProtectedRoute allowedRoles={["admin","employee"]}>
+              < InvoiceModule />
+            </ProtectedRoute>
+          }
+        />
+       
+     {/* <Route path="/email-templates" element={<EmailTemplateManager />} /> */}
+
       
          
       </Route>

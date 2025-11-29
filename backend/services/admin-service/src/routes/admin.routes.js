@@ -46,7 +46,7 @@ import {
   getAllContracts,
   getContractsByFreelancer,
   getContractById,
-  getFreelancers
+ 
 } from "../controllers/admin.controller.js";
 
 // Job post imports
