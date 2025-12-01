@@ -3,6 +3,8 @@ import {
   superAdminRegister,
   checkEmail,
   superAdminLogin,
+  superAdminLogout,           //Audit log
+  getAllSuperAdminAuditLogs,     //audit log
   verifyMfaSetup, 
   updateSuperAdminProfile,
   getSuperadminById, 
@@ -30,6 +32,11 @@ router.post("/superadmin/mfa/verify", verifyMfaSetup);
 
 router.get("/superadmin/get/:id", getSuperadminById); 
 router.put("/superadmin/promote/:adminId", verifyToken, promoteAdminToSuperAdmin);
+
+
+//Audit log for superadmin logout and getallsuperadminlogs
+router.post("/superadmin/logout", superAdminLogout);
+router.get("/superadmin/audit-logs", getAllSuperAdminAuditLogs);
 
 
 export default router;
