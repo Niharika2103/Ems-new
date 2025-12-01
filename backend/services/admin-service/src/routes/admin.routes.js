@@ -180,6 +180,6 @@ router.patch("/freelancer-contract/renew/:contract_id", renewContract);
 router.get("/freelancer-contract/all", getAllContracts);
 router.get("/freelancer-contract/freelancer/:freelancer_id", getContractsByFreelancer);
 router.get("/freelancer-contract/:contract_id", getContractById);
-router.get("/employees/freelancers", getFreelancers);
+// router.get("/employees/freelancers", getFreelancers);
 
 export default router;

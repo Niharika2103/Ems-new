@@ -1,541 +1,925 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link, useLocation } from 'react-router-dom';
-import {
-  Box,
-  Paper,
-  Typography,
-  TextField,
-  MenuItem,
-  Button,
-  Checkbox,
-  Grid,
-  CircularProgress,
-  Alert,
-  Chip,
-  Breadcrumbs,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Tooltip,
-  FormControl,
-  InputLabel,
-  Select,
-} from '@mui/material';
-import {
-  Home as HomeIcon,
-  AccountBalance as AccountsIcon,
-  Search as SearchIcon,
-  FilterList as FilterIcon,
-  SelectAll as SelectAllIcon,
-  Clear as ClearIcon,
-  CheckCircle as CheckCircleIcon,
-  Error as ErrorIcon,
-  Refresh as RefreshIcon,
-  CalendarMonth as CalendarIcon,
-} from '@mui/icons-material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 
 const PayrollSystem = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-
   // State management
-  const [employees, setEmployees] = useState([]);
-  const [selectedEmployees, setSelectedEmployees] = useState(new Set());
+  const [activeTab, setActiveTab] = useState('new-run');
+  const [step, setStep] = useState(1);
+  const [payrollData, setPayrollData] = useState({
+    payPeriod: '',
+    periodType: 'monthly',
+    selectedEmployees: [],
+    validationResults: null,
+    payrollResults: null,
+    runName: ''
+  });
+  
+  const [validationStatus, setValidationStatus] = useState({
+    attendance: 'pending',
+    leaves: 'pending',
+    overtime: 'pending',
+    overall: 'pending'
+  });
+  
+  const [validationIssues, setValidationIssues] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [payrollResult, setPayrollResult] = useState(null);
-  const [filters, setFilters] = useState({
-    department: '',
-    search: '',
-    year: new Date().getFullYear(),
-    month: '',
-    date: null,
-  });
+  const [selectedEmployeeDetails, setSelectedEmployeeDetails] = useState(null);
 
-  // Mock data - replace with actual API call
-  useEffect(() => {
-    const fetchEmployees = async () => {
-      const mockEmployees = [
-        { 
-          id: 1, 
-          name: 'John Doe', 
-          department: 'Engineering', 
-          baseSalary: 5000, 
-          employmentType: 'full-time',
-          joinDate: new Date(2022, 0, 15), // Jan 15, 2022
-          lastPayrollDate: new Date(2024, 0, 31) // Jan 31, 2024
-        },
-        { 
-          id: 2, 
-          name: 'Jane Smith', 
-          department: 'Marketing', 
-          baseSalary: 4500, 
-          employmentType: 'full-time',
-          joinDate: new Date(2023, 2, 10), // Mar 10, 2023
-          lastPayrollDate: new Date(2024, 0, 31)
-        },
-        { 
-          id: 3, 
-          name: 'Mike Johnson', 
-          department: 'Engineering', 
-          baseSalary: 5500, 
-          employmentType: 'full-time',
-          joinDate: new Date(2021, 5, 20), // Jun 20, 2021
-          lastPayrollDate: new Date(2024, 0, 31)
-        },
-        { 
-          id: 4, 
-          name: 'Sarah Wilson', 
-          department: 'HR', 
-          baseSalary: 4000, 
-          employmentType: 'full-time',
-          joinDate: new Date(2023, 8, 5), // Sep 5, 2023
-          lastPayrollDate: new Date(2024, 0, 31)
-        },
-        { 
-          id: 5, 
-          name: 'David Brown', 
-          department: 'Finance', 
-          baseSalary: 6000, 
-          employmentType: 'freelancer',
-          joinDate: new Date(2022, 11, 1), // Dec 1, 2022
-          lastPayrollDate: new Date(2024, 0, 31)
-        },
-        { 
-          id: 6, 
-          name: 'Emily Davis', 
-          department: 'Marketing', 
-          baseSalary: 4800, 
-          employmentType: 'full-time',
-          joinDate: new Date(2023, 1, 28), // Feb 28, 2023
-          lastPayrollDate: new Date(2024, 0, 31)
-        },
-      ];
-      setEmployees(mockEmployees);
-    };
-    
-    fetchEmployees();
-  }, []);
+  // Mock data
+  const [payrollPeriods] = useState([
+    { id: 'jan-2024', name: 'January 2024', type: 'monthly', start: '2024-01-01', end: '2024-01-31' },
+    { id: 'feb-2024', name: 'February 2024', type: 'monthly', start: '2024-02-01', end: '2024-02-29' },
+    { id: 'week1-feb', name: 'Week 1, Feb 2024', type: 'weekly', start: '2024-02-05', end: '2024-02-11' },
+    { id: 'week2-feb', name: 'Week 2, Feb 2024', type: 'weekly', start: '2024-02-12', end: '2024-02-18' },
+  ]);
 
-  // Filter employees based on search, department, and date filters
-  const filteredEmployees = employees.filter(emp => {
-    const matchesSearch = emp.name.toLowerCase().includes(filters.search.toLowerCase());
-    const matchesDepartment = !filters.department || emp.department === filters.department;
-    
-    // Date filters
-    const matchesYear = !filters.year || emp.joinDate.getFullYear() === filters.year;
-    const matchesMonth = !filters.month || emp.joinDate.getMonth() === parseInt(filters.month);
-    const matchesDate = !filters.date || 
-      emp.joinDate.toDateString() === filters.date.toDateString();
-
-    return matchesSearch && matchesDepartment && matchesYear && matchesMonth && matchesDate;
-  });
-
-  // Selection handlers
-  const toggleEmployeeSelection = (employeeId) => {
-    const newSelection = new Set(selectedEmployees);
-    if (newSelection.has(employeeId)) {
-      newSelection.delete(employeeId);
-    } else {
-      newSelection.add(employeeId);
+  const [payrollHistory, setPayrollHistory] = useState([
+    {
+      id: 'PR-001',
+      period: 'January 2024',
+      type: 'monthly',
+      status: 'completed',
+      runDate: '2024-02-05',
+      totalEmployees: 150,
+      totalAmount: '$450,000',
+      canReverse: true
+    },
+    {
+      id: 'PR-002',
+      period: 'Week 1, Feb 2024',
+      type: 'weekly',
+      status: 'completed',
+      runDate: '2024-02-12',
+      totalEmployees: 150,
+      totalAmount: '$112,500',
+      canReverse: true
+    },
+    {
+      id: 'PR-003',
+      period: 'December 2023',
+      type: 'monthly',
+      status: 'reversed',
+      runDate: '2024-01-05',
+      totalEmployees: 145,
+      totalAmount: '$435,000',
+      canReverse: false
     }
-    setSelectedEmployees(newSelection);
-  };
+  ]);
 
-  const selectAllEmployees = () => {
-    const allIds = new Set(filteredEmployees.map(emp => emp.id));
-    setSelectedEmployees(allIds);
-  };
+  const [employees] = useState([
+    { id: 1, name: 'John Doe', department: 'Engineering', basicSalary: 5000, attendance: 22, leaves: 2, overtime: 8 },
+    { id: 2, name: 'Jane Smith', department: 'Marketing', basicSalary: 4500, attendance: 20, leaves: 4, overtime: 4 },
+    { id: 3, name: 'Bob Johnson', department: 'Sales', basicSalary: 4000, attendance: 23, leaves: 1, overtime: 12 },
+  ]);
 
-  const clearSelection = () => {
-    setSelectedEmployees(new Set());
-  };
-
-  // Clear all filters
-  const clearAllFilters = () => {
-    setFilters({
-      department: '',
-      search: '',
-      year: new Date().getFullYear(),
-      month: '',
-      date: null,
-    });
-  };
-
-  // Payroll run handler
-  const runPayroll = async () => {
-    if (selectedEmployees.size === 0) {
-      return;
+  // CSS Styles
+  const styles = {
+    container: {
+      fontFamily: 'Arial, sans-serif',
+      maxWidth: '1200px',
+      margin: '0 auto',
+      padding: '20px'
+    },
+    header: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: '30px',
+      paddingBottom: '20px',
+      borderBottom: '1px solid #e0e0e0'
+    },
+    tabs: {
+      display: 'flex',
+      gap: '10px',
+      marginBottom: '30px'
+    },
+    tabButton: {
+      padding: '10px 20px',
+      border: 'none',
+      background: '#f0f0f0',
+      cursor: 'pointer',
+      borderRadius: '4px'
+    },
+    activeTab: {
+      background: '#2196F3',
+      color: 'white'
+    },
+    primaryButton: {
+      padding: '10px 20px',
+      background: '#2196F3',
+      color: 'white',
+      border: 'none',
+      borderRadius: '4px',
+      cursor: 'pointer',
+      fontSize: '14px'
+    },
+    secondaryButton: {
+      padding: '10px 20px',
+      background: '#f0f0f0',
+      color: '#333',
+      border: 'none',
+      borderRadius: '4px',
+      cursor: 'pointer',
+      fontSize: '14px',
+      marginRight: '10px'
+    },
+    dangerButton: {
+      padding: '8px 16px',
+      background: '#f44336',
+      color: 'white',
+      border: 'none',
+      borderRadius: '4px',
+      cursor: 'pointer',
+      fontSize: '12px',
+      marginLeft: '5px'
+    },
+    wizard: {
+      background: 'white',
+      borderRadius: '8px',
+      padding: '20px',
+      boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+    },
+    stepper: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      marginBottom: '30px',
+      position: 'relative'
+    },
+    step: {
+      textAlign: 'center',
+      flex: 1,
+      padding: '10px',
+      position: 'relative',
+      color: '#999'
+    },
+    activeStep: {
+      color: '#2196F3',
+      fontWeight: 'bold'
+    },
+    stepIndicator: {
+      width: '30px',
+      height: '30px',
+      borderRadius: '50%',
+      background: '#f0f0f0',
+      margin: '0 auto 10px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    },
+    activeIndicator: {
+      background: '#2196F3',
+      color: 'white'
+    },
+    grid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+      gap: '15px',
+      margin: '20px 0'
+    },
+    card: {
+      padding: '15px',
+      border: '1px solid #ddd',
+      borderRadius: '6px',
+      cursor: 'pointer',
+      transition: 'all 0.3s'
+    },
+    selectedCard: {
+      borderColor: '#2196F3',
+      background: '#e3f2fd'
+    },
+    validationGrid: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr 1fr',
+      gap: '20px',
+      margin: '20px 0'
+    },
+    validationCard: {
+      padding: '20px',
+      border: '1px solid #ddd',
+      borderRadius: '6px',
+      textAlign: 'center'
+    },
+    successCard: {
+      borderColor: '#4CAF50',
+      background: '#f1f8e9'
+    },
+    warningCard: {
+      borderColor: '#FF9800',
+      background: '#fff3e0'
+    },
+    errorCard: {
+      borderColor: '#f44336',
+      background: '#ffebee'
+    },
+    table: {
+      width: '100%',
+      borderCollapse: 'collapse',
+      marginTop: '20px'
+    },
+    th: {
+      background: '#f5f5f5',
+      padding: '12px',
+      textAlign: 'left',
+      borderBottom: '1px solid #ddd'
+    },
+    td: {
+      padding: '12px',
+      borderBottom: '1px solid #ddd'
+    },
+    badge: {
+      padding: '4px 8px',
+      borderRadius: '12px',
+      fontSize: '12px',
+      fontWeight: 'bold'
+    },
+    completedBadge: {
+      background: '#4CAF50',
+      color: 'white'
+    },
+    reversedBadge: {
+      background: '#f44336',
+      color: 'white'
+    },
+    modalOverlay: {
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'rgba(0,0,0,0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000
+    },
+    modalContent: {
+      background: 'white',
+      borderRadius: '8px',
+      padding: '20px',
+      maxWidth: '600px',
+      width: '100%',
+      maxHeight: '80vh',
+      overflow: 'auto'
+    },
+    modalHeader: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: '20px'
+    },
+    salarySections: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: '20px'
+    },
+    salarySection: {
+      padding: '15px',
+      border: '1px solid #e0e0e0',
+      borderRadius: '6px'
+    },
+    salaryRow: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      marginBottom: '10px',
+      paddingBottom: '10px',
+      borderBottom: '1px solid #f0f0f0'
+    },
+    netSalary: {
+      gridColumn: 'span 2',
+      textAlign: 'center',
+      padding: '20px',
+      background: '#e3f2fd',
+      borderRadius: '6px'
+    },
+    loadingOverlay: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'rgba(255,255,255,0.8)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: '8px'
     }
+  };
 
+  // Component functions
+  const handleRunValidation = async () => {
     setIsProcessing(true);
-    setPayrollResult(null);
-
-    try {
-      const payrollData = {
-        employeeIds: Array.from(selectedEmployees),
-        payrollDate: new Date().toISOString().split('T')[0],
-        month: new Date().toLocaleString('default', { month: 'long' }),
-        year: new Date().getFullYear()
+    
+    // Simulate API call
+    setTimeout(() => {
+      const results = {
+        attendance: 'success',
+        leaves: 'warning',
+        overtime: 'success',
+        overall: 'ready'
       };
-
-      // Replace with actual API call
-      const response = await mockPayrollAPI(payrollData);
       
-      setPayrollResult({
-        success: true,
-        message: `Payroll processed successfully for ${selectedEmployees.size} employees`,
-        data: response
-      });
-      
-      // Clear selection after successful processing
-      setSelectedEmployees(new Set());
-      
-    } catch (error) {
-      setPayrollResult({
-        success: false,
-        message: 'Payroll processing failed',
-        error: error.message
-      });
-    } finally {
+      setValidationStatus(results);
+      setValidationIssues(['3 employees have pending leave approval', '1 employee has attendance discrepancy']);
       setIsProcessing(false);
+      setPayrollData(prev => ({...prev, validationResults: results}));
+    }, 1500);
+  };
+
+  const handleRunPayroll = async () => {
+    setIsProcessing(true);
+    
+    // Simulate payroll processing
+    setTimeout(() => {
+      const results = {
+        success: true,
+        totalEmployees: employees.length,
+        totalGross: '$27,000',
+        totalNet: '$22,500',
+        details: employees.map(emp => ({
+          ...emp,
+          gross: emp.basicSalary + (emp.overtime * 25),
+          deductions: emp.basicSalary * 0.15,
+          net: (emp.basicSalary + (emp.overtime * 25)) * 0.85
+        }))
+      };
+      
+      setPayrollData(prev => ({...prev, payrollResults: results}));
+      setIsProcessing(false);
+      setStep(4);
+      
+      // Add to history
+      const newRun = {
+        id: `PR-00${payrollHistory.length + 1}`,
+        period: payrollPeriods.find(p => p.id === payrollData.payPeriod)?.name || 'Custom Period',
+        type: payrollData.periodType,
+        status: 'completed',
+        runDate: new Date().toISOString().split('T')[0],
+        totalEmployees: employees.length,
+        totalAmount: results.totalNet,
+        canReverse: true
+      };
+      
+      setPayrollHistory(prev => [newRun, ...prev]);
+    }, 2000);
+  };
+
+  const handleReversePayroll = async (payrollId) => {
+    if (window.confirm('Are you sure you want to reverse this payroll? This action cannot be undone.')) {
+      setIsProcessing(true);
+      
+      setTimeout(() => {
+        setPayrollHistory(prev => 
+          prev.map(run => 
+            run.id === payrollId 
+              ? {...run, status: 'reversed', canReverse: false}
+              : run
+          )
+        );
+        setIsProcessing(false);
+        alert(`Payroll ${payrollId} has been reversed successfully.`);
+      }, 1000);
     }
   };
 
-  // Mock API function
-  const mockPayrollAPI = (payrollData) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const selectedEmployeesData = employees.filter(emp => 
-          payrollData.employeeIds.includes(emp.id)
-        );
-        const totalAmount = selectedEmployeesData.reduce((sum, emp) => sum + emp.baseSalary, 0);
+  const handleRerunPayroll = async (payrollId) => {
+    setIsProcessing(true);
+    
+    setTimeout(() => {
+      const originalRun = payrollHistory.find(run => run.id === payrollId);
+      const newRun = {
+        ...originalRun,
+        id: `PR-00${payrollHistory.length + 1}`,
+        runDate: new Date().toISOString().split('T')[0],
+        status: 'completed'
+      };
+      
+      setPayrollHistory(prev => [newRun, ...prev]);
+      setIsProcessing(false);
+      alert(`Payroll ${payrollId} has been re-run successfully.`);
+    }, 1500);
+  };
+
+  const handleEmployeeSelect = (employeeId) => {
+    setSelectedEmployeeDetails(employees.find(emp => emp.id === employeeId));
+  };
+
+  const calculateSalary = (employee) => {
+    const overtimeRate = 25; // $ per hour
+    const deductionRate = 0.15; // 15%
+    
+    const overtimePay = employee.overtime * overtimeRate;
+    const gross = employee.basicSalary + overtimePay;
+    const deductions = gross * deductionRate;
+    const net = gross - deductions;
+    
+    return { gross, deductions, net };
+  };
+
+  // Sub-components
+  const PeriodSelection = () => (
+    <div>
+      <h3>Step 1: Select Pay Period</h3>
+      
+      <div style={{margin: '20px 0'}}>
+        <label style={{marginRight: '20px'}}>
+          <input 
+            type="radio" 
+            name="periodType" 
+            value="monthly"
+            checked={payrollData.periodType === 'monthly'}
+            onChange={(e) => setPayrollData({...payrollData, periodType: e.target.value, payPeriod: ''})}
+            style={{marginRight: '5px'}}
+          />
+          Monthly
+        </label>
+        <label>
+          <input 
+            type="radio" 
+            name="periodType" 
+            value="weekly"
+            checked={payrollData.periodType === 'weekly'}
+            onChange={(e) => setPayrollData({...payrollData, periodType: e.target.value, payPeriod: ''})}
+            style={{marginRight: '5px'}}
+          />
+          Weekly
+        </label>
+      </div>
+
+      <div style={styles.grid}>
+        {payrollPeriods
+          .filter(p => p.type === payrollData.periodType)
+          .map(period => (
+            <div 
+              key={period.id}
+              style={{
+                ...styles.card,
+                ...(payrollData.payPeriod === period.id ? styles.selectedCard : {})
+              }}
+              onClick={() => setPayrollData({...payrollData, payPeriod: period.id})}
+            >
+              <h4 style={{margin: '0 0 10px 0'}}>{period.name}</h4>
+              <p style={{margin: '0', color: '#666', fontSize: '14px'}}>
+                {period.start} to {period.end}
+              </p>
+            </div>
+          ))}
+      </div>
+
+      <div style={{marginTop: '20px'}}>
+        <input
+          type="text"
+          placeholder="Payroll Run Name (Optional)"
+          value={payrollData.runName}
+          onChange={(e) => setPayrollData({...payrollData, runName: e.target.value})}
+          style={{padding: '10px', width: '300px', marginRight: '10px'}}
+        />
+      </div>
+
+      <div style={{marginTop: '30px'}}>
+        <button 
+          style={styles.primaryButton}
+          disabled={!payrollData.payPeriod}
+          onClick={() => setStep(2)}
+        >
+          Next: Validate Data
+        </button>
+      </div>
+    </div>
+  );
+
+  const DataValidation = () => (
+    <div>
+      <h3>Step 2: Pre-Payroll Validation</h3>
+      <p style={{color: '#666', marginBottom: '20px'}}>
+        Validate attendance, leave, and overtime data before processing payroll.
+      </p>
+
+      <div style={styles.validationGrid}>
+        <div style={{
+          ...styles.validationCard,
+          ...(validationStatus.attendance === 'success' ? styles.successCard : 
+               validationStatus.attendance === 'warning' ? styles.warningCard : 
+               validationStatus.attendance === 'error' ? styles.errorCard : {})
+        }}>
+          <h4>Attendance</h4>
+          <p>{validationStatus.attendance === 'pending' ? 'Not validated' : 
+              validationStatus.attendance === 'success' ? '✓ All records valid' :
+              validationStatus.attendance === 'warning' ? '⚠ Needs review' : '✗ Issues found'}</p>
+        </div>
         
-        resolve({
-          totalProcessed: payrollData.employeeIds.length,
-          totalAmount: totalAmount,
-          timestamp: new Date().toISOString(),
-          payrollPeriod: `${payrollData.month} ${payrollData.year}`
-        });
-      }, 2000);
-    });
+        <div style={{
+          ...styles.validationCard,
+          ...(validationStatus.leaves === 'success' ? styles.successCard : 
+               validationStatus.leaves === 'warning' ? styles.warningCard : 
+               validationStatus.leaves === 'error' ? styles.errorCard : {})
+        }}>
+          <h4>Leave Applications</h4>
+          <p>{validationStatus.leaves === 'pending' ? 'Not validated' : 
+              validationStatus.leaves === 'success' ? '✓ All approved' :
+              validationStatus.leaves === 'warning' ? '⚠ Pending approvals' : '✗ Issues found'}</p>
+        </div>
+        
+        <div style={{
+          ...styles.validationCard,
+          ...(validationStatus.overtime === 'success' ? styles.successCard : 
+               validationStatus.overtime === 'warning' ? styles.warningCard : 
+               validationStatus.overtime === 'error' ? styles.errorCard : {})
+        }}>
+          <h4>Overtime</h4>
+          <p>{validationStatus.overtime === 'pending' ? 'Not validated' : 
+              validationStatus.overtime === 'success' ? '✓ Calculations valid' :
+              validationStatus.overtime === 'warning' ? '⚠ Needs review' : '✗ Issues found'}</p>
+        </div>
+      </div>
+
+      {validationIssues.length > 0 && (
+        <div style={{background: '#fff3e0', padding: '15px', borderRadius: '6px', margin: '20px 0'}}>
+          <h4 style={{margin: '0 0 10px 0', color: '#FF9800'}}>⚠️ Validation Issues:</h4>
+          <ul style={{margin: '0', paddingLeft: '20px'}}>
+            {validationIssues.map((issue, index) => (
+              <li key={index} style={{marginBottom: '5px'}}>{issue}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div style={{marginTop: '30px'}}>
+        <button style={styles.secondaryButton} onClick={() => setStep(1)}>
+          Back
+        </button>
+        <button 
+          style={styles.primaryButton}
+          onClick={handleRunValidation}
+          disabled={isProcessing}
+        >
+          {isProcessing ? 'Validating...' : 'Run All Validations'}
+        </button>
+        {validationStatus.overall === 'ready' && (
+          <button 
+            style={{...styles.primaryButton, marginLeft: '10px'}}
+            onClick={() => setStep(3)}
+          >
+            Next: Review & Run
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
+  const PayrollReview = () => {
+    const period = payrollPeriods.find(p => p.id === payrollData.payPeriod);
+    
+    return (
+      <div>
+        <h3>Step 3: Review & Run Payroll</h3>
+        
+        <div style={{background: '#f5f5f5', padding: '20px', borderRadius: '6px', marginBottom: '20px'}}>
+          <h4 style={{margin: '0 0 10px 0'}}>Payroll Summary</h4>
+          <p><strong>Period:</strong> {period?.name || 'N/A'}</p>
+          <p><strong>Type:</strong> {payrollData.periodType}</p>
+          <p><strong>Date Range:</strong> {period?.start} to {period?.end}</p>
+          <p><strong>Employees:</strong> {employees.length} employees</p>
+        </div>
+
+        <h4>Employee List</h4>
+        <table style={styles.table}>
+          <thead>
+            <tr>
+              <th style={styles.th}>Name</th>
+              <th style={styles.th}>Department</th>
+              <th style={styles.th}>Attendance</th>
+              <th style={styles.th}>Leaves</th>
+              <th style={styles.th}>Overtime (hrs)</th>
+              <th style={styles.th}>Estimated Net</th>
+              <th style={styles.th}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {employees.map(employee => {
+              const salary = calculateSalary(employee);
+              return (
+                <tr key={employee.id}>
+                  <td style={styles.td}>{employee.name}</td>
+                  <td style={styles.td}>{employee.department}</td>
+                  <td style={styles.td}>{employee.attendance} days</td>
+                  <td style={styles.td}>{employee.leaves} days</td>
+                  <td style={styles.td}>{employee.overtime}</td>
+                  <td style={styles.td}>${salary.net.toFixed(2)}</td>
+                  <td style={styles.td}>
+                    <button 
+                      style={{...styles.secondaryButton, padding: '5px 10px', fontSize: '12px'}}
+                      onClick={() => handleEmployeeSelect(employee.id)}
+                    >
+                      Details
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+
+        <div style={{marginTop: '30px'}}>
+          <button style={styles.secondaryButton} onClick={() => setStep(2)}>
+            Back
+          </button>
+          <button 
+            style={styles.primaryButton}
+            onClick={handleRunPayroll}
+            disabled={isProcessing}
+          >
+            {isProcessing ? 'Processing Payroll...' : 'Run Payroll'}
+          </button>
+        </div>
+      </div>
+    );
   };
 
-  // Calculate total selected salary
-  const totalSelectedSalary = employees
-    .filter(emp => selectedEmployees.has(emp.id))
-    .reduce((sum, emp) => sum + emp.baseSalary, 0);
+  const PayrollResults = () => (
+    <div>
+      <h3>Step 4: Payroll Results</h3>
+      
+      {payrollData.payrollResults && (
+        <div style={{background: '#e8f5e9', padding: '20px', borderRadius: '6px', marginBottom: '20px'}}>
+          <h4 style={{color: '#4CAF50', margin: '0 0 10px 0'}}>✓ Payroll Completed Successfully</h4>
+          <p><strong>Payroll ID:</strong> {payrollHistory[0]?.id}</p>
+          <p><strong>Total Employees:</strong> {payrollData.payrollResults.totalEmployees}</p>
+          <p><strong>Total Gross Amount:</strong> {payrollData.payrollResults.totalGross}</p>
+          <p><strong>Total Net Amount:</strong> {payrollData.payrollResults.totalNet}</p>
+          <p><strong>Processed On:</strong> {new Date().toLocaleString()}</p>
+        </div>
+      )}
 
-  const getEmploymentTypeChip = (type) => {
-    const chipProps = {
-      'full-time': { label: 'Full Time', color: 'success' },
-      'freelancer': { label: 'Freelancer', color: 'warning' },
-    }[type] || { label: type, color: 'default' };
+      <div style={{marginTop: '30px'}}>
+        <button 
+          style={styles.primaryButton}
+          onClick={() => {
+            setStep(1);
+            setPayrollData({
+              payPeriod: '',
+              periodType: 'monthly',
+              selectedEmployees: [],
+              validationResults: null,
+              payrollResults: null,
+              runName: ''
+            });
+            setValidationStatus({
+              attendance: 'pending',
+              leaves: 'pending',
+              overtime: 'pending',
+              overall: 'pending'
+            });
+            setValidationIssues([]);
+          }}
+        >
+          Run Another Payroll
+        </button>
+        <button 
+          style={{...styles.secondaryButton, marginLeft: '10px'}}
+          onClick={() => setActiveTab('history')}
+        >
+          View Payroll History
+        </button>
+      </div>
+    </div>
+  );
 
-    return <Chip {...chipProps} size="small" variant="outlined" />;
+  const PayrollHistoryView = () => (
+    <div>
+      <h3>Payroll History</h3>
+      
+      <table style={styles.table}>
+        <thead>
+          <tr>
+            <th style={styles.th}>Payroll ID</th>
+            <th style={styles.th}>Period</th>
+            <th style={styles.th}>Type</th>
+            <th style={styles.th}>Status</th>
+            <th style={styles.th}>Run Date</th>
+            <th style={styles.th}>Employees</th>
+            <th style={styles.th}>Total Amount</th>
+            <th style={styles.th}>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {payrollHistory.map(run => (
+            <tr key={run.id}>
+              <td style={styles.td}>{run.id}</td>
+              <td style={styles.td}>{run.period}</td>
+              <td style={styles.td}>{run.type}</td>
+              <td style={styles.td}>
+                <span style={{
+                  ...styles.badge,
+                  ...(run.status === 'completed' ? styles.completedBadge : 
+                       run.status === 'reversed' ? styles.reversedBadge : 
+                       {background: '#FF9800', color: 'white'})
+                }}>
+                  {run.status}
+                </span>
+              </td>
+              <td style={styles.td}>{run.runDate}</td>
+              <td style={styles.td}>{run.totalEmployees}</td>
+              <td style={styles.td}>{run.totalAmount}</td>
+              <td style={styles.td}>
+                <button 
+                  style={{...styles.secondaryButton, padding: '5px 10px', fontSize: '12px'}}
+                  onClick={() => {/* View details */}}
+                >
+                  View
+                </button>
+                {run.canReverse && (
+                  <>
+                    <button 
+                      style={styles.dangerButton}
+                      onClick={() => handleReversePayroll(run.id)}
+                      disabled={isProcessing}
+                    >
+                      Reverse
+                    </button>
+                    <button 
+                      style={{...styles.secondaryButton, padding: '5px 10px', fontSize: '12px', marginLeft: '5px'}}
+                      onClick={() => handleRerunPayroll(run.id)}
+                      disabled={isProcessing}
+                    >
+                      Re-run
+                    </button>
+                  </>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  const EmployeeSalaryModal = () => {
+    if (!selectedEmployeeDetails) return null;
+    
+    const salary = calculateSalary(selectedEmployeeDetails);
+    const deductions = [
+      { name: 'Tax', amount: salary.gross * 0.10 },
+      { name: 'Insurance', amount: salary.gross * 0.03 },
+      { name: 'Retirement', amount: salary.gross * 0.02 }
+    ];
+    const totalDeductions = deductions.reduce((sum, d) => sum + d.amount, 0);
+
+    return (
+      <div style={styles.modalOverlay} onClick={() => setSelectedEmployeeDetails(null)}>
+        <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+          <div style={styles.modalHeader}>
+            <h3 style={{margin: 0}}>{selectedEmployeeDetails.name} - Salary Breakdown</h3>
+            <button 
+              onClick={() => setSelectedEmployeeDetails(null)}
+              style={{background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer'}}
+            >
+              ×
+            </button>
+          </div>
+          
+          <div style={styles.salarySections}>
+            <div style={styles.salarySection}>
+              <h4>Earnings</h4>
+              <div style={styles.salaryRow}>
+                <span>Basic Salary</span>
+                <span>${selectedEmployeeDetails.basicSalary.toFixed(2)}</span>
+              </div>
+              <div style={styles.salaryRow}>
+                <span>Overtime ({selectedEmployeeDetails.overtime} hrs × $25)</span>
+                <span>${(selectedEmployeeDetails.overtime * 25).toFixed(2)}</span>
+              </div>
+              <div style={{...styles.salaryRow, borderBottom: '2px solid #333', fontWeight: 'bold'}}>
+                <span>Gross Salary</span>
+                <span>${salary.gross.toFixed(2)}</span>
+              </div>
+            </div>
+            
+            <div style={styles.salarySection}>
+              <h4>Deductions</h4>
+              {deductions.map(d => (
+                <div key={d.name} style={styles.salaryRow}>
+                  <span>{d.name}</span>
+                  <span>${d.amount.toFixed(2)}</span>
+                </div>
+              ))}
+              <div style={{...styles.salaryRow, borderBottom: '2px solid #333', fontWeight: 'bold'}}>
+                <span>Total Deductions</span>
+                <span>${totalDeductions.toFixed(2)}</span>
+              </div>
+            </div>
+            
+            <div style={styles.netSalary}>
+              <h4>Net Salary</h4>
+              <div style={{fontSize: '32px', fontWeight: 'bold', color: '#2196F3'}}>
+                ${salary.net.toFixed(2)}
+              </div>
+              <p style={{color: '#666', fontSize: '14px'}}>
+                After {selectedEmployeeDetails.attendance} days attendance, {selectedEmployeeDetails.leaves} days leave
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
-
-  // Check if payroll button should be enabled
-  const isPayrollButtonEnabled = selectedEmployees.size > 0 && !isProcessing;
-
-  // Generate years for dropdown (last 5 years)
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
-
-  // Months for dropdown
-  const months = [
-    { value: 0, label: 'January' },
-    { value: 1, label: 'February' },
-    { value: 2, label: 'March' },
-    { value: 3, label: 'April' },
-    { value: 4, label: 'May' },
-    { value: 5, label: 'June' },
-    { value: 6, label: 'July' },
-    { value: 7, label: 'August' },
-    { value: 8, label: 'September' },
-    { value: 9, label: 'October' },
-    { value: 10, label: 'November' },
-    { value: 11, label: 'December' },
-  ];
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Box sx={{ p: 3, maxWidth: 1200, margin: '0 auto' }}>
-        {/* Breadcrumb Navigation */}
-        <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 3 }}>
-          <Link to="/dashboard" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
-            <HomeIcon sx={{ mr: 0.5 }} fontSize="small" />
-            Dashboard
-          </Link>
-          <Link to="/accounts" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
-            <AccountsIcon sx={{ mr: 0.5 }} fontSize="small" />
-            Accounts
-          </Link>
-          <Typography color="text.primary">Payroll</Typography>
-        </Breadcrumbs>
-
-        {/* Header Section */}
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 'bold', color: 'text.primary' }}>
-            Payroll Processing System
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Calculate and process salaries for selected employees
-          </Typography>
-        </Box>
-
-        {/* Filters Section */}
-        <Paper sx={{ p: 3, mb: 3 }}>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} md={8}>
-              <Grid container spacing={2}>
-                {/* Search and Department */}
-                <Grid item xs={12} sm={6} md={3}>
-                  <TextField
-                    fullWidth
-                    placeholder="Search employees..."
-                    value={filters.search}
-                    onChange={(e) => setFilters({...filters, search: e.target.value})}
-                    InputProps={{
-                      startAdornment: <SearchIcon color="action" sx={{ mr: 1 }} />,
-                    }}
-                    size="small"
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                  <TextField
-                    fullWidth
-                    select
-                    label="Department"
-                    value={filters.department}
-                    onChange={(e) => setFilters({...filters, department: e.target.value})}
-                    InputProps={{
-                      startAdornment: <FilterIcon color="action" sx={{ mr: 1 }} />,
-                    }}
-                    size="small"
-                  >
-                    <MenuItem value="">All Departments</MenuItem>
-                    <MenuItem value="Engineering">Engineering</MenuItem>
-                    <MenuItem value="Marketing">Marketing</MenuItem>
-                    <MenuItem value="HR">HR</MenuItem>
-                    <MenuItem value="Finance">Finance</MenuItem>
-                  </TextField>
-                </Grid>
-                
-                
-
-                {/* Date Filter */}
-                <Grid item xs={12} sm={6} md={2}>
-                  <DatePicker
-                    label="Specific Date"
-                    value={filters.date}
-                    onChange={(newDate) => setFilters({...filters, date: newDate})}
-                    slotProps={{
-                      textField: {
-                        size: 'small',
-                        fullWidth: true,
-                      }
-                    }}
-                  />
-                </Grid>
-              </Grid>
-            </Grid>
-            
-            <Grid item xs={12} md={4}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, justifyContent: { md: 'flex-end' } }}>
-                <Tooltip title="Clear all filters">
-                  
-                </Tooltip>
-                <Tooltip title="Select all employees">
-                  <Button
-                    startIcon={<SelectAllIcon />}
-                    onClick={selectAllEmployees}
-                    variant="outlined"
-                    size="small"
-                  >
-                    Select All
-                  </Button>
-                </Tooltip>
-                <Tooltip title="Clear selection">
-                  <Button
-                    startIcon={<ClearIcon />}
-                    onClick={clearSelection}
-                    variant="outlined"
-                    size="small"
-                  >
-                    Clear
-                  </Button>
-                </Tooltip>
-                <Typography variant="body2" color="text.secondary">
-                  {selectedEmployees.size} selected
-                </Typography>
-              </Box>
-            </Grid>
-          </Grid>
-        </Paper>
-
-        {/* Employees Table */}
-        <Paper sx={{ mb: 3, overflow: 'hidden' }}>
-          <TableContainer sx={{ maxHeight: 440 }}>
-            <Table stickyHeader>
-              <TableHead>
-                <TableRow>
-                  <TableCell padding="checkbox">
-                    <Checkbox
-                      indeterminate={selectedEmployees.size > 0 && selectedEmployees.size < filteredEmployees.length}
-                      checked={filteredEmployees.length > 0 && selectedEmployees.size === filteredEmployees.length}
-                      onChange={selectAllEmployees}
-                    />
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem' }}>Employee Name</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem' }}>Department</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem' }}>Employment Type</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold', fontSize: '1rem' }}>Join Date</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 'bold', fontSize: '1rem' }}>Base Salary</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredEmployees.map((employee) => (
-                  <TableRow
-                    key={employee.id}
-                    hover
-                    selected={selectedEmployees.has(employee.id)}
-                    sx={{ 
-                      '&:last-child td, &:last-child th': { border: 0 },
-                      cursor: 'pointer'
-                    }}
-                    onClick={() => toggleEmployeeSelection(employee.id)}
-                  >
-                    <TableCell padding="checkbox">
-                      <Checkbox
-                        checked={selectedEmployees.has(employee.id)}
-                        onChange={() => toggleEmployeeSelection(employee.id)}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body1" fontWeight="medium">
-                        {employee.name}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2" color="text.secondary">
-                        {employee.department}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      {getEmploymentTypeChip(employee.employmentType)}
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2" color="text.secondary">
-                        {employee.joinDate.toLocaleDateString()}
-                      </Typography>
-                    </TableCell>
-                    <TableCell align="right">
-                      <Typography variant="body1" fontWeight="medium">
-                        ${employee.baseSalary.toLocaleString()}
-                    </Typography>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {filteredEmployees.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
-                      <Typography variant="body1" color="text.secondary">
-                        No employees found matching your criteria
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Paper>
-
-        {/* Action Section */}
-        <Paper sx={{ p: 3 }}>
-          <Grid container spacing={2} alignItems="center" justifyContent="space-between">
-            <Grid item xs={12} md={6}>
-              <Box>
-                <Typography variant="h6" gutterBottom>
-                  Total Selected: <Typography component="span" color="primary.main" fontWeight="bold">
-                    {selectedEmployees.size} employees
-                  </Typography>
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                  Total Amount: <Typography component="span" color="success.main" fontWeight="bold">
-                    ${totalSelectedSalary.toLocaleString()}
-                  </Typography>
-                </Typography>
-              </Box>
-            </Grid>
-            <Grid item xs={12} md={6}>
-              <Box sx={{ display: 'flex', gap: 2, justifyContent: { md: 'flex-end' } }}>
-                <Button
-                  startIcon={isProcessing ? <CircularProgress size={20} /> : <RefreshIcon />}
-                  onClick={runPayroll}
-                  disabled={!isPayrollButtonEnabled}
-                  variant="contained"
-                  size="large"
-                  color="success"
-                  sx={{ minWidth: 200 }}
-                >
-                  {isProcessing ? 'Processing...' : `Run Payroll (${selectedEmployees.size})`}
-                </Button>
-              </Box>
-            </Grid>
-          </Grid>
-        </Paper>
-
-        {/* Results Section */}
-        {payrollResult && (
-          <Alert
-            severity={payrollResult.success ? 'success' : 'error'}
-            sx={{ mt: 3 }}
-            icon={payrollResult.success ? <CheckCircleIcon /> : <ErrorIcon />}
+    <div style={styles.container}>
+      <div style={styles.header}>
+        <h1 style={{margin: 0}}>Payroll Management System</h1>
+        <div>
+          <button 
+            style={{...styles.primaryButton, marginRight: '10px'}}
+            onClick={() => {
+              setActiveTab('new-run');
+              setStep(1);
+            }}
           >
-            <Typography variant="h6" gutterBottom>
-              {payrollResult.success ? 'Payroll Processing Successful' : 'Payroll Processing Failed'}
-            </Typography>
-            <Typography variant="body2" gutterBottom>
-              {payrollResult.message}
-            </Typography>
-            {payrollResult.data && (
-              <Box sx={{ mt: 2 }}>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={4}>
-                    <Typography variant="body2">
-                      <strong>Total Processed:</strong> {payrollResult.data.totalProcessed} employees
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} sm={4}>
-                    <Typography variant="body2">
-                      <strong>Total Amount:</strong> ${payrollResult.data.totalAmount.toLocaleString()}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={12} sm={4}>
-                    <Typography variant="body2">
-                      <strong>Payroll Period:</strong> {payrollResult.data.payrollPeriod}
-                    </Typography>
-                </Grid>
-                </Grid>
-              </Box>
-            )}
-            {payrollResult.error && (
-              <Box sx={{ mt: 1, p: 1, bgcolor: 'error.light', borderRadius: 1 }}>
-                <Typography variant="body2">
-                  <strong>Error:</strong> {payrollResult.error}
-                </Typography>
-              </Box>
-            )}
-          </Alert>
-        )}
-      </Box>
-    </LocalizationProvider>
+            New Payroll Run
+          </button>
+          <button 
+            style={styles.secondaryButton}
+            onClick={() => setActiveTab('history')}
+          >
+            View History
+          </button>
+        </div>
+      </div>
+
+      <div style={styles.tabs}>
+        <button 
+          style={{...styles.tabButton, ...(activeTab === 'new-run' ? styles.activeTab : {})}}
+          onClick={() => setActiveTab('new-run')}
+        >
+          New Payroll Run
+        </button>
+        <button 
+          style={{...styles.tabButton, ...(activeTab === 'history' ? styles.activeTab : {})}}
+          onClick={() => setActiveTab('history')}
+        >
+          Payroll History
+        </button>
+        <button 
+          style={{...styles.tabButton, ...(activeTab === 'reports' ? styles.activeTab : {})}}
+          onClick={() => setActiveTab('reports')}
+        >
+          Reports
+        </button>
+      </div>
+
+      {activeTab === 'new-run' && (
+        <div style={styles.wizard}>
+          <div style={styles.stepper}>
+            {[1, 2, 3, 4].map((stepNum) => (
+              <div 
+                key={stepNum} 
+                style={{
+                  ...styles.step,
+                  ...(step === stepNum ? styles.activeStep : {})
+                }}
+              >
+                <div style={{
+                  ...styles.stepIndicator,
+                  ...(step === stepNum ? styles.activeIndicator : {})
+                }}>
+                  {stepNum}
+                </div>
+                <div>
+                  {stepNum === 1 && 'Select Period'}
+                  {stepNum === 2 && 'Validate'}
+                  {stepNum === 3 && 'Review'}
+                  {stepNum === 4 && 'Results'}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {isProcessing && (
+            <div style={styles.loadingOverlay}>
+              <div style={{textAlign: 'center'}}>
+                <div style={{fontSize: '24px', marginBottom: '10px'}}>⏳</div>
+                <p>Processing...</p>
+              </div>
+            </div>
+          )}
+
+          {step === 1 && <PeriodSelection />}
+          {step === 2 && <DataValidation />}
+          {step === 3 && <PayrollReview />}
+          {step === 4 && <PayrollResults />}
+        </div>
+      )}
+
+      {activeTab === 'history' && <PayrollHistoryView />}
+      
+      {activeTab === 'reports' && (
+        <div style={styles.wizard}>
+          <h3>Payroll Reports</h3>
+          <p>Reports feature coming soon...</p>
+        </div>
+      )}
+
+      {selectedEmployeeDetails && <EmployeeSalaryModal />}
+    </div>
   );
 };
 

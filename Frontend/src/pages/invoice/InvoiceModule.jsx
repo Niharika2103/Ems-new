@@ -264,13 +264,7 @@ const InvoiceModule = () => {
     <Paper sx={{ p: 3 }}>
       <Typography variant="h5">Invoices</Typography>
 
-      <Button
-        variant="contained"
-        sx={{ my: 2 }}
-        onClick={() => setScreen("create")}
-      >
-        + Create Invoice
-      </Button>
+      
 
       <Table>
         <TableHead>

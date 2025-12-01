@@ -77,7 +77,9 @@ import ContractManagement from "../pages/contracter/ContractManagement";
 import AccountsDashboard from "../pages/dashbaord/AccountsDashboard";
 import PayrollSystem from "../pages/Accounts/PayrollSystem";
 import InvoiceModule from "../pages/invoice/InvoiceModule";
-// import EmailTemplateManager from "../pages/EmailTemplateManager";
+import VendorLogin from "../pages/Auth/VendorLogin";
+
+
 
 function AppRoutes() {
   return (
@@ -598,7 +600,8 @@ function AppRoutes() {
        
      {/* <Route path="/email-templates" element={<EmailTemplateManager />} /> */}
 
-      
+      <Route path="/vendor/login" element={<VendorLogin />} />
+
          
       </Route>
 
