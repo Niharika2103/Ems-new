@@ -46,9 +46,18 @@ import {
   AccountBalance,
   CalendarMonth
 } from '@mui/icons-material';
+const getCurrentDate = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 const SalaryStructure = () => {
   const mapBackendToForm = (data) => ({
+
+    
     // Earnings
     basicPay: data.basicPay ?? "",
     houseRentAllowance: data.hra ?? "",
@@ -91,8 +100,8 @@ const SalaryStructure = () => {
     employeeName: '',
     employeeId: '',
     designation: '',
-    dateOfJoining: '',
-    dateOfBirth: '',
+    dateOfJoining: getCurrentDate(),
+    dateOfBirth:  getCurrentDate(),
 
     panNumber: '',
     // aadharNumber: '',
@@ -119,8 +128,8 @@ const SalaryStructure = () => {
     TotalDeductions: '',
     loanDeductions: '',
 
-    effectiveFrom: '',
-    effectiveTo: "",
+    effectiveFrom:  getCurrentDate(),
+    effectiveTo:  getCurrentDate(),
     payableDays: '',
     lossofDaysDays: '',
     lossofpayreversalDays: '',
@@ -156,8 +165,8 @@ const SalaryStructure = () => {
     TotalDeductions: '',
     loanDeductions: '',
 
-    effectiveFrom: "",
-    effectiveTo: "",
+    effectiveFrom: getCurrentDate(),
+    effectiveTo:  getCurrentDate(),
     payableDays: '',
     lossofDaysDays: '',
     lossofpayreversalDays: '',
@@ -241,6 +250,9 @@ const SalaryStructure = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+     if (name === "accountNumber") {
+    if (!/^\d*$/.test(value)) return; // prevents non-digits
+  }
     setFormData(prev => ({
       ...prev,
       [name]: value
