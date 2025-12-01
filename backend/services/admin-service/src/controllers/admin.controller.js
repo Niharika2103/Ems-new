@@ -2768,7 +2768,6 @@ export const getContractById = async (req, res) => {
 //   }
 // };
 
-<<<<<<< HEAD
 /*----------------------------Probation ------------------------------*/
 // get a new employee (who joined within 3 months )
 export const getNewEmployees = async (req, res) => {
@@ -2875,7 +2874,10 @@ export const createProbation = async (req, res) => {
   } catch (err) {
     console.error("Create Probation Error:", err);
     return res.status(500).json({ error: "Failed to assign probation" });
-=======
+    } finally {
+    client.release();
+  }
+};
 //Audit log -logout
 export const adminLogout = async (req, res) => {
   const client = await pool.connect();
@@ -2922,12 +2924,10 @@ export const adminLogout = async (req, res) => {
   } catch (err) {
     console.error("Logout Error:", err.message);
     res.status(500).json({ error: err.message });
->>>>>>> e9ba3d792ec286b01e94aab5b75b17f6e0c8dd03
   } finally {
     client.release();
   }
 };
-<<<<<<< HEAD
 // fecth assigned Probation details
 export const getProbationWithUser = async (req, res) => {
   try {
@@ -2955,9 +2955,6 @@ export const getProbationWithUser = async (req, res) => {
   }
 };
 
-
-=======
-
 export const getAllAdminAuditLogs = async (req, res) => {
   const client = await pool.connect();
   try {
@@ -2982,4 +2979,3 @@ export const getAllAdminAuditLogs = async (req, res) => {
     client.release();
   }
 };
->>>>>>> e9ba3d792ec286b01e94aab5b75b17f6e0c8dd03
