@@ -67,11 +67,11 @@ const EmpInfoDashboard = () => {
     },
     {
       title: "Probation",
-      message: "Track your probation status",
+      message: "Track and manage employee probation periods",
       icon: VerifiedUserIcon,
       iconBg: "bg-yellow-100",
       iconColor: "text-yellow-600",
-      onClick: () => navigate("/probation"),
+      onClick: () => navigate("/dashboard/empinfo/probation"),
     },
     {
       title: "Referrals",

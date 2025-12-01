@@ -36,6 +36,7 @@ import {
   getAllReferralsAdmin,
   getReferralByIdAdmin,
   updateReferralStatusAdmin,
+  createProbation,
 
   // === EXTRA AUDIT LOG CONTROLLERS ===
   adminLogout,
@@ -50,7 +51,9 @@ import {
   getAllContracts,
   getContractsByFreelancer,
   getContractById,
- 
+  //Probation
+  getNewEmployees,
+  getProbationWithUser
 } from "../controllers/admin.controller.js";
 
 // Job post imports
@@ -62,7 +65,8 @@ import {
   getArchivedJobPosts,
   updateJobPost,
   updateJobStatus,
-  getDraftJobPosts
+  getDraftJobPosts,
+ 
 } from "../controllers/jobPost.controller.js";
 
 // Applications
@@ -190,5 +194,13 @@ router.get("/freelancer-contract/all", getAllContracts);
 router.get("/freelancer-contract/freelancer/:freelancer_id", getContractsByFreelancer);
 router.get("/freelancer-contract/:contract_id", getContractById);
 // router.get("/employees/freelancers", getFreelancers);
+/* -----------------------------------------------------------------------------*/
+/*                          Probation                                           */
+/* -----------------------------------------------------------------------------*/
+router.get("/new-employees", getNewEmployees);
+
+router.post("/store-probation", createProbation);
+
+router.get("/probation/user", getProbationWithUser);
 
 export default router;
