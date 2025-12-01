@@ -36,15 +36,12 @@ import {
   getAllReferralsAdmin,
   getReferralByIdAdmin,
   updateReferralStatusAdmin,
-<<<<<<< HEAD
   createProbation,
-=======
 
   // === EXTRA AUDIT LOG CONTROLLERS ===
   adminLogout,
   getAllAdminAuditLogs,
 
->>>>>>> e9ba3d792ec286b01e94aab5b75b17f6e0c8dd03
   // === FREELANCER CONTRACT FUNCTIONS ===
   createFreelancerContract,
   updateContract,
@@ -202,11 +199,8 @@ router.get("/freelancer-contract/:contract_id", getContractById);
 /* -----------------------------------------------------------------------------*/
 router.get("/new-employees", getNewEmployees);
 
-<<<<<<< HEAD
 router.post("/store-probation", createProbation);
 
 router.get("/probation/user", getProbationWithUser);
 
-=======
->>>>>>> e9ba3d792ec286b01e94aab5b75b17f6e0c8dd03
 export default router;
