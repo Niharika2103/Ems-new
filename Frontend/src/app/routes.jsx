@@ -92,6 +92,7 @@ function AppRoutes() {
       <Route path="/superadmin/login" element={<SuperAdminLogin />} />
       <Route path="/superadmin/register" element={<SuperAdminRegister />} />
       <Route path="/login/reset-password" element={<ResetPassword />} />
+      <Route path="/vendor/login" element={<VendorLogin />} />
       <Route path="/vendor/registration" element={<VendorPanel />} />
       <Route path="/dashboard/admin-panel" element={
         <ProtectedRoute allowedRoles={["employee", "admin"]}>
@@ -600,7 +601,7 @@ function AppRoutes() {
        
      {/* <Route path="/email-templates" element={<EmailTemplateManager />} /> */}
 
-      <Route path="/vendor/login" element={<VendorLogin />} />
+      
 
          
       </Route>
