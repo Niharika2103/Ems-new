@@ -80,6 +80,9 @@ import InvoiceModule from "../pages/invoice/InvoiceModule";
 import ContractManager from "../pages/contracter/ContractManagement";
 import ProbationManagementSystem from "../pages/Probation/probation_management";
 // import EmailTemplateManager from "../pages/EmailTemplateManager";
+import VendorLogin from "../pages/Auth/VendorLogin";
+
+
 
 function AppRoutes() {
   return (
@@ -92,6 +95,7 @@ function AppRoutes() {
       <Route path="/superadmin/login" element={<SuperAdminLogin />} />
       <Route path="/superadmin/register" element={<SuperAdminRegister />} />
       <Route path="/login/reset-password" element={<ResetPassword />} />
+      <Route path="/vendor/login" element={<VendorLogin />} />
       <Route path="/vendor/registration" element={<VendorPanel />} />
       <Route path="/dashboard/admin-panel" element={
         <ProtectedRoute allowedRoles={["employee", "admin"]}>
@@ -301,7 +305,7 @@ function AppRoutes() {
         <Route path="/freelancer/contract-manager"
           element={
             <ProtectedRoute allowedRoles={["employee", "admin"]}>
-              <ContractManager />
+              <ContractManagement />
             </ProtectedRoute>
           } />
 

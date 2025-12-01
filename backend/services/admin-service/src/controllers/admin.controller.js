@@ -15,6 +15,7 @@ import { loadTemplate } from "../utils/templateLoader.js";
 
 import puppeteer from "puppeteer";
 
+
 // ✅ Updated table names
 const USER_MASTER_TABLE = "user_employees_master";
 const REGISTRATIONS_TABLE = "registrations";
@@ -358,7 +359,6 @@ export const adminLogin = async (req, res) => {
     const user = userResult.rows[0];
 
     if (!user) return res.status(401).json({ error: "Invalid email or password" });
-
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(401).json({ error: "Invalid password" });
 
@@ -381,13 +381,16 @@ export const adminLogin = async (req, res) => {
     if (!verified) return res.status(401).json({ error: "Invalid OTP" });
 
     const regDataResult = await client.query(
-      `SELECT is_temp_admin, temp_admin_expiry, is_approved FROM ${REGISTRATIONS_TABLE} WHERE user_id=$1`,
+      `SELECT is_temp_admin, temp_admin_expiry, is_approved 
+       FROM ${REGISTRATIONS_TABLE} WHERE user_id=$1`,
       [user.id]
     );
     const regData = regDataResult.rows[0];
 
     if (!regData?.is_approved)
-      return res.status(403).json({ error: "Access denied. Permission not granted by SuperAdmin." });
+      return res.status(403).json({
+        error: "Access denied. Permission not granted by SuperAdmin."
+      });
 
     const isTempAdmin =
       regData.is_temp_admin && new Date(regData.temp_admin_expiry) > new Date();
@@ -399,6 +402,29 @@ export const adminLogin = async (req, res) => {
       is_temp_admin: isTempAdmin,
       name: user.name,
     });
+
+  // AUDIT LOG — LOGIN ENTRY
+await client.query(
+  `
+  INSERT INTO audit_logs (
+    id,
+    super_admin_id,
+    employee_id,
+    created_by,
+    created_at
+  )
+  VALUES (
+    gen_random_uuid(),
+    NULL,
+    $1,
+    'login',
+    NOW()
+  )
+  `,
+  [user.id]
+);
+
+
 
     res.json({
       message: "Admin login successful with MFA",
@@ -412,6 +438,7 @@ export const adminLogin = async (req, res) => {
         is_temp_admin: isTempAdmin,
       },
     });
+
   } catch (err) {
     console.error("Admin Login Error:", err.message);
     res.status(500).json({ error: err.message });
@@ -2735,17 +2762,13 @@ export const getContractById = async (req, res) => {
 //        ORDER BY created_at DESC`
 //     );
 
-//     return res.json({
-//       count: result.rows.length,
-//       freelancers: result.rows
-//     });
-
 //   } catch (err) {
 //     console.error("Get Freelancers Error:", err.message);
 //     return res.status(500).json({ error: "Failed to fetch freelancers" });
 //   }
 // };
 
+<<<<<<< HEAD
 /*----------------------------Probation ------------------------------*/
 // get a new employee (who joined within 3 months )
 export const getNewEmployees = async (req, res) => {
@@ -2852,10 +2875,59 @@ export const createProbation = async (req, res) => {
   } catch (err) {
     console.error("Create Probation Error:", err);
     return res.status(500).json({ error: "Failed to assign probation" });
+=======
+//Audit log -logout
+export const adminLogout = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    // 1️⃣ Decode JWT but ignore expiration so logout still works
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+      return res.status(401).json({ error: "No token provided" });
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET, { ignoreExpiration: true });
+    } catch (err) {
+      return res.status(401).json({ error: "Invalid token" });
+    }
+
+    const employeeId = decoded.id;
+
+    // 2️⃣ Update the LATEST audit log entry (correct PostgreSQL syntax)
+    await client.query(
+      `
+      UPDATE audit_logs
+      SET 
+        updated_by = 'logout',
+        updated_at = NOW()
+      WHERE id = (
+        SELECT id FROM audit_logs
+        WHERE employee_id = $1
+        ORDER BY created_at DESC
+        LIMIT 1
+      )
+      `,
+      [employeeId]
+    );
+
+    // 3️⃣ Response
+    res.json({ message: "Admin logged out successfully" });
+
+  } catch (err) {
+    console.error("Logout Error:", err.message);
+    res.status(500).json({ error: err.message });
+>>>>>>> e9ba3d792ec286b01e94aab5b75b17f6e0c8dd03
   } finally {
     client.release();
   }
 };
+<<<<<<< HEAD
 // fecth assigned Probation details
 export const getProbationWithUser = async (req, res) => {
   try {
@@ -2884,3 +2956,30 @@ export const getProbationWithUser = async (req, res) => {
 };
 
 
+=======
+
+export const getAllAdminAuditLogs = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const result = await client.query(`
+      SELECT
+        id,
+        super_admin_id,
+        employee_id,
+        created_by,
+        updated_by,
+        created_at,
+        updated_at
+      FROM audit_logs
+      ORDER BY created_at DESC
+      LIMIT 1000
+    `);
+    res.json({ success: true, count: result.rowCount, audits: result.rows });
+  } catch (err) {
+    console.error("Fetch audit logs error:", err.message);
+    res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+};
+>>>>>>> e9ba3d792ec286b01e94aab5b75b17f6e0c8dd03
