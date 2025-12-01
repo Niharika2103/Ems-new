@@ -46,6 +46,13 @@ import {
   getAllContracts,
   getContractsByFreelancer,
   getContractById,
+  createInvoice,
+  getAllInvoices,
+  getInvoiceById,
+  updateInvoiceStatus,
+  generateInvoicePDF,
+  sendInvoiceReminder,
+  deleteInvoice
  
 } from "../controllers/admin.controller.js";
 
@@ -171,7 +178,25 @@ router.get("/freelancer-contract/all", getAllContracts);
 router.get("/freelancer-contract/freelancer/:freelancer_id", getContractsByFreelancer);
 router.get("/freelancer-contract/:contract_id", getContractById);
 
-// router.get("/employees/freelancers", getFreelancers);
+router.post("/invoices/create", createInvoice);
+
+// GET ALL INVOICES
+router.get("/invoices/all", getAllInvoices);
+
+// GET SINGLE INVOICE
+router.get("/invoices/:invoice_id", getInvoiceById);
+
+// UPDATE STATUS (pending → approved → paid)
+router.put("/invoices/status/:invoice_id", updateInvoiceStatus);
+
+// GENERATE PDF & RETURN PDF URL
+router.get("/invoices/pdf/:invoice_id", generateInvoicePDF);
+
+// SEND PAYMENT REMINDER EMAIL
+router.post("/invoices/reminder/:invoice_id", sendInvoiceReminder);
+
+// DELETE INVOICE
+router.delete("/invoices/:invoice_id", deleteInvoice);
 
 
 export default router;

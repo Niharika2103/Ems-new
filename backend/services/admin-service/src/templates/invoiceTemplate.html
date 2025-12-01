@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Invoice</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 30px;
+      color: #333;
+    }
+    .header {
+      text-align: center;
+      border-bottom: 2px solid #444;
+      padding-bottom: 10px;
+      margin-bottom: 20px;
+    }
+    .company {
+      font-size: 24px;
+      font-weight: bold;
+    }
+    .invoice-title {
+      font-size: 28px;
+      margin-top: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 25px;
+    }
+    table, th, td {
+      border: 1px solid #888;
+    }
+    th {
+      background-color: #f0f0f0;
+      padding: 10px;
+      text-align: left;
+    }
+    td {
+      padding: 10px;
+    }
+    .total-row {
+      font-weight: bold;
+      background: #f9f9f9;
+    }
+    .footer {
+      margin-top: 30px;
+      text-align: center;
+      font-size: 14px;
+      color: #555;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="header">
+    <div class="company">{{company_name}}</div>
+    <div>{{company_address}}</div>
+    <div>{{company_email}}</div>
+  </div>
+
+  <div class="invoice-title">INVOICE</div>
+
+  <p><strong>Invoice Number:</strong> {{invoice_number}}</p>
+  <p><strong>Invoice Date:</strong> {{invoice_date}}</p>
+  <p><strong>Due Date:</strong> {{due_date}}</p>
+
+  <h3>Bill To:</h3>
+  <p><strong>{{freelancer_name}}</strong><br />
+     {{freelancer_email}}
+  </p>
+
+  <table>
+    <tr>
+      <th>Description</th>
+      <th>Amount (₹)</th>
+    </tr>
+    <tr>
+      <td>Service Charges</td>
+      <td>{{amount}}</td>
+    </tr>
+    <tr>
+      <td>GST (18%)</td>
+      <td>{{tax_amount}}</td>
+    </tr>
+    <tr>
+      <td>TDS (10%)</td>
+      <td>{{tds_amount}}</td>
+    </tr>
+    <tr class="total-row">
+      <td>Net Payable</td>
+      <td>₹{{net_payable}}</td>
+    </tr>
+  </table>
+
+  <div class="footer">
+    This is a computer-generated invoice.  
+    <br />Thank you for your business!
+  </div>
+
+</body>
+</html>
