@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { adminRegisterApi, adminLoginApi, adminVerifyOtpApi, DeleteAdminApi, uploadEmployeeDocumentsApi, getAllReferralsAdminApi, getReferralByIdAdminApi, updateReferralStatusAdminApi, } from "../../api/authApi";
+import { adminRegisterApi, adminLoginApi, fetchNewEmployeeApi,adminVerifyOtpApi, DeleteAdminApi, uploadEmployeeDocumentsApi, getAllReferralsAdminApi, getReferralByIdAdminApi, updateReferralStatusAdminApi, } from "../../api/authApi";
 
 export const adminRegister = createAsyncThunk("admin/register", async (data, thunkAPI) => {
   try {
@@ -91,6 +91,18 @@ export const updateReferralStatusAdmin = createAsyncThunk(
     }
   }
 );
+//fetch
+export const fetchNewEmployees = createAsyncThunk(
+  "admin/fetchNewEmployees",
+  async (_, thunkAPI) => {
+    try {
+      const res = await fetchNewEmployeeApi();
+      return res.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
 
 
 const adminSlice = createSlice({
@@ -101,6 +113,7 @@ const adminSlice = createSlice({
     role: localStorage.getItem("role") || null,
     loading: false,
     error: null,
+    newEmpList:[],
     allReferrals: [],          // for referral list
   selectedReferral: null,    // for detail view
   referralsLoading: false,   // for list/detail loading
@@ -241,8 +254,24 @@ const adminSlice = createSlice({
   state.referralActionLoading = false;
   state.error = action.payload;
 })
+.addCase(fetchNewEmployees.pending, (state) => {
+  state.loading = true;
+  state.error = null;
+})
+.addCase(fetchNewEmployees.fulfilled, (state, action) => {
+  state.newEmpList = action.payload.data || [];   // your API returns data:[...]
+  state.loading = false;
+})
+.addCase(fetchNewEmployees.rejected, (state, action) => {
+  state.loading = false;
+  state.error = action.payload;
+})
+
+
   },
-});
+})
+
+
 
 export const { logout } = adminSlice.actions;
 export default adminSlice.reducer;

@@ -571,3 +571,16 @@ export const fetchAllFreelancerContractsApi = () => {
 export const fetchFreelancerContractByIdApi = (contractId) => {
   return adminClient.get(`/admin/freelancer-contract/${contractId}`);
 };
+//Probation 
+export const fetchNewEmployeeApi =()=>{
+  return adminClient.get(`${AUTH_API.ADMIN}/new-employees`);
+}
+//creating probation 
+export const createProbationPeriodApi =(payload)=>{
+  return adminClient.post(`${AUTH_API.ADMIN}/store-probation`,payload);
+}
+//fetch assign Probation 
+export const fetchassignProbationApi =()=>{
+  return adminClient.get(`${AUTH_API.ADMIN}/probation/user`)
+}
+

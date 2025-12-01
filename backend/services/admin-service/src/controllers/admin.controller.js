@@ -20,6 +20,7 @@ const USER_MASTER_TABLE = "user_employees_master";
 const REGISTRATIONS_TABLE = "registrations";
 const SUPERADMINS_TABLE = "super_admins";
 const REFERRALS_TABLE = "referrals";
+const PROBATION ="probation";
 
 // ================== Multer Config ==================
 const uploadDir = path.join(process.cwd(), "src/uploads");
@@ -2744,3 +2745,142 @@ export const getContractById = async (req, res) => {
 //     return res.status(500).json({ error: "Failed to fetch freelancers" });
 //   }
 // };
+
+/*----------------------------Probation ------------------------------*/
+// get a new employee (who joined within 3 months )
+export const getNewEmployees = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const query = `
+      SELECT id,email, name, department, designation, date_of_joining
+      FROM user_employees_master
+      WHERE date_of_joining >= NOW() - INTERVAL '3 months'
+      ORDER BY date_of_joining DESC
+    `;
+
+    const result = await client.query(query);
+
+    return res.status(200).json({
+      success: true,
+      count: result.rows.length,
+      data: result.rows,
+    });
+
+  } catch (err) {
+    console.error("Error fetching new employees:", err);
+    return res.status(500).json({ message: "Database error" });
+  } finally {
+    client.release();
+  }
+};
+//creating probation period 
+export const createProbation = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const {
+      usermasterid,
+      startDate,
+      endDate,
+      // duration,
+      reportingManager,
+      notes,
+      status = "active",
+    } = req.body;
+
+    // ---------------- VALIDATION ----------------
+    if (!usermasterid) {
+      return res.status(400).json({ error: "Employee (usermasterid) is required" });
+    }
+
+    if (!startDate) {
+      return res.status(400).json({ error: "Start date is required" });
+    }
+
+    if (!endDate) {
+      return res.status(400).json({ error: "End date is required" });
+    }
+
+    if (!reportingManager) {
+      return res.status(400).json({ error: "Reporting Manager is required" });
+    }
+
+    if (notes && notes.length > 300) {
+      return res.status(400).json({ error: "Notes cannot exceed 300 characters" });
+    }
+
+    // ----------------- PROGRESS CALC -----------------
+    // const start = new Date(startDate);
+    // const end = new Date(endDate);
+
+    // const diffDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+
+    // ----------------- INSERT QUERY ------------------
+    const insertQuery = `
+      INSERT INTO probation (
+        usermasterid,
+        startdate,
+        enddate,
+        status,
+        // progress,
+        // daysremaining,
+        manager,
+        notes,
+        createdat,
+        updatedat
+      )
+      VALUES ($1,$2,$3,$4,$5,$6,NOW(),NOW())
+      RETURNING *;
+    `;
+
+    const result = await client.query(insertQuery, [
+     
+       usermasterid,
+  startDate,
+  endDate,
+  status,
+  reportingManager,
+  notes || ""
+    ]);
+
+    return res.status(201).json({
+      message: "Probation assigned successfully",
+      probation: result.rows[0],
+    });
+
+  } catch (err) {
+    console.error("Create Probation Error:", err);
+    return res.status(500).json({ error: "Failed to assign probation" });
+  } finally {
+    client.release();
+  }
+};
+// fecth assigned Probation details
+export const getProbationWithUser = async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        u.id AS user_id,
+        u.name,
+        u.email,
+        u.department,
+        u.designation,
+        p.*
+      FROM ${PROBATION} p
+      JOIN ${USER_MASTER_TABLE} u 
+        ON u.id = p.usermasterid
+      ORDER BY p.probationid DESC
+    `;
+
+    const result = await pool.query(query);
+
+    res.status(200).json(result.rows);
+
+  } catch (error) {
+    console.error("Fetch Error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+
