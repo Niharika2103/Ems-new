@@ -8,7 +8,7 @@ import {
   upload,
   deleteAdmin,
   getAllAdmins,
-  approveAdmin, 
+  approveAdmin,
   grantTempAdminAccess,
   revokeTempAdminAccess,
   listTempAdmins,
@@ -36,6 +36,10 @@ import {
   getAllReferralsAdmin,
   getReferralByIdAdmin,
   updateReferralStatusAdmin,
+
+  // === EXTRA AUDIT LOG CONTROLLERS ===
+  adminLogout,
+  getAllAdminAuditLogs,
 
   // === FREELANCER CONTRACT FUNCTIONS ===
   createFreelancerContract,
@@ -73,12 +77,19 @@ import { uploadResume } from "../middleware/uploadResume.js";
 
 const router = Router();
 
-// ================= Admin Register/Login =================
+/* ================= Admin Register/Login ================= */
 router.post("/register", adminRegister);
 router.post("/verify-mfa", verifyAdminMfaSetup);
 router.post("/login", adminLogin);
 
-// ========== Admin CRUD ==========
+/* ========== AUDIT LOGS ========== */
+router.post("/logout", adminLogout);
+router.get("/audit-logs", getAllAdminAuditLogs);
+
+
+
+
+/* ========== Admin CRUD ========== */
 router.get("/fetchall", getAllAdmins);
 router.put("/status/:id", deleteAdmin);
 router.patch("/approve/:id", approveAdmin);
@@ -88,22 +99,22 @@ router.put(
   "/adminprofile-update/:id",
   upload.fields([
     { name: "profilePhoto", maxCount: 1 },
-    { name: "resume", maxCount: 1 },
+    { name: "resume", maxCount: 1 }
   ]),
   updateAdminProfile
 );
 
-// ========== Temporary Admin Management ==========
+/* ========== Temporary Admin Management ========== */
 router.post("/grant-temp", grantTempAdminAccess);
 router.delete("/revoke-temp/:email", revokeTempAdminAccess);
 router.get("/temp-admins", listTempAdmins);
 
-// Email verification
+/* ========== Email Verification ========== */
 router.post("/send-email-verification", sendEmailVerification);
 router.post("/verify-email", verifyEmail);
 router.post("/promote/:employeeId", promoteEmployee);
 
-// ===== Attendance Approval =====
+/* ========== Attendance Approval ========== */
 router.get("/attendance/pending-weekly", getPendingWeeklyApprovals);
 router.put("/attendance/weekly/approve", updateWeeklyApprovalStatus);
 router.post("/attendance/weekly/reject", rejectWeeklyApproval);
@@ -114,20 +125,17 @@ router.post("/attendance/monthly/reject", rejectMonthlyApproval);
 
 router.put("/attendance/update-worked-hours", adminUpdateWorkedHours);
 
-// Parental leaves
+/* ========== Parental Leaves ========== */
 router.put("/attendance/approve-parental", approveParentalLeave);
 router.get("/attendance/pending-parental", getPendingParentalLeaves);
 
-// Audit logs
-router.get("/audit-logs", getAuditLogs);
-
-// ===== Letters =====
+/* ========== Letters ========== */
 router.post("/letters/generate", generateLetter);
 router.get("/letters/:employeeId", getEmployeeLetters);
 router.delete("/letters/:employeeId/:filename", deleteLetter);
 router.post("/letters/send-email", sendLetterEmail);
 
-// ===== Employee Document Upload =====
+/* ========== Employee Document Upload ========== */
 router.post(
   "/employees/:id/upload-documents",
   documentUpload,
@@ -136,14 +144,17 @@ router.post(
 
 router.get("/employees-with-docs", getAllEmployeesWithDocs);
 router.get("/download/:employeeId/:docType", downloadEmployeeDocument);
-router.get("/download/:employeeId/:docType/:index", downloadEmployeeDocument);
+router.get(
+  "/download/:employeeId/:docType/:index",
+  downloadEmployeeDocument
+);
 
-// ===== Referrals =====
+/* ========== Referrals ========== */
 router.get("/referrals", getAllReferralsAdmin);
 router.get("/referrals/:referral_id", getReferralByIdAdmin);
 router.put("/referrals/status/:id", updateReferralStatusAdmin);
 
-// ================= Job Posting =================
+/* ========== Job Posting ========== */
 router.post("/admin/job-posts", createJobPost);
 router.get("/admin/job-posts", getAdminJobPosts);
 router.get("/jobs", getPublishedJobPosts);
@@ -153,15 +164,13 @@ router.put("/admin/job-posts/:id", updateJobPost);
 router.patch("/admin/job-posts/:id/status", updateJobStatus);
 router.get("/admin/job-posts/draft", getDraftJobPosts);
 
-// ================= Job Applications =================
+/* ========== Job Applications ========== */
 router.post("/applications/apply", uploadResume.single("resume"), applyForJob);
 router.get("/applications/all", getAllApplications);
 router.get("/applications/job/:jobId", getApplicationsByJob);
 router.put("/applications/status/:application_id", updateApplicationStatus);
 
-/* -------------------------------------------------------------------------- */
-/*                       FREELANCER CONTRACT ROUTES                           */
-/* -------------------------------------------------------------------------- */
+/* ========== Freelancer Contract Routes ========== */
 router.post("/freelancer-contract/create", createFreelancerContract);
 router.put("/freelancer-contract/update/:contract_id", updateContract);
 router.patch("/freelancer-contract/cancel/:contract_id", cancelContract);
@@ -172,6 +181,5 @@ router.get("/freelancer-contract/freelancer/:freelancer_id", getContractsByFreel
 router.get("/freelancer-contract/:contract_id", getContractById);
 
 router.get("/employees/freelancers", getFreelancers);
-
 
 export default router;
