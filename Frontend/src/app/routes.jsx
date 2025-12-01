@@ -292,7 +292,7 @@ function AppRoutes() {
         <Route path="/freelancer/contract-manager"
           element={
             <ProtectedRoute allowedRoles={["employee", "admin"]}>
-              <ContractManager />
+              <ContractManagement />
             </ProtectedRoute>
           } />
 
