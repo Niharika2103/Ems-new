@@ -50,7 +50,7 @@ import {
   getAllContracts,
   getContractsByFreelancer,
   getContractById,
-  getFreelancers
+ 
 } from "../controllers/admin.controller.js";
 
 // Job post imports
@@ -70,10 +70,13 @@ import {
   applyForJob,
   getAllApplications,
   updateApplicationStatus,
-  getApplicationsByJob
+  getApplicationsByJob,
+  filterApplications,
+  parseResume
 } from "../controllers/application.controller.js";
 
-import { uploadResume } from "../middleware/uploadResume.js";
+// ❗ Keep disk storage for actual job application resumes
+import { uploadResume, uploadResumeBuffer } from "../middleware/uploadResume.js";
 
 const router = Router();
 
@@ -163,9 +166,16 @@ router.get("/admin/job-posts/archived", getArchivedJobPosts);
 router.put("/admin/job-posts/:id", updateJobPost);
 router.patch("/admin/job-posts/:id/status", updateJobStatus);
 router.get("/admin/job-posts/draft", getDraftJobPosts);
+router.get("/applications/filter", filterApplications);
 
 /* ========== Job Applications ========== */
 router.post("/applications/apply", uploadResume.single("resume"), applyForJob);
+
+// ==================================================
+// ✅ FIXED — AI Resume Parser MUST use memory storage
+// ==================================================
+router.post("/applications/parse-resume", uploadResumeBuffer.single("resume"), parseResume);
+
 router.get("/applications/all", getAllApplications);
 router.get("/applications/job/:jobId", getApplicationsByJob);
 router.put("/applications/status/:application_id", updateApplicationStatus);
@@ -179,7 +189,6 @@ router.patch("/freelancer-contract/renew/:contract_id", renewContract);
 router.get("/freelancer-contract/all", getAllContracts);
 router.get("/freelancer-contract/freelancer/:freelancer_id", getContractsByFreelancer);
 router.get("/freelancer-contract/:contract_id", getContractById);
-
 router.get("/employees/freelancers", getFreelancers);
 
 export default router;

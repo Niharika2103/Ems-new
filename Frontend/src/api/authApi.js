@@ -114,7 +114,6 @@ export const updateJobStatusApi = (id, status) =>
     updated_by: "ADMIN_ID_HERE"
   });
 
-
 // Fetch only published jobs (for employee dashboard)
 export const getPublishedJobPostsApi = () =>
   adminClient.get(`${AUTH_API.ADMIN}/jobs`);
@@ -126,6 +125,15 @@ export const applyForJobApi = (formData) =>
 export const getAllApplicationsApi = () =>
   adminClient.get(`${AUTH_API.ADMIN}/applications/all`);
 
+export const filterApplicationsApi = (filters) =>
+  adminClient.get(`/admin/applications/filter`, {
+    params: filters,
+  });
+
+
+
+
+
 // Update application status
 export const updateApplicationStatusApi = (application_id, status) =>
   adminClient.put(
@@ -133,8 +141,11 @@ export const updateApplicationStatusApi = (application_id, status) =>
     { status }        
   );
 
-
-
+  // ✅ ADDED — Parse Resume API (Do NOT DELETE anything)
+export const parseResumeApi = (formData) =>
+  adminClient.post(`${AUTH_API.ADMIN}/applications/parse-resume`, formData, {
+    headers: { "Content-Type": "multipart/form-data" }
+  });
 
 
 
@@ -536,3 +547,38 @@ export const getReferralByIdAdminApi = (referral_id) =>
 
 export const updateReferralStatusAdminApi = (id, status) =>
   adminClient.put(`${AUTH_API.ADMIN}/referrals/status/${id}`, { status });
+
+
+export const createFreelancerContractApi = (data) => {
+  return adminClient.post(`/admin/freelancer-contract/create`, data);
+};
+
+export const updateFreelancerContractApi = (contractId, data) => {
+  return adminClient.put(`/admin/freelancer-contract/update/${contractId}`, data);
+};
+
+export const cancelFreelancerContractApi = (contractId) => {
+  return adminClient.patch(`/admin/freelancer-contract/cancel/${contractId}`);
+};
+
+export const updateFreelancerContractStatusApi = (contractId, status) => {
+  return adminClient.patch(`/admin/freelancer-contract/status/${contractId}`, { status });
+};
+
+export const renewFreelancerContractApi = (contractId, newEndDate) => {
+  return adminClient.patch(`/admin/freelancer-contract/renew/${contractId}`, {
+    new_end_date: newEndDate
+  });
+};
+
+export const fetchFreelancerContractsApi = (freelancerId) => {
+  return adminClient.get(`/admin/freelancer-contract/freelancer/${freelancerId}`);
+};
+
+export const fetchAllFreelancerContractsApi = () => {
+  return adminClient.get(`/admin/freelancer-contract/all`);
+};
+
+export const fetchFreelancerContractByIdApi = (contractId) => {
+  return adminClient.get(`/admin/freelancer-contract/${contractId}`);
+};

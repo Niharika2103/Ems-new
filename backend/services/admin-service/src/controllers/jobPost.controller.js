@@ -223,3 +223,61 @@ export const getDraftJobPosts = async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
+export const filterApplications = async (req, res) => {
+  try {
+    const {
+      status,
+      skills,
+      experience,
+      location,
+      startDate,
+      endDate
+    } = req.query;
+
+    let query = `
+      SELECT a.*, j.job_title, j.location, j.experience, j.skills
+      FROM applications a
+      JOIN job_posts j ON a.job_id = j.id
+      WHERE 1 = 1
+    `;
+
+    let values = [];
+    let i = 1;
+
+    if (status) {
+      query += ` AND a.status = $${i++}`;
+      values.push(status);
+    }
+
+    if (skills) {
+      query += ` AND j.skills ILIKE $${i++}`;
+      values.push(`%${skills}%`);
+    }
+
+    if (experience) {
+      query += ` AND j.experience = $${i++}`;
+      values.push(experience);
+    }
+
+    if (location) {
+      query += ` AND j.location ILIKE $${i++}`;
+      values.push(`%${location}%`);
+    }
+
+    if (startDate && endDate) {
+      query += ` AND a.applied_on BETWEEN $${i++} AND $${i++}`;
+      values.push(startDate, endDate);
+    }
+
+    const result = await pool.query(query, values);
+
+    res.status(200).json({
+      success: true,
+      applications: result.rows,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+

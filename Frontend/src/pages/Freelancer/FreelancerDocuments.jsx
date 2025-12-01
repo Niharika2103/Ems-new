@@ -11,6 +11,8 @@ import {
   TextField,
 } from "@mui/material";
 
+import { uploadFreelancerDocsApi } from "../../api/authApi";
+import { decodeToken } from "../../api/decodeToekn"; // 
 // UPDATED STEPS
 const steps = [
   "Profile Photo Upload",
@@ -37,6 +39,10 @@ const FreelancerDocuments = () => {
     gstReturns: null,
   });
 
+    //  // ✅ Get employeeId from decoded JWT token
+  const decoded = decodeToken();
+  const employeeId = decoded?.id; 
+
   const handleNext = () => {
     if (activeStep < steps.length - 1) setActiveStep((prev) => prev + 1);
   };
@@ -45,25 +51,74 @@ const FreelancerDocuments = () => {
     if (activeStep > 0) setActiveStep((prev) => prev - 1);
   };
 
+  // const handleFileChange = (e, key) => {
+  //   const files = e.target.files;
+  //   if (files) {
+  //     setFormData({
+  //       ...formData,
+  //       [key]: files.length > 1 ? Array.from(files) : files[0],
+  //     });
+  //   }
+  // };
+
   const handleFileChange = (e, key) => {
-    const files = e.target.files;
-    if (files) {
-      setFormData({
-        ...formData,
-        [key]: files.length > 1 ? Array.from(files) : files[0],
-      });
-    }
-  };
+  const files = e.target.files;
+  if (!files) return;
+
+  // ✅ Fix ONLY for GST Returns (must always be an array)
+  if (key === "gstReturns") {
+    setFormData({
+      ...formData,
+      gstReturns: Array.from(files), // ALWAYS array
+    });
+    return;
+  }
+
+  // ✅ All other file fields
+  setFormData({
+    ...formData,
+    [key]: files.length > 1 ? Array.from(files) : files[0],
+  });
+};
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = () => {
-    alert("All documents submitted successfully!");
-    console.log(formData);
+// ✅ Handle submit with employeeId check
+  const handleSubmit = async () => {
+  if (!employeeId) {
+    console.error("❌ Employee ID not found. Cannot submit documents.");
+    return;
+  }
+
+  // Use correct keys from formData
+  console.log("Profile Photo:", formData.profilePhoto);
+  console.log("Is File?", formData.profilePhoto instanceof File);
+
+  const payload = {
+    id: employeeId,
+    gstNumber: formData.gstNumber,
+    bankPassbook: formData.bankPassbook,
+    aadhaarCard: formData.aadhaarCard,
+    panCard: formData.panCard,
+    photo: formData.profilePhoto, // <-- use profilePhoto here
+    gstCertificate: formData.gstCertificate,
+    gstReturns: formData.gstReturns,
+    freelancerDocument: formData.freelancerDocument, // if your backend expects this
   };
+
+  try {
+    const response = await uploadFreelancerDocsApi(payload);
+    console.log("UPLOAD SUCCESS", response.data);
+  } catch (error) {
+    console.log("UPLOAD ERROR", error);
+  }
+};
+
+
 
   // FILE REQUIREMENTS
   const fileRequirements = {

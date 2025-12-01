@@ -16,7 +16,7 @@ const Header = ({ isOpen, setIsOpen }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [email, setEmail] = useState(null);
   const [emp, setEmp] = useState([])
- const [data, setData] = useState([]);
+  const [data, setData] = useState([]);
   const roleCheck =
     useSelector((state) => state.adminSlice?.role) ||
     useSelector((state) => state.authSlice?.role) ||
@@ -27,16 +27,16 @@ const Header = ({ isOpen, setIsOpen }) => {
 
   useEffect(() => {
     const getDecoded = async () => {
-    try {
-      const decoded = await decodeToken();
-      setData(decoded);
-    } catch (error) {
-      console.error("Error decoding token:", error);
-    }
-  };
+      try {
+        const decoded = await decodeToken();
+        setData(decoded);
+      } catch (error) {
+        console.error("Error decoding token:", error);
+      }
+    };
 
-  getDecoded();
-        
+    getDecoded();
+
     const employee = JSON.parse(localStorage.getItem("user"));
     setEmp(employee)
     if (employee) {
@@ -55,21 +55,21 @@ const Header = ({ isOpen, setIsOpen }) => {
     setAnchorEl(null);
   };
   const handleProfile = () => {
-     if (roleCheck === "employee") {
-    navigate("/dashboard/employeeinfo/employeeprofile");
-     }else{
+    if (roleCheck === "employee") {
+      navigate("/dashboard/employeeinfo/employeeprofile");
+    } else {
       navigate("/profile");
-     }
+    }
     handleClose();
   };
   const handlePassword = () => {
-    handleLoginSubmit(); 
+    handleLoginSubmit();
     navigate("/login/reset-password");
     localStorage.removeItem("token");
     localStorage.removeItem("role");
     localStorage.removeItem("user");
     handleClose();
-     
+
   };
 
   const handleLoginSubmit = () => {
@@ -83,25 +83,24 @@ const Header = ({ isOpen, setIsOpen }) => {
   };
   const Logout = () => {
     localStorage.clear();
+    if (roleCheck === "admin") {
+      window.location.replace("/#/admin/login");
+    } else if (roleCheck === "superadmin") {
+      window.location.replace("/#/superadmin/login");
+    } else if (roleCheck === "employee") {
+      window.location.replace("/#/login");
+    } else {
+      //  If no role exists → go to main landing page
+      window.location.href("/#/");
+    }
 
-     if (roleCheck === "admin") {
-    window.location.replace("/#/admin/login");
-  } else if (roleCheck === "superadmin") {
-    window.location.replace("/#/superadmin/login");
-  } else if (role === "employee") {
-    window.location.replace("/#/login");
-  } else {
-    //  If no role exists → go to main landing page
-    window.location.href("/#/");
-  }
-   
     setTimeout(() => {
       window.history.pushState(null, "", window.location.href);
       window.onpopstate = () => {
-        window.history.go(1); 
+        window.history.go(1);
       };
     }, 0);
-     handleClose();
+    handleClose();
   };
 
   return (

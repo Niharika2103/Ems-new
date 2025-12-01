@@ -19,6 +19,7 @@ import { LocationOn, AttachMoney } from "@mui/icons-material";
 import {
   getPublishedJobPostsApi,
   applyForJobApi,
+  parseResumeApi, // parse-resume API from backend
 } from "../../api/authApi";
 
 // ================= JOB CARD =================
@@ -79,10 +80,13 @@ const JobPost = () => {
   const [dateFilter, setDateFilter] = useState("all");
   const [minSalary, setMinSalary] = useState(0);
 
+  // formData includes skills and experience now
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
     phone: "",
+    skills: "",
+    experience: "",
     resume: null,
   });
 
@@ -91,13 +95,16 @@ const JobPost = () => {
     loadPublishedJobs();
   }, []);
 
+  const loadPublishedJobPosts = async () => {
+    loadPublishedJobs();
+  };
+
   const loadPublishedJobs = async () => {
     try {
       const res = await getPublishedJobPostsApi();
       const jobList = res.data.jobs || [];
 
       const formatted = jobList.map((job) => {
-        // ===== Salary Parsing =====
         let salaryMin = 0,
           salaryMax = 0;
 
@@ -107,7 +114,6 @@ const JobPost = () => {
           salaryMax = Number(parts[1].replace(/\D/g, "")) * 100000;
         }
 
-        // ===== Posted days ago =====
         const postedDate = new Date(job.posted_date);
         const today = new Date();
         const diffDays = Math.floor(
@@ -148,20 +154,64 @@ const JobPost = () => {
     return true;
   });
 
-  // ================= APPLY FORM =================
+  // ================= APPLY FORM INPUT CHANGE =================
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-    setFormData({ ...formData, [name]: files ? files[0] : value });
+    setFormData((prev) => ({
+      ...prev,
+      [name]: files ? files[0] : value,
+    }));
   };
 
+  // ================= RESUME PARSE (AUTO FILL) =================
+  const handleResumeUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const fd = new FormData();
+    fd.append("resume", file);
+
+    try {
+      const res = await parseResumeApi(fd);
+      const data = res?.data?.data || {};
+
+      console.log("🔥 Auto-filled Data from Resume:", data);
+
+      setFormData((prev) => ({
+        ...prev,
+        fullName: data.name || prev.fullName,
+        email: data.email || prev.email,
+        phone: data.phone || prev.phone,
+        skills: data.skills || prev.skills,
+        experience: data.experience || prev.experience,
+        resume: file,
+      }));
+    } catch (err) {
+      console.error("Resume parse failed", err);
+
+      setFormData((prev) => ({
+        ...prev,
+        resume: file,
+      }));
+    }
+  };
+
+  // ================= APPLY SUBMIT =================
   const handleApplySubmit = async (e) => {
     e.preventDefault();
+
+    if (!selectedJob) {
+      alert("Please select a job before applying.");
+      return;
+    }
 
     const fd = new FormData();
     fd.append("job_id", selectedJob.job_id);
     fd.append("candidate_name", formData.fullName);
     fd.append("email", formData.email);
     fd.append("phone", formData.phone);
+    fd.append("skills", formData.skills);
+    fd.append("experience", formData.experience);
     fd.append("resume", formData.resume);
 
     try {
@@ -169,7 +219,17 @@ const JobPost = () => {
       alert("Application submitted successfully!");
       setApplyOpen(false);
       setOpen(false);
+
+      setFormData({
+        fullName: "",
+        email: "",
+        phone: "",
+        skills: "",
+        experience: "",
+        resume: null,
+      });
     } catch (err) {
+      console.error("Apply error", err);
       alert("Failed to submit application");
     }
   };
@@ -258,7 +318,15 @@ const JobPost = () => {
           </Typography>
 
           {filteredJobs.map((job) => (
-            <JobCard key={job.id} job={job} onClick={() => setOpen(true) || setSelectedJob(job)} />
+            <JobCard
+              key={job.id}
+              job={job}
+              onClick={() => {
+                setSelectedJob(job);
+                setApplyOpen(false);
+                setOpen(true);
+              }}
+            />
           ))}
 
           {filteredJobs.length === 0 && (
@@ -315,7 +383,10 @@ const JobPost = () => {
                 fullWidth
                 variant="contained"
                 sx={{ mt: 3 }}
-                onClick={() => setApplyOpen(true)}
+                onClick={() => {
+                  setApplyOpen(true);
+                  setOpen(false);
+                }}
               >
                 Apply Now
               </Button>
@@ -351,6 +422,7 @@ const JobPost = () => {
                   fullWidth
                   required
                   onChange={handleChange}
+                  value={formData.fullName}
                 />
               </Grid>
 
@@ -362,6 +434,7 @@ const JobPost = () => {
                   fullWidth
                   required
                   onChange={handleChange}
+                  value={formData.email}
                 />
               </Grid>
 
@@ -372,9 +445,33 @@ const JobPost = () => {
                   fullWidth
                   required
                   onChange={handleChange}
+                  value={formData.phone}
                 />
               </Grid>
 
+              {/* SKILLS */}
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Skills"
+                  name="skills"
+                  fullWidth
+                  onChange={handleChange}
+                  value={formData.skills}
+                />
+              </Grid>
+
+              {/* EXPERIENCE */}
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  label="Experience (years)"
+                  name="experience"
+                  fullWidth
+                  onChange={handleChange}
+                  value={formData.experience}
+                />
+              </Grid>
+
+              {/* RESUME UPLOAD (AUTO PARSE) */}
               <Grid item xs={12} sm={6}>
                 <FormLabel>Resume *</FormLabel>
                 <TextField
@@ -383,12 +480,17 @@ const JobPost = () => {
                   fullWidth
                   required
                   inputProps={{ accept: ".pdf,.doc,.docx" }}
-                  onChange={handleChange}
+                  onChange={handleResumeUpload}
                 />
               </Grid>
 
               <Grid item xs={12}>
-                <Button type="submit" fullWidth variant="contained" sx={{ py: 1.5 }}>
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  sx={{ py: 1.5 }}
+                >
                   Submit Application
                 </Button>
               </Grid>

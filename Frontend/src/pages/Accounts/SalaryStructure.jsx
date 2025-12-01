@@ -241,6 +241,9 @@ const SalaryStructure = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+     if (name === "accountNumber") {
+    if (!/^\d*$/.test(value)) return; // prevents non-digits
+  }
     setFormData(prev => ({
       ...prev,
       [name]: value

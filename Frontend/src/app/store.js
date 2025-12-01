@@ -8,7 +8,7 @@ import projectSlice from "../features/Project/projectsSlice";
 import attendanceSlice from '../features/attendance/attendanceSlice';
 import freelancerSlice from '../features/freelancer/freelancerSlice';
 import salarystructureSlice from "../features/Salarystructure/salaryStructureSlice";
-
+import formReducer from "../features/vendor/formSlice"
 export const store = configureStore({
   reducer: {
     employeeDetails: employeesReducer,
@@ -20,5 +20,6 @@ export const store = configureStore({
     attendance:attendanceSlice,
     freelancerInfo:freelancerSlice,
     salaryInfo:salarystructureSlice,
+    form: formReducer
   },
 });

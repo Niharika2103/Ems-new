@@ -385,9 +385,7 @@ const PanelManagement = () => {
           <Button variant="outlined" startIcon={<GroupIcon />} onClick={handleCreatePanel}>
             Create Panel
           </Button>
-          <Button variant="contained" startIcon={<ScheduleIcon />} onClick={handleScheduleInterview}>
-            Schedule Interview
-          </Button>
+         
         </Box>
       </Box>
 
@@ -395,7 +393,7 @@ const PanelManagement = () => {
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
         <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)}>
           <Tab icon={<GroupIcon />} label="Interview Panels" />
-          <Tab icon={<CalendarIcon />} label="Scheduled Interviews" />
+          {/* <Tab icon={<CalendarIcon />} label="Scheduled Interviews" /> */}
         </Tabs>
       </Box>
 

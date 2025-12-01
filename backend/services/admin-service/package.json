@@ -15,14 +15,17 @@
     "@supabase/supabase-js": "^2.57.0",
     "axios": "^1.13.2",
     "bcryptjs": "^3.0.2",
-    "dotenv": "^17.2.2",
+    "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
+    "mammoth": "^1.11.0",
     "multer": "^2.0.2",
+    "pdf-parse": "^1.1.1",
     "pg": "^8.16.3",
     "puppeteer": "^24.30.0",
     "qrcode": "^1.5.4",
-    "speakeasy": "^2.0.0"
+    "speakeasy": "^2.0.0",
+    "textract": "^2.5.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
