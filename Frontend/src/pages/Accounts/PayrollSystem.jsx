@@ -827,21 +827,7 @@ const PayrollSystem = () => {
       <div style={styles.header}>
         <h1 style={{margin: 0}}>Payroll Management System</h1>
         <div>
-          <button 
-            style={{...styles.primaryButton, marginRight: '10px'}}
-            onClick={() => {
-              setActiveTab('new-run');
-              setStep(1);
-            }}
-          >
-            New Payroll Run
-          </button>
-          <button 
-            style={styles.secondaryButton}
-            onClick={() => setActiveTab('history')}
-          >
-            View History
-          </button>
+          
         </div>
       </div>
 

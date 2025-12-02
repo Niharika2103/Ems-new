@@ -116,8 +116,8 @@ export default function ApplicationTrackingTable() {
   const [scheduleTab, setScheduleTab] = useState(0);
 
   // Interview scheduling form
-  const [interviewDate, setInterviewDate] = useState(null);
-  const [interviewTime, setInterviewTime] = useState(null);
+  const [interviewDate, setInterviewDate] = useState(new Date());
+  const [interviewTime, setInterviewTime] = useState(new Date());
   const [interviewType, setInterviewType] = useState("");
   const [interviewer, setInterviewer] = useState("");
   const [meetingLink, setMeetingLink] = useState("");
@@ -161,8 +161,9 @@ export default function ApplicationTrackingTable() {
       skills: "",
       experience: "",
       location: "",
-      startDate: "",
-      endDate: "",
+     startDate: new Date().toISOString().split("T")[0],
+endDate: new Date().toISOString().split("T")[0],
+
     });
 
     try {
@@ -252,8 +253,8 @@ export default function ApplicationTrackingTable() {
     setSelectedRow(row);
     setScheduleDialogOpen(true);
     setScheduleTab(0);
-    setInterviewDate(null);
-    setInterviewTime(null);
+    setInterviewDate(new Date());
+    setInterviewTime(new Date());
     setInterviewType("");
     setInterviewer("");
     setMeetingLink("");
