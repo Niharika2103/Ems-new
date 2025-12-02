@@ -1706,7 +1706,8 @@ const templateFileMap = {
   "Salary Increment Letter": "salaryIncrementLetter.html",
   "Warning Letter": "warningLetter.html",
   "freelancer contract":"freelancerContract.html" ,
-  "invoice template":"invoiceTemplate.html"
+  "invoice Template":"invoiceTemplate.html",
+
 };
 
 // Replace {{placeholders}}
@@ -3036,7 +3037,8 @@ export const generateInvoicePDF = async (req, res) => {
     const invoice = rows[0];
 
     // Load template
-    const templatePath = path.join(process.cwd(), "templates/invoiceTemplate.html");
+    const templatePath = path.join(process.cwd(), "src/templates/invoiceTemplate.html");
+
     let html = fs.readFileSync(templatePath, "utf-8");
 
     html = html
@@ -3143,9 +3145,6 @@ export const deleteInvoice = async (req, res) => {
   } catch (err) {
     console.error("Delete Invoice Error:", err);
     res.status(500).json({ error: "Failed to delete invoice" });
-  } catch (err) {
-    console.error("Get Freelancers Error:", err.message);
-    return res.status(500).json({ error: "Failed to fetch freelancers" });
   }
 };
 

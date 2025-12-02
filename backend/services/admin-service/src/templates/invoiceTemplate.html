@@ -6,98 +6,75 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 30px;
+      padding: 40px;
       color: #333;
     }
-    .header {
+    .invoice-box {
+      width: 100%;
+      border: 1px solid #ddd;
+      padding: 20px;
+    }
+    h2 {
       text-align: center;
-      border-bottom: 2px solid #444;
-      padding-bottom: 10px;
       margin-bottom: 20px;
-    }
-    .company {
-      font-size: 24px;
-      font-weight: bold;
-    }
-    .invoice-title {
-      font-size: 28px;
-      margin-top: 20px;
     }
     table {
       width: 100%;
+      margin-top: 15px;
       border-collapse: collapse;
-      margin-top: 25px;
     }
-    table, th, td {
-      border: 1px solid #888;
+    table td {
+      padding: 8px;
+      vertical-align: top;
     }
-    th {
-      background-color: #f0f0f0;
-      padding: 10px;
-      text-align: left;
+    .border {
+      border: 1px solid #ddd;
     }
-    td {
-      padding: 10px;
-    }
-    .total-row {
-      font-weight: bold;
-      background: #f9f9f9;
-    }
-    .footer {
-      margin-top: 30px;
-      text-align: center;
-      font-size: 14px;
-      color: #555;
+    .right {
+      text-align: right;
     }
   </style>
 </head>
 
 <body>
+  <div class="invoice-box">
+    <h2>Invoice</h2>
 
-  <div class="header">
-    <div class="company">{{company_name}}</div>
-    <div>{{company_address}}</div>
-    <div>{{company_email}}</div>
+    <p><strong>Company:</strong> {{company_name}}</p>
+    <p><strong>Address:</strong> {{company_address}}</p>
+    <p><strong>Email:</strong> {{company_email}}</p>
+
+    <hr />
+
+    <p><strong>Invoice Number:</strong> {{invoice_number}}</p>
+    <p><strong>Invoice Date:</strong> {{invoice_date}}</p>
+    <p><strong>Due Date:</strong> {{due_date}}</p>
+
+    <hr />
+
+    <p><strong>Freelancer Name:</strong> {{freelancer_name}}</p>
+    <p><strong>Freelancer Email:</strong> {{freelancer_email}}</p>
+
+    <hr />
+
+    <table class="border">
+      <tr class="border">
+        <td><strong>Amount:</strong></td>
+        <td class="right">₹{{amount}}</td>
+      </tr>
+      <tr class="border">
+        <td><strong>GST (18%):</strong></td>
+        <td class="right">₹{{tax_amount}}</td>
+      </tr>
+      <tr class="border">
+        <td><strong>TDS (10%):</strong></td>
+        <td class="right">-₹{{tds_amount}}</td>
+      </tr>
+      <tr class="border">
+        <td><strong>Net Payable:</strong></td>
+        <td class="right"><strong>₹{{net_payable}}</strong></td>
+      </tr>
+    </table>
   </div>
-
-  <div class="invoice-title">INVOICE</div>
-
-  <p><strong>Invoice Number:</strong> {{invoice_number}}</p>
-  <p><strong>Invoice Date:</strong> {{invoice_date}}</p>
-  <p><strong>Due Date:</strong> {{due_date}}</p>
-
-  <h3>Bill To:</h3>
-  <p><strong>{{freelancer_name}}</strong><br />
-     {{freelancer_email}}
-  </p>
-
-  <table>
-    <tr>
-      <th>Description</th>
-      <th>Amount (₹)</th>
-    </tr>
-    <tr>
-      <td>Service Charges</td>
-      <td>{{amount}}</td>
-    </tr>
-    <tr>
-      <td>GST (18%)</td>
-      <td>{{tax_amount}}</td>
-    </tr>
-    <tr>
-      <td>TDS (10%)</td>
-      <td>{{tds_amount}}</td>
-    </tr>
-    <tr class="total-row">
-      <td>Net Payable</td>
-      <td>₹{{net_payable}}</td>
-    </tr>
-  </table>
-
-  <div class="footer">
-    This is a computer-generated invoice.  
-    <br />Thank you for your business!
-  </div>
-
 </body>
 </html>
