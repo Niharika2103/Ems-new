@@ -28,5 +28,5 @@ pool.on("connect", () => {
 pool.on("error", (err) => {
   console.error("❌ Unexpected error on idle PostgreSQL client", err);
   process.exit(-1);
-});
+});  
 export default pool;

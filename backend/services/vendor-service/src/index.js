@@ -29,4 +29,4 @@ app.use("/vendor", vendorRoutes);
 })();
 
 const PORT = process.env.PORT || 5010;
-app.listen(PORT, () => console.log(`Auth service running on port ${PORT}`));
+app.listen(PORT, () => console.log(`vendor service running on port ${PORT}`));
