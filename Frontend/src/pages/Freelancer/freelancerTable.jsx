@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Table, Button, Space, Popconfirm, Input, DatePicker } from "antd";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom"; // Added import
 import {
   deleteEmployee,
   fetchAllEmployees,
@@ -27,11 +28,12 @@ import {
 import { fetchAllFreelancer } from "../../features/freelancer/freelancerSlice";
 import { decodeToken } from "../../api/decodeToekn";
 import { validateEmployeeEdit } from "../../utils/validation";
-import { createFreelancerContractApi } from "../../api/authApi";
+import { createFreelancerContractApi,createInvoiceApi, fetchFreelancerContractsApi } from "../../api/authApi";
 const { Search } = Input;
 
 export default function FreelancerTable() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
@@ -43,13 +45,22 @@ export default function FreelancerTable() {
   const [contractForm, setContractForm] = useState({
     contract_title: "",
     start_date: moment(),
-    end_date:moment(),
+    end_date: moment(),
     payment_type: "",
     payment_amount: "",
     payment_terms: "",
     scope_of_work: ""
   });
 
+  // Invoice states
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
+  const [selectedFreelancerForInvoice, setSelectedFreelancerForInvoice] = useState(null);
+  const [invoiceForm, setInvoiceForm] = useState({
+    amount: "",
+    invoice_date: moment(),
+    due_date: moment().add(7, 'days'),
+  });
+const [selectedFreelancerContracts, setSelectedFreelancerContracts] = useState([]);
   const freelancers = useSelector(
     (state) => state.freelancerInfo.freelancerlist
   );
@@ -176,39 +187,104 @@ export default function FreelancerTable() {
     }));
   };
 
+  const handleContractSubmit = async (e) => {
+    e.preventDefault();
+
+    const startDateStr = contractForm.start_date ? contractForm.start_date.format('YYYY-MM-DD') : "";
+    const endDateStr = contractForm.end_date ? contractForm.end_date.format('YYYY-MM-DD') : "";
+
+    if (!contractForm.contract_title || !startDateStr || !endDateStr || !contractForm.payment_type || !contractForm.payment_amount) {
+      toast.error("Please fill all required fields");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const contractData = {
+        freelancer_id: selectedFreelancer.id,
+        contract_title: contractForm.contract_title,
+        contract_start_date: startDateStr,
+        contract_end_date: endDateStr,
+        payment_type: contractForm.payment_type,
+        payment_amount: contractForm.payment_amount,
+        payment_terms: contractForm.payment_terms,
+        scope_of_work: contractForm.scope_of_work
+      };
+
+      const response = await createFreelancerContractApi(contractData);
+
+      toast.success("Contract created successfully!");
+      setIsContractModalOpen(false);
+
+    } catch (error) {
+      toast.error(error?.response?.data?.error || "Failed to create contract");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Invoice Handlers
+ const handleCreateInvoice = async (record) => {
+  setSelectedFreelancerForInvoice(record);
+
+  // Fetch contracts for that freelancer
+  const res = await fetchFreelancerContractsApi(record.id);
+  setSelectedFreelancerContracts(res.data);
+
+  setInvoiceForm({
+    amount: "",
+    contract_id: "",
+    invoice_date: moment(),
+    due_date: moment().add(7, "days"),
+  });
+
+  setIsInvoiceModalOpen(true);
+};
 
 
-const handleContractSubmit = async (e) => {
+  const handleInvoiceChange = (name, value) => {
+    setInvoiceForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleInvoiceDateChange = (name, date) => {
+    setInvoiceForm(prev => ({
+      ...prev,
+      [name]: date
+    }));
+  };
+const handleInvoiceSubmit = async (e) => {
   e.preventDefault();
 
-  const startDateStr = contractForm.start_date ? contractForm.start_date.format('YYYY-MM-DD') : "";
-  const endDateStr = contractForm.end_date ? contractForm.end_date.format('YYYY-MM-DD') : "";
+  const invoiceDateStr = invoiceForm.invoice_date?.format("YYYY-MM-DD");
+  const dueDateStr = invoiceForm.due_date?.format("YYYY-MM-DD");
 
-  if (!contractForm.contract_title || !startDateStr || !endDateStr || !contractForm.payment_type || !contractForm.payment_amount) {
+  if (!invoiceForm.amount || !invoiceDateStr || !dueDateStr) {
     toast.error("Please fill all required fields");
     return;
   }
 
   setLoading(true);
+
   try {
-    const contractData = {
-      freelancer_id: selectedFreelancer.id,
-      contract_title: contractForm.contract_title,
-      contract_start_date: startDateStr,
-      contract_end_date: endDateStr,
-      payment_type: contractForm.payment_type,
-      payment_amount: contractForm.payment_amount,
-      payment_terms: contractForm.payment_terms,
-      scope_of_work: contractForm.scope_of_work
+    const payload = {
+      freelancer_id: selectedFreelancerForInvoice.id,
+      contract_id: invoiceForm.contract_id || null,
+      amount: Number(invoiceForm.amount),
+      invoice_date: invoiceDateStr,
+      due_date: dueDateStr,
+      created_by: "ADMIN",
     };
 
-    const response = await createFreelancerContractApi(contractData);
+    await createInvoiceApi(payload);
 
-    toast.success("Contract created successfully!");
-    setIsContractModalOpen(false);
-
+    toast.success("Invoice created successfully!");
+    setIsInvoiceModalOpen(false);
+    navigate("/invoices");
   } catch (error) {
-    toast.error(error?.response?.data?.error || "Failed to create contract");
+    toast.error(error?.response?.data?.error || "Failed to create invoice");
   } finally {
     setLoading(false);
   }
@@ -243,21 +319,15 @@ const handleContractSubmit = async (e) => {
       key: "department",
     },
     {
-      title: "Request",
-      dataIndex: "request",
-      key: "request",
-      filters: [
-        { text: "Pending", value: "Pending" },
-        { text: "Approved", value: "Approved" },
-      ],
-      onFilter: (value, record) => record.request?.includes(value),
-      render: (status, record) => (
+      title: "Actions",
+      key: "actions",
+      render: (_, record) => (
         <Space>
           <Button type="default" onClick={() => handleEdit(record)}>
             Edit
           </Button>
 
-          {/* Create Contract Button - Show only for active freelancers */}
+          {/* Create Contract Button */}
           {record.is_active && (
             <Button 
               type="primary" 
@@ -265,6 +335,17 @@ const handleContractSubmit = async (e) => {
               style={{ background: "#52c41a", borderColor: "#52c41a" }}
             >
               Create Contract
+            </Button>
+          )}
+
+          {/* Create Invoice Button */}
+          {record.is_active && (
+            <Button 
+              type="primary" 
+              onClick={() => handleCreateInvoice(record)}
+              style={{ background: "#1890ff", borderColor: "#1890ff" }}
+            >
+              Create Invoice
             </Button>
           )}
 
@@ -638,6 +719,93 @@ const handleContractSubmit = async (e) => {
                   style={{ marginTop: "10px" }}
                 >
                   Create Contract
+                </Button>
+              </Grid>
+            </Grid>
+          </Box>
+        </Box>
+      </ReusableModal>
+
+      {/* INVOICE CREATION MODAL */}
+      <ReusableModal
+        open={isInvoiceModalOpen}
+        onClose={() => setIsInvoiceModalOpen(false)}
+        title={`Create Invoice for ${selectedFreelancerForInvoice?.name}`}
+        width={500}
+      >
+        <Box sx={{ padding: 2 }}>
+          <Box
+            component="form"
+            onSubmit={handleInvoiceSubmit}
+            sx={{ background: "white", padding: "24px", borderRadius: "12px" }}
+          >
+
+            <Grid item xs={12}>
+  <TextField
+    select
+    label="Select Contract"
+    fullWidth
+    size="small"
+    value={invoiceForm.contract_id}
+    onChange={(e) => handleInvoiceChange("contract_id", e.target.value)}
+    required
+  >
+    {selectedFreelancerContracts.map((contract) => (
+      <MenuItem key={contract.id} value={contract.id}>
+        {contract.contract_title} – ₹{contract.payment_amount}
+      </MenuItem>
+    ))}
+  </TextField>
+</Grid>
+
+            <Grid container spacing={2}>
+              {/* Invoice Amount */}
+              <Grid item xs={12}>
+                <TextField
+                  label="Invoice Amount *"
+                  name="amount"
+                  type="number"
+                  value={invoiceForm.amount}
+                  onChange={(e) => handleInvoiceChange("amount", e.target.value)}
+                  fullWidth
+                  size="small"
+                  required
+                  placeholder="Enter amount"
+                />
+              </Grid>
+
+              {/* Invoice Date */}
+              <Grid item xs={12} sm={6}>
+                <FormLabel component="legend">Invoice Date *</FormLabel>
+                <DatePicker
+                  style={{ width: "100%" }}
+                  value={invoiceForm.invoice_date}
+                  onChange={(date) => handleInvoiceDateChange("invoice_date", date)}
+                  format="YYYY-MM-DD"
+                />
+              </Grid>
+
+              {/* Due Date */}
+              <Grid item xs={12} sm={6}>
+                <FormLabel component="legend">Due Date *</FormLabel>
+                <DatePicker
+                  style={{ width: "100%" }}
+                  value={invoiceForm.due_date}
+                  onChange={(date) => handleInvoiceDateChange("due_date", date)}
+                  format="YYYY-MM-DD"
+                />
+              </Grid>
+
+              {/* Submit Button */}
+              <Grid item xs={12}>
+                <Button
+                  htmlType="submit"
+                  type="primary"
+                  block
+                  loading={loading}
+                  style={{ marginTop: "10px" }}
+                >
+                  Create Invoice
                 </Button>
               </Grid>
             </Grid>

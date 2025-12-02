@@ -8,7 +8,7 @@ import {
   upload,
   deleteAdmin,
   getAllAdmins,
-  approveAdmin, 
+  approveAdmin,
   grantTempAdminAccess,
   revokeTempAdminAccess,
   listTempAdmins,
@@ -36,6 +36,11 @@ import {
   getAllReferralsAdmin,
   getReferralByIdAdmin,
   updateReferralStatusAdmin,
+  createProbation,
+
+  // === EXTRA AUDIT LOG CONTROLLERS ===
+  adminLogout,
+  getAllAdminAuditLogs,
 
   // === FREELANCER CONTRACT FUNCTIONS ===
   createFreelancerContract,
@@ -47,6 +52,13 @@ import {
   getContractsByFreelancer,
   getContractById,
 
+  createInvoice,
+  getAllInvoices,
+  getInvoiceById,
+  updateInvoiceStatus,
+  generateInvoicePDF,
+  sendInvoiceReminder,
+  deleteInvoice
  
 } from "../controllers/admin.controller.js";
 
@@ -59,7 +71,8 @@ import {
   getArchivedJobPosts,
   updateJobPost,
   updateJobStatus,
-  getDraftJobPosts
+  getDraftJobPosts,
+ 
 } from "../controllers/jobPost.controller.js";
 
 // Applications
@@ -88,12 +101,19 @@ import { uploadResume, uploadResumeBuffer } from "../middleware/uploadResume.js"
 
 const router = Router();
 
-// ================= Admin Register/Login =================
+/* ================= Admin Register/Login ================= */
 router.post("/register", adminRegister);
 router.post("/verify-mfa", verifyAdminMfaSetup);
 router.post("/login", adminLogin);
 
-// ========== Admin CRUD ==========
+/* ========== AUDIT LOGS ========== */
+router.post("/logout", adminLogout);
+router.get("/audit-logs", getAllAdminAuditLogs);
+
+
+
+
+/* ========== Admin CRUD ========== */
 router.get("/fetchall", getAllAdmins);
 router.put("/status/:id", deleteAdmin);
 router.patch("/approve/:id", approveAdmin);
@@ -103,22 +123,22 @@ router.put(
   "/adminprofile-update/:id",
   upload.fields([
     { name: "profilePhoto", maxCount: 1 },
-    { name: "resume", maxCount: 1 },
+    { name: "resume", maxCount: 1 }
   ]),
   updateAdminProfile
 );
 
-// ========== Temporary Admin Management ==========
+/* ========== Temporary Admin Management ========== */
 router.post("/grant-temp", grantTempAdminAccess);
 router.delete("/revoke-temp/:email", revokeTempAdminAccess);
 router.get("/temp-admins", listTempAdmins);
 
-// Email verification
+/* ========== Email Verification ========== */
 router.post("/send-email-verification", sendEmailVerification);
 router.post("/verify-email", verifyEmail);
 router.post("/promote/:employeeId", promoteEmployee);
 
-// ===== Attendance Approval =====
+/* ========== Attendance Approval ========== */
 router.get("/attendance/pending-weekly", getPendingWeeklyApprovals);
 router.put("/attendance/weekly/approve", updateWeeklyApprovalStatus);
 router.post("/attendance/weekly/reject", rejectWeeklyApproval);
@@ -129,20 +149,17 @@ router.post("/attendance/monthly/reject", rejectMonthlyApproval);
 
 router.put("/attendance/update-worked-hours", adminUpdateWorkedHours);
 
-// Parental leaves
+/* ========== Parental Leaves ========== */
 router.put("/attendance/approve-parental", approveParentalLeave);
 router.get("/attendance/pending-parental", getPendingParentalLeaves);
 
-// Audit logs
-router.get("/audit-logs", getAuditLogs);
-
-// ===== Letters =====
+/* ========== Letters ========== */
 router.post("/letters/generate", generateLetter);
 router.get("/letters/:employeeId", getEmployeeLetters);
 router.delete("/letters/:employeeId/:filename", deleteLetter);
 router.post("/letters/send-email", sendLetterEmail);
 
-// ===== Employee Document Upload =====
+/* ========== Employee Document Upload ========== */
 router.post(
   "/employees/:id/upload-documents",
   documentUpload,
@@ -151,14 +168,17 @@ router.post(
 
 router.get("/employees-with-docs", getAllEmployeesWithDocs);
 router.get("/download/:employeeId/:docType", downloadEmployeeDocument);
-router.get("/download/:employeeId/:docType/:index", downloadEmployeeDocument);
+router.get(
+  "/download/:employeeId/:docType/:index",
+  downloadEmployeeDocument
+);
 
-// ===== Referrals =====
+/* ========== Referrals ========== */
 router.get("/referrals", getAllReferralsAdmin);
 router.get("/referrals/:referral_id", getReferralByIdAdmin);
 router.put("/referrals/status/:id", updateReferralStatusAdmin);
 
-// ================= Job Posting =================
+/* ========== Job Posting ========== */
 router.post("/admin/job-posts", createJobPost);
 router.get("/admin/job-posts", getAdminJobPosts);
 router.get("/jobs", getPublishedJobPosts);
@@ -169,7 +189,7 @@ router.patch("/admin/job-posts/:id/status", updateJobStatus);
 router.get("/admin/job-posts/draft", getDraftJobPosts);
 router.get("/applications/filter", filterApplications);
 
-// ================= Job Applications =================
+/* ========== Job Applications ========== */
 router.post("/applications/apply", uploadResume.single("resume"), applyForJob);
 
 // INTERVIEW ROUTES
@@ -202,6 +222,27 @@ router.patch("/freelancer-contract/renew/:contract_id", renewContract);
 router.get("/freelancer-contract/all", getAllContracts);
 router.get("/freelancer-contract/freelancer/:freelancer_id", getContractsByFreelancer);
 router.get("/freelancer-contract/:contract_id", getContractById);
-router.get("/employees/freelancers", getFreelancers);
+
+// CREATE INVOICE
+router.post("/invoices/create", createInvoice);
+
+// GET ALL INVOICES
+router.get("/invoices/all", getAllInvoices);
+
+// GET SINGLE INVOICE
+router.get("/invoices/:invoice_id", getInvoiceById);
+
+// UPDATE STATUS (pending → approved → paid → cancelled)
+router.put("/invoices/status/:invoice_id", updateInvoiceStatus);
+
+// GENERATE PDF & GET URL
+router.get("/invoices/pdf/:invoice_id", generateInvoicePDF);
+
+// SEND PAYMENT REMINDER EMAIL
+router.post("/invoices/reminder/:invoice_id", sendInvoiceReminder);
+
+// DELETE INVOICE
+router.delete("/invoices/:invoice_id", deleteInvoice);
+
 
 export default router;

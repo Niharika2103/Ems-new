@@ -61,17 +61,17 @@ const EmpInfoDashboard = () => {
       icon: MailOutlineIcon,
       iconBg: "bg-pink-100",
       iconColor: "text-pink-600",
-      onClick: () => navigate("/documents/admin/letters"),
-      // onClick: () => navigate("/employee/letters"),
+      // onClick: () => navigate("/documents/admin/letters"),
+      onClick: () => navigate("/employee/letters"),
 
     },
     {
       title: "Probation",
-      message: "Track your probation status",
+      message: "Track and manage employee probation periods",
       icon: VerifiedUserIcon,
       iconBg: "bg-yellow-100",
       iconColor: "text-yellow-600",
-      onClick: () => navigate("/probation"),
+      onClick: () => navigate("/dashboard/empinfo/probation"),
     },
     {
       title: "Referrals",
