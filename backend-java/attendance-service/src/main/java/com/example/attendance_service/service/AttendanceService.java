@@ -1,7 +1,9 @@
 package com.example.attendance_service.service;
-
+import com.example.attendance_service.model.ProbationEntity;
+import com.example.attendance_service.repository.ProbationRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.time.YearMonth;
 import java.time.DayOfWeek;
 import java.util.Comparator;
@@ -32,16 +34,19 @@ import jakarta.transaction.Transactional;
 @Service
 public class AttendanceService {
 
+    private final ProbationRepository probationRepository;
+
 	private final AttendanceRepository attendanceRepository;
 	private final ProjectRepository projectRepository;
 	private final UserEmployeeMasterRepository userRepository;
 
 	public AttendanceService(AttendanceRepository attendanceRepository,
 			ProjectRepository projectRepository,
-			UserEmployeeMasterRepository userRepository) {
+			UserEmployeeMasterRepository userRepository,  ProbationRepository probationRepository) {
 		this.attendanceRepository = attendanceRepository;
 		this.projectRepository = projectRepository;
 		this.userRepository = userRepository;
+        this.probationRepository = probationRepository;
 	}
 
 	public List<AttendanceResponseDTO> getAllAttendance() {
@@ -72,12 +77,12 @@ public class AttendanceService {
 							        a.getWorkFromHome(),
 							        a.getPaternityLeave(),
 							        a.getMaternityLeave(),
-							        a.getRemainingLeaves()		
+							        a.getRemainingLeaves()
 						))
 				.collect(Collectors.toList());
 	}
 
-	
+
 	@Transactional
 public List<AttendanceEntity> saveOrUpdateAttendance(
         UUID employeeId, UUID projectId,  List<AttendanceRequestDTO> attendanceList, String employeename) {
@@ -117,15 +122,15 @@ public List<AttendanceEntity> saveOrUpdateAttendance(
                 existing.setGender(employee.getGender());
                 existing.setDate(date);
                 existing.setYear(date.getYear());
-                
+
                 if (dto.getWorkedHours() == 0 && "sl".equalsIgnoreCase(dto.getLeaveType())) {
                     // ✅ Case: Sick Leave (SL)
                     LocalDate previousDate = dto.getDate().minusDays(1);
- 
+
                     AttendanceEntity previousRecord = attendanceRepository
                             .findByEmployee_IdAndProject_IdAndDate(employeeId, projectId, previousDate)
                             .orElse(null);
- 
+
                     if (previousRecord != null) {
                         existing.setSl(previousRecord.getSl() - 1);
                     }
@@ -192,7 +197,7 @@ public List<AttendanceEntity> getAttendanceForWeek(UUID employeeId, UUID project
             employeeId, projectId, startOfWeek, endOfWeek);
 }
 
-    
+
 public List<AttendanceEntity> getAttendanceForMonthRange(UUID employeeId, LocalDate start, LocalDate end) {
     if (employeeId == null || start == null || end == null) {
         return Collections.emptyList();
@@ -203,12 +208,12 @@ public List<AttendanceEntity> getAttendanceForMonthRange(UUID employeeId, LocalD
 
 @Transactional
 public void releaseWeeklyAttendance(UUID employeeId, LocalDate weekStart, LocalDate weekEnd, String employeeName) {
-    
-	
+
+
 	List<AttendanceEntity> attendanceList =
             attendanceRepository.findByEmployee_IdAndDateBetween(employeeId, weekStart, weekEnd);
-	
-	
+
+
    // Fetch all attendance records for this week
 	List<AttendanceEntity> validRecords = attendanceList.stream()
             .filter(a -> a.getProject() != null)
@@ -219,8 +224,8 @@ public void releaseWeeklyAttendance(UUID employeeId, LocalDate weekStart, LocalD
         attendance.setCreatedBy(employeeName);        // Who released
         attendance.setCreatedAt(LocalDateTime.now());
     }
- 
-    
+
+
     // Save updates without touching monthlyStatus
     attendanceRepository.saveAll(validRecords);
 }
@@ -363,11 +368,11 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 	    // ✅ Compare requested vs available
 	    return (takenLeaves + requestedDays) <= allowed;
 	}
-	
-	
+
+
 //	private Map<String, Double> calculateProRatedLeaves(LocalDate joiningDate) {
 //	    int joiningMonth = joiningDate.getMonthValue();
-//	    int monthsRemaining = 12 - joiningMonth + 1; 
+//	    int monthsRemaining = 12 - joiningMonth + 1;
 //
 //	    Map<String, Integer> yearlyLeaves = Map.of(
 //	        "SL", 10,
@@ -385,34 +390,108 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 //
 //	    return proRated;
 //	}
-	
+private void applyMidYearLogic(LocalDate joiningDate, int recYear, int previousEL) {
+    int carryForwardEL = Math.min(previousEL, 10);
+    LocalDate midYearCutoff = LocalDate.of(recYear, 6, 30);
+    boolean joinedBeforeMid = joiningDate.getYear() < recYear || !joiningDate.isAfter(midYearCutoff);
+
+    int currentSL = joinedBeforeMid ? 10 : 5;
+    int currentEL = (joinedBeforeMid ? 25 : 12) + carryForwardEL;
+    int currentExtraMilar = joinedBeforeMid ? 2 : 1;
+    int currentHolidays = 10;
+    int currentOptionalHolidays = 2;
+
+    System.out.println("📅 MID-YEAR LOGIC APPLIED:");
+    System.out.println("   - Joining Date: " + joiningDate);
+    System.out.println("   - Mid-year Cutoff: " + midYearCutoff);
+    System.out.println("   - Joined Before Mid-year: " + joinedBeforeMid);
+    System.out.println("   - SL: " + currentSL);
+    System.out.println("   - EL: " + currentEL + " (Base: " + (joinedBeforeMid ? 25 : 12) + " + Carry Forward: " + carryForwardEL + ")");
+    System.out.println("   - Extra Milar: " + currentExtraMilar);
+    System.out.println("   - Holidays: " + currentHolidays);
+    System.out.println("   - Optional Holidays: " + currentOptionalHolidays);
+}
+
+
 	// 🔹 Calculates leaves based on mid-year joining logic (Jan–Dec year)
-	private Map<String, Integer> calculateLeavesBasedOnJoining(LocalDate joiningDate) {
-	    // Full-year leave configuration
-	    Map<String, Integer> yearlyLeaves = Map.of(
-	        "SL", 10,
-	        "EL", 25,
-	        "Extra Milar", 2,
-	        "Holidays", 10,
-	        "Optional Holidays", 2
-	    );
+    private Map<String, Integer> calculateLeavesConsideringProbation(UUID employeeId, LocalDate joiningDate) {
+        System.out.println("🔍 Calculating leaves for employeeId: " + employeeId + ", Joining Date: " + joiningDate);
 
-	    // 🗓️ Mid-year cutoff = June 30
-	    LocalDate midYear = LocalDate.of(joiningDate.getYear(), 6, 30);
-	    boolean joinedBeforeMidYear = !joiningDate.isAfter(midYear);
+        // ✅ ALWAYS CHECK PROBATION FIRST
+        Optional<ProbationEntity> probationOpt = probationRepository.findActiveProbation(employeeId, "active");
 
-	    Map<String, Integer> finalLeaves = new java.util.HashMap<>();
-	    yearlyLeaves.forEach((type, total) -> {
-	        int leaves = joinedBeforeMidYear ? total : total / 2; // Half if joined after mid-year
-	        finalLeaves.put(type, leaves);
-	    });
+        if (probationOpt.isPresent()) {
+            ProbationEntity probation = probationOpt.get();
+            LocalDate start = probation.getStartDate();
+            LocalDate end = probation.getEndDate();
 
-	    return finalLeaves;
-	}
+            System.out.println("🔵 ACTIVE PROBATION FOUND:");
+            System.out.println("   - Probation ID: " + probation.getProbationId());
+            System.out.println("   - Start: " + start + ", End: " + end);
+            System.out.println("   - Status: " + probation.getStatus());
 
-//	@Transactional
+            if (start == null || end == null) {
+                throw new RuntimeException("Probation start/end date missing for employeeId " + employeeId);
+            }
+
+            long totalDays = ChronoUnit.DAYS.between(start, end) + 1;
+            long months = (long) Math.ceil(totalDays / 30.0);
+            if (months < 1) months = 1;
+
+            Map<String, Integer> probationLeaves = new HashMap<>();
+            probationLeaves.put("SL", (int) months);
+            probationLeaves.put("EL", 0);
+            probationLeaves.put("Extra Milar", 0);
+            probationLeaves.put("Holidays", 10);
+            probationLeaves.put("Optional Holidays", 2);
+            probationLeaves.put("WFH", 315);
+            probationLeaves.put("Maternity Leave", 0);
+            probationLeaves.put("Paternity Leave", 0);
+
+            System.out.println("🔵 PROBATION LEAVES CALCULATED:");
+            System.out.println("   - Total Days: " + totalDays);
+            System.out.println("   - Months: " + months);
+            System.out.println("   - SL: " + months + " (1 per month)");
+            System.out.println("   - EL: 0 (None during probation)");
+
+            return probationLeaves;
+        }
+
+        // ---- DEFAULT LOGIC (NO ACTIVE PROBATION) ----
+        System.out.println("✅ No active probation → Applying mid-year joining logic");
+
+        Map<String, Integer> yearlyLeaves = Map.of(
+                "SL", 10,
+                "EL", 25,
+                "Extra Milar", 2,
+                "Holidays", 10,
+                "Optional Holidays", 2
+        );
+
+        LocalDate midYear = LocalDate.of(joiningDate.getYear(), 6, 30);
+        boolean beforeMidYear = !joiningDate.isAfter(midYear);
+
+        Map<String, Integer> finalLeaves = new HashMap<>();
+        yearlyLeaves.forEach((type, total) ->
+                finalLeaves.put(type, beforeMidYear ? total : total / 2)
+        );
+
+        finalLeaves.put("WFH", 315);
+        finalLeaves.put("Maternity Leave", beforeMidYear ? 180 : 90);
+        finalLeaves.put("Paternity Leave", beforeMidYear ? 7 : 3);
+
+        System.out.println("✅ DEFAULT LEAVES CALCULATED:");
+        System.out.println("   - Mid-year cutoff: " + midYear);
+        System.out.println("   - Before mid-year: " + beforeMidYear);
+        System.out.println("   - SL: " + finalLeaves.get("SL"));
+        System.out.println("   - EL: " + finalLeaves.get("EL"));
+
+        return finalLeaves;
+    }
+
+    //	@Transactional
 //	public void initializeDefaultLeaves(UUID employeeId, String adminName) {
-//	    
+//
 //	    boolean exists = attendanceRepository.existsByEmployee_IdAndProjectIsNull(employeeId);
 //	    if (exists) {
 //	        System.out.println("✅ Default leaves already exist for employee: " + employeeId);
@@ -435,7 +514,7 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 //	    AttendanceEntity base = new AttendanceEntity();
 //	    base.setEmployee(employee);
 //	    base.setProject(null); // indicates organization-level base record
-//	    base.setDate(joiningDate); 
+//	    base.setDate(joiningDate);
 //	    base.setYear(joiningDate.getYear());
 //	    base.setGender(employee.getGender());
 //
@@ -473,136 +552,215 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 //	    System.out.println(" Default leaves (pro-rated) created for employee ID: "
 //	            + employee.getId() + " | Joined: " + joiningDate);
 //	}
-	@Transactional
-	public void updateApprovedRecordsWithDefaultLeaves(UUID employeeId, LocalDate from, LocalDate to, String adminName) {
-	    List<AttendanceEntity> records = attendanceRepository.findByEmployee_IdAndDateBetween(employeeId, from, to);
-	    if (records.isEmpty()) return;
+    @Transactional
+    public void updateApprovedRecordsWithDefaultLeaves(UUID employeeId, LocalDate from, LocalDate to, String adminName) {
+        System.out.println("🔍 Starting updateApprovedRecordsWithDefaultLeaves for employeeId: " + employeeId);
 
-	    records.sort(Comparator.comparing(AttendanceEntity::getDate));
+        List<AttendanceEntity> records = attendanceRepository.findByEmployee_IdAndDateBetween(employeeId, from, to);
+        if (records == null || records.isEmpty()) {
+            System.out.println("⚠️ No records found for employee: " + employeeId);
+            return;
+        }
 
-	    UserEmployeeMasterEntity employee = records.get(0).getEmployee();
-	    LocalDate joiningDate = employee.getDateOfJoining();
-	    if (joiningDate == null) {
-	        throw new RuntimeException("Employee joining date is missing for ID: " + employeeId);
-	    }
+        records.sort(Comparator.comparing(AttendanceEntity::getDate));
 
-	    // ✅ Step 1: Get the last approved record before 'from'
-	    List<AttendanceEntity> approvedBeforeList = attendanceRepository.findLastApprovedBeforeDate(employeeId, from);
-	    AttendanceEntity lastRelevant = approvedBeforeList.isEmpty() ? null : approvedBeforeList.get(0);
+        UserEmployeeMasterEntity employee = records.get(0).getEmployee();
+        if (employee == null) throw new RuntimeException("Employee missing for ID: " + employeeId);
 
-	    // ✅ Step 2: Initialize current leave balances
-	    int currentSL = 0, currentEL = 0, currentExtraMilar = 0, currentHolidays = 0, currentOptionalHolidays = 0, currentRemaining = 0;
+        LocalDate joiningDate = employee.getDateOfJoining();
+        if (joiningDate == null) throw new RuntimeException("Employee joining date is missing for ID: " + employeeId);
 
-	    if (lastRelevant != null) {
-	        // Carry forward from last approved record
-	        currentSL = safeGet(lastRelevant.getSl(), 0);
-	        currentEL = safeGet(lastRelevant.getEl(), 0);
-	        currentExtraMilar = safeGet(lastRelevant.getExtraMilar(), 0);
-	        currentHolidays = safeGet(lastRelevant.getHolidays(), 0);
-	        currentOptionalHolidays = safeGet(lastRelevant.getOptionalHolidays(), 0);
-	        currentRemaining = safeGet(lastRelevant.getRemainingLeaves(), 0);
-	        System.out.println("🔁 Carrying forward leave balances from: " + lastRelevant.getDate());
-	    } else {
-	        // No approved record yet — first-time initialization
-	        Map<String, Integer> defaultLeaves = calculateLeavesBasedOnJoining(joiningDate);
-	        currentSL = defaultLeaves.get("SL");
-	        currentEL = defaultLeaves.get("EL");
-	        currentExtraMilar = defaultLeaves.get("Extra Milar");
-	        currentHolidays = defaultLeaves.get("Holidays");
-	        currentOptionalHolidays = defaultLeaves.get("Optional Holidays");
-	        currentRemaining = defaultLeaves.values().stream().mapToInt(Integer::intValue).sum();
-	        System.out.println("🆕 Initialized default leaves for first-time approval: " + employee.getEmployeeName());
-	    }
+        System.out.println("✅ Employee: " + employee.getEmployeeName() + ", Joining Date: " + joiningDate);
 
-	    int lastProcessedYear = from.minusDays(1).getYear();
+        // Get last approved record before this range
+        List<AttendanceEntity> approvedBeforeList = attendanceRepository.findLastApprovedBeforeDate(employeeId, from);
+        AttendanceEntity lastRelevant = approvedBeforeList.isEmpty() ? null : approvedBeforeList.get(0);
 
-	    // ✅ Step 3: Process each record in date order
-	    for (AttendanceEntity rec : records) {
-	        LocalDate recDate = rec.getDate();
-	        int recYear = recDate.getYear();
+        // Initialize balances
+        int currentSL = 0, currentEL = 0, currentExtraMilar = 0, currentHolidays = 0, currentOptionalHolidays = 0, currentRemaining = 0;
 
-	        // 🎯 Step 3A: Handle year transition
-	        if (recYear > lastProcessedYear) {
-	            System.out.println("🌍 New year detected for " + employee.getEmployeeName() + " → " + recYear);
+        if (lastRelevant != null) {
+            // Carry forward from previous record
+            currentSL = safeGet(lastRelevant.getSl(), 0);
+            currentEL = safeGet(lastRelevant.getEl(), 0);
+            currentExtraMilar = safeGet(lastRelevant.getExtraMilar(), 0);
+            currentHolidays = safeGet(lastRelevant.getHolidays(), 0);
+            currentOptionalHolidays = safeGet(lastRelevant.getOptionalHolidays(), 0);
+            currentRemaining = safeGet(lastRelevant.getRemainingLeaves(), 0);
+            System.out.println("🔁 Carrying forward from: " + lastRelevant.getDate()
+                    + " → SL=" + currentSL + ", EL=" + currentEL);
+        } else {
+            // First time - initialize with default/probation leaves
+            System.out.println("🆕 First time initialization for employee: " + employeeId);
+            Map<String, Integer> defaultLeaves = calculateLeavesConsideringProbation(employeeId, joiningDate);
+            currentSL = defaultLeaves.getOrDefault("SL", 0);
+            currentEL = defaultLeaves.getOrDefault("EL", 0);
+            currentExtraMilar = defaultLeaves.getOrDefault("Extra Milar", 0);
+            currentHolidays = defaultLeaves.getOrDefault("Holidays", 0);
+            currentOptionalHolidays = defaultLeaves.getOrDefault("Optional Holidays", 0);
+            currentRemaining = currentSL + currentEL + currentExtraMilar + currentHolidays + currentOptionalHolidays;
+            System.out.println("🆕 Initialized leaves → SL=" + currentSL + ", EL=" + currentEL
+                    + ", Extra Milar=" + currentExtraMilar + ", Holidays=" + currentHolidays
+                    + ", Optional=" + currentOptionalHolidays + ", Total Remaining=" + currentRemaining);
+        }
 
-	            // 💾 Carry forward only EL (up to 10 days)
-	            int carryForwardEL = 0;
-	            if (currentEL >= 10) {
-	                carryForwardEL = Math.min(currentEL, 10);
-	                System.out.printf("🎯 %s → Carry forward %d EL days to %d%n",
-	                        employee.getEmployeeName(), carryForwardEL, recYear);
-	            } else {
-	                System.out.printf("🚫 %s → No EL carry forward (EL=%d) for year %d%n",
-	                        employee.getEmployeeName(), currentEL, recYear);
-	            }
+        int lastProcessedYear = from.minusDays(1).getYear();
+
+        for (AttendanceEntity rec : records) {
+            LocalDate recDate = rec.getDate();
+            if (recDate == null) continue;
+            int recYear = recDate.getYear();
+
+            // ✅ YEAR TRANSITION LOGIC
+            if (recYear > lastProcessedYear) {
+                System.out.println("🌍 ========== NEW YEAR DETECTED: " + recYear + " for " + employee.getEmployeeName() + " ==========");
+
+                // ✅ STEP 1: CHECK PROBATION STATUS FIRST (HIGHEST PRIORITY)
+                Optional<ProbationEntity> probOpt = probationRepository.findActiveProbation(employeeId, "active");
+
+                if (probOpt.isPresent()) {
+                    ProbationEntity p = probOpt.get();
+                    LocalDate pStart = p.getStartDate();
+                    LocalDate pEnd = p.getEndDate();
+
+                    System.out.println("🔵 ACTIVE PROBATION FOUND:");
+                    System.out.println("   - Probation ID: " + p.getProbationId());
+                    System.out.println("   - Start Date: " + pStart);
+                    System.out.println("   - End Date: " + pEnd);
+                    System.out.println("   - Status: " + p.getStatus());
+
+                    if (pStart == null || pEnd == null) {
+                        throw new RuntimeException("Probation dates missing for employee " + employeeId);
+                    }
+
+                    LocalDate yearStart = LocalDate.of(recYear, 1, 1);
+                    LocalDate yearEnd = LocalDate.of(recYear, 12, 31);
+
+                    // Check if probation overlaps with this year
+                    if (!pEnd.isBefore(yearStart) && !pStart.isAfter(yearEnd)) {
+                        LocalDate overlapStart = pStart.isBefore(yearStart) ? yearStart : pStart;
+                        LocalDate overlapEnd = pEnd.isAfter(yearEnd) ? yearEnd : pEnd;
+
+                        long totalDays = ChronoUnit.DAYS.between(overlapStart, overlapEnd) + 1;
+                        long monthsInYear = (long) Math.ceil(totalDays / 30.0);
+                        monthsInYear = Math.max(1, monthsInYear);
+
+                        // ✅ PROBATION TAKES PRIORITY
+                        currentSL = (int) monthsInYear;
+                        currentEL = 0;
+                        currentExtraMilar = 0;
+                        currentHolidays = 10;
+                        currentOptionalHolidays = 2;
+
+                        System.out.println("🔵 PROBATION LOGIC APPLIED:");
+                        System.out.println("   - Overlap Period: " + overlapStart + " to " + overlapEnd);
+                        System.out.println("   - Total Days: " + totalDays);
+                        System.out.println("   - Calculated Months: " + monthsInYear);
+                        System.out.println("   - SL Allocated: " + currentSL + " (1 per month)");
+                        System.out.println("   - EL: " + currentEL + " (None during probation)");
+                        System.out.println("   - Extra Milar: " + currentExtraMilar);
+                        System.out.println("   - Holidays: " + currentHolidays);
+                        System.out.println("   - Optional Holidays: " + currentOptionalHolidays);
+                    } else {
+                        System.out.println("⚪ Probation exists but doesn't overlap " + recYear);
+                        applyMidYearLogic(joiningDate, recYear, currentEL);
+                    }
+                } else {
+                    // ✅ NO PROBATION - Apply mid-year logic
+                    System.out.println("✅ No active probation found → Applying mid-year joining logic");
+                    applyMidYearLogic(joiningDate, recYear, currentEL);
+                }
+
+                currentRemaining = currentSL + currentEL + currentExtraMilar + currentHolidays + currentOptionalHolidays;
+                lastProcessedYear = recYear;
+                System.out.println("📊 Year " + recYear + " initialized → Total Remaining: " + currentRemaining);
+            }
+
+            // ✅ DEDUCT LEAVES IF TAKEN
+            String leaveType = rec.getLeaveType();
+            if (leaveType != null && !leaveType.trim().isEmpty()) {
+                String normalizedLeaveType = leaveType.trim().toLowerCase();
+                System.out.println("➖ Processing leave on " + recDate + " → Type: " + leaveType);
+
+                switch (normalizedLeaveType) {
+                    case "sl":
+                        if (currentSL > 0) {
+                            currentSL -= 1;
+                            currentRemaining = Math.max(0, currentRemaining - 1);
+                            System.out.println("   ✅ Deducted 1 SL → Remaining SL: " + currentSL + ", Total: " + currentRemaining);
+                        } else {
+                            System.out.println("   ⚠️ No SL available to deduct!");
+                        }
+                        break;
+                    case "el":
+                        if (currentEL > 0) {
+                            currentEL -= 1;
+                            currentRemaining = Math.max(0, currentRemaining - 1);
+                            System.out.println("   ✅ Deducted 1 EL → Remaining EL: " + currentEL + ", Total: " + currentRemaining);
+                        } else {
+                            System.out.println("   ⚠️ No EL available to deduct!");
+                        }
+                        break;
+                    case "optional holidays":
+                        if (currentOptionalHolidays > 0) {
+                            currentOptionalHolidays -= 1;
+                            currentRemaining = Math.max(0, currentRemaining - 1);
+                            System.out.println("   ✅ Deducted 1 Optional Holiday → Remaining: " + currentOptionalHolidays);
+                        }
+                        break;
+                    case "holidays":
+                        if (currentHolidays > 0) {
+                            currentHolidays -= 1;
+                            currentRemaining = Math.max(0, currentRemaining - 1);
+                            System.out.println("   ✅ Deducted 1 Holiday → Remaining: " + currentHolidays);
+                        }
+                        break;
+                    case "extra milar":
+                        if (currentExtraMilar > 0) {
+                            currentExtraMilar -= 1;
+                            currentRemaining = Math.max(0, currentRemaining - 1);
+                            System.out.println("   ✅ Deducted 1 Extra Milar → Remaining: " + currentExtraMilar);
+                        }
+                        break;
+                    default:
+                        System.out.println("   ⚠️ Unknown leave type: " + leaveType);
+                }
+            }
+
+            // ✅ WRITE UPDATED BALANCES TO RECORD
+            rec.setSl(currentSL);
+            rec.setEl(currentEL);
+            rec.setExtraMilar(currentExtraMilar);
+            rec.setHolidays(currentHolidays);
+            rec.setOptionalHolidays(currentOptionalHolidays);
+            rec.setRemainingLeaves(currentRemaining);
+            rec.setStatus("approved");
+            rec.setUpdatedBy(adminName);
+            rec.setUpdatedAt(LocalDateTime.now());
+
+            System.out.println("📝 Updated record for " + recDate + " → SL=" + currentSL
+                    + ", EL=" + currentEL + ", Remaining=" + currentRemaining);
+
+            lastRelevant = rec;
+        }
 
 
-	            // 🧮 Load new year default leaves
-	            Map<String, Integer> yearlyLeaves = calculateLeavesBasedOnJoining(LocalDate.of(recYear, 1, 1));
+        attendanceRepository.saveAll(records);
+        System.out.println("✅ Successfully updated " + records.size() + " records with probation-aware leave calculation");
+    }
 
-	            currentSL = yearlyLeaves.get("SL"); // SL reset
-	            currentEL = yearlyLeaves.get("EL") + carryForwardEL; // EL + carry forward (max 10)
-	            currentExtraMilar = yearlyLeaves.get("Extra Milar"); // reset
-	            currentHolidays = yearlyLeaves.get("Holidays"); // reset
-	            currentOptionalHolidays = yearlyLeaves.get("Optional Holidays"); // reset
-	            currentRemaining = currentSL + currentEL + currentExtraMilar + currentHolidays + currentOptionalHolidays;
 
-	            System.out.printf("🎯 %s → Carry forward %d EL days to %d%n",
-	                    employee.getEmployeeName(), carryForwardEL, recYear);
-	        }
+    private void applyNormalYearLeaves(int recYear, LocalDate joiningDate) {
+        // Helper method for normal year leaves (when not in probation)
+        boolean joinedBeforeMid = joiningDate.getYear() < recYear
+                || !joiningDate.isAfter(LocalDate.of(recYear, 6, 30));
 
-	        // 📝 Apply balances to record
-	        rec.setSl(currentSL);
-	        rec.setEl(currentEL);
-	        rec.setExtraMilar(currentExtraMilar);
-	        rec.setHolidays(currentHolidays);
-	        rec.setOptionalHolidays(currentOptionalHolidays);
-	        rec.setRemainingLeaves(currentRemaining);
+        // This is just a placeholder - the actual logic is in the main method above
+    }
+    private int safeGet(Integer value, int defaultValue) {
+        return value != null ? value : defaultValue;
+    }
 
-	        // 🧩 Deduct leave if taken
-	        String leaveType = rec.getLeaveType();
-	        if (leaveType != null && !leaveType.trim().isEmpty()) {
-	            switch (leaveType.trim().toLowerCase()) {
-	                case "sl" -> {
-	                    currentSL = Math.max(0, currentSL - 1);
-	                    currentRemaining = Math.max(0, currentRemaining - 1);
-	                }
-	                case "el" -> {
-	                    currentEL = Math.max(0, currentEL - 1);
-	                    currentRemaining = Math.max(0, currentRemaining - 1);
-	                }
-	                case "optional holidays" -> {
-	                    currentOptionalHolidays = Math.max(0, currentOptionalHolidays - 1);
-	                    currentRemaining = Math.max(0, currentRemaining - 1);
-	                }
-	                case "holidays" -> {
-	                    currentHolidays = Math.max(0, currentHolidays - 1);
-	                    currentRemaining = Math.max(0, currentRemaining - 1);
-	                }
-	                case "extra milar" -> {
-	                    currentExtraMilar = Math.max(0, currentExtraMilar - 1);
-	                    currentRemaining = Math.max(0, currentRemaining - 1);
-	                }
-	                default -> { /* No deduction for WFH/Present */ }
-	            }
-	            System.out.println("➖ Deducted " + leaveType + " for " + employee.getEmployeeName() + " on " + recDate);
-	        }
-
-	        rec.setStatus("approved");
-	        rec.setUpdatedBy(adminName);
-	        rec.setUpdatedAt(LocalDateTime.now());
-	        lastProcessedYear = recYear;
-	        lastRelevant = rec;
-	    }
-
-	    attendanceRepository.saveAll(records);  
-	    System.out.println("✅ Successfully updated " + records.size() + " records with yearly EL carry-forward (max 10 days).");
-	}
-
-	private int safeGet(Integer value, int defaultValue) {
-	    return value != null ? value : defaultValue;
-	}
-	
 	@Transactional
 	public Map<String, Integer> getEmployeeLeaves(UUID employeeId) {
 
@@ -681,5 +839,4 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 	    return v != null ? v : 0;
 	}
 
-	
 }
