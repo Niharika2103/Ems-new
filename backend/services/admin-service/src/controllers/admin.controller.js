@@ -675,7 +675,6 @@ export const getAdminById = async (req, res) => {
 };
 
 // ================== Update Admin Profile ==================
-
 export const updateAdminProfile = async (req, res) => {
   const client = await pool.connect();
   try {
@@ -691,17 +690,36 @@ export const updateAdminProfile = async (req, res) => {
       return res.status(404).json({ error: "Admin not found" });
     }
 
-    let updates = { ...existing.rows[0], ...req.body };
+    // ✅ Whitelist of allowed database columns (snake_case)
+    const allowedFields = [
+      'name',
+      'dob',
+      'gender',
+      'email',
+      'phone',
+      'department',
+      'address',
+      'permanent_address',
+      'emergency_contact',
+      'profile_photo',
+      'resume',
+      'password'
+    ];
 
-    // 🚫 Remove restricted fields
-    delete updates.role;
-    delete updates.mfa_secret;
-    delete updates.mfa_enabled;
-    delete updates.employee_id;
-    delete updates.date_of_joining;
-    delete updates.access_flag;
+    // ✅ Initialize updates with existing values
+    const updates = {};
+    for (const field of allowedFields) {
+      updates[field] = existing.rows[0][field];
+    }
 
-    // 🔐 Hash password if updated
+    // ✅ Override with text fields from req.body (excluding file-related fields)
+    for (const field of allowedFields) {
+      if (field !== 'profile_photo' && field !== 'resume' && req.body[field] !== undefined) {
+        updates[field] = req.body[field];
+      }
+    }
+
+    // 🔐 Hash password if provided
     if (req.body.password) {
       updates.password = await bcrypt.hash(req.body.password, 10);
     }
@@ -714,7 +732,7 @@ export const updateAdminProfile = async (req, res) => {
       updates.resume = req.files.resume[0].filename;
     }
 
-    // ✅ Build dynamic query for updates
+    // ✅ Build dynamic query using only valid DB columns
     const setFields = Object.keys(updates)
       .map((key, index) => `${key} = $${index + 1}`)
       .join(", ");
@@ -741,7 +759,8 @@ export const updateAdminProfile = async (req, res) => {
     });
   } catch (err) {
     console.error("Update Admin Profile Error:", err.message);
-    res.status(500).json({ message: err.message });
+    console.error("Full error:", err); // For debugging
+    return res.status(500).json({ message: "Internal server error" });
   } finally {
     client.release();
   }
@@ -1686,7 +1705,9 @@ const templateFileMap = {
   "Promotion Letter": "promotionLetter.html",
   "Salary Increment Letter": "salaryIncrementLetter.html",
   "Warning Letter": "warningLetter.html",
-  "freelancer contract":"freelancerContract.html" 
+  "freelancer contract":"freelancerContract.html" ,
+  "invoice Template":"invoiceTemplate.html",
+
 };
 
 // Replace {{placeholders}}
@@ -2384,7 +2405,6 @@ export const updateReferralStatusAdmin = async (req, res) => {
 
 //   await browser.close();
 // }
-
 export const createFreelancerContract = async (req, res) => {
   const client = await pool.connect();
 
@@ -2470,9 +2490,9 @@ export const createFreelancerContract = async (req, res) => {
     await client.query(
       `
         INSERT INTO freelancer_contracts (
-        freelancer_id, contract_title, contract_start_date, contract_end_date,
-        payment_type, payment_amount, payment_terms, scope_of_work,
-        pdf_file, version
+          freelancer_id, contract_title, contract_start_date, contract_end_date,
+          payment_type, payment_amount, payment_terms, scope_of_work,
+          pdf_file, version
         )
         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,1)
       `,
@@ -2489,8 +2509,21 @@ export const createFreelancerContract = async (req, res) => {
       ]
     );
 
+    // ✅ Send email with attachment (using your existing sendEmail)
+    await sendEmail(
+      freelancer.email,
+      `Your Contract - ${contract_title}`,
+      `
+        <p>Hello <strong>${freelancer.name}</strong>,</p>
+        <p>Your freelancer contract has been created successfully.</p>
+        <p>Please find the attached PDF for your reference.</p>
+      `,
+      filePath,   // attachment path
+      fileName    // attachment filename
+    );
+
     res.json({
-      message: "Contract created successfully",
+      message: "Contract created successfully and email sent.",
       pdf_url: `/uploads/contracts/${fileName}`
     });
 
@@ -2590,8 +2623,21 @@ export const updateContract = async (req, res) => {
       ]
     );
 
+    // ✅ Email updated contract with attachment
+    await sendEmail(
+      freelancer.email,
+      `Updated Contract (Version ${newVersion})`,
+      `
+        <p>Hello <strong>${freelancer.name}</strong>,</p>
+        <p>Your freelancer contract has been updated.</p>
+        <p>Please find the updated contract attached as PDF.</p>
+      `,
+      filePath,
+      fileName
+    );
+
     res.json({
-      message: "Contract updated successfully",
+      message: "Contract updated successfully and email sent.",
       version: newVersion,
       pdf_url: `/uploads/contracts/${fileName}`
     });
@@ -2604,9 +2650,25 @@ export const updateContract = async (req, res) => {
   }
 };
 
+
 export const cancelContract = async (req, res) => {
   try {
     const { contract_id } = req.params;
+
+    const contract = await pool.query(
+      `SELECT freelancer_id FROM freelancer_contracts WHERE id=$1`,
+      [contract_id]
+    );
+
+    if (contract.rowCount === 0) {
+      return res.status(404).json({ error: "Contract not found" });
+    }
+
+    const freelancerRes = await pool.query(
+      `SELECT name, email FROM user_employees_master WHERE id=$1`,
+      [contract.rows[0].freelancer_id]
+    );
+    const freelancer = freelancerRes.rows[0];
 
     await pool.query(
       `UPDATE freelancer_contracts 
@@ -2615,7 +2677,17 @@ export const cancelContract = async (req, res) => {
       [contract_id]
     );
 
-    res.json({ message: "Contract cancelled successfully" });
+    // ✅ Notify via email
+    await sendEmail(
+      freelancer.email,
+      "Your Contract Has Been Cancelled",
+      `
+        <p>Hello <strong>${freelancer.name}</strong>,</p>
+        <p>Your freelancer contract has been <strong>cancelled</strong> by the admin.</p>
+      `
+    );
+
+    res.json({ message: "Contract cancelled successfully and email sent." });
   } catch (err) {
     console.error("Cancel Contract Error:", err);
     res.status(500).json({ error: "Failed to cancel contract" });
@@ -2627,6 +2699,21 @@ export const updateContractStatus = async (req, res) => {
     const { contract_id } = req.params;
     const { status } = req.body;
 
+    const contract = await pool.query(
+      `SELECT freelancer_id FROM freelancer_contracts WHERE id=$1`,
+      [contract_id]
+    );
+
+    if (contract.rowCount === 0) {
+      return res.status(404).json({ error: "Contract not found" });
+    }
+
+    const freelancerRes = await pool.query(
+      `SELECT name, email FROM user_employees_master WHERE id=$1`,
+      [contract.rows[0].freelancer_id]
+    );
+    const freelancer = freelancerRes.rows[0];
+
     await pool.query(
       `UPDATE freelancer_contracts 
        SET contract_status=$1, updated_at=NOW()
@@ -2634,7 +2721,16 @@ export const updateContractStatus = async (req, res) => {
       [status, contract_id]
     );
 
-    res.json({ message: "Status updated successfully" });
+    await sendEmail(
+      freelancer.email,
+      `Contract Status Updated - ${status}`,
+      `
+        <p>Hello <strong>${freelancer.name}</strong>,</p>
+        <p>Your contract status has been updated to <strong>${status}</strong>.</p>
+      `
+    );
+
+    res.json({ message: "Status updated successfully and email sent." });
   } catch (err) {
     console.error("Status Update Error:", err);
     res.status(500).json({ error: "Failed to update status" });
@@ -2656,8 +2752,13 @@ export const renewContract = async (req, res) => {
     }
 
     const old = existing.rows[0];
-
     const newVersion = old.version + 1;
+
+    const freelancerRes = await pool.query(
+      `SELECT name, email FROM user_employees_master WHERE id=$1`,
+      [old.freelancer_id]
+    );
+    const freelancer = freelancerRes.rows[0];
 
     await pool.query(
       `UPDATE freelancer_contracts 
@@ -2666,7 +2767,17 @@ export const renewContract = async (req, res) => {
       [newVersion, new_end_date, contract_id]
     );
 
-    res.json({ message: "Contract renewed successfully", version: newVersion });
+    await sendEmail(
+      freelancer.email,
+      "Your Contract Has Been Renewed",
+      `
+        <p>Hello <strong>${freelancer.name}</strong>,</p>
+        <p>Your freelancer contract has been successfully renewed.</p>
+        <p>New End Date: <strong>${new_end_date}</strong></p>
+      `
+    );
+
+    res.json({ message: "Contract renewed successfully and email sent.", version: newVersion });
   } catch (err) {
     console.error("Renew Contract Error:", err);
     res.status(500).json({ error: "Failed to renew contract" });
@@ -2753,20 +2864,289 @@ export const getContractById = async (req, res) => {
 };
 
 
-// export const getFreelancers = async (req, res) => {
-//   try {
-//     const result = await pool.query(
-//       `SELECT id, name, email, phone, designation, department 
-//        FROM user_employees_master
-//        WHERE employment_type = 'freelancer'
-//        ORDER BY created_at DESC`
-//     );
 
-//   } catch (err) {
-//     console.error("Get Freelancers Error:", err.message);
-//     return res.status(500).json({ error: "Failed to fetch freelancers" });
-//   }
-// };
+/* -----------------------------------------------------
+   1. CREATE INVOICE
+----------------------------------------------------- */
+export const createInvoice = async (req, res) => {
+  try {
+    const {
+      freelancer_id,
+      contract_id,
+      amount,
+      invoice_date,
+      due_date,
+      created_by,
+    } = req.body;
+
+    const GST_PERCENT = 18;
+    const TDS_PERCENT = 10;
+
+    const tax_amount = (amount * GST_PERCENT) / 100;
+    const tds_amount = (amount * TDS_PERCENT) / 100;
+    const net_payable = amount + tax_amount - tds_amount;
+
+    // Generate invoice number
+    const dateObj = new Date(invoice_date);
+    const ym = `${dateObj.getFullYear()}${String(
+      dateObj.getMonth() + 1
+    ).padStart(2, "0")}`;
+
+    const seqQuery = await pool.query(
+      `SELECT COUNT(*) + 1 AS seq FROM invoices WHERE to_char(invoice_date, 'YYYYMM') = $1`,
+      [ym]
+    );
+    const seq = seqQuery.rows[0].seq;
+
+    const invoice_number = `INV-${ym}-${String(seq).padStart(4, "0")}`;
+
+    const insertQuery = `
+      INSERT INTO invoices (
+        freelancer_id, contract_id, invoice_number,
+        amount, tax_amount, tds_amount, net_payable,
+        invoice_date, due_date, status, created_by
+      )
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'pending',$10)
+      RETURNING *
+    `;
+
+    const result = await pool.query(insertQuery, [
+      freelancer_id,
+      contract_id,
+      invoice_number,
+      amount,
+      tax_amount,
+      tds_amount,
+      net_payable,
+      invoice_date,
+      due_date,
+      created_by,
+    ]);
+
+    res.json({
+      success: true,
+      message: "Invoice created successfully",
+      invoice: result.rows[0],
+    });
+  } catch (err) {
+    console.error("Invoice Create Error:", err);
+    res.status(500).json({ error: "Failed to create invoice" });
+  }
+};
+
+/* -----------------------------------------------------
+   2. GET ALL INVOICES
+----------------------------------------------------- */
+export const getAllInvoices = async (req, res) => {
+  try {
+    const serverUrl = process.env.SERVER_URL;
+
+    const sql = `
+      SELECT inv.*, u.name AS freelancer_name, u.email AS freelancer_email
+      FROM invoices inv
+      LEFT JOIN user_employees_master u ON u.id = inv.freelancer_id
+      ORDER BY inv.created_at DESC
+    `;
+
+    const { rows } = await pool.query(sql);
+
+    const updated = rows.map((inv) => ({
+      ...inv,
+      pdf_url: inv.pdf_file
+        ? `${serverUrl}/uploads/invoices/${inv.pdf_file}`
+        : null,
+    }));
+
+    res.json(updated);
+  } catch (err) {
+    console.error("Get All Invoice Error:", err);
+    res.status(500).json({ error: "Failed to fetch invoices" });
+  }
+};
+
+/* -----------------------------------------------------
+   3. GET INVOICE BY ID
+----------------------------------------------------- */
+export const getInvoiceById = async (req, res) => {
+  try {
+    const { invoice_id } = req.params;
+    const serverUrl = process.env.SERVER_URL;
+
+    const sql = `SELECT * FROM invoices WHERE id=$1`;
+    const { rows } = await pool.query(sql, [invoice_id]);
+
+    if (rows.length === 0)
+      return res.status(404).json({ error: "Invoice not found" });
+
+    const invoice = rows[0];
+
+    invoice.pdf_url = invoice.pdf_file
+      ? `${serverUrl}/uploads/invoices/${invoice.pdf_file}`
+      : null;
+
+    res.json(invoice);
+  } catch (err) {
+    console.error("Get Invoice Error:", err);
+    res.status(500).json({ error: "Failed to fetch invoice" });
+  }
+};
+
+/* -----------------------------------------------------
+   4. UPDATE INVOICE STATUS
+----------------------------------------------------- */
+export const updateInvoiceStatus = async (req, res) => {
+  try {
+    const { invoice_id } = req.params;
+    const { status, updated_by } = req.body;
+
+    const valid = ["pending", "approved", "rejected", "paid"];
+    if (!valid.includes(status)) {
+      return res.status(400).json({ error: "Invalid invoice status" });
+    }
+
+    await pool.query(
+      `UPDATE invoices SET status=$1, updated_by=$2, updated_at=NOW() WHERE id=$3`,
+      [status, updated_by, invoice_id]
+    );
+
+    res.json({ success: true, message: "Status updated" });
+  } catch (err) {
+    console.error("Update Invoice Status Error:", err);
+    res.status(500).json({ error: "Failed to update invoice status" });
+  }
+};
+
+/* -----------------------------------------------------
+   5. GENERATE PDF (PUPPETEER)
+----------------------------------------------------- */
+export const generateInvoicePDF = async (req, res) => {
+  try {
+    const { invoice_id } = req.params;
+
+    const sql = `
+      SELECT inv.*, u.name AS freelancer_name, u.email AS freelancer_email
+      FROM invoices inv
+      LEFT JOIN user_employees_master u ON u.id = inv.freelancer_id
+      WHERE inv.id=$1
+    `;
+    const { rows } = await pool.query(sql, [invoice_id]);
+
+    if (rows.length === 0)
+      return res.status(404).json({ error: "Invoice not found" });
+
+    const invoice = rows[0];
+
+    // Load template
+    const templatePath = path.join(process.cwd(), "src/templates/invoiceTemplate.html");
+
+    let html = fs.readFileSync(templatePath, "utf-8");
+
+    html = html
+      .replace(/{{company_name}}/g, "Your Company Pvt Ltd")
+      .replace(/{{company_address}}/g, "Hyderabad, Telangana, India")
+      .replace(/{{company_email}}/g, "contact@company.com")
+      .replace(/{{invoice_number}}/g, invoice.invoice_number)
+      .replace(/{{invoice_date}}/g, invoice.invoice_date)
+      .replace(/{{due_date}}/g, invoice.due_date)
+      .replace(/{{freelancer_name}}/g, invoice.freelancer_name)
+      .replace(/{{freelancer_email}}/g, invoice.freelancer_email)
+      .replace(/{{amount}}/g, invoice.amount)
+      .replace(/{{tax_amount}}/g, invoice.tax_amount)
+      .replace(/{{tds_amount}}/g, invoice.tds_amount)
+      .replace(/{{net_payable}}/g, invoice.net_payable);
+
+    const pdfDir = "uploads/invoices";
+    if (!fs.existsSync(pdfDir)) fs.mkdirSync(pdfDir, { recursive: true });
+
+    const fileName = `Invoice_${invoice.invoice_number}.pdf`;
+    const filePath = path.join(pdfDir, fileName);
+
+    // Generate PDF
+    const browser = await puppeteer.launch({
+      headless: "new",
+      args: ["--no-sandbox"],
+    });
+
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: "networkidle0" });
+
+    await page.pdf({
+      path: filePath,
+      format: "A4",
+      printBackground: true,
+    });
+
+    await browser.close();
+
+    // Update DB
+    await pool.query(`UPDATE invoices SET pdf_file=$1 WHERE id=$2`, [
+      fileName,
+      invoice_id,
+    ]);
+
+    res.json({
+      success: true,
+      pdf_file: fileName,
+      pdf_url: `${process.env.SERVER_URL}/uploads/invoices/${fileName}`,
+    });
+  } catch (err) {
+    console.error("Invoice PDF Error:", err);
+    res.status(500).json({ error: "Failed to generate invoice PDF" });
+  }
+};
+
+/* -----------------------------------------------------
+   6. SEND REMINDER EMAIL
+----------------------------------------------------- */
+export const sendInvoiceReminder = async (req, res) => {
+  try {
+    const { invoice_id } = req.params;
+
+    const sql = `
+      SELECT inv.invoice_number, inv.net_payable, u.name, u.email
+      FROM invoices inv
+      LEFT JOIN user_employees_master u ON u.id = inv.freelancer_id
+      WHERE inv.id=$1
+    `;
+
+    const { rows } = await pool.query(sql, [invoice_id]);
+    if (rows.length === 0)
+      return res.status(404).json({ error: "Invoice not found" });
+
+    const invoice = rows[0];
+
+    await sendEmail({
+      to: invoice.email,
+      subject: `Payment Reminder - Invoice ${invoice.invoice_number}`,
+      text: `
+        Dear ${invoice.name},
+        This is a reminder to complete payment for invoice ${invoice.invoice_number}.
+        Net Payable: ₹${invoice.net_payable}.
+      `,
+    });
+
+    res.json({ success: true, message: "Reminder sent!" });
+  } catch (err) {
+    console.error("Reminder Error:", err);
+    res.status(500).json({ error: "Failed to send reminder" });
+  }
+};
+
+/* -----------------------------------------------------
+   7. DELETE INVOICE
+----------------------------------------------------- */
+export const deleteInvoice = async (req, res) => {
+  try {
+    const { invoice_id } = req.params;
+
+    await pool.query(`DELETE FROM invoices WHERE id=$1`, [invoice_id]);
+
+    res.json({ success: true, message: "Invoice deleted" });
+  } catch (err) {
+    console.error("Delete Invoice Error:", err);
+    res.status(500).json({ error: "Failed to delete invoice" });
+  }
+};
 
 /*----------------------------Probation ------------------------------*/
 // get a new employee (who joined within 3 months )

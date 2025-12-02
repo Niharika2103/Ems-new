@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Invoice</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      color: #333;
+    }
+    .invoice-box {
+      width: 100%;
+      border: 1px solid #ddd;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    table {
+      width: 100%;
+      margin-top: 15px;
+      border-collapse: collapse;
+    }
+    table td {
+      padding: 8px;
+      vertical-align: top;
+    }
+    .border {
+      border: 1px solid #ddd;
+    }
+    .right {
+      text-align: right;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="invoice-box">
+    <h2>Invoice</h2>
+
+    <p><strong>Company:</strong> {{company_name}}</p>
+    <p><strong>Address:</strong> {{company_address}}</p>
+    <p><strong>Email:</strong> {{company_email}}</p>
+
+    <hr />
+
+    <p><strong>Invoice Number:</strong> {{invoice_number}}</p>
+    <p><strong>Invoice Date:</strong> {{invoice_date}}</p>
+    <p><strong>Due Date:</strong> {{due_date}}</p>
+
+    <hr />
+
+    <p><strong>Freelancer Name:</strong> {{freelancer_name}}</p>
+    <p><strong>Freelancer Email:</strong> {{freelancer_email}}</p>
+
+    <hr />
+
+    <table class="border">
+      <tr class="border">
+        <td><strong>Amount:</strong></td>
+        <td class="right">₹{{amount}}</td>
+      </tr>
+      <tr class="border">
+        <td><strong>GST (18%):</strong></td>
+        <td class="right">₹{{tax_amount}}</td>
+      </tr>
+      <tr class="border">
+        <td><strong>TDS (10%):</strong></td>
+        <td class="right">-₹{{tds_amount}}</td>
+      </tr>
+      <tr class="border">
+        <td><strong>Net Payable:</strong></td>
+        <td class="right"><strong>₹{{net_payable}}</strong></td>
+      </tr>
+    </table>
+  </div>
+</body>
+</html>

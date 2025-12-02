@@ -51,9 +51,15 @@ import {
   getAllContracts,
   getContractsByFreelancer,
   getContractById,
-  //Probation
-  getNewEmployees,
-  getProbationWithUser
+
+  createInvoice,
+  getAllInvoices,
+  getInvoiceById,
+  updateInvoiceStatus,
+  generateInvoicePDF,
+  sendInvoiceReminder,
+  deleteInvoice
+ 
 } from "../controllers/admin.controller.js";
 
 // Job post imports
@@ -78,6 +84,17 @@ import {
   filterApplications,
   parseResume
 } from "../controllers/application.controller.js";
+//interview schedule for candidate
+import {
+  scheduleInterview,
+  getInterviewsByApplication, 
+  updateInterviewStatus,
+  rescheduleInterview,     // <-- ADD THIS
+  cancelInterview  
+} from "../controllers/interview.controller.js";
+
+//panel controller
+// import { getPanelMembers } from "../controllers/panel.controller.js";
 
 // ❗ Keep disk storage for actual job application resumes
 import { uploadResume, uploadResumeBuffer } from "../middleware/uploadResume.js";
@@ -175,6 +192,14 @@ router.get("/applications/filter", filterApplications);
 /* ========== Job Applications ========== */
 router.post("/applications/apply", uploadResume.single("resume"), applyForJob);
 
+// INTERVIEW ROUTES
+router.post("/interviews/schedule", scheduleInterview);
+router.get("/interviews/:application_id", getInterviewsByApplication);
+router.put("/interviews/status/:interview_id", updateInterviewStatus);
+router.put("/interviews/reschedule/:interview_id", rescheduleInterview);
+router.put("/interviews/cancel/:interview_id", cancelInterview);
+
+
 // ==================================================
 // ✅ FIXED — AI Resume Parser MUST use memory storage
 // ==================================================
@@ -184,7 +209,11 @@ router.get("/applications/all", getAllApplications);
 router.get("/applications/job/:jobId", getApplicationsByJob);
 router.put("/applications/status/:application_id", updateApplicationStatus);
 
-/* ========== Freelancer Contract Routes ========== */
+// router.get("/panel-members", getPanelMembers);
+
+/* -------------------------------------------------------------------------- */
+/*                       FREELANCER CONTRACT ROUTES                           */
+/* -------------------------------------------------------------------------- */
 router.post("/freelancer-contract/create", createFreelancerContract);
 router.put("/freelancer-contract/update/:contract_id", updateContract);
 router.patch("/freelancer-contract/cancel/:contract_id", cancelContract);
@@ -193,14 +222,27 @@ router.patch("/freelancer-contract/renew/:contract_id", renewContract);
 router.get("/freelancer-contract/all", getAllContracts);
 router.get("/freelancer-contract/freelancer/:freelancer_id", getContractsByFreelancer);
 router.get("/freelancer-contract/:contract_id", getContractById);
-// router.get("/employees/freelancers", getFreelancers);
-/* -----------------------------------------------------------------------------*/
-/*                          Probation                                           */
-/* -----------------------------------------------------------------------------*/
-router.get("/new-employees", getNewEmployees);
 
-router.post("/store-probation", createProbation);
+// CREATE INVOICE
+router.post("/invoices/create", createInvoice);
 
-router.get("/probation/user", getProbationWithUser);
+// GET ALL INVOICES
+router.get("/invoices/all", getAllInvoices);
+
+// GET SINGLE INVOICE
+router.get("/invoices/:invoice_id", getInvoiceById);
+
+// UPDATE STATUS (pending → approved → paid → cancelled)
+router.put("/invoices/status/:invoice_id", updateInvoiceStatus);
+
+// GENERATE PDF & GET URL
+router.get("/invoices/pdf/:invoice_id", generateInvoicePDF);
+
+// SEND PAYMENT REMINDER EMAIL
+router.post("/invoices/reminder/:invoice_id", sendInvoiceReminder);
+
+// DELETE INVOICE
+router.delete("/invoices/:invoice_id", deleteInvoice);
+
 
 export default router;
