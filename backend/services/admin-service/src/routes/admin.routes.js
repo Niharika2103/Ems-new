@@ -46,6 +46,7 @@ import {
   getAllContracts,
   getContractsByFreelancer,
   getContractById,
+
  
 } from "../controllers/admin.controller.js";
 
@@ -70,6 +71,17 @@ import {
   filterApplications,
   parseResume
 } from "../controllers/application.controller.js";
+//interview schedule for candidate
+import {
+  scheduleInterview,
+  getInterviewsByApplication, 
+  updateInterviewStatus,
+  rescheduleInterview,     // <-- ADD THIS
+  cancelInterview  
+} from "../controllers/interview.controller.js";
+
+//panel controller
+import { getPanelMembers } from "../controllers/panel.controller.js";
 
 // ❗ Keep disk storage for actual job application resumes
 import { uploadResume, uploadResumeBuffer } from "../middleware/uploadResume.js";
@@ -160,6 +172,14 @@ router.get("/applications/filter", filterApplications);
 // ================= Job Applications =================
 router.post("/applications/apply", uploadResume.single("resume"), applyForJob);
 
+// INTERVIEW ROUTES
+router.post("/interviews/schedule", scheduleInterview);
+router.get("/interviews/:application_id", getInterviewsByApplication);
+router.put("/interviews/status/:interview_id", updateInterviewStatus);
+router.put("/interviews/reschedule/:interview_id", rescheduleInterview);
+router.put("/interviews/cancel/:interview_id", cancelInterview);
+
+
 // ==================================================
 // ✅ FIXED — AI Resume Parser MUST use memory storage
 // ==================================================
@@ -168,6 +188,8 @@ router.post("/applications/parse-resume", uploadResumeBuffer.single("resume"), p
 router.get("/applications/all", getAllApplications);
 router.get("/applications/job/:jobId", getApplicationsByJob);
 router.put("/applications/status/:application_id", updateApplicationStatus);
+
+router.get("/panel-members", getPanelMembers);
 
 /* -------------------------------------------------------------------------- */
 /*                       FREELANCER CONTRACT ROUTES                           */
