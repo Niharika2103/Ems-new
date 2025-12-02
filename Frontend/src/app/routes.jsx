@@ -77,7 +77,6 @@ import ContractManagement from "../pages/contracter/ContractManagement";
 import AccountsDashboard from "../pages/dashbaord/AccountsDashboard";
 import PayrollSystem from "../pages/Accounts/PayrollSystem";
 import InvoiceModule from "../pages/invoice/InvoiceModule";
-import ContractManager from "../pages/contracter/ContractManagement";
 import ProbationManagementSystem from "../pages/Probation/probation_management";
 // import EmailTemplateManager from "../pages/EmailTemplateManager";
 import VendorLogin from "../pages/Auth/VendorLogin";
