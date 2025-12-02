@@ -94,7 +94,7 @@ import {
 } from "../controllers/interview.controller.js";
 
 //panel controller
-import { getPanelMembers } from "../controllers/panel.controller.js";
+// import { getPanelMembers } from "../controllers/panel.controller.js";
 
 // ❗ Keep disk storage for actual job application resumes
 import { uploadResume, uploadResumeBuffer } from "../middleware/uploadResume.js";
@@ -209,7 +209,7 @@ router.get("/applications/all", getAllApplications);
 router.get("/applications/job/:jobId", getApplicationsByJob);
 router.put("/applications/status/:application_id", updateApplicationStatus);
 
-router.get("/panel-members", getPanelMembers);
+// router.get("/panel-members", getPanelMembers);
 
 /* -------------------------------------------------------------------------- */
 /*                       FREELANCER CONTRACT ROUTES                           */
