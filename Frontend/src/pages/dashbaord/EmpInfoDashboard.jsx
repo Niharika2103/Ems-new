@@ -61,8 +61,8 @@ const EmpInfoDashboard = () => {
       icon: MailOutlineIcon,
       iconBg: "bg-pink-100",
       iconColor: "text-pink-600",
-      // onClick: () => navigate("/documents/admin/letters"),
-      onClick: () => navigate("/employee/letters"),
+      onClick: () => navigate("/documents/admin/letters"),
+      // onClick: () => navigate("/employee/letters"),
 
     },
     {

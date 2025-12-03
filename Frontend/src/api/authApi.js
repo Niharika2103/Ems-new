@@ -131,15 +131,26 @@ export const filterApplicationsApi = (filters) =>
   });
 
 
-
-
-
 // Update application status
-export const updateApplicationStatusApi = (application_id, status) =>
+export const updateApplicationStatusApi = (application_id, status, extraData = {}) =>
   adminClient.put(
     `${AUTH_API.ADMIN}/applications/status/${application_id}`,
-    { status }        
+    {
+      status,
+      ...extraData   // 👈 REQUIRED for interview data
+    }
   );
+
+  export const scheduleInterviewApi = (data) =>
+  adminClient.post(`${AUTH_API.ADMIN}/interviews/schedule`, data);
+//interview cancel and reschdule 
+  export const rescheduleInterviewApi = (id, data) =>
+  adminClient.put(`/admin/interviews/reschedule/${id}`, data);
+
+export const cancelInterviewApi = (id) =>
+  adminClient.put(`/admin/interviews/cancel/${id}`);
+
+
 
   // ✅ ADDED — Parse Resume API (Do NOT DELETE anything)
 export const parseResumeApi = (formData) =>
