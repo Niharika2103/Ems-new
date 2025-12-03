@@ -9,6 +9,7 @@ export const API_BASES = {
   ATTENDANCE:import.meta.env.VITE_Attendance_URL || "http://localhost:9091/api",
   SALARYSTRUCTURE:import.meta.env.VITE_SalaryStructure_URL || "http://localhost:9092",
   FREELANCER: import.meta.env.VITE_FREELANCER_URL || "http://localhost:5005",
+  VENDOR: import.meta.env.VITE_VENDOR_URL || "http://localhost:5010",
 
 };
 
@@ -32,7 +33,8 @@ export const AUTH_API = {
   PROJECT:`${API_BASES.PROJECT}`,
   ATTENDANCE:`${API_BASES.ATTENDANCE}`,
   SALARYSTRUCTURE:`${API_BASES.SALARYSTRUCTURE}/salary`,
-  FREELANCER: `${API_BASES.FREELANCER}/freelancer`, 
+  FREELANCER: `${API_BASES.FREELANCER}/freelancer`,
+  VENDOR: `${API_BASES.VENDOR}/vendor` 
 };
 
 export const ROLES = {
@@ -42,7 +44,8 @@ export const ROLES = {
   PROJECT:"project",
   ATTENDANCE:"attendance",
   SALARYSTRUCTURE:"salarystructure",
-   FREELANCER: "freelancer",
+  FREELANCER: "freelancer",
+  VENDOR: "vendor",
 };
 
 export const OTP_LENGTH = 6;
