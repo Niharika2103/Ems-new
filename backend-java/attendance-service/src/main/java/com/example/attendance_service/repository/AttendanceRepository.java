@@ -86,4 +86,8 @@ public interface AttendanceRepository extends JpaRepository<AttendanceEntity, UU
             @Param("month") int month,
             @Param("leaveType") String leaveType
     );
+    Optional<AttendanceEntity> findTopByEmployee_IdAndProject_IdAndDateBeforeOrderByDateDesc(
+            UUID employeeId, UUID projectId, LocalDate date
+    );
+
 }
