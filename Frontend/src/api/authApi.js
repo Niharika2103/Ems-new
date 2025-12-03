@@ -617,3 +617,40 @@ export const adminLogoutApi = (email) => {
       throw err;
     });
 };
+
+//Probation 
+export const fetchNewEmployeeApi =()=>{
+  return adminClient.get(`${AUTH_API.ADMIN}/new-employees`);
+}
+//creating probation 
+export const createProbationPeriodApi =(payload)=>{
+  return adminClient.post(`${AUTH_API.ADMIN}/store-probation`,payload);
+}
+//fetch assign Probation 
+export const fetchassignProbationApi =()=>{
+  return adminClient.get(`${AUTH_API.ADMIN}/probation/user`)
+}
+// / ================== INVOICE APIs ======================
+export const createInvoiceApi = (data) =>
+  adminClient.post(`${AUTH_API.ADMIN}/invoices/create`, data);
+
+export const getAllInvoicesApi = () =>
+  adminClient.get(`${AUTH_API.ADMIN}/invoices/all`);
+
+export const getInvoiceByIdApi = (invoiceId) =>
+  adminClient.get(`${AUTH_API.ADMIN}/invoices/${invoiceId}`);
+
+export const updateInvoiceStatusApi = (invoiceId, status, updatedBy) =>
+  adminClient.put(`${AUTH_API.ADMIN}/invoices/status/${invoiceId}`, {
+    status,
+    updated_by: updatedBy,
+  });
+
+export const generateInvoicePdfApi = (invoiceId) =>
+  adminClient.get(`${AUTH_API.ADMIN}/invoices/pdf/${invoiceId}`);
+
+export const sendInvoiceReminderApi = (invoiceId) =>
+  adminClient.post(`${AUTH_API.ADMIN}/invoices/reminder/${invoiceId}`);
+
+export const deleteInvoiceApi = (invoiceId) =>
+  adminClient.delete(`${AUTH_API.ADMIN}/invoices/${invoiceId}`);

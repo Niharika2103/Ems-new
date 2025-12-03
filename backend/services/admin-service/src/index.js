@@ -29,5 +29,5 @@ app.use("/admin", adminRoutes);
   }
 })();
 
-const PORT = process.env.PORT || 5002;
+const PORT = process.env.PORT || 5102;
 app.listen(PORT, () => console.log(`Admin service running on port ${PORT}`));
