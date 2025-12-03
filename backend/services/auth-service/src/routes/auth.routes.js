@@ -38,5 +38,5 @@ router.put("/superadmin/promote/:adminId", verifyToken, promoteAdminToSuperAdmin
 router.post("/superadmin/logout", superAdminLogout);
 router.get("/superadmin/audit-logs", getAllSuperAdminAuditLogs);
 
-
+//
 export default router;

@@ -593,6 +593,27 @@ export const fetchAllFreelancerContractsApi = () => {
 export const fetchFreelancerContractByIdApi = (contractId) => {
   return adminClient.get(`/admin/freelancer-contract/${contractId}`);
 };
+
+//Auditlogs
+
+export const getAllAdminAuditLogsApi = () =>
+  adminClient.get(`${AUTH_API.ADMIN}/audit-logs`);
+
+export const adminLogoutApi = (email) => {
+  console.log("Calling backend logout with email:", email);
+
+  return adminClient
+    .post("/admin/logout", { email })
+    .then((res) => {
+      console.log("Logout API CALLED SUCCESSFULLY", res.data);
+      return res;
+    })
+    .catch((err) => {
+      console.error("Logout API ERROR:", err);
+      throw err;
+    });
+};
+
 //Probation 
 export const fetchNewEmployeeApi =()=>{
   return adminClient.get(`${AUTH_API.ADMIN}/new-employees`);
@@ -605,8 +626,7 @@ export const createProbationPeriodApi =(payload)=>{
 export const fetchassignProbationApi =()=>{
   return adminClient.get(`${AUTH_API.ADMIN}/probation/user`)
 }
-
-// ================== INVOICE APIs ======================
+// / ================== INVOICE APIs ======================
 export const createInvoiceApi = (data) =>
   adminClient.post(`${AUTH_API.ADMIN}/invoices/create`, data);
 

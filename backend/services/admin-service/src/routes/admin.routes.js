@@ -36,7 +36,6 @@ import {
   getAllReferralsAdmin,
   getReferralByIdAdmin,
   updateReferralStatusAdmin,
-  createProbation,
 
   // === EXTRA AUDIT LOG CONTROLLERS ===
   adminLogout,
@@ -51,14 +50,16 @@ import {
   getAllContracts,
   getContractsByFreelancer,
   getContractById,
-
+createProbation,
   createInvoice,
   getAllInvoices,
   getInvoiceById,
   updateInvoiceStatus,
   generateInvoicePDF,
   sendInvoiceReminder,
-  deleteInvoice
+  deleteInvoice,
+  getNewEmployees,
+  getProbationWithUser
  
 } from "../controllers/admin.controller.js";
 
@@ -109,7 +110,7 @@ router.post("/login", adminLogin);
 /* ========== AUDIT LOGS ========== */
 router.post("/logout", adminLogout);
 router.get("/audit-logs", getAllAdminAuditLogs);
-
+//
 
 
 
@@ -244,5 +245,9 @@ router.post("/invoices/reminder/:invoice_id", sendInvoiceReminder);
 // DELETE INVOICE
 router.delete("/invoices/:invoice_id", deleteInvoice);
 
+router.get("/new-employees", getNewEmployees);
 
+router.post("/store-probation", createProbation);
+
+router.get("/probation/user", getProbationWithUser);
 export default router;
