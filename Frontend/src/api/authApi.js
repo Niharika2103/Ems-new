@@ -594,10 +594,6 @@ export const fetchFreelancerContractByIdApi = (contractId) => {
   return adminClient.get(`/admin/freelancer-contract/${contractId}`);
 };
 
-//
-// export const adminLogoutApi = (email) =>
-//   adminClient.post(`${AUTH_API.ADMIN}/logout`, { email });
-
 //Auditlogs
 
 export const getAllAdminAuditLogsApi = () =>
