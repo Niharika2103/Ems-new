@@ -1,7 +1,7 @@
 // application.controller.js
 import pool from "../config/db.js";
 import fs from "fs";
-import OpenAI from "openai";
+//import OpenAI from "openai";
 
 // ============================================================
 // pdf-parse import (works with ES modules / Node v24)

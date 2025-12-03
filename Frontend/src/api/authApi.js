@@ -593,40 +593,27 @@ export const fetchAllFreelancerContractsApi = () => {
 export const fetchFreelancerContractByIdApi = (contractId) => {
   return adminClient.get(`/admin/freelancer-contract/${contractId}`);
 };
-//Probation 
-export const fetchNewEmployeeApi =()=>{
-  return adminClient.get(`${AUTH_API.ADMIN}/new-employees`);
-}
-//creating probation 
-export const createProbationPeriodApi =(payload)=>{
-  return adminClient.post(`${AUTH_API.ADMIN}/store-probation`,payload);
-}
-//fetch assign Probation 
-export const fetchassignProbationApi =()=>{
-  return adminClient.get(`${AUTH_API.ADMIN}/probation/user`)
-}
 
-// ================== INVOICE APIs ======================
-export const createInvoiceApi = (data) =>
-  adminClient.post(`${AUTH_API.ADMIN}/invoices/create`, data);
+//
+// export const adminLogoutApi = (email) =>
+//   adminClient.post(`${AUTH_API.ADMIN}/logout`, { email });
 
-export const getAllInvoicesApi = () =>
-  adminClient.get(`${AUTH_API.ADMIN}/invoices/all`);
+//Auditlogs
 
-export const getInvoiceByIdApi = (invoiceId) =>
-  adminClient.get(`${AUTH_API.ADMIN}/invoices/${invoiceId}`);
+export const getAllAdminAuditLogsApi = () =>
+  adminClient.get(`${AUTH_API.ADMIN}/audit-logs`);
 
-export const updateInvoiceStatusApi = (invoiceId, status, updatedBy) =>
-  adminClient.put(`${AUTH_API.ADMIN}/invoices/status/${invoiceId}`, {
-    status,
-    updated_by: updatedBy,
-  });
+export const adminLogoutApi = (email) => {
+  console.log("Calling backend logout with email:", email);
 
-export const generateInvoicePdfApi = (invoiceId) =>
-  adminClient.get(`${AUTH_API.ADMIN}/invoices/pdf/${invoiceId}`);
-
-export const sendInvoiceReminderApi = (invoiceId) =>
-  adminClient.post(`${AUTH_API.ADMIN}/invoices/reminder/${invoiceId}`);
-
-export const deleteInvoiceApi = (invoiceId) =>
-  adminClient.delete(`${AUTH_API.ADMIN}/invoices/${invoiceId}`);
+  return adminClient
+    .post("/admin/logout", { email })
+    .then((res) => {
+      console.log("Logout API CALLED SUCCESSFULLY", res.data);
+      return res;
+    })
+    .catch((err) => {
+      console.error("Logout API ERROR:", err);
+      throw err;
+    });
+};

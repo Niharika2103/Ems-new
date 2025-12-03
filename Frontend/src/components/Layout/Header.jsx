@@ -9,6 +9,9 @@ import { decodeToken } from "../../api/decodeToekn";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+//import for header audit logs
+import { adminLogoutApi } from "../../api/authApi"; 
+
 const Header = ({ isOpen, setIsOpen }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -25,27 +28,54 @@ const Header = ({ isOpen, setIsOpen }) => {
 
   const open = Boolean(anchorEl);
 
-  useEffect(() => {
-    const getDecoded = async () => {
+  // useEffect(() => {
+  //   const getDecoded = async () => {
+  //     try {
+  //       const decoded = await decodeToken();
+  //       setData(decoded);
+  //     } catch (error) {
+  //       console.error("Error decoding token:", error);
+  //     }
+  //   };
+
+  //   getDecoded();
+
+  //   const employee = JSON.parse(localStorage.getItem("user"));
+  //   setEmp(employee)
+  //   if (employee) {
+  //     setEmail((prev) => ({
+  //       ...prev,
+  //       email: employee.email,
+  //     }));
+  //   }
+  // }, []);
+
+  //auditlogs -logout
+
+ useEffect(() => {
+    const init = async () => {
       try {
         const decoded = await decodeToken();
+        console.log("Decoded token:", decoded);
         setData(decoded);
+
+        const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+        console.log("Stored user:", storedUser);
+        setEmp(storedUser);
+
+        const finalEmail =
+          decoded?.email || storedUser?.email || "";
+
+        console.log("Initial email for logout:", finalEmail);
+        setEmail(finalEmail);
       } catch (error) {
         console.error("Error decoding token:", error);
       }
     };
 
-    getDecoded();
-
-    const employee = JSON.parse(localStorage.getItem("user"));
-    setEmp(employee)
-    if (employee) {
-      setEmail((prev) => ({
-        ...prev,
-        email: employee.email,
-      }));
-    }
+    init();
   }, []);
+
 
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -81,8 +111,47 @@ const Header = ({ isOpen, setIsOpen }) => {
       })
       .catch((err) => toast.error(err.error || "Login failed"));
   };
-  const Logout = () => {
+  // const Logout = () => {
+  //   localStorage.clear();
+  //   if (roleCheck === "admin") {
+  //     window.location.replace("/#/admin/login");
+  //   } else if (roleCheck === "superadmin") {
+  //     window.location.replace("/#/superadmin/login");
+  //   } else if (roleCheck === "employee") {
+  //     window.location.replace("/#/login");
+  //   } else {
+  //     //  If no role exists → go to main landing page
+  //     window.location.href("/#/");
+  //   }
+
+  //   setTimeout(() => {
+  //     window.history.pushState(null, "", window.location.href);
+  //     window.onpopstate = () => {
+  //       window.history.go(1);
+  //     };
+  //   }, 0);
+  //   handleClose();
+  // };
+
+  //auditlogs logout
+  
+const Logout = async () => {
+    try {
+      console.log("Logout clicked. Email state =", email);
+
+      if (email) {
+        await adminLogoutApi(email);   // ⬅ backend call
+      } else {
+        console.warn("No email available for logout, skipping API call.");
+      }
+    } catch (error) {
+      console.error("Logout API Error:", error);
+    }
+
+    // Clear client session
     localStorage.clear();
+
+    // Redirect based on role
     if (roleCheck === "admin") {
       window.location.replace("/#/admin/login");
     } else if (roleCheck === "superadmin") {
@@ -90,19 +159,11 @@ const Header = ({ isOpen, setIsOpen }) => {
     } else if (roleCheck === "employee") {
       window.location.replace("/#/login");
     } else {
-      //  If no role exists → go to main landing page
-      window.location.href("/#/");
+      window.location.replace("/#/");
     }
 
-    setTimeout(() => {
-      window.history.pushState(null, "", window.location.href);
-      window.onpopstate = () => {
-        window.history.go(1);
-      };
-    }, 0);
     handleClose();
   };
-
   return (
     <>
       <header className="flex font-robo font-semibold justify-between items-center px-4 sm:px-6 py-2 bg-gradient-to-r  bg-white text-white shadow-md">
