@@ -3103,34 +3103,53 @@ export const sendInvoiceReminder = async (req, res) => {
     const { invoice_id } = req.params;
 
     const sql = `
-      SELECT inv.invoice_number, inv.net_payable, u.name, u.email
+      SELECT 
+        inv.invoice_number,
+        inv.net_payable,
+        u.name AS freelancer_name,
+        u.email AS freelancer_email
       FROM invoices inv
-      LEFT JOIN user_employees_master u ON u.id = inv.freelancer_id
-      WHERE inv.id=$1
+      LEFT JOIN user_employees_master u 
+        ON u.id = inv.freelancer_id
+      WHERE inv.id = $1
     `;
 
     const { rows } = await pool.query(sql, [invoice_id]);
-    if (rows.length === 0)
+
+    if (rows.length === 0) {
       return res.status(404).json({ error: "Invoice not found" });
+    }
 
     const invoice = rows[0];
 
+    console.log("DEBUG EMAIL:", {
+      to: invoice.freelancer_email,
+      name: invoice.freelancer_name
+    });
+
+    if (!invoice.freelancer_email) {
+      return res.status(400).json({ error: "Freelancer email not found" });
+    }
+
+    // Send Reminder
     await sendEmail({
-      to: invoice.email,
+      to: invoice.freelancer_email,
       subject: `Payment Reminder - Invoice ${invoice.invoice_number}`,
       text: `
-        Dear ${invoice.name},
-        This is a reminder to complete payment for invoice ${invoice.invoice_number}.
-        Net Payable: ₹${invoice.net_payable}.
-      `,
+        Dear ${invoice.freelancer_name},
+        This is a reminder for Invoice ${invoice.invoice_number}.
+        Net Payable: ₹${invoice.net_payable}
+      `
     });
 
     res.json({ success: true, message: "Reminder sent!" });
+
   } catch (err) {
     console.error("Reminder Error:", err);
     res.status(500).json({ error: "Failed to send reminder" });
   }
 };
+
 
 /* -----------------------------------------------------
    7. DELETE INVOICE

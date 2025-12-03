@@ -16,22 +16,23 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export async function sendEmail(
+export async function sendEmail({
   to,
   subject,
-  html,
+  html = "",
+  text = "",
   attachmentPath = null,
-  attachmentName = null
-) {
+  attachmentName = null,
+}) {
   try {
     const mailOptions = {
       from: process.env.FROM_EMAIL,
       to,
       subject,
       html,
+      text,
     };
 
-    // Add attachment if provided
     if (attachmentPath && attachmentName) {
       mailOptions.attachments = [
         {
@@ -43,11 +44,7 @@ export async function sendEmail(
     }
 
     await transporter.sendMail(mailOptions);
-    console.log(
-      `📧 Email sent to ${to} ${
-        attachmentName ? `with attachment: ${attachmentName}` : ""
-      }`
-    );
+    console.log(`📧 Email sent to ${to}`);
   } catch (err) {
     console.error("❌ Email error:", err.message);
     throw err;
