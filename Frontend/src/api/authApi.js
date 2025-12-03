@@ -582,3 +582,27 @@ export const fetchAllFreelancerContractsApi = () => {
 export const fetchFreelancerContractByIdApi = (contractId) => {
   return adminClient.get(`/admin/freelancer-contract/${contractId}`);
 };
+
+//
+// export const adminLogoutApi = (email) =>
+//   adminClient.post(`${AUTH_API.ADMIN}/logout`, { email });
+
+//Auditlogs
+
+export const getAllAdminAuditLogsApi = () =>
+  adminClient.get(`${AUTH_API.ADMIN}/audit-logs`);
+
+export const adminLogoutApi = (email) => {
+  console.log("Calling backend logout with email:", email);
+
+  return adminClient
+    .post("/admin/logout", { email })
+    .then((res) => {
+      console.log("Logout API CALLED SUCCESSFULLY", res.data);
+      return res;
+    })
+    .catch((err) => {
+      console.error("Logout API ERROR:", err);
+      throw err;
+    });
+};

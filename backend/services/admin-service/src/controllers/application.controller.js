@@ -1,7 +1,7 @@
 // application.controller.js
 import pool from "../config/db.js";
 import fs from "fs";
-import OpenAI from "openai";
+//import OpenAI from "openai";
 
 // ============================================================
 // ✅ pdf-parse import (works with ES modules / Node v24)
@@ -19,9 +19,9 @@ import textract from "textract";
 /* ============================================================
    OPENAI CLIENT (still kept, not used)
    ============================================================ */
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// const client = new OpenAI({
+//   apiKey: process.env.OPENAI_API_KEY,
+// });
 
 /* ============================================================
    APPLY FOR JOB (Employee)

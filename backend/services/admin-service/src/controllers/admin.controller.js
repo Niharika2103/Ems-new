@@ -15,6 +15,7 @@ import { loadTemplate } from "../utils/templateLoader.js";
 
 import puppeteer from "puppeteer";
 
+//import { USER_MASTER_TABLE } from '../config/constants.js';
 
 // ✅ Updated table names
 const USER_MASTER_TABLE = "user_employees_master";
@@ -358,6 +359,7 @@ export const adminLogin = async (req, res) => {
     const user = userResult.rows[0];
 
     if (!user) return res.status(401).json({ error: "Invalid email or password" });
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(401).json({ error: "Invalid password" });
 
@@ -402,25 +404,29 @@ export const adminLogin = async (req, res) => {
       name: user.name,
     });
 
-  // AUDIT LOG — LOGIN ENTRY
+    // AUDIT LOG – LOGIN ENTRY
 await client.query(
   `
-  INSERT INTO audit_logs (
-    id,
-    super_admin_id,
-    employee_id,
-    created_by,
-    created_at
-  )
-  VALUES (
-    gen_random_uuid(),
-    NULL,
-    $1,
-    'login',
-    NOW()
-  )
+    INSERT INTO audit_logs (
+      id,
+      super_admin_id,
+      employee_id,
+      created_by,
+      created_at,
+      updated_by,
+      updated_at
+    )
+    VALUES (
+      gen_random_uuid(),
+      NULL,
+      $1,
+      'login',
+      NOW(),
+      NULL,
+      NULL
+    )
   `,
-  [user.id]
+  [user.id]          // MUST be the same "id" used in adminLogout
 );
 
 
@@ -445,7 +451,6 @@ await client.query(
     client.release();
   }
 };
-
 
 /**
  * Verify Admin MFA Setup (after registration)
@@ -2767,77 +2772,103 @@ export const getContractById = async (req, res) => {
 //   }
 // };
 
-//Audit log -logout
+
+// auditlogs
 export const adminLogout = async (req, res) => {
   const client = await pool.connect();
 
   try {
-    // 1️⃣ Decode JWT but ignore expiration so logout still works
-    const authHeader = req.headers.authorization;
+    const { email } = req.body;
 
-    if (!authHeader) {
-      return res.status(401).json({ error: "No token provided" });
+    if (!email) {
+      return res.status(400).json({ error: "Email is required for logout" });
     }
 
-    const token = authHeader.split(" ")[1];
-
-    let decoded;
-    try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET, { ignoreExpiration: true });
-    } catch (err) {
-      return res.status(401).json({ error: "Invalid token" });
-    }
-
-    const employeeId = decoded.id;
-
-    // 2️⃣ Update the LATEST audit log entry (correct PostgreSQL syntax)
-    await client.query(
+    // 1) Get admin user from USERS table
+    const { rows: userRows } = await client.query(
       `
-      UPDATE audit_logs
-      SET 
-        updated_by = 'logout',
-        updated_at = NOW()
-      WHERE id = (
-        SELECT id FROM audit_logs
-        WHERE employee_id = $1
-        ORDER BY created_at DESC
-        LIMIT 1
-      )
+        SELECT id, email FROM ${USER_MASTER_TABLE}
+        WHERE email ILIKE $1 AND role = 'admin'
       `,
-      [employeeId]
+      [email]
     );
 
-    // 3️⃣ Response
-    res.json({ message: "Admin logged out successfully" });
+    if (userRows.length === 0) {
+      return res.status(404).json({ error: "Admin not found" });
+    }
 
+    const user = userRows[0]; // must match the one used at login
+
+    // 2) Update latest login audit record for this admin
+    const result = await client.query(
+      `
+        UPDATE audit_logs AS a
+        SET updated_by = 'logout',
+            updated_at = NOW()
+        FROM (
+          SELECT id
+          FROM audit_logs
+          WHERE employee_id = $1
+            AND created_by = 'login'
+            AND updated_by IS NULL
+          ORDER BY created_at DESC
+          LIMIT 1
+        ) AS t
+        WHERE a.id = t.id
+      `,
+      [user.id]
+    );
+
+    if (result.rowCount === 0) {
+      return res
+        .status(404)
+        .json({ error: "No login session found to update" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Admin logged out successfully",
+    });
   } catch (err) {
-    console.error("Logout Error:", err.message);
-    res.status(500).json({ error: err.message });
+    console.error("Admin Logout Error:", err.message);
+    return res.status(500).json({ error: err.message });
   } finally {
     client.release();
   }
 };
 
+
 export const getAllAdminAuditLogs = async (req, res) => {
   const client = await pool.connect();
+
   try {
     const result = await client.query(`
-      SELECT
-        id,
-        super_admin_id,
-        employee_id,
-        created_by,
-        updated_by,
-        created_at,
-        updated_at
-      FROM audit_logs
-      ORDER BY created_at DESC
-      LIMIT 1000
+      SELECT 
+        al.id AS audit_id,
+        u.id AS user_id,
+        u.name AS user_name,
+        u.email AS user_email,
+        al.created_at AS login_time,
+        CASE 
+          WHEN al.updated_by = 'logout' THEN al.updated_at 
+          ELSE NULL 
+        END AS logout_time
+      FROM audit_logs al
+      LEFT JOIN ${USER_MASTER_TABLE} u 
+        ON u.id = al.employee_id
+      WHERE al.created_by = 'login'  -- Only login-initiated audit rows
+      ORDER BY al.created_at DESC;
     `);
-    res.json({ success: true, count: result.rowCount, audits: result.rows });
+
+    res.json({
+      success: true,
+      count: result.rowCount,
+      audits: result.rows
+    });
+
   } catch (err) {
     console.error("Fetch audit logs error:", err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Failed to fetch audit logs" });
   } finally {
     client.release();
   }
