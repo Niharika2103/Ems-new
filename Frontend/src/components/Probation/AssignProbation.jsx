@@ -51,30 +51,30 @@ const dispatch = useDispatch();
     }
 
     // Start date required
-    if (!startDate) {
-      errs.startDate = "Start date is required";
-    } else {
-      const today = new Date().toISOString().split("T")[0];
+    // if (!startDate) {
+    //   errs.startDate = "Start date is required";
+    // } else {
+    //   const today = new Date().toISOString().split("T")[0];
 
-      // Rule 1: start date cannot be in the past
-      if (startDate < today) {
-        errs.startDate = "Start date cannot be in the past";
-      }
+    //   // Rule 1: start date cannot be in the past
+    //   if (startDate < today) {
+    //     errs.startDate = "Start date cannot be in the past";
+    //   }
 
       // Rule 2: cannot exceed 1 year from today
-      const limitDate = addMonthsToDate(today, 12);
-      if (startDate > limitDate) {
-        errs.startDate = "Start date cannot be more than 1 year from today";
-      }
+    //   const limitDate = addMonthsToDate(today, 12);
+    //   if (startDate > limitDate) {
+    //     errs.startDate = "Start date cannot be more than 1 year from today";
+    //   }
 
-      // Rule 3: start date cannot be before joining date
-      if (joiningDate) {
-        const jd = joiningDate.split("T")[0];
-        if (startDate < jd) {
-          errs.startDate = `Start date cannot be before joining date (${jd})`;
-        }
-      }
-    }
+    //   // Rule 3: start date cannot be before joining date
+    //   if (joiningDate) {
+    //     const jd = joiningDate.split("T")[0];
+    //     if (startDate < jd) {
+    //       errs.startDate = `Start date cannot be before joining date (${jd})`;
+    //     }
+    //   }
+    // }
 
     // Duration
     if (duration === "" || duration === null) {
