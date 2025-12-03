@@ -77,6 +77,8 @@ import ContractManagement from "../pages/contracter/ContractManagement";
 import AccountsDashboard from "../pages/dashbaord/AccountsDashboard";
 import PayrollSystem from "../pages/Accounts/PayrollSystem";
 import InvoiceModule from "../pages/invoice/InvoiceModule";
+import ProbationManagementSystem from "../pages/Probation/probation_management";
+// import EmailTemplateManager from "../pages/EmailTemplateManager";
 import VendorLogin from "../pages/Auth/VendorLogin";
 
 
@@ -92,6 +94,7 @@ function AppRoutes() {
       <Route path="/superadmin/login" element={<SuperAdminLogin />} />
       <Route path="/superadmin/register" element={<SuperAdminRegister />} />
       <Route path="/login/reset-password" element={<ResetPassword />} />
+      <Route path="/vendor/login" element={<VendorLogin />} />
       <Route path="/vendor/registration" element={<VendorPanel />} />
       <Route path="/dashboard/admin-panel" element={
         <ProtectedRoute allowedRoles={["employee", "admin"]}>
@@ -114,6 +117,13 @@ function AppRoutes() {
       {/* Routes with Layout */}
       <Route element={<Layout />}>
         {/* Employee routes */}
+        <Route path="/dashboard/empinfo/probation"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <ProbationManagementSystem />
+            </ProtectedRoute>
+
+          } />
         <Route
           path="/dashboard/assign_project"
           element={
@@ -177,15 +187,15 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-      <Route path="/accounts/payroll" 
-      element={
-          <ProtectedRoute allowedRoles={["admin"]}>
+        <Route path="/accounts/payroll"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
               <PayrollSystem />
             </ProtectedRoute>
           }
         />
-      
-        
+
+
         <Route path="/job-postings"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
@@ -447,7 +457,7 @@ function AppRoutes() {
           path="/dashboard/accounts"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
-              <AccountsDashboard/>
+              <AccountsDashboard />
             </ProtectedRoute>
           }
         />
@@ -577,32 +587,31 @@ function AppRoutes() {
               < CustomReports />
             </ProtectedRoute>
           }
-        />  
-         <Route path="/recruitment/panel-management" element={<PanelManagement />} />
+        />
+        <Route path="/recruitment/panel-management" element={<PanelManagement />} />
 
-         <Route path="/audits-and-logs"
+        <Route path="/audits-and-logs"
           element={
-             <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["admin"]}>
               < AuditLogsPage />
             </ProtectedRoute>
           }
-        /> 
-        
+        />
+
         <Route path="/manage" element={<ContractManagement />} />
 
-        <Route path="/invoices" 
-        element={
-             <ProtectedRoute allowedRoles={["admin","employee"]}>
+        <Route path="/invoices"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
               < InvoiceModule />
             </ProtectedRoute>
           }
         />
-       
-     {/* <Route path="/email-templates" element={<EmailTemplateManager />} /> */}
 
-      <Route path="/vendor/login" element={<VendorLogin />} />
+        {/* <Route path="/email-templates" element={<EmailTemplateManager />} /> */}
 
-         
+
+
       </Route>
 
     </Routes>

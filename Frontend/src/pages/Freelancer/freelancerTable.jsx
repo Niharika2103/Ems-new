@@ -28,7 +28,7 @@ import {
 import { fetchAllFreelancer } from "../../features/freelancer/freelancerSlice";
 import { decodeToken } from "../../api/decodeToekn";
 import { validateEmployeeEdit } from "../../utils/validation";
-import { createFreelancerContractApi } from "../../api/authApi";
+import { createFreelancerContractApi,createInvoiceApi, fetchFreelancerContractsApi } from "../../api/authApi";
 const { Search } = Input;
 
 export default function FreelancerTable() {
@@ -60,7 +60,7 @@ export default function FreelancerTable() {
     invoice_date: moment(),
     due_date: moment().add(7, 'days'),
   });
-
+const [selectedFreelancerContracts, setSelectedFreelancerContracts] = useState([]);
   const freelancers = useSelector(
     (state) => state.freelancerInfo.freelancerlist
   );
@@ -224,15 +224,23 @@ export default function FreelancerTable() {
   };
 
   // Invoice Handlers
-  const handleCreateInvoice = (record) => {
-    setSelectedFreelancerForInvoice(record);
-    setInvoiceForm({
-      amount: "",
-      invoice_date: moment(),
-      due_date: moment().add(7, 'days'),
-    });
-    setIsInvoiceModalOpen(true);
-  };
+ const handleCreateInvoice = async (record) => {
+  setSelectedFreelancerForInvoice(record);
+
+  // Fetch contracts for that freelancer
+  const res = await fetchFreelancerContractsApi(record.id);
+  setSelectedFreelancerContracts(res.data);
+
+  setInvoiceForm({
+    amount: "",
+    contract_id: "",
+    invoice_date: moment(),
+    due_date: moment().add(7, "days"),
+  });
+
+  setIsInvoiceModalOpen(true);
+};
+
 
   const handleInvoiceChange = (name, value) => {
     setInvoiceForm(prev => ({
@@ -247,40 +255,41 @@ export default function FreelancerTable() {
       [name]: date
     }));
   };
+const handleInvoiceSubmit = async (e) => {
+  e.preventDefault();
 
-  const handleInvoiceSubmit = async (e) => {
-    e.preventDefault();
+  const invoiceDateStr = invoiceForm.invoice_date?.format("YYYY-MM-DD");
+  const dueDateStr = invoiceForm.due_date?.format("YYYY-MM-DD");
 
-    const invoiceDateStr = invoiceForm.invoice_date ? invoiceForm.invoice_date.format('YYYY-MM-DD') : "";
-    const dueDateStr = invoiceForm.due_date ? invoiceForm.due_date.format('YYYY-MM-DD') : "";
+  if (!invoiceForm.amount || !invoiceDateStr || !dueDateStr) {
+    toast.error("Please fill all required fields");
+    return;
+  }
 
-    if (!invoiceForm.amount || !invoiceDateStr || !dueDateStr) {
-      toast.error("Please fill all required fields");
-      return;
-    }
+  setLoading(true);
 
-    if (parseFloat(invoiceForm.amount) <= 0) {
-      toast.error("Amount must be greater than 0");
-      return;
-    }
+  try {
+    const payload = {
+      freelancer_id: selectedFreelancerForInvoice.id,
+      contract_id: invoiceForm.contract_id || null,
+      amount: Number(invoiceForm.amount),
+      invoice_date: invoiceDateStr,
+      due_date: dueDateStr,
+      created_by: "ADMIN",
+    };
 
-    setLoading(true);
-    try {
-      // Here you can add your API call to create invoice
-      // const response = await createFreelancerInvoiceApi(invoiceData);
-      
-      toast.success("Invoice created successfully!");
-      setIsInvoiceModalOpen(false);
-      
-      // Navigate to invoices page
-      navigate('/invoices');
+    await createInvoiceApi(payload);
 
-    } catch (error) {
-      toast.error(error?.response?.data?.error || "Failed to create invoice");
-    } finally {
-      setLoading(false);
-    }
-  };
+    toast.success("Invoice created successfully!");
+    setIsInvoiceModalOpen(false);
+    navigate("/invoices");
+  } catch (error) {
+    toast.error(error?.response?.data?.error || "Failed to create invoice");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   // Table Columns
   const columns = [
@@ -730,6 +739,25 @@ export default function FreelancerTable() {
             onSubmit={handleInvoiceSubmit}
             sx={{ background: "white", padding: "24px", borderRadius: "12px" }}
           >
+
+            <Grid item xs={12}>
+  <TextField
+    select
+    label="Select Contract"
+    fullWidth
+    size="small"
+    value={invoiceForm.contract_id}
+    onChange={(e) => handleInvoiceChange("contract_id", e.target.value)}
+    required
+  >
+    {selectedFreelancerContracts.map((contract) => (
+      <MenuItem key={contract.id} value={contract.id}>
+        {contract.contract_title} – ₹{contract.payment_amount}
+      </MenuItem>
+    ))}
+  </TextField>
+</Grid>
+
             <Grid container spacing={2}>
               {/* Invoice Amount */}
               <Grid item xs={12}>
