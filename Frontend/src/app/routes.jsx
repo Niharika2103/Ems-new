@@ -82,8 +82,7 @@ import CommissionSystemDashboard from "../pages/Freelancer/Commision/CommissionS
 import VendorLogin from "../pages/Auth/VendorLogin";
 import PayoutManagement from "../pages/Freelancer/payouts/PayoutManagement";
 import SettingsPage from "../pages/Settings/SettingsPage";
-// import EmailTemplatesPage from "../pages/Templates/EmailTemplatesPage";
-// import WhatsAppTemplatesPage from "../pages/Templates/WhatsAppTemplatesPage";
+import PanelFeedbackTable from "../pages/JobPosting/PanelFeedbackTable";
 
 
 
@@ -619,8 +618,8 @@ function AppRoutes() {
        <Route path="/payout-management" element={<PayoutManagement />} />
        <Route path="/commision" element={<CommissionSystemDashboard />} />
        <Route path="/settings" element={<SettingsPage />} />
-       {/* <Route path="/email-template" element={<EmailTemplatesPage />} /> */}
-       {/* <Route path="/watsup-template" element={<WhatsAppTemplatesPage />} /> */}
+       <Route path="/feedback-table" element={<PanelFeedbackTable />} />
+       
 
        
       </Route>
