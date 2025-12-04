@@ -1,5 +1,7 @@
 import { superadminClient,employeeClient,adminClient,ProjectClient,AttendanceClient,SalaryStructureClient, freelancerClient ,vendorClient } from "./axiosClient";
 import { AUTH_API } from "../utils/constants";
+
+
 import { RestaurantMenuSharp } from "@mui/icons-material";
 
 
@@ -158,6 +160,12 @@ export const parseResumeApi = (formData) =>
     headers: { "Content-Type": "multipart/form-data" }
   });
 
+// ======================= GET INTERVIEWS BY APPLICATION ID =======================
+export const getInterviewsByApplicationApi = (application_id) => {
+  return adminClient.get(`/admin/interviews/${application_id}`);
+};
+
+// ================== Interview Panels ==================
 
 
 // ======== Letter Generation API ========

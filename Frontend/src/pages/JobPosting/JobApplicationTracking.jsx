@@ -37,6 +37,9 @@ import {
   updateApplicationStatusApi,
   filterApplicationsApi,
   scheduleInterviewApi,
+  rescheduleInterviewApi,
+  cancelInterviewApi,
+  getInterviewsByApplicationApi, // ✅ you must have this in authApi
 } from "../../api/authApi";
 
 const STATUS_STEPS = ["APPLIED", "SCREENING", "INTERVIEW", "DECISION"];
@@ -131,9 +134,16 @@ export default function ApplicationTrackingTable() {
   const [selectedRow, setSelectedRow] = useState(null);
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
-  const [panels, setPanels] = useState(mockPanels);
+  const [panels, setPanels] = useState([]);
   const [scheduleTab, setScheduleTab] = useState(0);
 
+  const [latestInterviewId, setLatestInterviewId] = useState(null); // ✅ NEW
+  
+  const [interviewsList, setInterviewsList] = useState([]);
+  const [interviewSelectDialog, setInterviewSelectDialog] = useState(false);
+  const [selectedInterviewId, setSelectedInterviewId] = useState(null);
+  const [actionType, setActionType] = useState(""); // "reschedule" or "cancel"
+  
   // Interview scheduling form
   const [interviewDate, setInterviewDate] = useState(new Date());
   const [interviewTime, setInterviewTime] = useState(new Date());
@@ -161,6 +171,7 @@ export default function ApplicationTrackingTable() {
       const rows = list.map((app, index) => ({
         id: index + 1,
         appId: app.application_id,
+        candidateName: app.candidate_name, // keep this if backend sends it
         jobTitle: app.job_title?.trim() ? app.job_title : "Unknown Title",
         appliedOn: app.applied_date || "Not Provided",
         status: (app.status || "APPLIED").toUpperCase(),
@@ -180,9 +191,8 @@ export default function ApplicationTrackingTable() {
       skills: "",
       experience: "",
       location: "",
-     startDate: new Date().toISOString().split("T")[0],
-endDate: new Date().toISOString().split("T")[0],
-
+      startDate: new Date().toISOString().split("T")[0],
+      endDate: new Date().toISOString().split("T")[0],
     });
 
     try {
@@ -192,6 +202,7 @@ endDate: new Date().toISOString().split("T")[0],
       const rows = list.map((app, index) => ({
         id: index + 1,
         appId: app.application_id,
+        candidateName: app.candidate_name,
         jobTitle: app.job_title?.trim() ? app.job_title : "Unknown Title",
         appliedOn: app.applied_date || "Not Provided",
         status: (app.status || "APPLIED").toUpperCase(),
@@ -229,10 +240,7 @@ endDate: new Date().toISOString().split("T")[0],
     const newStatus = STATUS_STEPS[newIndex];
 
     try {
-      await updateApplicationStatusApi(
-        selectedRow.appId,
-        newStatus.toUpperCase()
-      );
+      await updateApplicationStatusApi(selectedRow.appId, newStatus.toUpperCase());
 
       const updatedRow = { ...selectedRow, status: newStatus };
       setSelectedRow(updatedRow);
@@ -247,6 +255,33 @@ endDate: new Date().toISOString().split("T")[0],
       alert("Failed to update status");
     }
   };
+//---------------------------------------------
+  useEffect(() => {
+  const fetchPanels = async () => {
+    try {
+      const res = await getAllPanelsApi();
+      const list = res.data || [];
+
+      const formattedPanels = list.map((p, index) => ({
+        id: index + 1,
+        name: p.panel_name,
+        members: p.members.map(m => ({
+          id: m.employee_id,
+          name: m.fullname,
+          role: m.designation
+        })),
+        status: "Active",
+      }));
+
+      setPanels(formattedPanels);
+    } catch (err) {
+      console.error("Failed to load panels:", err);
+    }
+  };
+
+  fetchPanels();
+}, []);
+
 
   // ================= SCHEDULE INTERVIEW =================
   const handleScheduleInterview = (row) => {
@@ -261,10 +296,23 @@ endDate: new Date().toISOString().split("T")[0],
     setSelectedPanels([]);
   };
 
-  const handleUpdateStatus = (row) => {
-    setSelectedRow(row);
-    setStatusDialogOpen(true);
-  };
+  // ✅ UPDATED: when opening status dialog, also fetch latest interview_id
+  const handleUpdateStatus = async (row) => {
+  setSelectedRow(row);
+  setStatusDialogOpen(true);
+
+  try {
+    const res = await getInterviewsByApplicationApi(row.appId);
+    const interviews = res.data?.interviews || [];
+
+    setInterviewsList(interviews);
+    setSelectedInterviewId(null); // reset previous selection
+  } catch (err) {
+    console.error("Error fetching interviews for application", err);
+  }
+};
+
+
 
   const handleStatusUpdate = async (newStatus) => {
     if (!selectedRow) return;
@@ -305,7 +353,6 @@ endDate: new Date().toISOString().split("T")[0],
       const formattedTime = formatTimeLocal(interviewTime);
 
       try {
-        // Send BOTH meeting_link and location as the pasted Google Meet link
         const res = await scheduleInterviewApi({
           application_id: selectedRow.appId,
           interview_date: formattedDate,
@@ -326,7 +373,6 @@ endDate: new Date().toISOString().split("T")[0],
           setMeetingLink(generatedLink);
         }
 
-        // Update status AFTER backend success
         await updateApplicationStatusApi(selectedRow.appId, "INTERVIEW");
 
         const updatedRow = {
@@ -377,7 +423,6 @@ endDate: new Date().toISOString().split("T")[0],
       const panelMemberIds = allMembers.map((m) => m.id);
 
       try {
-        // Default date/time for panel interview (today at 10:00)
         const today = new Date();
         const defaultDate = formatDateLocal(today);
         const defaultTime = "10:00:00";
@@ -438,6 +483,76 @@ endDate: new Date().toISOString().split("T")[0],
       }
     }
   };
+
+  // ======== RESCHEDULE FUNCTION (uses latestInterviewId) ========
+      const handleRescheduleInterview = () => {
+      if (interviewsList.length === 0) {
+        alert("No interviews found.");
+        return;
+      }
+      setSelectedInterviewId(null);
+      setActionType("reschedule");
+      setInterviewSelectDialog(true);
+    };
+
+
+
+  // ======== CANCEL FUNCTION (uses latestInterviewId) ========
+      const handleCancelInterview = () => {
+      if (interviewsList.length === 0) {
+        alert("No interviews found.");
+        return;
+      }
+      setSelectedInterviewId(null);
+      setActionType("cancel");
+      setInterviewSelectDialog(true);
+    };
+
+   
+
+      const executeReschedule = async () => {
+      const newDate = prompt("Enter new interview date (YYYY-MM-DD)");
+      const newTime = prompt("Enter new interview time (HH:MM)");
+      const newMeet = prompt("Paste new Google Meet link");
+
+      if (!newDate || !newTime || !newMeet) {
+        return alert("Date, time, and meeting link are required!");
+      }
+
+      try {
+        await rescheduleInterviewApi(selectedInterviewId, {
+          interview_date: newDate,
+          interview_time: newTime,
+          meeting_link: newMeet
+        });
+
+        alert("Interview rescheduled successfully!");
+        setInterviewSelectDialog(false);
+        setStatusDialogOpen(false);
+        handleClearFilters();
+      } catch (err) {
+        console.error(err);
+        alert("Failed to reschedule interview");
+      }
+    };
+
+    const executeCancel = async () => {
+      if (!window.confirm("Are you sure you want to cancel this interview?"))
+        return;
+
+      try {
+        await cancelInterviewApi(selectedInterviewId);
+
+        alert("Interview cancelled successfully!");
+        setInterviewSelectDialog(false);
+        setStatusDialogOpen(false);
+        handleClearFilters();
+      } catch (err) {
+        console.error(err);
+        alert("Failed to cancel interview");
+      }
+    };
+
 
   // ================= NAVIGATION =================
   const handleNavigateToPanelManagement = () => {
@@ -922,10 +1037,33 @@ endDate: new Date().toISOString().split("T")[0],
           <DialogContent>
             <Typography variant="body1" mb={2}>
               Current status:{" "}
-              <strong>
-                {STATUS_LABEL[selectedRow?.status] || "Unknown"}
-              </strong>
+              <strong>{STATUS_LABEL[selectedRow?.status] || "Unknown"}</strong>
             </Typography>
+
+            {/* ===== RESCHEDULE + CANCEL BUTTONS (Always Visible When INTERVIEW) ===== */}
+            {selectedRow?.status === "INTERVIEW" && (
+              <Box display="flex" flexDirection="column" gap={1.5} mb={2}>
+                <Button
+                  variant="outlined"
+                  color="warning"
+                  fullWidth
+                  onClick={handleRescheduleInterview}
+                >
+                  RESCHEDULE INTERVIEW
+                </Button>
+
+                <Button
+                  variant="outlined"
+                  color="error"
+                  fullWidth
+                  onClick={handleCancelInterview}
+                >
+                  CANCEL INTERVIEW
+                </Button>
+              </Box>
+            )}
+
+            {/* ===== ORIGINAL STATUS BUTTONS ===== */}
             <Box display="flex" flexDirection="column" gap={1.5}>
               {Object.entries(STATUS_LABEL).map(([status, label]) => {
                 if (status === "HIRED" || status === "REJECTED") return null;
@@ -965,10 +1103,56 @@ endDate: new Date().toISOString().split("T")[0],
               })}
             </Box>
           </DialogContent>
+
           <DialogActions>
             <Button onClick={() => setStatusDialogOpen(false)}>Close</Button>
           </DialogActions>
         </Dialog>
+        <Dialog
+  open={interviewSelectDialog}
+  onClose={() => setInterviewSelectDialog(false)}
+  maxWidth="sm"
+  fullWidth
+>
+  <DialogTitle>Select Interview</DialogTitle>
+  <DialogContent>
+    {interviewsList.length === 0 ? (
+      <Typography>No interviews found.</Typography>
+    ) : (
+      interviewsList.map((intv) => (
+        <Button
+          key={intv.interview_id}
+          fullWidth
+          variant="outlined"
+          sx={{ my: 1 }}
+          onClick={() => {
+          setSelectedInterviewId(intv.interview_id);
+        }}
+
+        >
+          {intv.interview_type} — {intv.interview_date} {intv.interview_time}
+        </Button>
+      ))
+    )}
+  </DialogContent>
+
+  <DialogActions>
+    <Button onClick={() => setInterviewSelectDialog(false)}>Close</Button>
+
+    <Button
+      variant="contained"
+      disabled={!selectedInterviewId}
+      onClick={() =>
+        actionType === "reschedule"
+          ? executeReschedule()
+          : executeCancel()
+      }
+    >
+      {actionType === "reschedule" ? "Reschedule" : "Cancel"}
+    </Button>
+  </DialogActions>
+</Dialog>
+
       </Box>
     </LocalizationProvider>
   );
