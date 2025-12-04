@@ -76,4 +76,18 @@ public interface AttendanceRepository extends JpaRepository<AttendanceEntity, UU
 		    @Param("employeeId") UUID employeeId,
 		    @Param("beforeDate") LocalDate beforeDate
 		);
+
+    @Query("SELECT COUNT(a) FROM AttendanceEntity a WHERE a.employee.id = :employeeId " +
+            "AND YEAR(a.date) = :year AND MONTH(a.date) = :month " +
+            "AND a.leaveType = :leaveType")
+    long countByEmployeeIdAndMonthAndLeaveType(
+            @Param("employeeId") UUID employeeId,
+            @Param("year") int year,
+            @Param("month") int month,
+            @Param("leaveType") String leaveType
+    );
+    Optional<AttendanceEntity> findTopByEmployee_IdAndProject_IdAndDateBeforeOrderByDateDesc(
+            UUID employeeId, UUID projectId, LocalDate date
+    );
+
 }

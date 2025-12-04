@@ -1,30 +1,24 @@
 // application.controller.js
 import pool from "../config/db.js";
 import fs from "fs";
-import OpenAI from "openai";
+//import OpenAI from "openai";
 
 // ============================================================
-// ✅ pdf-parse import (works with ES modules / Node v24)
+// pdf-parse import (works with ES modules / Node v24)
 // ============================================================
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
-const pdfParse = require("pdf-parse");   // <-- pdfParse works correctly
+const pdfParse = require("pdf-parse");
 
 // ============================================================
-// 📌 Extra imports for DOCX + DOC support
+// DOCX + DOC support
 // ============================================================
 import mammoth from "mammoth";
 import textract from "textract";
 
-/* ============================================================
-   OPENAI CLIENT (still kept, not used)
-   ============================================================ */
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 /* ============================================================
-   APPLY FOR JOB (Employee)
+   APPLY FOR JOB
    ============================================================ */
 export const applyForJob = async (req, res) => {
   try {
@@ -87,7 +81,7 @@ export const applyForJob = async (req, res) => {
 };
 
 /* ============================================================
-   GET ALL APPLICATIONS (ADMIN)
+   GET ALL APPLICATIONS
    ============================================================ */
 export const getAllApplications = async (req, res) => {
   try {
@@ -123,7 +117,7 @@ export const getAllApplications = async (req, res) => {
 };
 
 /* ============================================================
-   GET APPLICATIONS FOR A SPECIFIC JOB
+   GET APPLICATIONS BY JOB
    ============================================================ */
 export const getApplicationsByJob = async (req, res) => {
   try {
@@ -163,7 +157,8 @@ export const getApplicationsByJob = async (req, res) => {
 };
 
 /* ============================================================
-   UPDATE APPLICATION STATUS
+   UPDATE APPLICATION STATUS (ADMIN)
+   — Simple Status Update Only
    ============================================================ */
 export const updateApplicationStatus = async (req, res) => {
   try {
@@ -195,6 +190,7 @@ export const updateApplicationStatus = async (req, res) => {
       });
     }
 
+    // --------- SIMPLE STATUS UPDATE ONLY ----------
     const query = `
       UPDATE applications
       SET status = $1, updated_at = NOW()
@@ -211,7 +207,7 @@ export const updateApplicationStatus = async (req, res) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       message: "Application status updated successfully",
       data: result.rows[0],
@@ -219,9 +215,13 @@ export const updateApplicationStatus = async (req, res) => {
 
   } catch (error) {
     console.error("Status Update Error:", error);
-    res.status(500).json({ success: false, message: "Server error" });
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 };
+
 
 /* ============================================================
    FILTER APPLICATIONS  
@@ -317,7 +317,7 @@ export const filterApplications = async (req, res) => {
 };
 
 /* ============================================================
-   PARSE RESUME — PDF, DOCX, DOC support added
+   PARSE RESUME  
    ============================================================ */
 export const parseResume = async (req, res) => {
   try {
@@ -333,17 +333,11 @@ export const parseResume = async (req, res) => {
 
     let text = "";
 
-    // -------------------------------
-    // 1️⃣ PDF
-    // -------------------------------
     if (mimeType === "application/pdf") {
       const pdf = await pdfParse(fileBuffer);
       text = pdf.text || "";
     }
 
-    // -------------------------------
-    // 2️⃣ DOCX (.docx → mammoth)
-    // -------------------------------
     else if (
       mimeType ===
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
@@ -352,9 +346,6 @@ export const parseResume = async (req, res) => {
       text = result.value || "";
     }
 
-    // -------------------------------
-    // 3️⃣ DOC (.doc → textract)
-    // -------------------------------
     else if (mimeType === "application/msword") {
       text = await new Promise((resolve, reject) => {
         textract.fromBufferWithName(req.file.originalname, fileBuffer, (err, txt) => {
@@ -364,9 +355,6 @@ export const parseResume = async (req, res) => {
       });
     }
 
-    // -------------------------------
-    // ❌ Unsupported file
-    // -------------------------------
     else {
       return res.status(400).json({
         success: false,
@@ -374,9 +362,6 @@ export const parseResume = async (req, res) => {
       });
     }
 
-    // -------------------------------
-    // Extract data (same logic)
-    // -------------------------------
     const lines = text
       .split("\n")
       .map((l) => l.trim())

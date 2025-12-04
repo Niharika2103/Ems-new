@@ -1,8 +1,8 @@
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
-
+ 
 dotenv.config();
-
+ 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: process.env.SMTP_PORT,
@@ -15,7 +15,7 @@ const transporter = nodemailer.createTransport({
     rejectUnauthorized: false, // allow self-signed certificates
   },
 });
-
+ 
 export async function sendEmail(
   to,
   subject,
@@ -30,7 +30,7 @@ export async function sendEmail(
       subject,
       html,
     };
-
+ 
     // Add attachment if provided
     if (attachmentPath && attachmentName) {
       mailOptions.attachments = [
@@ -41,7 +41,7 @@ export async function sendEmail(
         },
       ];
     }
-
+ 
     await transporter.sendMail(mailOptions);
     console.log(
       `📧 Email sent to ${to} ${

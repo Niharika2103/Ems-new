@@ -15,6 +15,7 @@ import { loadTemplate } from "../utils/templateLoader.js";
 
 import puppeteer from "puppeteer";
 
+//import { USER_MASTER_TABLE } from '../config/constants.js';
 
 // ✅ Updated table names
 const USER_MASTER_TABLE = "user_employees_master";
@@ -22,6 +23,8 @@ const REGISTRATIONS_TABLE = "registrations";
 const SUPERADMINS_TABLE = "super_admins";
 const REFERRALS_TABLE = "referrals";
 const PROBATION ="probation";
+const PANEL_MEMBERS_TABLE = "panel_members";
+const INTERVIEWS_TABLE = "interviews"
 
 // ================== Multer Config ==================
 const uploadDir = path.join(process.cwd(), "src/uploads");
@@ -359,6 +362,7 @@ export const adminLogin = async (req, res) => {
     const user = userResult.rows[0];
 
     if (!user) return res.status(401).json({ error: "Invalid email or password" });
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(401).json({ error: "Invalid password" });
 
@@ -403,25 +407,29 @@ export const adminLogin = async (req, res) => {
       name: user.name,
     });
 
-  // AUDIT LOG — LOGIN ENTRY
+    // AUDIT LOG – LOGIN ENTRY
 await client.query(
   `
-  INSERT INTO audit_logs (
-    id,
-    super_admin_id,
-    employee_id,
-    created_by,
-    created_at
-  )
-  VALUES (
-    gen_random_uuid(),
-    NULL,
-    $1,
-    'login',
-    NOW()
-  )
+    INSERT INTO audit_logs (
+      id,
+      super_admin_id,
+      employee_id,
+      created_by,
+      created_at,
+      updated_by,
+      updated_at
+    )
+    VALUES (
+      gen_random_uuid(),
+      NULL,
+      $1,
+      'login',
+      NOW(),
+      NULL,
+      NULL
+    )
   `,
-  [user.id]
+  [user.id]          // MUST be the same "id" used in adminLogout
 );
 
 
@@ -446,7 +454,6 @@ await client.query(
     client.release();
   }
 };
-
 
 /**
  * Verify Admin MFA Setup (after registration)
@@ -675,7 +682,6 @@ export const getAdminById = async (req, res) => {
 };
 
 // ================== Update Admin Profile ==================
-
 export const updateAdminProfile = async (req, res) => {
   const client = await pool.connect();
   try {
@@ -691,17 +697,36 @@ export const updateAdminProfile = async (req, res) => {
       return res.status(404).json({ error: "Admin not found" });
     }
 
-    let updates = { ...existing.rows[0], ...req.body };
+    // ✅ Whitelist of allowed database columns (snake_case)
+    const allowedFields = [
+      'name',
+      'dob',
+      'gender',
+      'email',
+      'phone',
+      'department',
+      'address',
+      'permanent_address',
+      'emergency_contact',
+      'profile_photo',
+      'resume',
+      'password'
+    ];
 
-    // 🚫 Remove restricted fields
-    delete updates.role;
-    delete updates.mfa_secret;
-    delete updates.mfa_enabled;
-    delete updates.employee_id;
-    delete updates.date_of_joining;
-    delete updates.access_flag;
+    // ✅ Initialize updates with existing values
+    const updates = {};
+    for (const field of allowedFields) {
+      updates[field] = existing.rows[0][field];
+    }
 
-    // 🔐 Hash password if updated
+    // ✅ Override with text fields from req.body (excluding file-related fields)
+    for (const field of allowedFields) {
+      if (field !== 'profile_photo' && field !== 'resume' && req.body[field] !== undefined) {
+        updates[field] = req.body[field];
+      }
+    }
+
+    // 🔐 Hash password if provided
     if (req.body.password) {
       updates.password = await bcrypt.hash(req.body.password, 10);
     }
@@ -714,7 +739,7 @@ export const updateAdminProfile = async (req, res) => {
       updates.resume = req.files.resume[0].filename;
     }
 
-    // ✅ Build dynamic query for updates
+    // ✅ Build dynamic query using only valid DB columns
     const setFields = Object.keys(updates)
       .map((key, index) => `${key} = $${index + 1}`)
       .join(", ");
@@ -741,7 +766,8 @@ export const updateAdminProfile = async (req, res) => {
     });
   } catch (err) {
     console.error("Update Admin Profile Error:", err.message);
-    res.status(500).json({ message: err.message });
+    console.error("Full error:", err); // For debugging
+    return res.status(500).json({ message: "Internal server error" });
   } finally {
     client.release();
   }
@@ -1686,7 +1712,9 @@ const templateFileMap = {
   "Promotion Letter": "promotionLetter.html",
   "Salary Increment Letter": "salaryIncrementLetter.html",
   "Warning Letter": "warningLetter.html",
-  "freelancer contract":"freelancerContract.html" 
+  "freelancer contract":"freelancerContract.html" ,
+  "invoice Template":"invoiceTemplate.html",
+
 };
 
 // Replace {{placeholders}}
@@ -2384,7 +2412,6 @@ export const updateReferralStatusAdmin = async (req, res) => {
 
 //   await browser.close();
 // }
-
 export const createFreelancerContract = async (req, res) => {
   const client = await pool.connect();
 
@@ -2470,9 +2497,9 @@ export const createFreelancerContract = async (req, res) => {
     await client.query(
       `
         INSERT INTO freelancer_contracts (
-        freelancer_id, contract_title, contract_start_date, contract_end_date,
-        payment_type, payment_amount, payment_terms, scope_of_work,
-        pdf_file, version
+          freelancer_id, contract_title, contract_start_date, contract_end_date,
+          payment_type, payment_amount, payment_terms, scope_of_work,
+          pdf_file, version
         )
         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,1)
       `,
@@ -2489,8 +2516,21 @@ export const createFreelancerContract = async (req, res) => {
       ]
     );
 
+    // ✅ Send email with attachment (using your existing sendEmail)
+    await sendEmail(
+      freelancer.email,
+      `Your Contract - ${contract_title}`,
+      `
+        <p>Hello <strong>${freelancer.name}</strong>,</p>
+        <p>Your freelancer contract has been created successfully.</p>
+        <p>Please find the attached PDF for your reference.</p>
+      `,
+      filePath,   // attachment path
+      fileName    // attachment filename
+    );
+
     res.json({
-      message: "Contract created successfully",
+      message: "Contract created successfully and email sent.",
       pdf_url: `/uploads/contracts/${fileName}`
     });
 
@@ -2590,8 +2630,21 @@ export const updateContract = async (req, res) => {
       ]
     );
 
+    // ✅ Email updated contract with attachment
+    await sendEmail(
+      freelancer.email,
+      `Updated Contract (Version ${newVersion})`,
+      `
+        <p>Hello <strong>${freelancer.name}</strong>,</p>
+        <p>Your freelancer contract has been updated.</p>
+        <p>Please find the updated contract attached as PDF.</p>
+      `,
+      filePath,
+      fileName
+    );
+
     res.json({
-      message: "Contract updated successfully",
+      message: "Contract updated successfully and email sent.",
       version: newVersion,
       pdf_url: `/uploads/contracts/${fileName}`
     });
@@ -2604,9 +2657,25 @@ export const updateContract = async (req, res) => {
   }
 };
 
+
 export const cancelContract = async (req, res) => {
   try {
     const { contract_id } = req.params;
+
+    const contract = await pool.query(
+      `SELECT freelancer_id FROM freelancer_contracts WHERE id=$1`,
+      [contract_id]
+    );
+
+    if (contract.rowCount === 0) {
+      return res.status(404).json({ error: "Contract not found" });
+    }
+
+    const freelancerRes = await pool.query(
+      `SELECT name, email FROM user_employees_master WHERE id=$1`,
+      [contract.rows[0].freelancer_id]
+    );
+    const freelancer = freelancerRes.rows[0];
 
     await pool.query(
       `UPDATE freelancer_contracts 
@@ -2615,7 +2684,17 @@ export const cancelContract = async (req, res) => {
       [contract_id]
     );
 
-    res.json({ message: "Contract cancelled successfully" });
+    // ✅ Notify via email
+    await sendEmail(
+      freelancer.email,
+      "Your Contract Has Been Cancelled",
+      `
+        <p>Hello <strong>${freelancer.name}</strong>,</p>
+        <p>Your freelancer contract has been <strong>cancelled</strong> by the admin.</p>
+      `
+    );
+
+    res.json({ message: "Contract cancelled successfully and email sent." });
   } catch (err) {
     console.error("Cancel Contract Error:", err);
     res.status(500).json({ error: "Failed to cancel contract" });
@@ -2627,6 +2706,21 @@ export const updateContractStatus = async (req, res) => {
     const { contract_id } = req.params;
     const { status } = req.body;
 
+    const contract = await pool.query(
+      `SELECT freelancer_id FROM freelancer_contracts WHERE id=$1`,
+      [contract_id]
+    );
+
+    if (contract.rowCount === 0) {
+      return res.status(404).json({ error: "Contract not found" });
+    }
+
+    const freelancerRes = await pool.query(
+      `SELECT name, email FROM user_employees_master WHERE id=$1`,
+      [contract.rows[0].freelancer_id]
+    );
+    const freelancer = freelancerRes.rows[0];
+
     await pool.query(
       `UPDATE freelancer_contracts 
        SET contract_status=$1, updated_at=NOW()
@@ -2634,7 +2728,16 @@ export const updateContractStatus = async (req, res) => {
       [status, contract_id]
     );
 
-    res.json({ message: "Status updated successfully" });
+    await sendEmail(
+      freelancer.email,
+      `Contract Status Updated - ${status}`,
+      `
+        <p>Hello <strong>${freelancer.name}</strong>,</p>
+        <p>Your contract status has been updated to <strong>${status}</strong>.</p>
+      `
+    );
+
+    res.json({ message: "Status updated successfully and email sent." });
   } catch (err) {
     console.error("Status Update Error:", err);
     res.status(500).json({ error: "Failed to update status" });
@@ -2656,8 +2759,13 @@ export const renewContract = async (req, res) => {
     }
 
     const old = existing.rows[0];
-
     const newVersion = old.version + 1;
+
+    const freelancerRes = await pool.query(
+      `SELECT name, email FROM user_employees_master WHERE id=$1`,
+      [old.freelancer_id]
+    );
+    const freelancer = freelancerRes.rows[0];
 
     await pool.query(
       `UPDATE freelancer_contracts 
@@ -2666,7 +2774,17 @@ export const renewContract = async (req, res) => {
       [newVersion, new_end_date, contract_id]
     );
 
-    res.json({ message: "Contract renewed successfully", version: newVersion });
+    await sendEmail(
+      freelancer.email,
+      "Your Contract Has Been Renewed",
+      `
+        <p>Hello <strong>${freelancer.name}</strong>,</p>
+        <p>Your freelancer contract has been successfully renewed.</p>
+        <p>New End Date: <strong>${new_end_date}</strong></p>
+      `
+    );
+
+    res.json({ message: "Contract renewed successfully and email sent.", version: newVersion });
   } catch (err) {
     console.error("Renew Contract Error:", err);
     res.status(500).json({ error: "Failed to renew contract" });
@@ -2753,20 +2871,308 @@ export const getContractById = async (req, res) => {
 };
 
 
-// export const getFreelancers = async (req, res) => {
-//   try {
-//     const result = await pool.query(
-//       `SELECT id, name, email, phone, designation, department 
-//        FROM user_employees_master
-//        WHERE employment_type = 'freelancer'
-//        ORDER BY created_at DESC`
-//     );
 
-//   } catch (err) {
-//     console.error("Get Freelancers Error:", err.message);
-//     return res.status(500).json({ error: "Failed to fetch freelancers" });
-//   }
-// };
+/* -----------------------------------------------------
+   1. CREATE INVOICE
+----------------------------------------------------- */
+export const createInvoice = async (req, res) => {
+  try {
+    const {
+      freelancer_id,
+      contract_id,
+      amount,
+      invoice_date,
+      due_date,
+      created_by,
+    } = req.body;
+
+    const GST_PERCENT = 18;
+    const TDS_PERCENT = 10;
+
+    const tax_amount = (amount * GST_PERCENT) / 100;
+    const tds_amount = (amount * TDS_PERCENT) / 100;
+    const net_payable = amount + tax_amount - tds_amount;
+
+    // Generate invoice number
+    const dateObj = new Date(invoice_date);
+    const ym = `${dateObj.getFullYear()}${String(
+      dateObj.getMonth() + 1
+    ).padStart(2, "0")}`;
+
+    const seqQuery = await pool.query(
+      `SELECT COUNT(*) + 1 AS seq FROM invoices WHERE to_char(invoice_date, 'YYYYMM') = $1`,
+      [ym]
+    );
+    const seq = seqQuery.rows[0].seq;
+
+    const invoice_number = `INV-${ym}-${String(seq).padStart(4, "0")}`;
+
+    const insertQuery = `
+      INSERT INTO invoices (
+        freelancer_id, contract_id, invoice_number,
+        amount, tax_amount, tds_amount, net_payable,
+        invoice_date, due_date, status, created_by
+      )
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'pending',$10)
+      RETURNING *
+    `;
+
+    const result = await pool.query(insertQuery, [
+      freelancer_id,
+      contract_id,
+      invoice_number,
+      amount,
+      tax_amount,
+      tds_amount,
+      net_payable,
+      invoice_date,
+      due_date,
+      created_by,
+    ]);
+
+    res.json({
+      success: true,
+      message: "Invoice created successfully",
+      invoice: result.rows[0],
+    });
+  } catch (err) {
+    console.error("Invoice Create Error:", err);
+    res.status(500).json({ error: "Failed to create invoice" });
+  }
+};
+
+/* -----------------------------------------------------
+   2. GET ALL INVOICES
+----------------------------------------------------- */
+export const getAllInvoices = async (req, res) => {
+  try {
+    const serverUrl = process.env.SERVER_URL;
+
+    const sql = `
+      SELECT inv.*, u.name AS freelancer_name, u.email AS freelancer_email
+      FROM invoices inv
+      LEFT JOIN user_employees_master u ON u.id = inv.freelancer_id
+      ORDER BY inv.created_at DESC
+    `;
+
+    const { rows } = await pool.query(sql);
+
+    const updated = rows.map((inv) => ({
+      ...inv,
+      pdf_url: inv.pdf_file
+        ? `${serverUrl}/uploads/invoices/${inv.pdf_file}`
+        : null,
+    }));
+
+    res.json(updated);
+  } catch (err) {
+    console.error("Get All Invoice Error:", err);
+    res.status(500).json({ error: "Failed to fetch invoices" });
+  }
+};
+
+/* -----------------------------------------------------
+   3. GET INVOICE BY ID
+----------------------------------------------------- */
+export const getInvoiceById = async (req, res) => {
+  try {
+    const { invoice_id } = req.params;
+    const serverUrl = process.env.SERVER_URL;
+
+    const sql = `SELECT * FROM invoices WHERE id=$1`;
+    const { rows } = await pool.query(sql, [invoice_id]);
+
+    if (rows.length === 0)
+      return res.status(404).json({ error: "Invoice not found" });
+
+    const invoice = rows[0];
+
+    invoice.pdf_url = invoice.pdf_file
+      ? `${serverUrl}/uploads/invoices/${invoice.pdf_file}`
+      : null;
+
+    res.json(invoice);
+  } catch (err) {
+    console.error("Get Invoice Error:", err);
+    res.status(500).json({ error: "Failed to fetch invoice" });
+  }
+};
+
+/* -----------------------------------------------------
+   4. UPDATE INVOICE STATUS
+----------------------------------------------------- */
+export const updateInvoiceStatus = async (req, res) => {
+  try {
+    const { invoice_id } = req.params;
+    const { status, updated_by } = req.body;
+
+    const valid = ["pending", "approved", "rejected", "paid"];
+    if (!valid.includes(status)) {
+      return res.status(400).json({ error: "Invalid invoice status" });
+    }
+
+    await pool.query(
+      `UPDATE invoices SET status=$1, updated_by=$2, updated_at=NOW() WHERE id=$3`,
+      [status, updated_by, invoice_id]
+    );
+
+    res.json({ success: true, message: "Status updated" });
+  } catch (err) {
+    console.error("Update Invoice Status Error:", err);
+    res.status(500).json({ error: "Failed to update invoice status" });
+  }
+};
+
+/* -----------------------------------------------------
+   5. GENERATE PDF (PUPPETEER)
+----------------------------------------------------- */
+export const generateInvoicePDF = async (req, res) => {
+  try {
+    const { invoice_id } = req.params;
+
+    const sql = `
+      SELECT inv.*, u.name AS freelancer_name, u.email AS freelancer_email
+      FROM invoices inv
+      LEFT JOIN user_employees_master u ON u.id = inv.freelancer_id
+      WHERE inv.id=$1
+    `;
+    const { rows } = await pool.query(sql, [invoice_id]);
+
+    if (rows.length === 0)
+      return res.status(404).json({ error: "Invoice not found" });
+
+    const invoice = rows[0];
+
+    // Load template
+    const templatePath = path.join(process.cwd(), "src/templates/invoiceTemplate.html");
+
+    let html = fs.readFileSync(templatePath, "utf-8");
+
+    html = html
+      .replace(/{{company_name}}/g, "Your Company Pvt Ltd")
+      .replace(/{{company_address}}/g, "Hyderabad, Telangana, India")
+      .replace(/{{company_email}}/g, "contact@company.com")
+      .replace(/{{invoice_number}}/g, invoice.invoice_number)
+      .replace(/{{invoice_date}}/g, invoice.invoice_date)
+      .replace(/{{due_date}}/g, invoice.due_date)
+      .replace(/{{freelancer_name}}/g, invoice.freelancer_name)
+      .replace(/{{freelancer_email}}/g, invoice.freelancer_email)
+      .replace(/{{amount}}/g, invoice.amount)
+      .replace(/{{tax_amount}}/g, invoice.tax_amount)
+      .replace(/{{tds_amount}}/g, invoice.tds_amount)
+      .replace(/{{net_payable}}/g, invoice.net_payable);
+
+    const pdfDir = "uploads/invoices";
+    if (!fs.existsSync(pdfDir)) fs.mkdirSync(pdfDir, { recursive: true });
+
+    const fileName = `Invoice_${invoice.invoice_number}.pdf`;
+    const filePath = path.join(pdfDir, fileName);
+
+    // Generate PDF
+    const browser = await puppeteer.launch({
+      headless: "new",
+      args: ["--no-sandbox"],
+    });
+
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: "networkidle0" });
+
+    await page.pdf({
+      path: filePath,
+      format: "A4",
+      printBackground: true,
+    });
+
+    await browser.close();
+
+    // Update DB
+    await pool.query(`UPDATE invoices SET pdf_file=$1 WHERE id=$2`, [
+      fileName,
+      invoice_id,
+    ]);
+
+    res.json({
+      success: true,
+      pdf_file: fileName,
+      pdf_url: `${process.env.SERVER_URL}/uploads/invoices/${fileName}`,
+    });
+  } catch (err) {
+    console.error("Invoice PDF Error:", err);
+    res.status(500).json({ error: "Failed to generate invoice PDF" });
+  }
+};
+
+/* -----------------------------------------------------
+   6. SEND REMINDER EMAIL
+----------------------------------------------------- */
+export const sendInvoiceReminder = async (req, res) => {
+  try {
+    const { invoice_id } = req.params;
+
+    const sql = `
+      SELECT 
+        inv.invoice_number,
+        inv.net_payable,
+        u.name AS freelancer_name,
+        u.email AS freelancer_email
+      FROM invoices inv
+      LEFT JOIN user_employees_master u 
+        ON u.id = inv.freelancer_id
+      WHERE inv.id = $1
+    `;
+
+    const { rows } = await pool.query(sql, [invoice_id]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Invoice not found" });
+    }
+
+    const invoice = rows[0];
+
+    console.log("DEBUG EMAIL:", {
+      to: invoice.freelancer_email,
+      name: invoice.freelancer_name
+    });
+
+    if (!invoice.freelancer_email) {
+      return res.status(400).json({ error: "Freelancer email not found" });
+    }
+
+    // Send Reminder
+    await sendEmail({
+      to: invoice.freelancer_email,
+      subject: `Payment Reminder - Invoice ${invoice.invoice_number}`,
+      text: `
+        Dear ${invoice.freelancer_name},
+        This is a reminder for Invoice ${invoice.invoice_number}.
+        Net Payable: ₹${invoice.net_payable}
+      `
+    });
+
+    res.json({ success: true, message: "Reminder sent!" });
+
+  } catch (err) {
+    console.error("Reminder Error:", err);
+    res.status(500).json({ error: "Failed to send reminder" });
+  }
+};
+
+
+/* -----------------------------------------------------
+   7. DELETE INVOICE
+----------------------------------------------------- */
+export const deleteInvoice = async (req, res) => {
+  try {
+    const { invoice_id } = req.params;
+
+    await pool.query(`DELETE FROM invoices WHERE id=$1`, [invoice_id]);
+
+    res.json({ success: true, message: "Invoice deleted" });
+  } catch (err) {
+    console.error("Delete Invoice Error:", err);
+    res.status(500).json({ error: "Failed to delete invoice" });
+  }
+};
 
 /*----------------------------Probation ------------------------------*/
 // get a new employee (who joined within 3 months )
@@ -2805,7 +3211,6 @@ export const createProbation = async (req, res) => {
       usermasterid,
       startDate,
       endDate,
-      // duration,
       reportingManager,
       notes,
       status = "active",
@@ -2845,8 +3250,6 @@ export const createProbation = async (req, res) => {
         startdate,
         enddate,
         status,
-        // progress,
-        // daysremaining,
         manager,
         notes,
         createdat,
@@ -2883,47 +3286,60 @@ export const adminLogout = async (req, res) => {
   const client = await pool.connect();
 
   try {
-    // 1️⃣ Decode JWT but ignore expiration so logout still works
-    const authHeader = req.headers.authorization;
+    const { email } = req.body;
 
-    if (!authHeader) {
-      return res.status(401).json({ error: "No token provided" });
+    if (!email) {
+      return res.status(400).json({ error: "Email is required for logout" });
     }
 
-    const token = authHeader.split(" ")[1];
-
-    let decoded;
-    try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET, { ignoreExpiration: true });
-    } catch (err) {
-      return res.status(401).json({ error: "Invalid token" });
-    }
-
-    const employeeId = decoded.id;
-
-    // 2️⃣ Update the LATEST audit log entry (correct PostgreSQL syntax)
-    await client.query(
+    // 1) Get admin user from USERS table
+    const { rows: userRows } = await client.query(
       `
-      UPDATE audit_logs
-      SET 
-        updated_by = 'logout',
-        updated_at = NOW()
-      WHERE id = (
-        SELECT id FROM audit_logs
-        WHERE employee_id = $1
-        ORDER BY created_at DESC
-        LIMIT 1
-      )
+        SELECT id, email FROM ${USER_MASTER_TABLE}
+        WHERE email ILIKE $1 AND role = 'admin'
       `,
-      [employeeId]
+      [email]
     );
 
-    // 3️⃣ Response
-    res.json({ message: "Admin logged out successfully" });
+    if (userRows.length === 0) {
+      return res.status(404).json({ error: "Admin not found" });
+    }
 
+    const user = userRows[0]; // must match the one used at login
+
+    // 2) Update latest login audit record for this admin
+    const result = await client.query(
+      `
+        UPDATE audit_logs AS a
+        SET updated_by = 'logout',
+            updated_at = NOW()
+        FROM (
+          SELECT id
+          FROM audit_logs
+          WHERE employee_id = $1
+            AND created_by = 'login'
+            AND updated_by IS NULL
+          ORDER BY created_at DESC
+          LIMIT 1
+        ) AS t
+        WHERE a.id = t.id
+      `,
+      [user.id]
+    );
+
+    if (result.rowCount === 0) {
+      return res
+        .status(404)
+        .json({ error: "No login session found to update" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Admin logged out successfully",
+    });
   } catch (err) {
-    console.error("Logout Error:", err.message);
-    res.status(500).json({ error: err.message });
+    console.error("Admin Logout Error:", err.message);
+    return res.status(500).json({ error: err.message });
   } finally {
     client.release();
   }
@@ -2955,26 +3371,425 @@ export const getProbationWithUser = async (req, res) => {
   }
 };
 
+
 export const getAllAdminAuditLogs = async (req, res) => {
   const client = await pool.connect();
+
   try {
     const result = await client.query(`
-      SELECT
-        id,
-        super_admin_id,
-        employee_id,
-        created_by,
-        updated_by,
-        created_at,
-        updated_at
-      FROM audit_logs
-      ORDER BY created_at DESC
-      LIMIT 1000
+      SELECT 
+        al.id AS audit_id,
+        u.id AS user_id,
+        u.name AS user_name,
+        u.email AS user_email,
+        al.created_at AS login_time,
+        CASE 
+          WHEN al.updated_by = 'logout' THEN al.updated_at 
+          ELSE NULL 
+        END AS logout_time
+      FROM audit_logs al
+      LEFT JOIN ${USER_MASTER_TABLE} u 
+        ON u.id = al.employee_id
+      WHERE al.created_by = 'login'  -- Only login-initiated audit rows
+      ORDER BY al.created_at DESC;
     `);
-    res.json({ success: true, count: result.rowCount, audits: result.rows });
+
+    res.json({
+      success: true,
+      count: result.rowCount,
+      audits: result.rows
+    });
+
   } catch (err) {
     console.error("Fetch audit logs error:", err.message);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: "Failed to fetch audit logs" });
+  } finally {
+    client.release();
+  }
+};
+
+
+export const assignPanelMembers = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { panel_name, member_ids } = req.body;
+
+    if (!panel_name) {
+      return res.status(400).json({ error: "Panel name is required" });
+    }
+
+    if (!Array.isArray(member_ids) || member_ids.length === 0) {
+      return res.status(400).json({ error: "No members selected" });
+    }
+
+    // Clear existing members for the same panel (optional)
+    await client.query(
+  `DELETE FROM ${PANEL_MEMBERS_TABLE} WHERE panel_name = $1`,
+  [panel_name]
+);
+
+    // Insert new members
+    const insertQuery = `
+      INSERT INTO panel_members (panel_name, employee_id)
+      SELECT $1, id 
+      FROM user_employees_master 
+      WHERE id = ANY($2)
+      RETURNING *;
+    `;
+
+    const { rows } = await client.query(insertQuery, [panel_name, member_ids]);
+
+    res.status(200).json({
+      message: "Panel members assigned successfully",
+      panel_name,
+      assigned_members: rows
+    });
+
+  } catch (error) {
+    console.error("Assign Panel Error:", error);
+    res.status(500).json({ error: "Failed to assign panel members" });
+  } finally {
+    client.release();
+  }
+};
+
+
+export const getAllPanels = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const query = `
+      SELECT 
+        pm.panel_name,
+        json_agg(
+          json_build_object(
+            'employee_id', pm.employee_id,
+            'fullname', u.name,
+            'email', u.email,
+            'designation', u.designation
+          )
+        ) AS members
+      FROM panel_members pm
+      LEFT JOIN user_employees_master u 
+        ON u.id = pm.employee_id
+      GROUP BY pm.panel_name;
+    `;
+
+    const { rows } = await client.query(query);
+
+    res.status(200).json(rows);
+
+  } catch (err) {
+    console.error("Get Panels Error:", err);
+    res.status(500).json({ error: "Failed to fetch panels" });
+  } finally {
+    client.release();
+  }
+};
+
+
+export const scheduleInterviewReferral = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { referral_id } = req.params;
+    let {
+      round_name,
+      interview_date,
+      interview_time,
+      meeting_link,
+      interviewer_ids = []
+    } = req.body;
+
+    if (!round_name || !interview_date || !interview_time) {
+      return res.status(400).json({ error: "Round name, date and time required" });
+    }
+
+    // Ensure interviewer_ids is an array of UUID strings
+    if (!Array.isArray(interviewer_ids) || interviewer_ids.length === 0) {
+      return res.status(400).json({ error: "At least one interviewer must be selected" });
+    }
+
+    // Convert any empty string or invalid values
+    interviewer_ids = interviewer_ids.filter(id => id && id.trim() !== "");
+
+    if (interviewer_ids.length === 0) {
+      return res.status(400).json({ error: "No valid interviewer IDs provided" });
+    }
+
+    // 1) Fetch referral details
+    const { rows: refRows } = await client.query(
+      `SELECT candidate_name, candidate_email FROM referrals WHERE id = $1`,
+      [referral_id]
+    );
+
+    if (refRows.length === 0)
+      return res.status(404).json({ error: "Referral not found" });
+
+    const referral = refRows[0];
+
+    // 2) Fetch interviewers (names + emails)
+    const { rows: interviewerList } = await client.query(
+      `SELECT name, email FROM user_employees_master WHERE id = ANY($1::uuid[])`,
+      [interviewer_ids]
+    );
+
+    if (interviewerList.length === 0) {
+      return res.status(400).json({ error: "No interviewers found with the given IDs" });
+    }
+
+    const interviewerNames = interviewerList.map(i => i.name);
+
+    // 3) Insert into interviews
+    const insertQuery = `
+      INSERT INTO interviews (
+        application_id,
+        referral_id,
+        interview_date,
+        interview_type,
+        interviewer,
+        location,
+        status,
+        created_by
+      )
+      VALUES (NULL, $1, $2, $3, $4, $5, 'scheduled', 'Admin')
+      RETURNING *
+    `;
+
+    const fullDateTime = `${interview_date} ${interview_time}`;
+
+    const insertRes = await client.query(insertQuery, [
+      referral_id,
+      fullDateTime,
+      round_name,
+      interviewerNames,
+      meeting_link
+    ]);
+
+    await client.query(
+  `UPDATE referrals
+   SET status = 'Interview',
+       updated_by = 'Admin',
+       updated_at = NOW()
+   WHERE id = $1`,
+  [referral_id]
+);
+console.log("Candidate Email:", referral.candidate_email);
+
+    // 4) Candidate email
+    await sendEmail(
+      referral.candidate_email,
+      `Interview Scheduled - ${round_name}`,
+      `
+        <h3>Your Interview Is Scheduled</h3>
+        <p><strong>Round:</strong> ${round_name}</p>
+        <p><strong>Date:</strong> ${interview_date}</p>
+        <p><strong>Time:</strong> ${interview_time}</p>
+        <p><a href="${meeting_link}">Join Meeting</a></p>
+      `
+    );
+
+    // 5) Interviewers email
+    for (let member of interviewerList) {
+      await sendEmail(
+        member.email,
+        `You are assigned as Interviewer - ${round_name}`,
+        `
+          <h3>New Interview Assigned</h3>
+          <p><strong>Candidate:</strong> ${referral.candidate_name}</p>
+          <p><strong>Date:</strong> ${interview_date}</p>
+          <p><strong>Time:</strong> ${interview_time}</p>
+          <p><a href="${meeting_link}">Join Meeting</a></p>
+        `
+      );
+    }
+
+    return res.status(200).json({
+      message: "Interview scheduled successfully",
+      interview: insertRes.rows[0]
+    });
+
+  } catch (err) {
+    console.error("Schedule Error:", err);
+    return res.status(500).json({ error: "Failed to schedule interview" });
+  } finally {
+    client.release();
+  }
+};
+
+export const rescheduleInterviewReferral = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { referral_id } = req.params;
+
+    const {
+      round_name,
+      interview_date,
+      interview_time,
+      location,             // meeting link
+      interviewer_ids = []
+    } = req.body;
+
+    if (!round_name || !interview_date || !interview_time || !location) {
+      return res.status(400).json({ error: "Round, date, time, and location are required" });
+    }
+
+    if (interviewer_ids.length === 0) {
+      return res.status(400).json({ error: "At least one interviewer must be selected" });
+    }
+
+    // 1) Fetch referral details
+    const { rows: refRows } = await client.query(
+      `SELECT candidate_name, candidate_email FROM referrals WHERE id = $1`,
+      [referral_id]
+    );
+    if (refRows.length === 0)
+      return res.status(404).json({ error: "Referral not found" });
+
+    const referral = refRows[0];
+
+    // 2) Fetch interviewers
+    const { rows: interviewerList } = await client.query(
+      `SELECT id, name, email FROM user_employees_master WHERE id = ANY($1)`,
+      [interviewer_ids]
+    );
+
+    const interviewerNames = interviewerList.map(i => i.name);
+
+    // 3) Insert new interview row with status 'rescheduled'
+    const fullDateTime = `${interview_date} ${interview_time}`;
+
+    const insertQuery = `
+      INSERT INTO ${INTERVIEWS_TABLE}  (
+        referral_id,
+        application_id,
+        interview_date,
+        interview_type,
+        interviewer,
+        location,
+        status,
+        created_by
+      )
+      VALUES ($1, NULL, $2, $3, $4, $5, 'rescheduled', 'Admin')
+      RETURNING *
+    `;
+
+    const insertRes = await client.query(insertQuery, [
+      referral_id,
+      fullDateTime,
+      round_name,
+      interviewerNames,
+      location
+    ]);
+
+    await client.query(
+  `UPDATE referrals
+   SET status = 'Interview',
+       updated_by = 'Admin',
+       updated_at = NOW()
+   WHERE id = $1`,
+  [referral_id]
+);
+
+
+    // 4) Send email to candidate
+    await sendEmail(
+      referral.candidate_email,
+      `Interview Rescheduled - ${round_name}`,
+      `
+        <h3>Your Interview Has Been Rescheduled</h3>
+        <p><strong>Round:</strong> ${round_name}</p>
+        <p><strong>Date:</strong> ${interview_date}</p>
+        <p><strong>Time:</strong> ${interview_time}</p>
+        <p><a href="${location}">Join Meeting</a></p>
+      `
+    );
+
+    // 5) Send emails to interviewers
+    for (let member of interviewerList) {
+      await sendEmail(
+        member.email,
+        `You are assigned as Interviewer - Rescheduled ${round_name}`,
+        `
+          <h3>Interview Rescheduled</h3>
+          <p><strong>Candidate:</strong> ${referral.candidate_name}</p>
+          <p><strong>Date:</strong> ${interview_date}</p>
+          <p><strong>Time:</strong> ${interview_time}</p>
+          <p><a href="${location}">Join Meeting</a></p>
+        `
+      );
+    }
+
+    return res.status(200).json({
+      message: "Interview rescheduled successfully",
+      interview: insertRes.rows[0]
+    });
+
+  } catch (err) {
+    console.error("Reschedule Error:", err);
+    return res.status(500).json({ error: "Failed to reschedule interview" });
+  } finally {
+    client.release();
+  }
+};
+
+export const addPanelFeedback = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { interview_id } = req.params;
+    const { panel_member, rating, comments } = req.body;
+
+    if (!panel_member || !rating) {
+      return res.status(400).json({ error: "Panel member and rating are required" });
+    }
+
+    // Validate rating
+    if (rating < 1 || rating > 10) {
+      return res.status(400).json({ error: "Rating must be between 1 and 10" });
+    }
+
+    // Check if interview exists
+    const { rows: interviewRows } = await client.query(
+      `SELECT interview_id FROM interviews WHERE interview_id = $1`,
+      [interview_id]
+    );
+
+    if (interviewRows.length === 0) {
+      return res.status(404).json({ error: "Interview not found" });
+    }
+
+    // Insert feedback
+    const insertQuery = `
+      INSERT INTO panel_feedback (
+        interview_id,
+        panel_member,
+        rating,
+        comments,
+        created_by,
+        updated_by
+      )
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING *
+    `;
+
+    const insertRes = await client.query(insertQuery, [
+      interview_id,
+      panel_member,
+      rating,
+      comments,
+      panel_member,
+      panel_member
+    ]);
+
+    return res.status(200).json({
+      message: "Feedback submitted successfully",
+      feedback: insertRes.rows[0]
+    });
+
+  } catch (err) {
+    console.error("Panel Feedback Error:", err);
+    return res.status(500).json({ error: "Failed to submit feedback" });
   } finally {
     client.release();
   }

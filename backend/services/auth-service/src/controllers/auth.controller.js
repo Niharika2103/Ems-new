@@ -118,7 +118,7 @@ export const superAdminLogin = async (req, res) => {
   try {
     const { email, password, otp } = req.body;
 
-    // 1️⃣ Login from user_employees_master
+    // 1️⃣ Fetch from USERS_TABLE → role = superadmin
     const { rows } = await client.query(
       `SELECT * FROM ${USERS_TABLE} WHERE email ILIKE $1 AND role=$2`,
       [email, "superadmin"]
@@ -128,21 +128,18 @@ export const superAdminLogin = async (req, res) => {
     if (!user)
       return res.status(401).json({ error: "Invalid email or password" });
 
-    // 2️⃣ Check password
+    // 2️⃣ Password check
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
       return res.status(401).json({ error: "Invalid email or password" });
 
-    // 3️⃣ Ensure MFA enabled
+    // 3️⃣ Check MFA
     if (!user.mfa_enabled)
-      return res.status(403).json({
-        error: "MFA setup not completed. Please verify OTP first."
-      });
+      return res.status(403).json({ error: "MFA setup not completed" });
 
     if (!otp)
-      return res.status(400).json({ error: "OTP required for login" });
+      return res.status(400).json({ error: "OTP required" });
 
-    // 4️⃣ Verify OTP
     const verified = speakeasy.totp.verify({
       secret: user.mfa_secret,
       encoding: "base32",
@@ -153,59 +150,63 @@ export const superAdminLogin = async (req, res) => {
     if (!verified)
       return res.status(401).json({ error: "Invalid OTP" });
 
-    // 5️⃣ Fetch super_admins.id
+    // 4️⃣ Get super_admins.id using user.id
     const superAdmin = await client.query(
-      `SELECT id FROM super_admins WHERE user_id=$1`,
-      [user.id]  // user_employees_master.id
+      `SELECT id FROM super_admins WHERE user_id = $1`,
+      [user.id]
     );
 
-    if (superAdmin.rowCount === 0) {
+    if (superAdmin.rowCount === 0)
       return res.status(500).json({
-        error: "Super Admin record not found in super_admins table"
+        error: "Super Admin record missing in super_admins table"
       });
-    }
 
     const superAdminId = superAdmin.rows[0].id;
 
-    // 6️⃣ Insert audit log (FIXED SQL)
+    // 5️⃣ Insert Audit Log
     await client.query(
-      `
-        INSERT INTO audit_logs (
-          id,
-          super_admin_id,
-          employee_id,
-          created_by,
-          created_at
-        )
-        VALUES (
-          gen_random_uuid(),
-          $1,
-          $2,
-          'login',
-          NOW()
-        );
-      `,
-      [superAdminId, user.id]
-    );
+  `
+  INSERT INTO audit_logs (
+    id,
+    super_admin_id,
+    employee_id,
+    created_by,
+    created_at,
+    updated_by,
+    updated_at
+  )
+  VALUES (
+    gen_random_uuid(),
+    $1,
+    $2,
+    'login',
+    NOW(),
+    NULL,
+    NULL
+  );
+  `,
+  [superAdminId, user.id]
+);
 
-    // 7️⃣ Issue JWT
+
+    // 6️⃣ Issue JWT
     const token = issueJwt({
+      id: user.id,
       email: user.email,
       role: user.role,
-      id: user.id,
       name: user.name,
     });
 
     return res.status(200).json({
-      message: "SuperAdmin login successful with MFA",
+      message: "SuperAdmin login success",
       token,
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
         role: user.role,
-        mfa_enabled: user.mfa_enabled,
-      },
+        mfa_enabled: user.mfa_enabled
+      }
     });
 
   } catch (err) {
@@ -478,46 +479,44 @@ export const promoteAdminToSuperAdmin = async (req, res) => {
 export const superAdminLogout = async (req, res) => {
   const client = await pool.connect();
   try {
-    const { email } = req.body; // logout using email, no token needed
+    const { email } = req.body;
 
-    if (!email) {
+    if (!email)
       return res.status(400).json({ error: "Email is required for logout" });
-    }
 
-    // 1️⃣ Get the user from USERS_TABLE (user_employees_master)
+    // 1️⃣ Fetch user record
     const { rows: userRows } = await client.query(
       `SELECT * FROM ${USERS_TABLE} WHERE email ILIKE $1 AND role=$2`,
       [email, "superadmin"]
     );
 
-    if (userRows.length === 0) {
-      return res.status(401).json({ error: "Super Admin not found" });
-    }
+    if (userRows.length === 0)
+      return res.status(401).json({ error: "SuperAdmin not found" });
 
-    const user = userRows[0]; // user_employees_master record
+    const user = userRows[0];
 
-    // 2️⃣ Get super_admins.id for audit_logs
+    // 2️⃣ Get super_admins.id
     const { rows: saRows } = await client.query(
       `SELECT id FROM super_admins WHERE user_id=$1`,
-      [user.id] // user_employees_master.id
+      [user.id]
     );
 
-    if (saRows.length === 0) {
-      return res.status(500).json({ error: "Super Admin record missing in super_admins table" });
-    }
+    if (saRows.length === 0)
+      return res.status(500).json({
+        error: "Super Admin record missing in super_admins table"
+      });
 
     const superAdminId = saRows[0].id;
 
-    // 3️⃣ Update the latest audit log (login row) to mark logout
+    // 3️⃣ Update latest audit log
     const result = await client.query(
       `
       UPDATE audit_logs
-      SET updated_by = 'logout',
-          updated_at = NOW()
+      SET updated_by='logout',
+          updated_at=NOW()
       WHERE id = (
         SELECT id FROM audit_logs
-        WHERE super_admin_id = $1
-          AND employee_id = $2
+        WHERE super_admin_id=$1 AND employee_id=$2
         ORDER BY created_at DESC
         LIMIT 1
       )
@@ -525,9 +524,8 @@ export const superAdminLogout = async (req, res) => {
       [superAdminId, user.id]
     );
 
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: "No login record found to update" });
-    }
+    if (result.rowCount === 0)
+      return res.status(404).json({ error: "No login log found" });
 
     return res.status(200).json({ message: "SuperAdmin logged out successfully" });
 
@@ -544,19 +542,24 @@ export const getAllSuperAdminAuditLogs = async (req, res) => {
 
   try {
     const result = await client.query(`
-      SELECT 
-        id,
-        super_admin_id,
-        created_by,
-        updated_by,
-        created_at,
-        updated_at
-      FROM audit_logs
-      WHERE super_admin_id IS NOT NULL
-      ORDER BY created_at DESC
+      SELECT
+        al.id AS audit_id,
+        u.id AS user_id,
+        u.name AS user_name,
+        u.email AS user_email,
+        u.role AS user_role,
+        al.created_by,
+        al.updated_by,
+        al.created_at AS login_time,
+        al.updated_at AS logout_time
+      FROM audit_logs al
+      JOIN user_employees_master u
+        ON u.id = al.employee_id
+      WHERE al.super_admin_id IS NOT NULL
+      ORDER BY al.created_at DESC
     `);
 
-    res.json({
+    return res.status(200).json({
       success: true,
       count: result.rowCount,
       audits: result.rows
@@ -564,7 +567,7 @@ export const getAllSuperAdminAuditLogs = async (req, res) => {
 
   } catch (err) {
     console.error("Fetch SuperAdmin Audit Logs Error:", err.message);
-    res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: err.message });
   } finally {
     client.release();
   }

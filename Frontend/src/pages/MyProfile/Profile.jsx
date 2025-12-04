@@ -107,19 +107,42 @@ const Profile = () => {
     alert("Mock OTP sent to email");
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const id = data?.id;
-    if (!id) return;
-    if (roles === "admin") {
-      dispatch(updateAdminProfile({ data: formData, id }))
-        .unwrap()
-        .then(() => toast.success("Profile updated successfully!"))
-        .catch(() => toast.error("Update failed"));
-    } else if (roles === "superadmin") {
-      dispatch(updateSuperAdminProfile({ data: formData, id }));
+ const handleSubmit = (e) => {
+  e.preventDefault();
+  const id = data?.id;
+  if (!id) return;
+
+  if (roles === "admin") {
+    // Build FormData for multipart upload
+    const formDataToSend = new FormData();
+
+    // Append text fields (skip files)
+    Object.entries(formData).forEach(([key, value]) => {
+      if (key === "profilePhoto") {
+        // Handle separately below
+        return;
+      }
+      // Only append non-file fields; ensure empty strings are sent if needed
+      formDataToSend.append(key, value || "");
+    });
+
+    // Append file if present
+    if (formData.profilePhoto instanceof File) {
+      formDataToSend.append("profilePhoto", formData.profilePhoto);
     }
-  };
+    // Note: if you later add "resume", handle similarly
+
+    dispatch(updateAdminProfile({ data: formDataToSend, id }))
+      .unwrap()
+      .then(() => toast.success("Profile updated successfully!"))
+      .catch((err) => {
+        console.error("Update error:", err);
+        toast.error("Update failed");
+      });
+  } else if (roles === "superadmin") {
+    dispatch(updateSuperAdminProfile({ data: formData, id }));
+  }
+};
 
   return (
     <>

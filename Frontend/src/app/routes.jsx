@@ -606,7 +606,7 @@ function AppRoutes() {
 
         <Route path="/invoices"
           element={
-            <ProtectedRoute allowedRoles={["admin", "employee"]}>
+            <ProtectedRoute allowedRoles={["admin"]}>
               < InvoiceModule />
             </ProtectedRoute>
           }

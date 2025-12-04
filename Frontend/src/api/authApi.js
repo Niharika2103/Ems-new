@@ -1,4 +1,4 @@
-import { superadminClient,employeeClient,adminClient,ProjectClient,AttendanceClient,SalaryStructureClient, freelancerClient  } from "./axiosClient";
+import { superadminClient,employeeClient,adminClient,ProjectClient,AttendanceClient,SalaryStructureClient, freelancerClient ,vendorClient } from "./axiosClient";
 import { AUTH_API } from "../utils/constants";
 import { RestaurantMenuSharp } from "@mui/icons-material";
 
@@ -131,15 +131,26 @@ export const filterApplicationsApi = (filters) =>
   });
 
 
-
-
-
 // Update application status
-export const updateApplicationStatusApi = (application_id, status) =>
+export const updateApplicationStatusApi = (application_id, status, extraData = {}) =>
   adminClient.put(
     `${AUTH_API.ADMIN}/applications/status/${application_id}`,
-    { status }        
+    {
+      status,
+      ...extraData   // 👈 REQUIRED for interview data
+    }
   );
+
+  export const scheduleInterviewApi = (data) =>
+  adminClient.post(`${AUTH_API.ADMIN}/interviews/schedule`, data);
+//interview cancel and reschdule 
+  export const rescheduleInterviewApi = (id, data) =>
+  adminClient.put(`/admin/interviews/reschedule/${id}`, data);
+
+export const cancelInterviewApi = (id) =>
+  adminClient.put(`/admin/interviews/cancel/${id}`);
+
+
 
   // ✅ ADDED — Parse Resume API (Do NOT DELETE anything)
 export const parseResumeApi = (formData) =>
@@ -548,6 +559,25 @@ export const getReferralByIdAdminApi = (referral_id) =>
 export const updateReferralStatusAdminApi = (id, status) =>
   adminClient.put(`${AUTH_API.ADMIN}/referrals/status/${id}`, { status });
 
+// ================= Panel Management APIs =================
+export const assignPanelMembersApi = (panelData) =>
+  adminClient.post(`${AUTH_API.ADMIN}/panels/assign`, panelData);
+
+export const getAllPanelsApi = () =>
+  adminClient.get(`${AUTH_API.ADMIN}/panels`);
+
+// ================= Interview Scheduling APIs =================
+export const scheduleInterviewReferralApi = (referral_id, interviewData) =>
+  adminClient.post(`${AUTH_API.ADMIN}/interviews/schedule/${referral_id}`, interviewData);
+
+export const rescheduleInterviewReferralApi = (referral_id, interviewData) =>
+  adminClient.post(`${AUTH_API.ADMIN}/interviews/reschedule/${referral_id}`, interviewData);
+
+// ================= Feedback APIs =================
+export const addPanelFeedbackApi = (interview_id, feedbackData) =>
+  adminClient.post(`${AUTH_API.ADMIN}/interviews/${interview_id}/feedback`, feedbackData);
+
+
 
 export const createFreelancerContractApi = (data) => {
   return adminClient.post(`/admin/freelancer-contract/create`, data);
@@ -582,6 +612,27 @@ export const fetchAllFreelancerContractsApi = () => {
 export const fetchFreelancerContractByIdApi = (contractId) => {
   return adminClient.get(`/admin/freelancer-contract/${contractId}`);
 };
+
+//Auditlogs
+
+export const getAllAdminAuditLogsApi = () =>
+  adminClient.get(`${AUTH_API.ADMIN}/audit-logs`);
+
+export const adminLogoutApi = (email) => {
+  console.log("Calling backend logout with email:", email);
+
+  return adminClient
+    .post("/admin/logout", { email })
+    .then((res) => {
+      console.log("Logout API CALLED SUCCESSFULLY", res.data);
+      return res;
+    })
+    .catch((err) => {
+      console.error("Logout API ERROR:", err);
+      throw err;
+    });
+};
+
 //Probation 
 export const fetchNewEmployeeApi =()=>{
   return adminClient.get(`${AUTH_API.ADMIN}/new-employees`);
@@ -594,4 +645,41 @@ export const createProbationPeriodApi =(payload)=>{
 export const fetchassignProbationApi =()=>{
   return adminClient.get(`${AUTH_API.ADMIN}/probation/user`)
 }
+// / ================== INVOICE APIs ======================
+export const createInvoiceApi = (data) =>
+  adminClient.post(`${AUTH_API.ADMIN}/invoices/create`, data);
 
+export const getAllInvoicesApi = () =>
+  adminClient.get(`${AUTH_API.ADMIN}/invoices/all`);
+
+export const getInvoiceByIdApi = (invoiceId) =>
+  adminClient.get(`${AUTH_API.ADMIN}/invoices/${invoiceId}`);
+
+export const updateInvoiceStatusApi = (invoiceId, status, updatedBy) =>
+  adminClient.put(`${AUTH_API.ADMIN}/invoices/status/${invoiceId}`, {
+    status,
+    updated_by: updatedBy,
+  });
+
+export const generateInvoicePdfApi = (invoiceId) =>
+  adminClient.get(`${AUTH_API.ADMIN}/invoices/pdf/${invoiceId}`);
+
+export const sendInvoiceReminderApi = (invoiceId) =>
+  adminClient.post(`${AUTH_API.ADMIN}/invoices/reminder/${invoiceId}`);
+
+export const deleteInvoiceApi = (invoiceId) =>
+  adminClient.delete(`${AUTH_API.ADMIN}/invoices/${invoiceId}`);
+
+
+// ================= Vendor Auth =================
+export const vendorRegisterApi = (data) =>
+  vendorClient.post(`/vendor/register`, data); // backend route
+
+export const vendorLoginApi = (data) =>
+  vendorClient.post(`/vendor/login`, data);
+
+export const vendorForgotPasswordApi = (data) =>
+  vendorClient.post(`/vendor/forgot-password`, data);
+
+export const vendorResetPasswordApi = (data) =>
+  vendorClient.post(`/vendor/reset-password`, data);
