@@ -1,4 +1,4 @@
-import { superadminClient,employeeClient,adminClient,ProjectClient,AttendanceClient,SalaryStructureClient, freelancerClient  } from "./axiosClient";
+import { superadminClient,employeeClient,adminClient,ProjectClient,AttendanceClient,SalaryStructureClient, freelancerClient ,vendorClient } from "./axiosClient";
 import { AUTH_API } from "../utils/constants";
 import { RestaurantMenuSharp } from "@mui/icons-material";
 
@@ -559,6 +559,25 @@ export const getReferralByIdAdminApi = (referral_id) =>
 export const updateReferralStatusAdminApi = (id, status) =>
   adminClient.put(`${AUTH_API.ADMIN}/referrals/status/${id}`, { status });
 
+// ================= Panel Management APIs =================
+export const assignPanelMembersApi = (panelData) =>
+  adminClient.post(`${AUTH_API.ADMIN}/panels/assign`, panelData);
+
+export const getAllPanelsApi = () =>
+  adminClient.get(`${AUTH_API.ADMIN}/panels`);
+
+// ================= Interview Scheduling APIs =================
+export const scheduleInterviewReferralApi = (referral_id, interviewData) =>
+  adminClient.post(`${AUTH_API.ADMIN}/interviews/schedule/${referral_id}`, interviewData);
+
+export const rescheduleInterviewReferralApi = (referral_id, interviewData) =>
+  adminClient.post(`${AUTH_API.ADMIN}/interviews/reschedule/${referral_id}`, interviewData);
+
+// ================= Feedback APIs =================
+export const addPanelFeedbackApi = (interview_id, feedbackData) =>
+  adminClient.post(`${AUTH_API.ADMIN}/interviews/${interview_id}/feedback`, feedbackData);
+
+
 
 export const createFreelancerContractApi = (data) => {
   return adminClient.post(`/admin/freelancer-contract/create`, data);
@@ -650,3 +669,17 @@ export const sendInvoiceReminderApi = (invoiceId) =>
 
 export const deleteInvoiceApi = (invoiceId) =>
   adminClient.delete(`${AUTH_API.ADMIN}/invoices/${invoiceId}`);
+
+
+// ================= Vendor Auth =================
+export const vendorRegisterApi = (data) =>
+  vendorClient.post(`/vendor/register`, data); // backend route
+
+export const vendorLoginApi = (data) =>
+  vendorClient.post(`/vendor/login`, data);
+
+export const vendorForgotPasswordApi = (data) =>
+  vendorClient.post(`/vendor/forgot-password`, data);
+
+export const vendorResetPasswordApi = (data) =>
+  vendorClient.post(`/vendor/reset-password`, data);

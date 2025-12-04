@@ -17,8 +17,6 @@ import {
   DialogActions,
   TextField,
   Grid,
-  Card,
-  CardContent,
   Alert,
   CircularProgress,
   IconButton,
@@ -26,27 +24,33 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Tabs,
-  Tab,
+  Checkbox,
+  FormControlLabel,
+  Tooltip,
 } from "@mui/material";
 import {
   Visibility,
   Edit,
   Download,
-  Schedule,
-  Group,
-  CalendarToday
+  Add as AddIcon,
+  Schedule as ScheduleIcon,
 } from "@mui/icons-material";
 import { DatePicker, TimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import {
-  getAllReferralsAdmin,
-  updateReferralStatusAdmin
-} from "../../features/auth/adminSlice";
 
-// ===== STATUS WORKFLOW CONFIG =====
+// Redux
+import { getAllReferralsAdmin, updateReferralStatusAdmin } from "../../features/auth/adminSlice";
+
+// APIs
+import {
+  getAllPanelsApi,
+  scheduleInterviewReferralApi,
+  rescheduleInterviewReferralApi
+} from "../../api/authApi";
+
+// ===== STATUS CONFIG =====
 const STATUS_ORDER = {
   submitted: 0,
   shortlisted: 1,
@@ -73,56 +77,6 @@ const statusLabels = {
   rejected: "Rejected"
 };
 
-const interviewTypes = [
-  "Technical Round 1",
-  "Technical Round 2",
-  "Manager Round",
-  "HR Round",
-  "Final Round"
-];
-
-const interviewers = [
-  "Tech Lead - Frontend",
-  "Tech Lead - Backend",
-  "Engineering Manager",
-  "HR Manager",
-  "CTO"
-];
-
-// Mock panel data - you can replace this with actual API calls
-const mockPanels = [
-  {
-    id: 1,
-    name: 'Technical Interview Panel',
-    members: [
-      { id: 1, name: 'John Smith', role: 'Tech Lead', department: 'Engineering' },
-      { id: 2, name: 'Sarah Chen', role: 'Senior Developer', department: 'Engineering' },
-    ],
-    skills: ['JavaScript', 'React', 'Node.js'],
-    status: 'Active',
-  },
-  {
-    id: 2,
-    name: 'HR Interview Panel',
-    members: [
-      { id: 3, name: 'Emily Davis', role: 'HR Manager', department: 'Human Resources' },
-      { id: 4, name: 'David Wilson', role: 'Recruiter', department: 'Human Resources' },
-    ],
-    skills: ['Communication', 'Culture Fit', 'Behavioral'],
-    status: 'Active',
-  },
-  {
-    id: 3,
-    name: 'Management Interview Panel',
-    members: [
-      { id: 5, name: 'Lisa Brown', role: 'Director', department: 'Management' },
-      { id: 6, name: 'Robert Taylor', role: 'VP Engineering', department: 'Management' },
-    ],
-    skills: ['Leadership', 'Strategy', 'Management'],
-    status: 'Active',
-  },
-];
-
 const normalizeReferral = (ref) => ({
   id: ref.id,
   referralId: ref.referral_id,
@@ -148,43 +102,64 @@ export default function AdminReferralDashboard() {
   const navigate = useNavigate();
   const { allReferrals, referralsLoading, error, referralActionLoading } = useSelector((state) => state.admin);
 
+  // Dialog states
   const [selectedReferral, setSelectedReferral] = useState(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [resumeDialogOpen, setResumeDialogOpen] = useState(false);
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
+  const [scheduleMode, setScheduleMode] = useState("new"); // "new" or "reschedule"
+
+  // Filters
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
-  const [panels, setPanels] = useState(mockPanels);
-  const [scheduleTab, setScheduleTab] = useState(0); // 0 for direct, 1 for panel
 
-  // Interview scheduling form
+  // Scheduling form state
+  const [panels, setPanels] = useState([]);
+  const [loadingPanels, setLoadingPanels] = useState(false);
+  const [selectedPanelNames, setSelectedPanelNames] = useState([]);
+  const [selectedMemberIds, setSelectedMemberIds] = useState([]);
+  const [roundName, setRoundName] = useState("");
   const [interviewDate, setInterviewDate] = useState(null);
   const [interviewTime, setInterviewTime] = useState(null);
-  const [interviewType, setInterviewType] = useState("");
-  const [interviewer, setInterviewer] = useState("");
   const [meetingLink, setMeetingLink] = useState("");
-  const [selectedPanels, setSelectedPanels] = useState([]);
 
+  // Fetch data
   useEffect(() => {
     dispatch(getAllReferralsAdmin());
   }, [dispatch]);
 
+  useEffect(() => {
+    const fetchPanels = async () => {
+      setLoadingPanels(true);
+      try {
+        const res = await getAllPanelsApi();
+        setPanels(res.data || []);
+      } catch (err) {
+        console.error("Failed to load panels:", err);
+      } finally {
+        setLoadingPanels(false);
+      }
+    };
+    fetchPanels();
+  }, []);
+
+  // Handlers
   const handleViewDetails = (referral) => {
     setSelectedReferral(referral);
     setViewDialogOpen(true);
   };
 
-  const handleScheduleInterview = (referral) => {
+  const handleScheduleInterview = (referral, mode) => {
     setSelectedReferral(referral);
+    setScheduleMode(mode);
     setScheduleDialogOpen(true);
-    setScheduleTab(0);
+    setSelectedPanelNames([]);
+    setSelectedMemberIds([]);
+    setRoundName(mode === "reschedule" ? referral.interviewType || "" : "");
     setInterviewDate(null);
     setInterviewTime(null);
-    setInterviewType("");
-    setInterviewer("");
-    setMeetingLink("");
-    setSelectedPanels([]);
+    setMeetingLink(referral.meetingLink || "");
   };
 
   const handleUpdateStatus = (referral) => {
@@ -196,70 +171,12 @@ export default function AdminReferralDashboard() {
     try {
       const titleCaseStatus = newStatus.charAt(0).toUpperCase() + newStatus.slice(1);
       await dispatch(
-        updateReferralStatusAdmin({ 
-          id: selectedReferral.id, 
-          status: titleCaseStatus 
-        })
+        updateReferralStatusAdmin({ id: selectedReferral.id, status: titleCaseStatus })
       ).unwrap();
       setStatusDialogOpen(false);
     } catch (err) {
-      console.error("Failed to update status:", err);
-    }
-  };
-
-  const handleScheduleSubmit = async () => {
-    if (scheduleTab === 0) {
-      // Direct scheduling
-      if (!interviewDate || !interviewTime) {
-        alert("Please select both date and time.");
-        return;
-      }
-
-      const combinedDate = new Date(interviewDate);
-      combinedDate.setHours(interviewTime.getHours());
-      combinedDate.setMinutes(interviewTime.getMinutes());
-
-      try {
-        await dispatch(
-          updateReferralStatusAdmin({
-            id: selectedReferral.id,
-            status: "Interview",
-            interview_date: combinedDate.toISOString(),
-            interview_type: interviewType,
-            interviewer: interviewer,
-            meeting_link: meetingLink,
-          })
-        ).unwrap();
-        setScheduleDialogOpen(false);
-      } catch (err) {
-        console.error("Failed to schedule interview:", err);
-      }
-    } else {
-      // Panel-based scheduling
-      if (selectedPanels.length === 0) {
-        alert("Please select at least one panel.");
-        return;
-      }
-
-      const selectedPanelData = panels.filter(p => selectedPanels.includes(p.id));
-      const panelNames = selectedPanelData.map(p => p.name).join(' + ');
-      const allMembers = selectedPanelData.flatMap(p => p.members);
-      const interviewerNames = [...new Set(allMembers.map(m => m.name))].join(', ');
-      
-      try {
-        await dispatch(
-          updateReferralStatusAdmin({
-            id: selectedReferral.id,
-            status: "Interview",
-            interview_type: `Panel - ${panelNames}`,
-            interviewer: interviewerNames,
-           
-          })
-        ).unwrap();
-        setScheduleDialogOpen(false);
-      } catch (err) {
-        console.error("Failed to schedule panel interview:", err);
-      }
+      console.error("Status update failed:", err);
+      alert("Failed to update status.");
     }
   };
 
@@ -270,7 +187,7 @@ export default function AdminReferralDashboard() {
 
   const handleDownloadResume = (referral) => {
     if (!referral.resumeUrl) return;
-    const link = document.createElement('a');
+    const link = document.createElement("a");
     link.href = referral.resumeUrl;
     link.download = referral.resumeName;
     document.body.appendChild(link);
@@ -278,22 +195,68 @@ export default function AdminReferralDashboard() {
     document.body.removeChild(link);
   };
 
-  // ✅ Only keep navigation for create new panel
   const handleNavigateToPanelManagement = () => {
     navigate("/recruitment/panel-management");
   };
 
-  // ✅ Handle multiple panel selection
-  const handlePanelSelectionChange = (event) => {
-    const { value } = event.target;
-    setSelectedPanels(typeof value === 'string' ? value.split(',') : value);
+  // ✅ MAIN FIX: Send correct field based on mode
+  const handleScheduleSubmit = async () => {
+    if (!roundName.trim()) {
+      alert("Interview round name is required.");
+      return;
+    }
+    if (selectedMemberIds.length === 0) {
+      alert("Please select at least one interviewer.");
+      return;
+    }
+    if (!interviewDate || !interviewTime || !meetingLink.trim()) {
+      alert("Date, time, and meeting link are required.");
+      return;
+    }
+
+    const dateStr = interviewDate instanceof Date
+      ? interviewDate.toISOString().split("T")[0]
+      : interviewDate;
+    const timeStr = interviewTime instanceof Date
+      ? interviewTime.toTimeString().slice(0, 5)
+      : interviewTime;
+
+    // ✅ Build payload with correct field name
+    const interviewData = {
+      round_name: roundName.trim(),
+      interview_date: dateStr,
+      interview_time: timeStr,
+      interviewer_ids: selectedMemberIds,
+    };
+
+    if (scheduleMode === "reschedule") {
+      interviewData.location = meetingLink.trim(); // ✅ backend expects 'location'
+    } else {
+      interviewData.meeting_link = meetingLink.trim(); // ✅ backend expects 'meeting_link'
+    }
+
+    try {
+      if (scheduleMode === "reschedule") {
+        await rescheduleInterviewReferralApi(selectedReferral.id, interviewData);
+        alert("Interview rescheduled!");
+      } else {
+        await scheduleInterviewReferralApi(selectedReferral.id, interviewData);
+        alert("New interview round scheduled!");
+      }
+
+      await dispatch(getAllReferralsAdmin());
+      setScheduleDialogOpen(false);
+    } catch (err) {
+      console.error("Scheduling error:", err);
+      alert("Failed to schedule interview.");
+    }
   };
 
   const filteredReferrals = allReferrals
     .map(normalizeReferral)
-    .filter(referral => {
+    .filter((referral) => {
       const matchesStatus = statusFilter === "all" || referral.status === statusFilter;
-      const matchesSearch = 
+      const matchesSearch =
         referral.candidateName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         referral.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
         referral.referredBy.toLowerCase().includes(searchTerm.toLowerCase());
@@ -308,14 +271,15 @@ export default function AdminReferralDashboard() {
     );
   }
 
+  const combinedMembers = selectedPanelNames.flatMap(panelName => {
+    const panel = panels.find(p => p.panel_name === panelName);
+    return panel ? panel.members.map(m => ({ ...m, sourcePanel: panelName })) : [];
+  });
+
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Box p={4} sx={{ background: "#f4f7fb", minHeight: "100vh" }}>
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error.error || error.message || "Failed to load referrals"}
-          </Alert>
-        )}
+        {error && <Alert severity="error" sx={{ mb: 2 }}>{error.message || "Failed to load referrals"}</Alert>}
 
         <Typography variant="h4" fontWeight={600} mb={2}>
           Referral Management Dashboard
@@ -331,8 +295,16 @@ export default function AdminReferralDashboard() {
           />
           <Box>
             <Button size="small" onClick={() => setStatusFilter("all")} color={statusFilter === "all" ? "primary" : "inherit"}>All</Button>
-            {Object.keys(statusLabels).map(status => (
-              <Button key={status} size="small" onClick={() => setStatusFilter(status)} color={statusFilter === status ? "primary" : "inherit"} sx={{ ml: 1 }}>{statusLabels[status]}</Button>
+            {Object.keys(statusLabels).map((status) => (
+              <Button
+                key={status}
+                size="small"
+                onClick={() => setStatusFilter(status)}
+                color={statusFilter === status ? "primary" : "inherit"}
+                sx={{ ml: 1 }}
+              >
+                {statusLabels[status]}
+              </Button>
             ))}
           </Box>
         </Box>
@@ -383,7 +355,7 @@ export default function AdminReferralDashboard() {
                       />
                       {referral.interviewDate && (
                         <Typography variant="caption" display="block" color="textSecondary">
-                          {new Date(referral.interviewDate).toLocaleString()}
+                          {new Date(referral.interviewDate).toLocaleString()} ({referral.interviewType})
                         </Typography>
                       )}
                     </TableCell>
@@ -391,20 +363,10 @@ export default function AdminReferralDashboard() {
                       <Box display="flex" gap={1}>
                         {referral.resumeUrl && (
                           <>
-                            <IconButton
-                              size="small"
-                              onClick={() => handleViewResume(referral)}
-                              color="primary"
-                              title="Preview Resume"
-                            >
+                            <IconButton size="small" onClick={() => handleViewResume(referral)} color="primary">
                               <Visibility />
                             </IconButton>
-                            <IconButton
-                              size="small"
-                              onClick={() => handleDownloadResume(referral)}
-                              color="secondary"
-                              title="Download Resume"
-                            >
+                            <IconButton size="small" onClick={() => handleDownloadResume(referral)} color="secondary">
                               <Download />
                             </IconButton>
                           </>
@@ -413,35 +375,47 @@ export default function AdminReferralDashboard() {
                     </TableCell>
                     <TableCell>
                       <Box display="flex" gap={1}>
-                        <IconButton
-                          size="small"
-                          onClick={() => handleViewDetails(referral)}
-                          color="info"
-                          title="View Details"
-                        >
+                        <IconButton size="small" onClick={() => handleViewDetails(referral)} color="info">
                           <Visibility />
                         </IconButton>
 
-                        {referral.status === "shortlisted" && (
-                          <IconButton
-                            size="small"
-                            onClick={() => handleScheduleInterview(referral)}
-                            color="warning"
-                            title="Schedule Interview"
-                          >
-                            <Schedule />
-                          </IconButton>
+                        {/* Schedule New Round */}
+                        {!isTerminalStatus(referral.status) && (
+                          <Tooltip title="Schedule New Interview Round">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleScheduleInterview(referral, "new")}
+                              color="primary"
+                            >
+                              <AddIcon />
+                            </IconButton>
+                          </Tooltip>
                         )}
 
+                        {/* ✅ Reschedule — for all "Interview" status */}
+                        {referral.status === "interview" && (
+                          <Tooltip title="Reschedule this interview">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleScheduleInterview(referral, "reschedule")}
+                              color="warning"
+                            >
+                              <ScheduleIcon />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+
+                        {/* Status Update (includes "Interview") */}
                         {!isTerminalStatus(referral.status) && (
-                          <IconButton
-                            size="small"
-                            onClick={() => handleUpdateStatus(referral)}
-                            color="primary"
-                            title="Update Status"
-                          >
-                            <Edit />
-                          </IconButton>
+                          <Tooltip title="Update Status">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleUpdateStatus(referral)}
+                              color="primary"
+                            >
+                              <Edit />
+                            </IconButton>
+                          </Tooltip>
                         )}
                       </Box>
                     </TableCell>
@@ -452,169 +426,147 @@ export default function AdminReferralDashboard() {
           </Table>
         </TableContainer>
 
-        {/* Schedule Interview Dialog */}
+        {/* Schedule / Reschedule Dialog */}
         <Dialog open={scheduleDialogOpen} onClose={() => setScheduleDialogOpen(false)} maxWidth="md" fullWidth>
           <DialogTitle>
-            Schedule Interview — {selectedReferral?.candidateName}
+            {scheduleMode === "reschedule"
+              ? `Reschedule Interview — ${selectedReferral?.candidateName}`
+              : `Schedule New Round — ${selectedReferral?.candidateName}`}
           </DialogTitle>
           <DialogContent>
-            <Tabs value={scheduleTab} onChange={(e, newValue) => setScheduleTab(newValue)} sx={{ mb: 2 }}>
-              <Tab label="Direct Scheduling" />
-              <Tab label="Panel Scheduling" />
-            </Tabs>
-
-            {scheduleTab === 0 ? (
-              // Direct Scheduling Tab
-              <Grid container spacing={2}>
-                <Grid item xs={12} md={6}>
-                  <DatePicker
-                    label="Interview Date *"
-                    value={interviewDate}
-                    onChange={setInterviewDate}
-                    renderInput={(params) => <TextField {...params} fullWidth />}
-                    minDate={new Date()}
-                  />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <TimePicker
-                    label="Interview Time *"
-                    value={interviewTime}
-                    onChange={setInterviewTime}
-                    renderInput={(params) => <TextField {...params} fullWidth />}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <FormControl fullWidth>
-                    <InputLabel>Interview Type</InputLabel>
-                    <Select 
-                      value={interviewType} 
-                      onChange={(e) => setInterviewType(e.target.value)} 
-                      label="Interview Type"
-                      sx={{ minHeight: '56px' }}
-                    >
-                      {interviewTypes.map(type => <MenuItem key={type} value={type}>{type}</MenuItem>)}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12}>
-                  <FormControl fullWidth>
-                    <InputLabel>Interviewer</InputLabel>
-                    <Select 
-                      value={interviewer} 
-                      onChange={(e) => setInterviewer(e.target.value)} 
-                      label="Interviewer"
-                      sx={{ minHeight: '56px' }}
-                    >
-                      {interviewers.map(person => <MenuItem key={person} value={person}>{person}</MenuItem>)}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Meeting Link"
-                    value={meetingLink}
-                    onChange={(e) => setMeetingLink(e.target.value)}
-                    placeholder="https://meet.google.com/..."
-                  />
-                </Grid>
-              
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Interview Round Name *"
+                  placeholder="e.g., Technical Round 1, HR Interview"
+                  value={roundName}
+                  onChange={(e) => setRoundName(e.target.value)}
+                />
               </Grid>
-            ) : (
-              // Panel Scheduling Tab
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <FormControl fullWidth>
-                    <InputLabel>Select Interview Panels *</InputLabel>
-                    <Select 
-                      multiple
-                      value={selectedPanels}
-                      onChange={handlePanelSelectionChange}
-                      label="Select Interview Panels *"
-                      sx={{ minHeight: '56px' }}
-                      renderValue={(selected) => (
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                          {selected.map((value) => {
-                            const panel = panels.find(p => p.id === value);
-                            return panel ? (
-                              <Chip key={value} label={panel.name} size="small" />
-                            ) : null;
-                          })}
-                        </Box>
-                      )}
-                    >
-                      {panels.filter(panel => panel.status === 'Active').map(panel => (
-                        <MenuItem key={panel.id} value={panel.id}>
-                          {panel.name} ({panel.members.length} members)
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                  <Typography variant="caption" color="textSecondary" sx={{ mt: 1 }}>
-                    Don't see a suitable panel?{' '}
-                    <Button 
-                      size="small" 
-                      onClick={handleNavigateToPanelManagement}
-                      sx={{ minWidth: 'auto', p: 0 }}
-                    >
-                      Create new panel
-                    </Button>
-                  </Typography>
-                </Grid>
 
-                {selectedPanels.length > 0 && (
-                  <>
-                    <Grid item xs={12}>
-                      <Typography variant="subtitle2" gutterBottom>
-                        Selected Panels ({selectedPanels.length}):
-                      </Typography>
-                      <Box sx={{ pl: 2 }}>
-                        {selectedPanels.map(panelId => {
-                          const panel = panels.find(p => p.id === panelId);
-                          return panel ? (
-                            <Box key={panel.id} sx={{ mb: 2 }}>
-                              <Typography variant="body2" fontWeight="bold" color="primary">
-                                {panel.name}
-                              </Typography>
-                              <Box sx={{ pl: 1 }}>
-                                {panel.members.map(member => (
-                                  <Typography key={member.id} variant="body2" color="textSecondary">
-                                    • {member.name} - {member.role}
-                                  </Typography>
-                                ))}
-                              </Box>
-                            </Box>
-                          ) : null;
-                        })}
+              <Grid item xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Select Interview Panels</InputLabel>
+                  <Select
+                    multiple
+                    value={selectedPanelNames}
+                    onChange={(e) => setSelectedPanelNames(e.target.value)}
+                    renderValue={(selected) => (
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {selected.map((name) => (
+                          <Chip key={name} label={name} size="small" />
+                        ))}
                       </Box>
-                    </Grid>
-
-                   
-                    <Grid item xs={12}>
-                     
-                    </Grid>
-                   
-                  </>
-                )}
+                    )}
+                    label="Select Interview Panels"
+                  >
+                    {loadingPanels ? (
+                      <MenuItem disabled>Loading panels...</MenuItem>
+                    ) : (
+                      panels.map(panel => (
+                        <MenuItem key={panel.panel_name} value={panel.panel_name}>
+                          {panel.panel_name} ({panel.members?.length || 0} members)
+                        </MenuItem>
+                      ))
+                    )}
+                  </Select>
+                </FormControl>
+                <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: "block" }}>
+                  Don’t see a panel?{" "}
+                  <Button size="small" onClick={handleNavigateToPanelManagement} sx={{ minWidth: "auto", p: 0 }}>
+                    Create new panel
+                  </Button>
+                </Typography>
               </Grid>
-            )}
+
+              {selectedPanelNames.length > 0 && (
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" gutterBottom>
+                    Select Interviewers ({combinedMembers.length})
+                  </Typography>
+                  <Box sx={{ maxHeight: 250, overflow: "auto", border: "1px solid #eee", borderRadius: 1, p: 1 }}>
+                    {combinedMembers.map((member) => (
+                      <FormControlLabel
+                        key={member.employee_id}
+                        control={
+                          <Checkbox
+                            checked={selectedMemberIds.includes(member.employee_id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedMemberIds(prev => [...prev, member.employee_id]);
+                              } else {
+                                setSelectedMemberIds(prev =>
+                                  prev.filter(id => id !== member.employee_id)
+                                );
+                              }
+                            }}
+                          />
+                        }
+                        label={`${member.fullname} (${member.sourcePanel}) - ${member.designation || "—"}`}
+                      />
+                    ))}
+                  </Box>
+                </Grid>
+              )}
+
+              {/* ✅ FIXED DATE/TIME PICKERS */}
+              <Grid item xs={12} md={6}>
+                <DatePicker
+                  label="Interview Date *"
+                  value={interviewDate}
+                  onChange={setInterviewDate}
+                  minDate={new Date()}
+                  slotProps={{
+                    textField: { fullWidth: true, size: "medium" },
+                    popper: { sx: { zIndex: 1401 } },
+                  }}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TimePicker
+                  label="Interview Time *"
+                  value={interviewTime}
+                  onChange={setInterviewTime}
+                  slotProps={{
+                    textField: { fullWidth: true, size: "medium" },
+                    desktopPaper: { sx: { zIndex: 1401 } },
+                    mobilePaper: { sx: { zIndex: 1401 } },
+                  }}
+                />
+              </Grid>
+
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Meeting Link / Location *"
+                  value={meetingLink}
+                  onChange={(e) => setMeetingLink(e.target.value)}
+                  placeholder="https://meet.google.com/xxx-xxxx-xxx"
+                />
+              </Grid>
+            </Grid>
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setScheduleDialogOpen(false)}>Cancel</Button>
-            <Button 
-              onClick={handleScheduleSubmit} 
-              variant="contained" 
+            <Button
+              onClick={handleScheduleSubmit}
+              variant="contained"
               disabled={
-                referralActionLoading || 
-                (scheduleTab === 0 ? (!interviewDate || !interviewTime) : (selectedPanels.length === 0))
+                referralActionLoading ||
+                !roundName.trim() ||
+                selectedMemberIds.length === 0 ||
+                !interviewDate ||
+                !interviewTime ||
+                !meetingLink.trim()
               }
             >
-              {referralActionLoading ? "Scheduling..." : "Schedule Interview"}
+              {referralActionLoading ? "Processing..." : scheduleMode === "reschedule" ? "Reschedule Interview" : "Schedule Round"}
             </Button>
           </DialogActions>
         </Dialog>
 
-        {/* Update Status Dialog */}
+        {/* Status Update Dialog — includes "Interview" */}
         <Dialog open={statusDialogOpen} onClose={() => setStatusDialogOpen(false)} maxWidth="sm" fullWidth>
           <DialogTitle>Update Status for {selectedReferral?.candidateName}</DialogTitle>
           <DialogContent>
@@ -622,37 +574,29 @@ export default function AdminReferralDashboard() {
               Current status: <strong>{statusLabels[selectedReferral?.status] || "Unknown"}</strong>
             </Typography>
             <Box display="flex" flexDirection="column" gap={1.5}>
-              {Object.entries(statusLabels).map(([status, label]) => {
-                const isCurrent = selectedReferral?.status === status;
-                const isBefore = STATUS_ORDER[status] < STATUS_ORDER[selectedReferral?.status];
-                const isTerminal = isTerminalStatus(selectedReferral?.status);
-                const isInvalid = isBefore || isTerminal;
-
-                return (
-                  <Button
-                    key={status}
-                    variant={isCurrent ? "contained" : "outlined"}
-                    color={statusColors[status] || "primary"}
-                    onClick={() => handleStatusUpdate(status)}
-                    disabled={isInvalid}
-                    sx={{ 
-                      justifyContent: "flex-start", 
-                      py: 1.5,
-                      opacity: isInvalid ? 0.6 : 1,
-                      cursor: isInvalid ? "not-allowed" : "pointer"
-                    }}
-                    size="large"
-                  >
-                    {label}
-                    {isBefore && (
-                      <Typography ml={1} color="textSecondary" fontSize="0.875rem">(locked)</Typography>
-                    )}
-                    {isTerminal && (
-                      <Typography ml={1} color="textSecondary" fontSize="0.875rem">(final)</Typography>
-                    )}
-                  </Button>
-                );
-              })}
+              {Object.entries(statusLabels)
+                .filter(([status]) => status !== "submitted") // ✅ Allow "Interview"
+                .map(([status, label]) => {
+                  const isCurrent = selectedReferral?.status === status;
+                  const isBefore = STATUS_ORDER[status] < STATUS_ORDER[selectedReferral?.status];
+                  const isTerminal = isTerminalStatus(selectedReferral?.status);
+                  const isInvalid = isBefore || isTerminal;
+                  return (
+                    <Button
+                      key={status}
+                      variant={isCurrent ? "contained" : "outlined"}
+                      color={statusColors[status] || "primary"}
+                      onClick={() => handleStatusUpdate(status)}
+                      disabled={isInvalid}
+                      sx={{ justifyContent: "flex-start", py: 1.5 }}
+                      size="large"
+                    >
+                      {label}
+                      {isBefore && <Typography ml={1} color="textSecondary" fontSize="0.875rem">(locked)</Typography>}
+                      {isTerminal && <Typography ml={1} color="textSecondary" fontSize="0.875rem">(final)</Typography>}
+                    </Button>
+                  );
+                })}
             </Box>
           </DialogContent>
           <DialogActions>
@@ -660,7 +604,7 @@ export default function AdminReferralDashboard() {
           </DialogActions>
         </Dialog>
 
-        {/* Resume Dialog */}
+        {/* Resume & View Dialogs */}
         <Dialog open={resumeDialogOpen} onClose={() => setResumeDialogOpen(false)} maxWidth="md" fullWidth>
           <DialogTitle>Resume Preview</DialogTitle>
           <DialogContent>
@@ -678,6 +622,20 @@ export default function AdminReferralDashboard() {
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setResumeDialogOpen(false)}>Close</Button>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog open={viewDialogOpen} onClose={() => setViewDialogOpen(false)} maxWidth="sm">
+          <DialogTitle>Referral Details</DialogTitle>
+          <DialogContent>
+            {selectedReferral && (
+              <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                {JSON.stringify(selectedReferral, null, 2)}
+              </pre>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setViewDialogOpen(false)}>Close</Button>
           </DialogActions>
         </Dialog>
       </Box>

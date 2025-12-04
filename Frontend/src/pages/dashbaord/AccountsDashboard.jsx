@@ -30,14 +30,14 @@ const AccountsDashboard = () => {
       iconColor: "text-green-600",
       onClick: () => navigate("/accounts/payroll"),
     },
-    // {
-    //   title: "Payslips",
-    //   message: "Download and view your salary slips",
-    //   icon: ReceiptIcon,
-    //   iconBg: "bg-purple-100",
-    //   iconColor: "text-purple-600",
-    //   onClick: () => navigate("/accounts/payslips"),
-    // },
+    {
+      title: "Compliance",
+      message: "Download and view your salary slips",
+      icon: ReceiptIcon,
+      iconBg: "bg-purple-100",
+      iconColor: "text-purple-600",
+      // onClick: () => navigate("/compliance"),
+    },
     // {
     //   title: "Payroll History",
     //   message: "View previous payroll records",

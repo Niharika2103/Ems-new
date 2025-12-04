@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { vendorResetPasswordApi,vendorLoginApi } from "../../api/authApi";
 import {
   Box,
   Button,
@@ -34,6 +35,9 @@ import "swiper/css/effect-coverflow";
 
 export default function VendorLogin() {
   const navigate = useNavigate();
+
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get("token");
 
   const [formData, setFormData] = useState({
     email: "",
@@ -77,60 +81,81 @@ export default function VendorLogin() {
   // ------------------------------
   // Login Submit
   // ------------------------------
-  const handleLogin = (e) => {
-    e.preventDefault();
+ const handleLogin = async (e) => {
+  e.preventDefault();
 
-    let validation = {};
-    if (!formData.email.trim()) validation.email = "Email is required";
-    if (!formData.password.trim()) validation.password = "Password is required";
+  let validation = {};
+  if (!formData.email.trim()) validation.email = "Email is required";
+  if (!formData.password.trim()) validation.password = "Password is required";
 
-    if (Object.keys(validation).length > 0) {
-      setErrors(validation);
-      return;
+  if (Object.keys(validation).length > 0) {
+    setErrors(validation);
+    return;
+  }
+
+  try {
+    const response = await vendorLoginApi(formData); // call backend
+    if (response.data.success) {
+      toast.success("Vendor Login Successful!");
+      // save vendor info in localStorage or context
+      localStorage.setItem("vendor", JSON.stringify(response.data.vendor));
+      setTimeout(() => {
+        navigate("/vendor"); // redirect to vendor dashboard
+      }, 1200);
     }
-
-    toast.success("Vendor Login Successful!");
-
-    setTimeout(() => {
-      navigate("/vendor");
-    }, 1200);
-  };
+  } catch (err) {
+    console.error(err);
+    toast.error(err.response?.data?.error || "Login failed");
+  }
+};
 
   // ------------------------------
   // Forgot Password Submit
   // ------------------------------
-  const handleForgotSubmit = (e) => {
-    e.preventDefault();
+  const handleForgotSubmit = async (e) => {
+  e.preventDefault();
 
-    let validation = {};
+  let validation = {};
+  if (!forgotPasswordData.newPassword)
+    validation.newPassword = "New password required";
+  if (!forgotPasswordData.confirmPassword)
+    validation.confirmPassword = "Confirm password required";
+  if (
+    forgotPasswordData.newPassword &&
+    forgotPasswordData.confirmPassword &&
+    forgotPasswordData.newPassword !== forgotPasswordData.confirmPassword
+  ) {
+    validation.confirmPassword = "Passwords do not match";
+  }
 
-    if (!forgotPasswordData.newPassword)
-      validation.newPassword = "New password required";
+  if (Object.keys(validation).length > 0) {
+    setForgotErrors(validation);
+    return;
+  }
 
-    if (!forgotPasswordData.confirmPassword)
-      validation.confirmPassword = "Confirm password required";
+  setForgotLoading(true);
 
-    if (
-      forgotPasswordData.newPassword &&
-      forgotPasswordData.confirmPassword &&
-      forgotPasswordData.newPassword !== forgotPasswordData.confirmPassword
-    ) {
-      validation.confirmPassword = "Passwords do not match";
-    }
+  try {
+    // You need to pass token as well from URL
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
 
-    if (Object.keys(validation).length > 0) {
-      setForgotErrors(validation);
-      return;
-    }
+    const response = await vendorResetPasswordApi({
+      token,
+      newPassword: forgotPasswordData.newPassword,
+    });
 
-    setForgotLoading(true);
-
-    setTimeout(() => {
-      toast.success("Password reset successful!");
-      setForgotLoading(false);
+    if (response.data.success) {
+      toast.success(response.data.message || "Password reset successful!");
       setShowForgotPassword(false);
-    }, 1500);
-  };
+    }
+  } catch (err) {
+    console.error(err);
+    toast.error(err.response?.data?.error || "Reset failed");
+  } finally {
+    setForgotLoading(false);
+  }
+};
 
   return (
     <div className="admin-page">
