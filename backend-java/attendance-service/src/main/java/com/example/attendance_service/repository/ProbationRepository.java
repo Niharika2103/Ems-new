@@ -11,17 +11,18 @@ import java.util.UUID;
 
 public interface ProbationRepository extends JpaRepository<ProbationEntity, Long> {
 
-    @Query("""
-        SELECT p FROM ProbationEntity p
-        WHERE p.usermasterid = :userId
-          AND LOWER(p.status) = LOWER(:status)
-          AND :date BETWEEN p.startDate AND p.endDate
-    """)
-    Optional<ProbationEntity> findProbationForDate(
-            @Param("userId") UUID userId,
-            @Param("status") String status,
-            @Param("date") LocalDate date
-    );
+	@Query("""
+		    SELECT p FROM ProbationEntity p
+		    WHERE p.employeeId = :userId
+		      AND LOWER(p.status) = LOWER(:status)
+		      AND :date BETWEEN p.startDate AND p.endDate
+		""")
+		Optional<ProbationEntity> findProbationForDate(
+		        @Param("userId") UUID userId,
+		        @Param("status") String status,
+		        @Param("date") LocalDate date
+		);
+
 
 }
 
