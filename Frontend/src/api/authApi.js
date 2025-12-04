@@ -559,6 +559,25 @@ export const getReferralByIdAdminApi = (referral_id) =>
 export const updateReferralStatusAdminApi = (id, status) =>
   adminClient.put(`${AUTH_API.ADMIN}/referrals/status/${id}`, { status });
 
+// ================= Panel Management APIs =================
+export const assignPanelMembersApi = (panelData) =>
+  adminClient.post(`${AUTH_API.ADMIN}/panels/assign`, panelData);
+
+export const getAllPanelsApi = () =>
+  adminClient.get(`${AUTH_API.ADMIN}/panels`);
+
+// ================= Interview Scheduling APIs =================
+export const scheduleInterviewReferralApi = (referral_id, interviewData) =>
+  adminClient.post(`${AUTH_API.ADMIN}/interviews/schedule/${referral_id}`, interviewData);
+
+export const rescheduleInterviewReferralApi = (referral_id, interviewData) =>
+  adminClient.post(`${AUTH_API.ADMIN}/interviews/reschedule/${referral_id}`, interviewData);
+
+// ================= Feedback APIs =================
+export const addPanelFeedbackApi = (interview_id, feedbackData) =>
+  adminClient.post(`${AUTH_API.ADMIN}/interviews/${interview_id}/feedback`, feedbackData);
+
+
 
 export const createFreelancerContractApi = (data) => {
   return adminClient.post(`/admin/freelancer-contract/create`, data);
