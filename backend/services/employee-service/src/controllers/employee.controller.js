@@ -1404,3 +1404,58 @@ export const getMyReferrals = async (req, res) => {
     client.release();
   }
 };
+
+//fetching salary structure 
+
+export const getEmployeeSalary = async (req, res) => {
+  const { employeeId } = req.params;
+
+  try {
+    // Fetch employee personal details
+    const userQuery = `
+      SELECT 
+        name,
+        employee_id,
+        designation,
+        date_of_joining,
+        dob,
+        permanent_address AS location,
+        employment_type
+      FROM user_employees_master
+      WHERE id = $1
+    `;
+
+    const userResult = await pool.query(userQuery, [employeeId]);
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+
+    // Fetch salary structure
+    const salaryQuery = `
+      SELECT *
+      FROM salary_structure
+      WHERE employee_id = $1
+      ORDER BY created_at DESC
+      LIMIT 1
+
+    `;
+
+    const salaryResult = await pool.query(salaryQuery, [employeeId]);
+
+    if (salaryResult.rows.length === 0) {
+      return res.status(404).json({ error: "Salary structure not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      employee: userResult.rows[0],
+      salary: salaryResult.rows[0],
+    });
+
+  } catch (err) {
+    console.error("Error fetching salary:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+

@@ -19,9 +19,11 @@ import {
   applyParentalLeave,
   getFreelancers,
   createReferral,
-  getMyReferrals
+  getMyReferrals,
+  getEmployeeSalary
 
 } from "../controllers/employee.controller.js";
+
 
 const router = Router();
 
@@ -84,6 +86,9 @@ router.post(
 );
 
 router.get("/my-referrals/:employeeId", getMyReferrals);
+
+//emp salary 
+router.get("/salary/:employeeId", getEmployeeSalary);
 
 
 export default router;
