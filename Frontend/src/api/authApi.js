@@ -573,6 +573,9 @@ export const scheduleInterviewReferralApi = (referral_id, interviewData) =>
 export const rescheduleInterviewReferralApi = (referral_id, interviewData) =>
   adminClient.post(`${AUTH_API.ADMIN}/interviews/reschedule/${referral_id}`, interviewData);
 
+export const getAllInterviewsWithDetailsApi = () =>
+  adminClient.get(`${AUTH_API.ADMIN}/interviews/all`);
+
 // ================= Feedback APIs =================
 export const addPanelFeedbackApi = (interview_id, feedbackData) =>
   adminClient.post(`${AUTH_API.ADMIN}/interviews/${interview_id}/feedback`, feedbackData);

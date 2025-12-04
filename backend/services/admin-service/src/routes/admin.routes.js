@@ -40,6 +40,7 @@ import {
   getAllPanels,
   scheduleInterviewReferral,
   rescheduleInterviewReferral,
+  getAllInterviewsWithDetails,
   addPanelFeedback,
 
   // === EXTRA AUDIT LOG CONTROLLERS ===
@@ -195,6 +196,11 @@ router.post("/interviews/schedule/:referral_id", scheduleInterviewReferral);
 
 // Reschedule interview (insert a new row)
 router.post("/interviews/reschedule/:referral_id", rescheduleInterviewReferral);
+
+router.get(
+  "/interviews/all",
+  getAllInterviewsWithDetails
+);
 
 router.post(
   "/interviews/:interview_id/feedback",

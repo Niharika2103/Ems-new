@@ -3733,6 +3733,56 @@ export const rescheduleInterviewReferral = async (req, res) => {
   }
 };
 
+export const getAllInterviewsWithDetails = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const query = `
+      SELECT 
+        i.interview_id,
+        i.referral_id,
+        i.interview_date,
+        i.interview_type AS round_name,
+        i.location,
+        i.status,
+        i.created_at,
+
+        -- Candidate Details
+        r.candidate_name,
+        r.candidate_email,
+        r.phone_number,
+
+        -- Panel Members (Interviewer Names + Emails)
+        (
+            SELECT json_agg(json_build_object(
+                'id', u.id,
+                'name', u.name,
+                'email', u.email
+            ))
+            FROM user_employees_master u
+            WHERE u.name = ANY(i.interviewer)
+        ) AS panel_members
+      FROM interviews i
+      LEFT JOIN referrals r ON r.id = i.referral_id
+      ORDER BY i.interview_date DESC;
+    `;
+
+    const { rows } = await client.query(query);
+
+    return res.status(200).json({
+      message: "All interviews fetched successfully",
+      data: rows,
+    });
+
+  } catch (err) {
+    console.error("Get Interviews Error:", err);
+    return res.status(500).json({ error: "Failed to get interviews" });
+  } finally {
+    client.release();
+  }
+};
+
+
 export const addPanelFeedback = async (req, res) => {
   const client = await pool.connect();
 
