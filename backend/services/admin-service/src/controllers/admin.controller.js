@@ -3208,7 +3208,7 @@ export const createProbation = async (req, res) => {
 
   try {
     const {
-      usermasterid,
+      employee_id,
       startDate,
       endDate,
       reportingManager,
@@ -3217,8 +3217,8 @@ export const createProbation = async (req, res) => {
     } = req.body;
 
     // ---------------- VALIDATION ----------------
-    if (!usermasterid) {
-      return res.status(400).json({ error: "Employee (usermasterid) is required" });
+    if (!employee_id) {
+      return res.status(400).json({ error: "Employee (employee_id) is required" });
     }
 
     if (!startDate) {
@@ -3246,7 +3246,7 @@ export const createProbation = async (req, res) => {
     // ----------------- INSERT QUERY ------------------
     const insertQuery = `
       INSERT INTO probation (
-        usermasterid,
+        employee_id,
         startdate,
         enddate,
         status,
@@ -3261,7 +3261,7 @@ export const createProbation = async (req, res) => {
 
     const result = await client.query(insertQuery, [
      
-       usermasterid,
+       employee_id,
   startDate,
   endDate,
   status,
@@ -3357,7 +3357,7 @@ export const getProbationWithUser = async (req, res) => {
         p.*
       FROM ${PROBATION} p
       JOIN ${USER_MASTER_TABLE} u 
-        ON u.id = p.usermasterid
+        ON u.id = p.employee_id
       ORDER BY p.probationid DESC
     `;
 

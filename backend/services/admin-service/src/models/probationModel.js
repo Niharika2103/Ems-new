@@ -3,7 +3,7 @@ export const ProbationModel = {
 
   columns: [
     "probationid",
-    "usermasterid",
+    "employee_id",
     "startdate",
     "enddate",
     "status",
