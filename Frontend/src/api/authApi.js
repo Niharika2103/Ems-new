@@ -580,37 +580,37 @@ export const addPanelFeedbackApi = (interview_id, feedbackData) =>
 
 
 export const createFreelancerContractApi = (data) => {
-  return adminClient.post(`/admin/freelancer-contract/create`, data);
+  return adminClient.post(`${AUTH_API.FREELANCER}/admin/freelancer-contract/create`, data);
 };
 
 export const updateFreelancerContractApi = (contractId, data) => {
-  return adminClient.put(`/admin/freelancer-contract/update/${contractId}`, data);
+  return adminClient.put(`${AUTH_API.FREELANCER}/admin/freelancer-contract/update/${contractId}`, data);
 };
 
 export const cancelFreelancerContractApi = (contractId) => {
-  return adminClient.patch(`/admin/freelancer-contract/cancel/${contractId}`);
+  return adminClient.patch(`${AUTH_API.FREELANCER}/admin/freelancer-contract/cancel/${contractId}`);
 };
 
 export const updateFreelancerContractStatusApi = (contractId, status) => {
-  return adminClient.patch(`/admin/freelancer-contract/status/${contractId}`, { status });
+  return adminClient.patch(`${AUTH_API.FREELANCER}/admin/freelancer-contract/status/${contractId}`, { status });
 };
 
 export const renewFreelancerContractApi = (contractId, newEndDate) => {
-  return adminClient.patch(`/admin/freelancer-contract/renew/${contractId}`, {
+  return adminClient.patch(`${AUTH_API.FREELANCER}/admin/freelancer-contract/renew/${contractId}`, {
     new_end_date: newEndDate
   });
 };
 
 export const fetchFreelancerContractsApi = (freelancerId) => {
-  return adminClient.get(`/admin/freelancer-contract/freelancer/${freelancerId}`);
+  return adminClient.get(`${AUTH_API.FREELANCER}/admin/freelancer-contract/freelancer/${freelancerId}`);
 };
 
 export const fetchAllFreelancerContractsApi = () => {
-  return adminClient.get(`/admin/freelancer-contract/all`);
+  return adminClient.get(`${AUTH_API.FREELANCER}/admin/freelancer-contract/all`);
 };
 
 export const fetchFreelancerContractByIdApi = (contractId) => {
-  return adminClient.get(`/admin/freelancer-contract/${contractId}`);
+  return adminClient.get(`${AUTH_API.FREELANCER}/admin/freelancer-contract/${contractId}`);
 };
 
 //Auditlogs
@@ -622,7 +622,7 @@ export const adminLogoutApi = (email) => {
   console.log("Calling backend logout with email:", email);
 
   return adminClient
-    .post("/admin/logout", { email })
+    .post(`${AUTH_API.ADMIN}/admin/logout`, { email })
     .then((res) => {
       console.log("Logout API CALLED SUCCESSFULLY", res.data);
       return res;
@@ -673,13 +673,13 @@ export const deleteInvoiceApi = (invoiceId) =>
 
 // ================= Vendor Auth =================
 export const vendorRegisterApi = (data) =>
-  vendorClient.post(`/vendor/register`, data); // backend route
+  vendorClient.post(`${AUTH_API.VENDOR}/vendor/register`, data); // backend route
 
 export const vendorLoginApi = (data) =>
-  vendorClient.post(`/vendor/login`, data);
+  vendorClient.post(`${AUTH_API.VENDOR}/vendor/login`, data);
 
 export const vendorForgotPasswordApi = (data) =>
-  vendorClient.post(`/vendor/forgot-password`, data);
+  vendorClient.post(`${AUTH_API.VENDOR}/vendor/forgot-password`, data);
 
 export const vendorResetPasswordApi = (data) =>
-  vendorClient.post(`/vendor/reset-password`, data);
+  vendorClient.post(`${AUTH_API.VENDOR}/vendor/reset-password`, data);
