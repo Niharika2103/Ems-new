@@ -580,37 +580,37 @@ export const addPanelFeedbackApi = (interview_id, feedbackData) =>
 
 
 export const createFreelancerContractApi = (data) => {
-  return adminClient.post(`${AUTH_API.FREELANCER}/admin/freelancer-contract/create`, data);
+  return freelancerClient.post(`${AUTH_API.FREELANCER}/admin/freelancer-contract/create`, data);
 };
 
 export const updateFreelancerContractApi = (contractId, data) => {
-  return adminClient.put(`${AUTH_API.FREELANCER}/admin/freelancer-contract/update/${contractId}`, data);
+  return freelancerClient.put(`${AUTH_API.FREELANCER}/admin/freelancer-contract/update/${contractId}`, data);
 };
 
 export const cancelFreelancerContractApi = (contractId) => {
-  return adminClient.patch(`${AUTH_API.FREELANCER}/admin/freelancer-contract/cancel/${contractId}`);
+  return freelancerClient.patch(`${AUTH_API.FREELANCER}/admin/freelancer-contract/cancel/${contractId}`);
 };
 
 export const updateFreelancerContractStatusApi = (contractId, status) => {
-  return adminClient.patch(`${AUTH_API.FREELANCER}/admin/freelancer-contract/status/${contractId}`, { status });
+  return freelancerClient.patch(`${AUTH_API.FREELANCER}/admin/freelancer-contract/status/${contractId}`, { status });
 };
 
 export const renewFreelancerContractApi = (contractId, newEndDate) => {
-  return adminClient.patch(`${AUTH_API.FREELANCER}/admin/freelancer-contract/renew/${contractId}`, {
+  return freelancerClient.patch(`${AUTH_API.FREELANCER}/admin/freelancer-contract/renew/${contractId}`, {
     new_end_date: newEndDate
   });
 };
 
 export const fetchFreelancerContractsApi = (freelancerId) => {
-  return adminClient.get(`${AUTH_API.FREELANCER}/admin/freelancer-contract/freelancer/${freelancerId}`);
+  return freelancerClient.get(`${AUTH_API.FREELANCER}/admin/freelancer-contract/freelancer/${freelancerId}`);
 };
 
 export const fetchAllFreelancerContractsApi = () => {
-  return adminClient.get(`${AUTH_API.FREELANCER}/admin/freelancer-contract/all`);
+  return freelancerClient.get(`${AUTH_API.FREELANCER}/admin/freelancer-contract/all`);
 };
 
 export const fetchFreelancerContractByIdApi = (contractId) => {
-  return adminClient.get(`${AUTH_API.FREELANCER}/admin/freelancer-contract/${contractId}`);
+  return freelancerClient.get(`${AUTH_API.FREELANCER}/admin/freelancer-contract/${contractId}`);
 };
 
 //Auditlogs
@@ -645,6 +645,7 @@ export const createProbationPeriodApi =(payload)=>{
 export const fetchassignProbationApi =()=>{
   return adminClient.get(`${AUTH_API.ADMIN}/probation/user`)
 }
+
 // / ================== INVOICE APIs ======================
 export const createInvoiceApi = (data) =>
   adminClient.post(`${AUTH_API.ADMIN}/invoices/create`, data);
