@@ -43,14 +43,14 @@ const FreelancerDashboard = () => {
       iconColor: "text-pink-600",
     //   onClick: () => navigate("/payslip"),
     },
-    {
-      title: "Probation",
-      message: "Track your probation status",
-      icon: VerifiedUserIcon,
-      iconBg: "bg-yellow-100",
-      iconColor: "text-yellow-600",
-    //   onClick: () => navigate("/probation"),
-    },
+    // {
+    //   title: "Probation",
+    //   message: "Track your probation status",
+    //   icon: VerifiedUserIcon,
+    //   iconBg: "bg-yellow-100",
+    //   iconColor: "text-yellow-600",
+    // //   onClick: () => navigate("/probation"),
+    // },
     {
       title: "Referrals",
       message: "Refer candidates and earn rewards",

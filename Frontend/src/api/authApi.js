@@ -265,9 +265,9 @@ export const ProjectInsertApi = (data) =>
 export const ProjectFetchAllApi = () =>
   ProjectClient.get(`${AUTH_API.PROJECT}/projects`);
 //project assign to employee
-export const ProjectAssignApi = (projectId, employeeId, role = "employee") => {
+export const ProjectAssignApi = (projectId, employeeId, role = "employee",employee_type) => {
   return ProjectClient.post(
-    `${AUTH_API.PROJECT}/projects/${projectId}/assign?employeeId=${employeeId}&role=${role}`
+    `${AUTH_API.PROJECT}/projects/${projectId}/assign?employeeId=${employeeId}&role=${role}&employee_type=${employee_type}`
   );
 }
 //assigned project 
