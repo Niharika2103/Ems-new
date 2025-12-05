@@ -134,7 +134,7 @@ export default function FreelancerAssignProjectpage() {
           </div>
 
           {/* Shift */}
-          <div className="flex-1">
+          {/* <div className="flex-1">
             <label className="block mb-2 font-semibold">Shift</label>
             <select
               value={shift}
@@ -146,9 +146,9 @@ export default function FreelancerAssignProjectpage() {
               <option value="afternoon">shift2</option>
               <option value="night">shift3</option>
             </select>
-          </div>
+          </div> */}
 
-          {/* OT */}
+          {/* OT
           <div className="flex-1">
             <label className="block mb-2 font-semibold">OT</label>
             <select
@@ -160,7 +160,7 @@ export default function FreelancerAssignProjectpage() {
               <option value="yes">Yes</option>
               <option value="no">No</option>
             </select>
-          </div>
+          </div> */}
 
           {/* Employment Type */}
           <div className="flex-1">
