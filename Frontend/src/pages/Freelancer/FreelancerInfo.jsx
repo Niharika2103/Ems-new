@@ -7,6 +7,7 @@ import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
+import AssignmentIcon from "@mui/icons-material/Assignment";
 
 const FreelancerDashboard = () => {
   const navigate = useNavigate();
@@ -73,6 +74,14 @@ const FreelancerDashboard = () => {
       iconBg: "bg-purple-100",
       iconColor: "text-purple-600",
       onClick: () => navigate("/invoices"),
+    },
+    {
+      title: "Payouts",
+      message: "Calculate your commision",
+      icon: AssignmentIcon,
+      iconBg: "bg-sky-100",
+      iconColor: "text-sky-600",
+      // onClick: () => navigate("/job-postings"),
     },
     
   ];

@@ -23,6 +23,8 @@ const REGISTRATIONS_TABLE = "registrations";
 const SUPERADMINS_TABLE = "super_admins";
 const REFERRALS_TABLE = "referrals";
 const PROBATION ="probation";
+const PANEL_MEMBERS_TABLE = "panel_members";
+const INTERVIEWS_TABLE = "interviews"
 
 // ================== Multer Config ==================
 const uploadDir = path.join(process.cwd(), "src/uploads");
@@ -3206,7 +3208,7 @@ export const createProbation = async (req, res) => {
 
   try {
     const {
-      usermasterid,
+      employee_id,
       startDate,
       endDate,
       reportingManager,
@@ -3215,8 +3217,8 @@ export const createProbation = async (req, res) => {
     } = req.body;
 
     // ---------------- VALIDATION ----------------
-    if (!usermasterid) {
-      return res.status(400).json({ error: "Employee (usermasterid) is required" });
+    if (!employee_id) {
+      return res.status(400).json({ error: "Employee (employee_id) is required" });
     }
 
     if (!startDate) {
@@ -3244,7 +3246,7 @@ export const createProbation = async (req, res) => {
     // ----------------- INSERT QUERY ------------------
     const insertQuery = `
       INSERT INTO probation (
-        usermasterid,
+        employee_id,
         startdate,
         enddate,
         status,
@@ -3259,7 +3261,7 @@ export const createProbation = async (req, res) => {
 
     const result = await client.query(insertQuery, [
      
-       usermasterid,
+       employee_id,
   startDate,
   endDate,
   status,
@@ -3355,7 +3357,7 @@ export const getProbationWithUser = async (req, res) => {
         p.*
       FROM ${PROBATION} p
       JOIN ${USER_MASTER_TABLE} u 
-        ON u.id = p.usermasterid
+        ON u.id = p.employee_id
       ORDER BY p.probationid DESC
     `;
 
@@ -3401,6 +3403,393 @@ export const getAllAdminAuditLogs = async (req, res) => {
   } catch (err) {
     console.error("Fetch audit logs error:", err.message);
     res.status(500).json({ error: "Failed to fetch audit logs" });
+  } finally {
+    client.release();
+  }
+};
+
+
+export const assignPanelMembers = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { panel_name, member_ids } = req.body;
+
+    if (!panel_name) {
+      return res.status(400).json({ error: "Panel name is required" });
+    }
+
+    if (!Array.isArray(member_ids) || member_ids.length === 0) {
+      return res.status(400).json({ error: "No members selected" });
+    }
+
+    // Clear existing members for the same panel (optional)
+    await client.query(
+  `DELETE FROM ${PANEL_MEMBERS_TABLE} WHERE panel_name = $1`,
+  [panel_name]
+);
+
+    // Insert new members
+    const insertQuery = `
+      INSERT INTO panel_members (panel_name, employee_id)
+      SELECT $1, id 
+      FROM user_employees_master 
+      WHERE id = ANY($2)
+      RETURNING *;
+    `;
+
+    const { rows } = await client.query(insertQuery, [panel_name, member_ids]);
+
+    res.status(200).json({
+      message: "Panel members assigned successfully",
+      panel_name,
+      assigned_members: rows
+    });
+
+  } catch (error) {
+    console.error("Assign Panel Error:", error);
+    res.status(500).json({ error: "Failed to assign panel members" });
+  } finally {
+    client.release();
+  }
+};
+
+
+export const getAllPanels = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const query = `
+      SELECT 
+        pm.panel_name,
+        json_agg(
+          json_build_object(
+            'employee_id', pm.employee_id,
+            'fullname', u.name,
+            'email', u.email,
+            'designation', u.designation
+          )
+        ) AS members
+      FROM panel_members pm
+      LEFT JOIN user_employees_master u 
+        ON u.id = pm.employee_id
+      GROUP BY pm.panel_name;
+    `;
+
+    const { rows } = await client.query(query);
+
+    res.status(200).json(rows);
+
+  } catch (err) {
+    console.error("Get Panels Error:", err);
+    res.status(500).json({ error: "Failed to fetch panels" });
+  } finally {
+    client.release();
+  }
+};
+
+
+export const scheduleInterviewReferral = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { referral_id } = req.params;
+    let {
+      round_name,
+      interview_date,
+      interview_time,
+      meeting_link,
+      interviewer_ids = []
+    } = req.body;
+
+    if (!round_name || !interview_date || !interview_time) {
+      return res.status(400).json({ error: "Round name, date and time required" });
+    }
+
+    // Ensure interviewer_ids is an array of UUID strings
+    if (!Array.isArray(interviewer_ids) || interviewer_ids.length === 0) {
+      return res.status(400).json({ error: "At least one interviewer must be selected" });
+    }
+
+    // Convert any empty string or invalid values
+    interviewer_ids = interviewer_ids.filter(id => id && id.trim() !== "");
+
+    if (interviewer_ids.length === 0) {
+      return res.status(400).json({ error: "No valid interviewer IDs provided" });
+    }
+
+    // 1) Fetch referral details
+    const { rows: refRows } = await client.query(
+      `SELECT candidate_name, candidate_email FROM referrals WHERE id = $1`,
+      [referral_id]
+    );
+
+    if (refRows.length === 0)
+      return res.status(404).json({ error: "Referral not found" });
+
+    const referral = refRows[0];
+
+    // 2) Fetch interviewers (names + emails)
+    const { rows: interviewerList } = await client.query(
+      `SELECT name, email FROM user_employees_master WHERE id = ANY($1::uuid[])`,
+      [interviewer_ids]
+    );
+
+    if (interviewerList.length === 0) {
+      return res.status(400).json({ error: "No interviewers found with the given IDs" });
+    }
+
+    const interviewerNames = interviewerList.map(i => i.name);
+
+    // 3) Insert into interviews
+    const insertQuery = `
+      INSERT INTO interviews (
+        application_id,
+        referral_id,
+        interview_date,
+        interview_type,
+        interviewer,
+        location,
+        status,
+        created_by
+      )
+      VALUES (NULL, $1, $2, $3, $4, $5, 'scheduled', 'Admin')
+      RETURNING *
+    `;
+
+    const fullDateTime = `${interview_date} ${interview_time}`;
+
+    const insertRes = await client.query(insertQuery, [
+      referral_id,
+      fullDateTime,
+      round_name,
+      interviewerNames,
+      meeting_link
+    ]);
+
+    await client.query(
+  `UPDATE referrals
+   SET status = 'Interview',
+       updated_by = 'Admin',
+       updated_at = NOW()
+   WHERE id = $1`,
+  [referral_id]
+);
+console.log("Candidate Email:", referral.candidate_email);
+
+    // 4) Candidate email
+    await sendEmail(
+      referral.candidate_email,
+      `Interview Scheduled - ${round_name}`,
+      `
+        <h3>Your Interview Is Scheduled</h3>
+        <p><strong>Round:</strong> ${round_name}</p>
+        <p><strong>Date:</strong> ${interview_date}</p>
+        <p><strong>Time:</strong> ${interview_time}</p>
+        <p><a href="${meeting_link}">Join Meeting</a></p>
+      `
+    );
+
+    // 5) Interviewers email
+    for (let member of interviewerList) {
+      await sendEmail(
+        member.email,
+        `You are assigned as Interviewer - ${round_name}`,
+        `
+          <h3>New Interview Assigned</h3>
+          <p><strong>Candidate:</strong> ${referral.candidate_name}</p>
+          <p><strong>Date:</strong> ${interview_date}</p>
+          <p><strong>Time:</strong> ${interview_time}</p>
+          <p><a href="${meeting_link}">Join Meeting</a></p>
+        `
+      );
+    }
+
+    return res.status(200).json({
+      message: "Interview scheduled successfully",
+      interview: insertRes.rows[0]
+    });
+
+  } catch (err) {
+    console.error("Schedule Error:", err);
+    return res.status(500).json({ error: "Failed to schedule interview" });
+  } finally {
+    client.release();
+  }
+};
+
+export const rescheduleInterviewReferral = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { referral_id } = req.params;
+
+    const {
+      round_name,
+      interview_date,
+      interview_time,
+      location,             // meeting link
+      interviewer_ids = []
+    } = req.body;
+
+    if (!round_name || !interview_date || !interview_time || !location) {
+      return res.status(400).json({ error: "Round, date, time, and location are required" });
+    }
+
+    if (interviewer_ids.length === 0) {
+      return res.status(400).json({ error: "At least one interviewer must be selected" });
+    }
+
+    // 1) Fetch referral details
+    const { rows: refRows } = await client.query(
+      `SELECT candidate_name, candidate_email FROM referrals WHERE id = $1`,
+      [referral_id]
+    );
+    if (refRows.length === 0)
+      return res.status(404).json({ error: "Referral not found" });
+
+    const referral = refRows[0];
+
+    // 2) Fetch interviewers
+    const { rows: interviewerList } = await client.query(
+      `SELECT id, name, email FROM user_employees_master WHERE id = ANY($1)`,
+      [interviewer_ids]
+    );
+
+    const interviewerNames = interviewerList.map(i => i.name);
+
+    // 3) Insert new interview row with status 'rescheduled'
+    const fullDateTime = `${interview_date} ${interview_time}`;
+
+    const insertQuery = `
+      INSERT INTO ${INTERVIEWS_TABLE}  (
+        referral_id,
+        application_id,
+        interview_date,
+        interview_type,
+        interviewer,
+        location,
+        status,
+        created_by
+      )
+      VALUES ($1, NULL, $2, $3, $4, $5, 'rescheduled', 'Admin')
+      RETURNING *
+    `;
+
+    const insertRes = await client.query(insertQuery, [
+      referral_id,
+      fullDateTime,
+      round_name,
+      interviewerNames,
+      location
+    ]);
+
+    await client.query(
+  `UPDATE referrals
+   SET status = 'Interview',
+       updated_by = 'Admin',
+       updated_at = NOW()
+   WHERE id = $1`,
+  [referral_id]
+);
+
+
+    // 4) Send email to candidate
+    await sendEmail(
+      referral.candidate_email,
+      `Interview Rescheduled - ${round_name}`,
+      `
+        <h3>Your Interview Has Been Rescheduled</h3>
+        <p><strong>Round:</strong> ${round_name}</p>
+        <p><strong>Date:</strong> ${interview_date}</p>
+        <p><strong>Time:</strong> ${interview_time}</p>
+        <p><a href="${location}">Join Meeting</a></p>
+      `
+    );
+
+    // 5) Send emails to interviewers
+    for (let member of interviewerList) {
+      await sendEmail(
+        member.email,
+        `You are assigned as Interviewer - Rescheduled ${round_name}`,
+        `
+          <h3>Interview Rescheduled</h3>
+          <p><strong>Candidate:</strong> ${referral.candidate_name}</p>
+          <p><strong>Date:</strong> ${interview_date}</p>
+          <p><strong>Time:</strong> ${interview_time}</p>
+          <p><a href="${location}">Join Meeting</a></p>
+        `
+      );
+    }
+
+    return res.status(200).json({
+      message: "Interview rescheduled successfully",
+      interview: insertRes.rows[0]
+    });
+
+  } catch (err) {
+    console.error("Reschedule Error:", err);
+    return res.status(500).json({ error: "Failed to reschedule interview" });
+  } finally {
+    client.release();
+  }
+};
+
+export const addPanelFeedback = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { interview_id } = req.params;
+    const { panel_member, rating, comments } = req.body;
+
+    if (!panel_member || !rating) {
+      return res.status(400).json({ error: "Panel member and rating are required" });
+    }
+
+    // Validate rating
+    if (rating < 1 || rating > 10) {
+      return res.status(400).json({ error: "Rating must be between 1 and 10" });
+    }
+
+    // Check if interview exists
+    const { rows: interviewRows } = await client.query(
+      `SELECT interview_id FROM interviews WHERE interview_id = $1`,
+      [interview_id]
+    );
+
+    if (interviewRows.length === 0) {
+      return res.status(404).json({ error: "Interview not found" });
+    }
+
+    // Insert feedback
+    const insertQuery = `
+      INSERT INTO panel_feedback (
+        interview_id,
+        panel_member,
+        rating,
+        comments,
+        created_by,
+        updated_by
+      )
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING *
+    `;
+
+    const insertRes = await client.query(insertQuery, [
+      interview_id,
+      panel_member,
+      rating,
+      comments,
+      panel_member,
+      panel_member
+    ]);
+
+    return res.status(200).json({
+      message: "Feedback submitted successfully",
+      feedback: insertRes.rows[0]
+    });
+
+  } catch (err) {
+    console.error("Panel Feedback Error:", err);
+    return res.status(500).json({ error: "Failed to submit feedback" });
   } finally {
     client.release();
   }

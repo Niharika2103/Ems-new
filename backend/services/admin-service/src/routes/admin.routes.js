@@ -36,6 +36,11 @@ import {
   getAllReferralsAdmin,
   getReferralByIdAdmin,
   updateReferralStatusAdmin,
+  assignPanelMembers,
+  getAllPanels,
+  scheduleInterviewReferral,
+  rescheduleInterviewReferral,
+  addPanelFeedback,
 
   // === EXTRA AUDIT LOG CONTROLLERS ===
   adminLogout,
@@ -178,6 +183,23 @@ router.get(
 router.get("/referrals", getAllReferralsAdmin);
 router.get("/referrals/:referral_id", getReferralByIdAdmin);
 router.put("/referrals/status/:id", updateReferralStatusAdmin);
+
+// Assign members to a panel
+router.post("/panels/assign", assignPanelMembers);
+
+// Get all panels with members
+router.get("/panels", getAllPanels);
+
+// Schedule interview (for referral)
+router.post("/interviews/schedule/:referral_id", scheduleInterviewReferral);
+
+// Reschedule interview (insert a new row)
+router.post("/interviews/reschedule/:referral_id", rescheduleInterviewReferral);
+
+router.post(
+  "/interviews/:interview_id/feedback",
+  addPanelFeedback
+);
 
 /* ========== Job Posting ========== */
 router.post("/admin/job-posts", createJobPost);

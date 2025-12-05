@@ -57,7 +57,7 @@ const JobPostDashboard = () => {
       icon: BarChartIcon,
       iconBg: "bg-yellow-100",
       iconColor: "text-yellow-600",
-      onClick: () => navigate("/candidate/feedback"),
+      onClick: () => navigate("/feedback-table"),
     },
 
     {
