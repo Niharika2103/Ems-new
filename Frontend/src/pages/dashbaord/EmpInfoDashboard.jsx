@@ -35,6 +35,24 @@ const EmpInfoDashboard = () => {
     }
     return "/";
   };
+   const getLetterPath = () => {
+    if (storedUser?.employment_type === "fulltime") {
+      return "/documents/admin/letters";
+    }
+    if (role === "admin") {
+      return "/employee/letters";
+    }
+    return "/";
+  };
+  const getReferralspath =()=>{
+ if (storedUser?.employment_type === "fulltime") {
+      return "/dashboard/emp_info/referral";
+    }
+    if (role === "admin") {
+      return "/admin/referrals";
+    }
+    return "/";
+  }
 
   // Current page title
   const currentPage = pathnames[pathnames.length - 1] || "";
@@ -45,7 +63,7 @@ const EmpInfoDashboard = () => {
       icon: AccountCircleIcon,
       iconBg: "bg-sky-100",
       iconColor: "text-sky-600",
-      // onClick: () => navigate("/profile"),
+      onClick: () => navigate("/profile"),
     },
     {
       title: "Document",
@@ -61,8 +79,7 @@ const EmpInfoDashboard = () => {
       icon: MailOutlineIcon,
       iconBg: "bg-pink-100",
       iconColor: "text-pink-600",
-      onClick: () => navigate("/documents/admin/letters"),
-      // onClick: () => navigate("/employee/letters"),
+      onClick: () => navigate(getLetterPath()),
 
     },
     {
@@ -79,8 +96,9 @@ const EmpInfoDashboard = () => {
       icon: GroupAddIcon,
       iconBg: "bg-green-100",
       iconColor: "text-green-600",
+      onClick: ()=> navigate(getReferralspath()),
       // onClick: () => navigate("/dashboard/emp_info/referral"),
-      onClick: () => navigate("/admin/referrals"),
+      // onClick: () => navigate("/admin/referrals"),
     },
     {
       title: "Invoice",
