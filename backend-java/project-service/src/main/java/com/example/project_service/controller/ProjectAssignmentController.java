@@ -23,8 +23,10 @@ public class ProjectAssignmentController {
     public ProjectAssignmentEntity assignProject(
             @PathVariable UUID projectId,
             @RequestParam UUID employeeId,
-            @RequestParam String role) {
-        return projectAssignmentService.assignProjectToEmployee(projectId, employeeId, role);
+            @RequestParam String role,
+    @RequestParam String employee_type
+    ) {
+        return projectAssignmentService.assignProjectToEmployee(projectId, employeeId, role,employee_type);
     }
     
     @GetMapping("/employee/{employeeId}")
