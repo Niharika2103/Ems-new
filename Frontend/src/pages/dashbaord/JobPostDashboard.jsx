@@ -13,6 +13,22 @@ import AssignmentIcon from "@mui/icons-material/Assignment";
 const JobPostDashboard = () => {
   const navigate = useNavigate();
 
+    const role =
+    storedUser?.employment_type ||
+    localStorage.getItem("role") ||
+    useSelector((state) => state.adminSlice) ||
+    useSelector((state) => state.authSlice?.role) ||
+    useSelector((state) => state.employeeSlice?.role);
+
+     const getJobInfoPath = () => {
+    if (storedUser?.employment_type === "fulltime") {
+      return "/employee/application-tracking";
+    }
+    if (role === "admin") {
+      return "/job-posts";
+    }
+    return "/";
+  };
 
   const stats = [
     {
@@ -37,8 +53,7 @@ const JobPostDashboard = () => {
     icon: PersonIcon,
     iconBg: "bg-sky-100",
     iconColor: "text-sky-600",
-    // onClick: () => navigate("/job-posts"),
-   onClick: () => navigate("/employee/application-tracking"),
+   onClick: () => navigate(getJobInfoPath()),
 
   },
 
