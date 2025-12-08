@@ -12,7 +12,7 @@ import AssignmentIcon from "@mui/icons-material/Assignment";
 
 const JobPostDashboard = () => {
   const navigate = useNavigate();
-
+const storedUser = JSON.parse(localStorage.getItem("user"));
     const role =
     storedUser?.employment_type ||
     localStorage.getItem("role") ||
