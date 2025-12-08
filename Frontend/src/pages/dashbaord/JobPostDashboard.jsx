@@ -22,10 +22,10 @@ const storedUser = JSON.parse(localStorage.getItem("user"));
 
      const getJobInfoPath = () => {
     if (storedUser?.employment_type === "fulltime") {
-      return "/employee/application-tracking";
+      return "/job-posts";
     }
     if (role === "admin") {
-      return "/job-posts";
+      return "/employee/application-tracking";
     }
     return "/";
   };
@@ -37,7 +37,7 @@ const storedUser = JSON.parse(localStorage.getItem("user"));
       icon: GroupIcon,
       iconBg: "bg-sky-100",
       iconColor: "text-sky-600",
-      onClick: () => navigate("/published-jobs"),
+      onClick: () => navigate("/published-jobs"),//admin
     },
     {
       title: "Create Jobs",
@@ -45,7 +45,7 @@ const storedUser = JSON.parse(localStorage.getItem("user"));
       icon: AssignmentIcon,
       iconBg: "bg-sky-100",
       iconColor: "text-sky-600",
-      onClick: () => navigate("/job-postings"),
+      onClick: () => navigate("/job-postings"),//admin
     },
     {
     title: "Job Info",
