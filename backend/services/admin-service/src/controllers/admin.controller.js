@@ -1455,7 +1455,7 @@ export const updateMonthlyApprovalStatus = async (req, res) => {
     // 2️⃣ CALL JAVA MONTHLY LEAVE ENGINE HERE
     try {  
       await axios.post(
-        "http://localhost:9191/api/attendance/apply-default-leaves-on-approval",
+        "http://localhost:9091/api/attendance/apply-default-leaves-on-approval",
         {
           employeeId,
           from,
