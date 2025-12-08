@@ -42,7 +42,7 @@ import {
   rescheduleInterviewReferral,
   getAllInterviewsWithDetails,
   addPanelFeedback,
-
+  getPanelFeedback,
   // === EXTRA AUDIT LOG CONTROLLERS ===
   adminLogout,
   getAllAdminAuditLogs,
@@ -207,6 +207,7 @@ router.post(
   addPanelFeedback
 );
 
+router.get("/panel-feedback/:interview_id", getPanelFeedback);
 /* ========== Job Posting ========== */
 router.post("/admin/job-posts", createJobPost);
 router.get("/admin/job-posts", getAdminJobPosts);

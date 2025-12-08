@@ -580,6 +580,8 @@ export const getAllInterviewsWithDetailsApi = () =>
 export const addPanelFeedbackApi = (interview_id, feedbackData) =>
   adminClient.post(`${AUTH_API.ADMIN}/interviews/${interview_id}/feedback`, feedbackData);
 
+export const getPanelFeedbackApi = (interview_id) =>
+  adminClient.get(`${AUTH_API.ADMIN}/panel-feedback/${interview_id}`);
 
 
 export const createFreelancerContractApi = (data) => {

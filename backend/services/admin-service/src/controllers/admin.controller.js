@@ -3751,6 +3751,7 @@ export const getAllInterviewsWithDetails = async (req, res) => {
         r.candidate_name,
         r.candidate_email,
         r.phone_number,
+        r.position,
 
         -- Panel Members (Interviewer Names + Emails)
         (
@@ -3840,6 +3841,52 @@ export const addPanelFeedback = async (req, res) => {
   } catch (err) {
     console.error("Panel Feedback Error:", err);
     return res.status(500).json({ error: "Failed to submit feedback" });
+  } finally {
+    client.release();
+  }
+};
+
+
+export const getPanelFeedback = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { interview_id } = req.params;
+
+    // Validate interview exists (optional but recommended)
+    const { rows: interviewRows } = await client.query(
+      `SELECT interview_id FROM interviews WHERE interview_id = $1`,
+      [interview_id]
+    );
+
+    if (interviewRows.length === 0) {
+      return res.status(404).json({ error: "Interview not found" });
+    }
+
+    // Fetch only panel_feedback table data
+    const query = `
+      SELECT 
+        feedback_id,
+        interview_id,
+        panel_member,
+        rating,
+        comments,
+        created_at
+      FROM panel_feedback
+      WHERE interview_id = $1
+      ORDER BY created_at DESC
+    `;
+
+    const { rows } = await client.query(query, [interview_id]);
+
+    return res.status(200).json({
+      message: "Panel feedback fetched successfully",
+      feedback: rows
+    });
+
+  } catch (err) {
+    console.error("Get Panel Feedback Error:", err);
+    return res.status(500).json({ error: "Failed to fetch panel feedback" });
   } finally {
     client.release();
   }

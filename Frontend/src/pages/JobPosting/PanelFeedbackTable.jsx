@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // Add this import
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Paper,
@@ -18,110 +18,84 @@ import {
   IconButton,
   Tooltip,
   CircularProgress,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions
 } from '@mui/material';
 import {
   Search as SearchIcon,
-  FilterList as FilterIcon,
   CalendarToday as CalendarIcon,
   Person as PersonIcon,
   Badge as BadgeIcon,
-  Download as DownloadIcon,
-  Visibility as ViewIcon
+  Visibility as ViewIcon,
+  Category as CategoryIcon, // Optional: for round icon
 } from '@mui/icons-material';
 
+//  Update this import path as needed
+import { getAllInterviewsWithDetailsApi } from "../../api/authApi";
+
 const PanelFeedbackTable = () => {
-  const navigate = useNavigate(); // Initialize useNavigate hook
-  
-  // Sample data
-  const [data, setData] = useState([
-    {
-      id: 1,
-      interviewId: 'INT-2024-001',
-      candidateName: 'John Doe',
-      panelMember: 'Dr. Sarah Smith',
-      interviewDate: '2024-01-15T10:00:00',
-      candidateEmail: 'john.doe@email.com',
-      candidateRole: 'Senior Frontend Developer'
-    },
-    {
-      id: 2,
-      interviewId: 'INT-2024-002',
-      candidateName: 'Jane Smith',
-      panelMember: 'Prof. Michael Johnson',
-      interviewDate: '2024-01-16T14:30:00',
-      candidateEmail: 'jane.smith@email.com',
-      candidateRole: 'Project Manager'
-    },
-    {
-      id: 3,
-      interviewId: 'INT-2024-003',
-      candidateName: 'Robert Johnson',
-      panelMember: 'Dr. Sarah Smith',
-      interviewDate: '2024-01-17T11:15:00',
-      candidateEmail: 'robert.j@email.com',
-      candidateRole: 'UX Designer'
-    },
-    {
-      id: 4,
-      interviewId: 'INT-2024-004',
-      candidateName: 'Alice Williams',
-      panelMember: 'Mr. David Brown',
-      interviewDate: '2024-01-18T09:45:00',
-      candidateEmail: 'alice.w@email.com',
-      candidateRole: 'DevOps Engineer'
-    },
-    {
-      id: 5,
-      interviewId: 'INT-2024-005',
-      candidateName: 'Michael Chen',
-      panelMember: 'Ms. Emily Wilson',
-      interviewDate: '2024-01-19T15:20:00',
-      candidateEmail: 'michael.chen@email.com',
-      candidateRole: 'Data Scientist'
-    }
-  ]);
+  const navigate = useNavigate();
 
-  const [filteredData, setFilteredData] = useState(data);
+  const [data, setData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [selectedInterview, setSelectedInterview] = useState(null);
-  const [openDialog, setOpenDialog] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Simulate API call
   useEffect(() => {
-    setLoading(true);
-    // Simulate API delay
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
+    const fetchInterviews = async () => {
+      try {
+        setLoading(true);
+        const response = await getAllInterviewsWithDetailsApi();
+        const interviews = response.data?.data || [];
+
+        const transformed = interviews.map((row) => {
+          const panelMembers = row.panel_members || [];
+          return {
+            id: row.interview_id,
+            interviewId: row.interview_id ?? '—',
+            roundName: row.round_name || '—', // ✅ ADD ROUND NAME
+            candidateName: row.candidate_name || '—',
+            candidateEmail: row.candidate_email || '—',
+            candidateRole: row.position || '—',
+            interviewDate: row.interview_date,
+            panelMember: panelMembers.map(p => p.name).join(', ') || '—',
+            panelMemberCount: panelMembers.length,
+            fullInterviewData: row,
+          };
+        });
+
+        setData(transformed);
+        setFilteredData(transformed);
+      } catch (error) {
+        console.error('Failed to fetch interviews:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInterviews();
   }, []);
 
-  // Filter data
   useEffect(() => {
     if (!searchTerm.trim()) {
       setFilteredData(data);
       return;
     }
 
-    const lowercasedTerm = searchTerm.toLowerCase();
-    const filtered = data.filter(item =>
-      item.candidateName.toLowerCase().includes(lowercasedTerm) ||
-      item.panelMember.toLowerCase().includes(lowercasedTerm) ||
-      item.interviewId.toLowerCase().includes(lowercasedTerm) ||
-      formatDate(item.interviewDate).toLowerCase().includes(lowercasedTerm)
+    const term = searchTerm.toLowerCase();
+    const filtered = data.filter(
+      (item) =>
+        item.candidateName.toLowerCase().includes(term) ||
+        item.panelMember.toLowerCase().includes(term) ||
+        String(item.interviewId).includes(term) ||
+        item.roundName.toLowerCase().includes(term) || // ✅ Include round in search
+        (item.interviewDate &&
+          formatDate(item.interviewDate).toLowerCase().includes(term))
     );
 
     setFilteredData(filtered);
   }, [searchTerm, data]);
 
-  // Format date
   const formatDate = (dateString) => {
+    if (!dateString) return '—';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
       weekday: 'short',
@@ -129,58 +103,33 @@ const PanelFeedbackTable = () => {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 
-  // Format time
   const formatTime = (dateString) => {
+    if (!dateString) return '—';
     const date = new Date(dateString);
     return date.toLocaleTimeString('en-US', {
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 
-  // Get initials for avatar
   const getInitials = (name) => {
     return name
       .split(' ')
-      .map(word => word[0])
+      .map((word) => word[0])
       .join('')
       .toUpperCase()
       .slice(0, 2);
   };
 
-  // Handle view details - Navigates to /candidate/feedback
-  const handleViewDetails = (interview) => {
-    // Navigate to /candidate/feedback with interview data
-    navigate('/candidate/feedback', { 
-      state: { 
-        interviewData: interview,
-        // You can also pass specific parameters if needed
-        interviewId: interview.interviewId,
-        candidateName: interview.candidateName,
-        panelMember: interview.panelMember,
-        interviewDate: interview.interviewDate
-      }
+  const handleViewDetails = (row) => {
+    navigate('/candidate/feedback', {
+      state: { interviewData: row.fullInterviewData },
     });
   };
-
-  // Alternative: If you want to pass data via URL params
-  const handleViewDetailsWithParams = (interview) => {
-    navigate(`/candidate/feedback/${interview.interviewId}`, {
-      state: { interviewData: interview }
-    });
-  };
-
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
-    setSelectedInterview(null);
-  };
-
-  
-  
 
   return (
     <Box sx={{ width: '100%', p: 3 }}>
@@ -191,43 +140,40 @@ const PanelFeedbackTable = () => {
             Interview Panel Feedback
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Track and manage all interview records with panel member details
+            Track and manage all interview records with round, panel, and candidate details
           </Typography>
         </Box>
-        <Chip 
+        <Chip
           label={`${filteredData.length} Interviews`}
           color="primary"
           variant="outlined"
         />
       </Stack>
 
-      {/* Search and Filters */}
+      {/* Search */}
       <Paper sx={{ p: 2, mb: 3 }}>
-        <Stack direction="row" spacing={2} alignItems="center">
-          <TextField
-            placeholder="Search by candidate, panel member, or interview ID..."
-            variant="outlined"
-            size="small"
-            fullWidth
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon color="action" />
-                </InputAdornment>
-              ),
-              endAdornment: searchTerm && (
-                <InputAdornment position="end">
-                  <IconButton size="small" onClick={() => setSearchTerm('')}>
-                    ×
-                  </IconButton>
-                </InputAdornment>
-              )
-            }}
-          />
-          
-        </Stack>
+        <TextField
+          placeholder="Search by candidate, panel, round, or interview ID..."
+          variant="outlined"
+          size="small"
+          fullWidth
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon color="action" />
+              </InputAdornment>
+            ),
+            endAdornment: searchTerm && (
+              <InputAdornment position="end">
+                <IconButton size="small" onClick={() => setSearchTerm('')}>
+                  ×
+                </IconButton>
+              </InputAdornment>
+            ),
+          }}
+        />
       </Paper>
 
       {/* Table */}
@@ -244,12 +190,18 @@ const PanelFeedbackTable = () => {
                 </TableCell>
                 <TableCell sx={{ fontWeight: 600, bgcolor: 'background.default' }}>
                   <Stack direction="row" alignItems="center" spacing={1}>
+                    <CategoryIcon fontSize="small" />
+                    <span>Round</span>
+                  </Stack>
+                </TableCell>
+                <TableCell sx={{ fontWeight: 600, bgcolor: 'background.default' }}>
+                  <Stack direction="row" alignItems="center" spacing={1}>
                     <PersonIcon fontSize="small" />
                     <span>Candidate Name</span>
                   </Stack>
                 </TableCell>
                 <TableCell sx={{ fontWeight: 600, bgcolor: 'background.default' }}>
-                  Panel Member
+                  Panel Member(s)
                 </TableCell>
                 <TableCell sx={{ fontWeight: 600, bgcolor: 'background.default' }}>
                   <Stack direction="row" alignItems="center" spacing={1}>
@@ -265,7 +217,7 @@ const PanelFeedbackTable = () => {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ py: 8 }}>
+                  <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
                     <CircularProgress />
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
                       Loading interview data...
@@ -274,15 +226,16 @@ const PanelFeedbackTable = () => {
                 </TableRow>
               ) : filteredData.length > 0 ? (
                 filteredData.map((row) => (
-                  <TableRow 
+                  <TableRow
                     key={row.id}
                     hover
-                    sx={{ 
-                      '&:hover': { 
+                    sx={{
+                      '&:hover': {
                         backgroundColor: 'action.hover',
-                        cursor: 'pointer'
-                      }
+                        cursor: 'pointer',
+                      },
                     }}
+                    onClick={() => handleViewDetails(row)}
                   >
                     <TableCell>
                       <Chip
@@ -290,6 +243,21 @@ const PanelFeedbackTable = () => {
                         color="primary"
                         size="small"
                         variant="outlined"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={row.roundName}
+                        size="small"
+                        color={
+                          row.roundName.toLowerCase().includes('final')
+                            ? 'success'
+                            : row.roundName.toLowerCase().includes('technical')
+                            ? 'info'
+                            : row.roundName.toLowerCase().includes('hr')
+                            ? 'warning'
+                            : 'default'
+                        }
                       />
                     </TableCell>
                     <TableCell>
@@ -308,46 +276,44 @@ const PanelFeedbackTable = () => {
                       </Stack>
                     </TableCell>
                     <TableCell>
-                      <Box>
-                        <Typography variant="body2">
-                          {row.panelMember}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          Interview Panel
-                        </Typography>
-                      </Box>
+                      <Typography variant="body2" noWrap>
+                        {row.panelMember}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {row.panelMemberCount > 1
+                          ? `${row.panelMemberCount} panel members`
+                          : 'Interview Panel'}
+                      </Typography>
                     </TableCell>
                     <TableCell>
-                      <Box>
-                        <Typography variant="body2">
-                          {formatDate(row.interviewDate)}
-                        </Typography>
-                        <Chip
-                          label={formatTime(row.interviewDate)}
+                      <Typography variant="body2">
+                        {formatDate(row.interviewDate)}
+                      </Typography>
+                      <Chip
+                        label={formatTime(row.interviewDate)}
+                        size="small"
+                        sx={{ mt: 0.5 }}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Tooltip title="View Feedback">
+                        <IconButton
                           size="small"
-                          sx={{ mt: 0.5 }}
-                        />
-                      </Box>
-                    </TableCell>
-                    <TableCell>
-                      <Stack direction="row" spacing={1}>
-                        <Tooltip title="View Feedback">
-                          <IconButton
-                            size="small"
-                            color="primary"
-                            onClick={() => handleViewDetails(row)}
-                          >
-                            <ViewIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        
-                      </Stack>
+                          color="primary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewDetails(row);
+                          }}
+                        >
+                          <ViewIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
                     </TableCell>
                   </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} align="center" sx={{ py: 8 }}>
+                  <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
                     <Box sx={{ textAlign: 'center' }}>
                       <SearchIcon sx={{ fontSize: 60, color: 'text.disabled', mb: 2 }} />
                       <Typography variant="h6" color="text.secondary" gutterBottom>
@@ -364,89 +330,6 @@ const PanelFeedbackTable = () => {
           </Table>
         </TableContainer>
       </Paper>
-
-     
-
-      {/* Details Dialog - Optional: You can remove this if not needed */}
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="sm" fullWidth>
-        {selectedInterview && (
-          <>
-            <DialogTitle>
-              Interview Details - {selectedInterview.interviewId}
-            </DialogTitle>
-            <DialogContent dividers>
-              <Stack spacing={3}>
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    CANDIDATE INFORMATION
-                  </Typography>
-                  <Stack direction="row" spacing={2} alignItems="center">
-                    <Avatar sx={{ bgcolor: 'primary.main', width: 56, height: 56 }}>
-                      {getInitials(selectedInterview.candidateName)}
-                    </Avatar>
-                    <Box>
-                      <Typography variant="h6">
-                        {selectedInterview.candidateName}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {selectedInterview.candidateRole}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {selectedInterview.candidateEmail}
-                      </Typography>
-                    </Box>
-                  </Stack>
-                </Box>
-
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    PANEL MEMBER
-                  </Typography>
-                  <Typography variant="body1">
-                    {selectedInterview.panelMember}
-                  </Typography>
-                </Box>
-
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    INTERVIEW SCHEDULE
-                  </Typography>
-                  <Stack direction="row" spacing={2}>
-                    <Box>
-                      <Typography variant="body2" fontWeight={500}>
-                        Date
-                      </Typography>
-                      <Typography variant="body2">
-                        {formatDate(selectedInterview.interviewDate).split(',')[0]}
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography variant="body2" fontWeight={500}>
-                        Time
-                      </Typography>
-                      <Typography variant="body2">
-                        {formatTime(selectedInterview.interviewDate)}
-                      </Typography>
-                    </Box>
-                  </Stack>
-                </Box>
-              </Stack>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleCloseDialog}>Close</Button>
-              <Button 
-                variant="contained" 
-                onClick={() => {
-                  handleCloseDialog();
-                  handleViewDetails(selectedInterview);
-                }}
-              >
-                Go to Feedback
-              </Button>
-            </DialogActions>
-          </>
-        )}
-      </Dialog>
     </Box>
   );
 };
