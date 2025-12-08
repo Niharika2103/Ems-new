@@ -24,7 +24,7 @@ public class ProjectAssignmentService {
         this.projectRepository = projectRepository;
     }
 
-    public ProjectAssignmentEntity assignProjectToEmployee(UUID projectId, UUID employeeId, String role) {
+    public ProjectAssignmentEntity assignProjectToEmployee(UUID projectId, UUID employeeId, String role ,String employee_type) {
         Projects project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new RuntimeException("Project not found"));
 
@@ -32,8 +32,10 @@ public class ProjectAssignmentService {
         ProjectAssignmentEntity assignment = new ProjectAssignmentEntity();
         assignment.setEmployeeId(employeeId);
         assignment.setProject(project);
+        assignment.setEmployee_type(employee_type);
         assignment.setRole(role);
         assignment.setAssignedAt(LocalDateTime.now());
+
 
         return assignmentRepository.save(assignment);
     }

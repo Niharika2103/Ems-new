@@ -35,62 +35,74 @@ const EmpInfoDashboard = () => {
     }
     return "/";
   };
+   const getLetterPath = () => {
+    if (storedUser?.employment_type === "fulltime") {
+      return "/employee/letters";
+    }
+    if (role === "admin") {
+      return "/documents/admin/letters";
+    }
+    return "/";
+  };
+  const getReferralspath =()=>{
+ if (storedUser?.employment_type === "fulltime") {
+      return "/dashboard/emp_info/referral";
+    }
+    if (role === "admin") {
+      return "/admin/referrals";
+    }
+    return "/";
+  }
 
   // Current page title
   const currentPage = pathnames[pathnames.length - 1] || "";
-  const stats = [
-    {
-      title: "Profile",
-      message: "Check your daily attendance",
-      icon: AccountCircleIcon,
-      iconBg: "bg-sky-100",
-      iconColor: "text-sky-600",
-      // onClick: () => navigate("/profile"),
-    },
-    {
-      title: "Document",
-      message: "View HR announcements",
-      icon: DescriptionIcon,
-      iconBg: "bg-purple-100",
-      iconColor: "text-purple-600",
-      onClick: () => navigate(getDocumentPath()),
-    },
-    {
-      title: "Letters",
-      message: "Download your salary slips",
-      icon: MailOutlineIcon,
-      iconBg: "bg-pink-100",
-      iconColor: "text-pink-600",
-      onClick: () => navigate("/documents/admin/letters"),
-      // onClick: () => navigate("/employee/letters"),
+ const stats = [
+  {
+    title: "Document",
+    message: "View HR announcements",
+    icon: DescriptionIcon,
+    iconBg: "bg-purple-100",
+    iconColor: "text-purple-600",
+    onClick: () => navigate(getDocumentPath()),
+  },
+  {
+    title: "Letters",
+    message: "Download your salary slips",
+    icon: MailOutlineIcon,
+    iconBg: "bg-pink-100",
+    iconColor: "text-pink-600",
+    onClick: () => navigate(getLetterPath()),
+  },
+  {
+    title: "Referrals",
+    message: "Refer candidates and earn rewards",
+    icon: GroupAddIcon,
+    iconBg: "bg-green-100",
+    iconColor: "text-green-600",
+    onClick: () => navigate(getReferralspath()),
+  },
+  {
+    title: "Invoice",
+    message: "View Contracts & Agreements",
+    icon: CreditCardIcon,
+    iconBg: "bg-purple-100",
+    iconColor: "text-purple-600",
+    onClick: () => navigate("/invoices"),
+  },
+];
 
-    },
-    {
-      title: "Probation",
-      message: "Track and manage employee probation periods",
-      icon: VerifiedUserIcon,
-      iconBg: "bg-yellow-100",
-      iconColor: "text-yellow-600",
-      onClick: () => navigate("/dashboard/empinfo/probation"),
-    },
-    {
-      title: "Referrals",
-      message: "Refer candidates and earn rewards",
-      icon: GroupAddIcon,
-      iconBg: "bg-green-100",
-      iconColor: "text-green-600",
-      // onClick: () => navigate("/dashboard/emp_info/referral"),
-      onClick: () => navigate("/admin/referrals"),
-    },
-    {
-      title: "Invoice",
-      message: "View Contracts & Agreements",
-      icon: CreditCardIcon,
-      iconBg: "bg-purple-100",
-      iconColor: "text-purple-600",
-      onClick: () => navigate("/invoices"),
-    },
-  ];
+// Add Probation card only if admin
+if (role === "admin") {
+  stats.push({
+    title: "Probation",
+    message: "Track and manage employee probation periods",
+    icon: VerifiedUserIcon,
+    iconBg: "bg-yellow-100",
+    iconColor: "text-yellow-600",
+    onClick: () => navigate("/dashboard/empinfo/probation"),
+  });
+}
+
 
   return (
     <>

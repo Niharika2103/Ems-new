@@ -266,7 +266,7 @@ const empDetailsSlice = createSlice({
       .addCase(fetchAllEmployees.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-      })
+      })  
       // delete employee
       .addCase(deleteEmployee.pending, (state) => {
         state.loading = true;

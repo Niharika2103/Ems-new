@@ -137,10 +137,8 @@ const Header = ({ isOpen, setIsOpen }) => {
   
 const Logout = async () => {
     try {
-      console.log("Logout clicked. Email state =", email);
-
       if (email) {
-        await adminLogoutApi(email);   // ⬅ backend call
+        await adminLogoutApi(email);   
       } else {
         console.warn("No email available for logout, skipping API call.");
       }

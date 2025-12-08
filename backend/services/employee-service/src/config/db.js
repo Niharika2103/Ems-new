@@ -16,7 +16,7 @@ const pool = new Pool({
   // ssl: {
   //   rejectUnauthorized: false, // required for Azure
   // },
-  ssl:false
+  ssl:false,
 });
 
 pool.on("connect", () => {

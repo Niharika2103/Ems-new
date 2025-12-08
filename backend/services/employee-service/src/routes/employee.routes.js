@@ -19,7 +19,7 @@ import {
   applyParentalLeave,
   getFreelancers,
   createReferral,
-  getMyReferrals
+  getMyReferrals,
 
 } from "../controllers/employee.controller.js";
 
