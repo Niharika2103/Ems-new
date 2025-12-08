@@ -23,10 +23,10 @@ const AdminDashboard = () => {
 
      const getAccountPath = () => {
     if (storedUser?.employment_type === "fulltime") {
-      return "/accounts/salary-structure";
+      return "/dashboard/accounts";
     }
     if (role === "admin") {
-      return "/dashboard/accounts";
+      return "/accounts/salary-structure";
     }
     return "/";
   };
