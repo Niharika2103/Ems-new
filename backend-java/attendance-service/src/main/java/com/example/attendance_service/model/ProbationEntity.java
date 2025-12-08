@@ -11,20 +11,20 @@ import java.util.UUID;
 public class ProbationEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "probationid")
-    private Long probationId;
+    private UUID probationId;
 
     // ---- FK COLUMN ----
-    @Column(name = "usermasterid", nullable = false)
-    private UUID usermasterid;
+    @Column(name = "employee_id", nullable = false)
+    private UUID employeeId;
 
-    // ---- MAPPED USER ENTITY (READ-ONLY RELATION) ----
+    // ---- USER RELATION ----
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
-            name = "usermasterid",          // FK column in probation table
-            referencedColumnName = "id",    // Primary key in user table
-            insertable = false,             // prevent duplicate column mapping
+            name = "employee_id",     // FK column in probation table
+            referencedColumnName = "id",
+            insertable = false,       // do not override FK
             updatable = false
     )
     private UserEmployeeMasterEntity user;
@@ -53,28 +53,29 @@ public class ProbationEntity {
     // ---- Constructors ----
     public ProbationEntity() {}
 
-    public ProbationEntity(UUID usermasterid, LocalDate startDate, LocalDate endDate, String status) {
-        this.usermasterid = usermasterid;
+    public ProbationEntity(UUID employeeId, LocalDate startDate, LocalDate endDate, String status) {
+        this.employeeId = employeeId;
         this.startDate = startDate;
         this.endDate = endDate;
         this.status = status;
     }
 
     // ---- Getters & Setters ----
-    public Long getProbationId() {
+
+    public UUID getProbationId() {
         return probationId;
     }
 
-    public void setProbationId(Long probationId) {
+    public void setProbationId(UUID probationId) {
         this.probationId = probationId;
     }
 
-    public UUID getUsermasterid() {
-        return usermasterid;
+    public UUID getEmployeeId() {
+        return employeeId;
     }
 
-    public void setUsermasterid(UUID usermasterid) {
-        this.usermasterid = usermasterid;
+    public void setEmployeeId(UUID employeeId) {
+        this.employeeId = employeeId;
     }
 
     public UserEmployeeMasterEntity getUser() {
@@ -141,7 +142,8 @@ public class ProbationEntity {
         this.updatedAt = updatedAt;
     }
 
-    // ---- equals, hashCode, toString ----
+    // ---- equals & hashCode ----
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -153,16 +155,5 @@ public class ProbationEntity {
     @Override
     public int hashCode() {
         return Objects.hash(probationId);
-    }
-
-    @Override
-    public String toString() {
-        return "ProbationEntity{" +
-                "probationId=" + probationId +
-                ", usermasterid=" + usermasterid +
-                ", startDate=" + startDate +
-                ", endDate=" + endDate +
-                ", status='" + status + '\'' +
-                '}';
     }
 }

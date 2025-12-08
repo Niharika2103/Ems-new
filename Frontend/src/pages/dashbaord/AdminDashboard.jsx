@@ -13,7 +13,23 @@ import BusinessIcon from "@mui/icons-material/Business";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const storedUser = JSON.parse(localStorage.getItem("user"));
+    const role =
+    storedUser?.employment_type ||
+    localStorage.getItem("role") ||
+    useSelector((state) => state.adminSlice) ||
+    useSelector((state) => state.authSlice?.role) ||
+    useSelector((state) => state.employeeSlice?.role);
 
+     const getAccountPath = () => {
+    if (storedUser?.employment_type === "fulltime") {
+      return "/accounts/salary-structure";
+    }
+    if (role === "admin") {
+      return "/dashboard/accounts";
+    }
+    return "/";
+  };
 
   const stats = [
     {
@@ -70,8 +86,7 @@ const AdminDashboard = () => {
       icon: AccountBalanceIcon,
       iconBg: "bg-yellow-100",
       iconColor: "text-yellow-600",
-      // onClick: () => navigate("/accounts/salary-structure"),
-      onClick: () => navigate("/dashboard/accounts"),
+      onClick: () => navigate(getAccountPath()),
     },
 
      {

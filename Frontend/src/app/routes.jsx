@@ -78,8 +78,11 @@ import AccountsDashboard from "../pages/dashbaord/AccountsDashboard";
 import PayrollSystem from "../pages/Accounts/PayrollSystem";
 import InvoiceModule from "../pages/invoice/InvoiceModule";
 import ProbationManagementSystem from "../pages/Probation/probation_management";
-// import EmailTemplateManager from "../pages/EmailTemplateManager";
+import CommissionSystemDashboard from "../pages/Freelancer/Commision/CommissionSystemDashboard";
 import VendorLogin from "../pages/Auth/VendorLogin";
+import PayoutManagement from "../pages/Freelancer/payouts/PayoutManagement";
+import SettingsPage from "../pages/Settings/SettingsPage";
+import PanelFeedbackTable from "../pages/JobPosting/PanelFeedbackTable";
 
 
 
@@ -608,10 +611,17 @@ function AppRoutes() {
           }
         />
 
-        {/* <Route path="/email-templates" element={<EmailTemplateManager />} /> */}
+       
 
+      {/* <Route path="/compliance" element={<ComplianceDashboard />} />  */}
+      
+       <Route path="/payout-management" element={<PayoutManagement />} />
+       <Route path="/commision" element={<CommissionSystemDashboard />} />
+       <Route path="/settings" element={<SettingsPage />} />
+       <Route path="/feedback-table" element={<PanelFeedbackTable />} />
+       
 
-
+       
       </Route>
 
     </Routes>

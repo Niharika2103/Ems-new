@@ -22,9 +22,9 @@ export const ProjectGetAll = createAsyncThunk("project/fetchall", async (_, thun
 // Assign Projects
 export const ProjectAssign = createAsyncThunk(
   "project/assign",
-  async ({ projectId, employeeId, role }, thunkAPI) => {
+  async ({ projectId, employeeId, role,employee_type }, thunkAPI) => {
     try {
-      const res = await ProjectAssignApi(projectId, employeeId, role);
+      const res = await ProjectAssignApi(projectId, employeeId, role,employee_type);
       return res.data;
     } catch (err) {
       return thunkAPI.rejectWithValue(err.response?.data || err.message);

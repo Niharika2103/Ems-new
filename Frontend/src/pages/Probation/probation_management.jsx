@@ -19,7 +19,7 @@ const ProbationManagementSystem = () => {
   const [assignMode, setAssignMode] = useState('new');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-
+  const [viewEmployee, setViewEmployee] = useState(null);      
   useEffect(() => {
     if (activeTab === "employees") {
       dispatch(fetchNewEmployees());
@@ -51,12 +51,25 @@ const ProbationManagementSystem = () => {
     return texts[status] || status;
   };
 
-  const filteredList = list.filter(emp => {
-    const matchesSearch = emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.employeeId.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterStatus === 'all' || emp.status === filterStatus;
-    return matchesSearch && matchesFilter;
-  });
+   const filteredList = list.filter(emp => {
+  const name = (emp.name || "").toLowerCase();
+  const empId = (
+    emp.employeeId ||
+    emp.employee_id ||
+    emp.user_id ||
+    ""
+  ).toLowerCase();
+
+  const matchesSearch =
+    name.includes(searchTerm.toLowerCase()) ||
+    empId.includes(searchTerm.toLowerCase());
+
+  const matchesFilter =
+    filterStatus === "all" || emp.status === filterStatus;
+
+  return matchesSearch && matchesFilter;
+});
+
 
 
 
@@ -87,18 +100,6 @@ const ProbationManagementSystem = () => {
               </div>
               <p className="text-3xl font-bold text-gray-800">
                 {/* {probationList.filter(e => e.status === 'active').length} */}
-              </p>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-gray-600 text-sm">Pending Review</p>
-                <div className="bg-yellow-100 p-2 rounded-lg">
-                  <AlertCircle className="text-yellow-600" size={20} />
-                </div>
-              </div>
-              <p className="text-3xl font-bold text-gray-800">
-                {/* {probationList.filter(e => e.status === 'pending_review').length} */}
               </p>
             </div>
 
@@ -190,7 +191,9 @@ const ProbationManagementSystem = () => {
 
             <EmployeeTable
               data={filteredList}
-              onActionClick={setSelectedEmployee}
+              // onActionClick={setSelectedEmployee}
+              onActionClick={(emp) => setViewEmployee(emp)}
+
               showAssignAction={false}
               getStatusColor={getStatusColor}
               getStatusText={getStatusText}
@@ -232,16 +235,20 @@ const ProbationManagementSystem = () => {
         </div>
       </div>
       {showAssignModal && (
-        <AssignProbation employee={selectedEmployee} onClose={() => setShowAssignModal(false)} />
+        <AssignProbation employee={selectedEmployee} modalTitle="Assign Probation" onClose={() => {
+        setShowAssignModal(false);
+        setSelectedEmployee(null);
+      }}  />
       )}
 
-      {selectedEmployee && !showAssignModal && (
-        <EmployeeDetailView
-          employee={selectedEmployee}
-          probation={selectedEmployee}    // ✔️ now data exists
-          onClose={() => setSelectedEmployee(null)}
-        />
-      )}
+     {viewEmployee && (
+  <EmployeeDetailView
+    employee={viewEmployee}
+    probation={viewEmployee}
+    onCloseProbation={() => setViewEmployee(null)}
+  />
+)}
+
 
 
     </div>

@@ -90,4 +90,33 @@ public interface AttendanceRepository extends JpaRepository<AttendanceEntity, UU
             UUID employeeId, UUID projectId, LocalDate date
     );
 
+//    @Query("""
+//    	    SELECT COUNT(a) FROM AttendanceEntity a
+//    	    WHERE a.employee.id = :employeeId
+//    	      AND LOWER(a.leaveType) = LOWER(:leaveType)
+//    	      AND a.date BETWEEN :start AND :end
+//    	      AND a.status = 'approved'
+//    	""")
+//    	long countApprovedLeavesOfTypeInRange(
+//    	        @Param("employeeId") UUID employeeId,
+//    	        @Param("leaveType") String leaveType,
+//    	        @Param("start") LocalDate start,
+//    	        @Param("end") LocalDate end
+//    	);
+
+    @Query("""
+    	    SELECT COUNT(a) FROM AttendanceEntity a
+    	    WHERE a.employee.id = :employeeId
+    	      AND LOWER(a.leaveType) = 'sl'
+    	      AND LOWER(a.status) = 'approved'
+    	      AND a.date BETWEEN :start AND :end
+    	""")
+    	long countApprovedSLInMonth(
+    	        @Param("employeeId") UUID employeeId,
+    	        @Param("start") LocalDate start,
+    	        @Param("end") LocalDate end
+    	);
+
+
+
 }
