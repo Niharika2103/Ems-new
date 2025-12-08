@@ -84,7 +84,7 @@ import PayoutManagement from "../pages/Freelancer/payouts/PayoutManagement";
 import SettingsPage from "../pages/Settings/SettingsPage";
 import PanelFeedbackTable from "../pages/JobPosting/PanelFeedbackTable";
 import SuperAdminAuditLogs from "../pages/Auditlogs/SuperAdminAuditLogs";
-
+import FreelancerApprovalTable from "../pages/Reports/FreelancerApprovalTable";
 
 
 function AppRoutes() {
@@ -621,7 +621,15 @@ function AppRoutes() {
        <Route path="/settings" element={<SettingsPage />} />
        <Route path="/feedback-table" element={<PanelFeedbackTable />} />
 
-       <Route path="/audit-logs" element={<SuperAdminAuditLogs />} />
+       <Route path="/audit-logs"
+       element={
+          <ProtectedRoute allowedRoles={["superadmin"]}>
+              <SuperAdminAuditLogs />
+            </ProtectedRoute>
+          }
+        />
+      <Route path="/freelancers/approved" element={<FreelancerApprovalTable />} />
+
 
        
 
