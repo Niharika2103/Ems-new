@@ -1,62 +1,23 @@
-// Professional PanelFeedback.jsx
 import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { addPanelFeedbackApi, getPanelFeedbackApi } from "../../api/authApi";
 
-// ===== Mock API =====
-const fetchFeedbacks = async (candidateId) => {
-  return [
-    { id: 1, userId: 101, userName: "Dr. Sarah Chen", communication: 4, technical: 5, problemSolving: 4, comments: "Exceptional candidate with strong technical fundamentals and excellent communication skills.", createdAt: "2025-11-26" },
-    { id: 2, userId: 102, userName: "Mr. James Wilson", communication: 3, technical: 4, problemSolving: 3, comments: "Solid technical background with room for growth in problem-solving under pressure.", createdAt: "2025-11-27" },
-  ];
-};
-
-const submitFeedback = async (candidateId, payload) => {
-  return { ...payload, id: Math.floor(Math.random() * 100000), createdAt: new Date().toISOString() };
-};
-
-// ===== Score Aggregation =====
-const getAggregatedScores = (records) => {
-  if (!records.length) return null;
-
-  const total = {
-    communication: 0,
-    technical: 0,
-    problemSolving: 0,
-  };
-
-  records.forEach((r) => {
-    total.communication += r.communication;
-    total.technical += r.technical;
-    total.problemSolving += r.problemSolving;
-  });
-
-  const count = records.length;
-
-  return {
-    communication: Number((total.communication / count).toFixed(1)),
-    technical: Number((total.technical / count).toFixed(1)),
-    problemSolving: Number((total.problemSolving / count).toFixed(1)),
-    overall: Number(((total.communication + total.technical + total.problemSolving) / (3 * count)).toFixed(1)),
-    count,
-  };
-};
-
-// ===== Rating Component =====
-const Rating = ({ label, value, setValue }) => (
-  <div className="mb-6">
-    <div className="flex justify-between items-center mb-3">
-      <label className="block text-sm font-medium text-gray-700">{label}</label>
-      <span className="text-sm font-semibold text-blue-600">{value}/5</span>
+const Rating10 = ({ value, setValue }) => (
+  <div className="mb-4">
+    <div className="flex justify-between items-center mb-2">
+      <label className="block text-sm font-medium text-gray-700">Rating</label>
+      <span className="text-sm font-semibold text-blue-600">{value}/10</span>
     </div>
-    <div className="flex gap-2">
-      {[1, 2, 3, 4, 5].map((n) => (
+    <div className="grid grid-cols-5 gap-2 sm:grid-cols-10">
+      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
         <button
           key={n}
           type="button"
           onClick={() => setValue(n)}
-          className={`flex-1 py-3 rounded-lg border transition-all duration-200 ${
-            n <= value 
-              ? "bg-blue-500 text-white border-blue-500 shadow-sm" 
-              : "bg-white text-gray-600 border-gray-300 hover:bg-gray-50"
+          className={`py-2 text-xs sm:text-sm rounded-lg border transition-all ${
+            n <= value
+              ? "bg-blue-500 text-white border-blue-500"
+              : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
           } font-medium`}
         >
           {n}
@@ -66,241 +27,276 @@ const Rating = ({ label, value, setValue }) => (
   </div>
 );
 
-// ===== Score Display Component =====
-const ScoreDisplay = ({ label, score, maxScore = 5 }) => {
-  const percentage = (score / maxScore) * 100;
-  
-  return (
-    <div className="bg-white p-4 rounded-lg border border-gray-200">
-      <div className="flex justify-between items-center mb-2">
-        <span className="text-sm font-medium text-gray-600">{label}</span>
-        <span className="text-lg font-bold text-gray-900">{score}</span>
-      </div>
-      <div className="w-full bg-gray-200 rounded-full h-2">
-        <div 
-          className="bg-blue-500 h-2 rounded-full transition-all duration-500"
-          style={{ width: `${percentage}%` }}
-        ></div>
-      </div>
-    </div>
-  );
-};
+export default function PanelFeedback() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { interviewData } = location.state || {};
 
-// ===== Main Component =====
-export default function PanelFeedback({ candidateId, userRole = "panel", userId }) {
-  const [records, setRecords] = useState([]);
+  const [feedbackForms, setFeedbackForms] = useState([]);
+  const [existingFeedback, setExistingFeedback] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
-  // Feedback Form State
-  const [communication, setCommunication] = useState(3);
-  const [technical, setTechnical] = useState(3);
-  const [problemSolving, setProblemSolving] = useState(3);
-  const [comments, setComments] = useState("");
-
+  // ✅ Fetch existing feedback on mount
   useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      const data = await fetchFeedbacks(candidateId);
-      setRecords(data);
-      setLoading(false);
-    };
-    load();
-  }, [candidateId]);
-
-  const onSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!comments.trim()) {
-      alert("Please provide comments before submitting feedback.");
+    if (!interviewData) {
+      navigate("/interviews");
       return;
     }
 
-    const payload = {
-      userId,
-      userName: `Panel-${userId}`,
-      communication,
-      technical,
-      problemSolving,
-      comments,
+    const fetchExistingFeedback = async () => {
+      try {
+        setLoading(true);
+        const response = await getPanelFeedbackApi(interviewData.interview_id);
+        setExistingFeedback(response.data.feedback || []);
+      } catch (error) {
+        console.error("Failed to fetch existing feedback:", error);
+        setExistingFeedback([]);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    setSaving(true);
-    const saved = await submitFeedback(candidateId, payload);
-    setRecords((prev) => [...prev, saved]);
-    
-    // Reset form
-    setCommunication(3);
-    setTechnical(3);
-    setProblemSolving(3);
-    setComments("");
-    
-    setSaving(false);
+    fetchExistingFeedback();
+  }, [interviewData, navigate]);
+
+  const panelMembers = interviewData?.panel_members || [];
+
+  // ✅ Get IDs of panel members who already submitted (from DB)
+  const submittedPanelIds = existingFeedback.map(fb => fb.panel_member);
+
+  // ✅ Get IDs of panel members who have a form (frontend only)
+  const usedPanelIds = feedbackForms.map(form => form.panelMemberId);
+
+  // ✅ Available = all panelists minus (submitted + in-form)
+  const availablePanelists = panelMembers.filter(
+    pm => !submittedPanelIds.includes(pm.id) && !usedPanelIds.includes(pm.id)
+  );
+
+  const handleAddFeedback = () => {
+    if (availablePanelists.length === 0) return;
+
+    const nextPanelist = availablePanelists[0];
+    setFeedbackForms(prev => [
+      ...prev,
+      {
+        id: Date.now(),
+        panelMemberId: nextPanelist.id,
+        panelMemberName: nextPanelist.name,
+        rating: 5,
+        comments: "",
+      }
+    ]);
   };
 
-  const agg = getAggregatedScores(records);
+  const updateForm = (formId, field, value) => {
+    setFeedbackForms(prev =>
+      prev.map(form =>
+        form.id === formId ? { ...form, [field]: value } : form
+      )
+    );
+  };
+
+  const removeForm = (formId) => {
+    setFeedbackForms(prev => prev.filter(form => form.id !== formId));
+  };
+
+  const handleSubmit = async (form) => {
+    setSubmitting(true);
+    try {
+      // ✅ Send panel_member as ID (matches your backend)
+      await addPanelFeedbackApi(interviewData.interview_id, {
+        panel_member: form.panelMemberId,
+        rating: form.rating,
+        comments: form.comments,
+      });
+
+      setSuccessMessage(`Feedback submitted for ${form.panelMemberName}!`);
+
+      // ✅ Refresh existing feedback after submit
+      const response = await getPanelFeedbackApi(interviewData.interview_id);
+      setExistingFeedback(response.data.feedback || []);
+
+      // Remove the form
+      setFeedbackForms(prev => prev.filter(f => f.id !== form.id));
+
+      setTimeout(() => setSuccessMessage(""), 3000);
+    } catch (error) {
+      console.error("Submission failed:", error);
+      alert("Failed to submit feedback. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (!interviewData) return null;
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading feedback data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Candidate Evaluation</h1>
-          <p className="text-gray-600">Candidate ID: {candidateId} • Role: {userRole}</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Interview Feedback</h1>
+          <p className="text-gray-600">
+            Candidate: <span className="font-medium">{interviewData.candidate_name}</span> •
+            Round: <span className="font-medium">{interviewData.round_name || "—"}</span> •
+            Interview ID: {interviewData.interview_id}
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Feedback Form - Left Side */}
-          {userRole === "panel" && (
-            <div className="lg:col-span-1">
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <div className="mb-6">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-2">Submit Your Evaluation</h2>
-                  <p className="text-sm text-gray-600">Rate the candidate's performance across key dimensions</p>
-                </div>
-
-                <form onSubmit={onSubmit}>
-                  <Rating 
-                    label="Communication Skills" 
-                    value={communication} 
-                    setValue={setCommunication}
-                  />
-                  
-                  <Rating 
-                    label="Technical Expertise" 
-                    value={technical} 
-                    setValue={setTechnical}
-                  />
-                  
-                  <Rating 
-                    label="Problem Solving" 
-                    value={problemSolving} 
-                    setValue={setProblemSolving}
-                  />
-
-                  <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Detailed Comments
-                    </label>
-                    <textarea
-                      className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                      rows="4"
-                      placeholder="Provide specific feedback on strengths, areas for improvement, and overall recommendation..."
-                      value={comments}
-                      onChange={(e) => setComments(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className={`w-full py-3 px-4 rounded-lg font-medium text-white transition-colors ${
-                      saving 
-                        ? "bg-gray-400 cursor-not-allowed" 
-                        : "bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                    }`}
-                  >
-                    {saving ? "Submitting..." : "Submit Evaluation"}
-                  </button>
-                </form>
-
-                <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                  <p className="text-xs text-blue-700 text-center">
-                    Your feedback is confidential and will only be visible to authorized recruiters
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Scores and Feedback - Right Side */}
-          <div className={`${userRole === "panel" ? "lg:col-span-2" : "lg:col-span-3"}`}>
-            {/* Overall Score Card */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Overall Assessment</h2>
-              
-              {!agg ? (
-                <div className="text-center py-8">
-                  <div className="text-gray-400 mb-2">
-                    <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                    </svg>
-                  </div>
-                  <p className="text-gray-500">No evaluations submitted yet</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {/* Overall Score */}
-                  <div className="text-center p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
-                    <div className="text-4xl font-bold text-gray-900 mb-2">{agg.overall}/5</div>
-                    <p className="text-gray-600">Overall Score • Based on {agg.count} evaluation(s)</p>
-                  </div>
-
-                  {/* Individual Scores */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <ScoreDisplay label="Communication" score={agg.communication} />
-                    <ScoreDisplay label="Technical Skills" score={agg.technical} />
-                    <ScoreDisplay label="Problem Solving" score={agg.problemSolving} />
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Feedback List - Only for Recruiters */}
-            {userRole === "recruiter" && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Panel Feedback</h2>
-                
-                {loading ? (
-                  <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                    <p className="text-gray-600 mt-2">Loading feedback...</p>
-                  </div>
-                ) : records.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    No feedback submitted yet
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {records.map((feedback) => (
-                      <div key={feedback.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div className="flex justify-between items-start mb-3">
-                          <div>
-                            <h4 className="font-semibold text-gray-900">{feedback.userName}</h4>
-                            <div className="flex gap-4 mt-1 text-sm text-gray-600">
-                              <span>Comm: <strong>{feedback.communication}/5</strong></span>
-                              <span>Tech: <strong>{feedback.technical}/5</strong></span>
-                              <span>Problem: <strong>{feedback.problemSolving}/5</strong></span>
-                            </div>
-                          </div>
-                          <span className="text-sm text-gray-500">
-                            {new Date(feedback.createdAt).toLocaleDateString()}
-                          </span>
-                        </div>
-                        <p className="text-gray-700 bg-gray-50 p-3 rounded border-l-4 border-blue-500">
-                          {feedback.comments}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Info for Panel Members */}
-            {userRole === "panel" && records.length > 0 && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-                <div className="flex items-center text-sm text-gray-600">
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span>Your individual feedback is confidential. Only recruiters can view all evaluations.</span>
-                </div>
-              </div>
-            )}
+        {successMessage && (
+          <div className="mb-6 p-4 bg-green-50 text-green-700 rounded-lg border border-green-200 text-center">
+            {successMessage}
           </div>
+        )}
+
+        {/* Show Already Submitted Feedback */}
+        {existingFeedback.length > 0 && (
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">Submitted Feedback</h3>
+            <div className="space-y-3">
+              {existingFeedback.map((fb) => {
+                const panelist = panelMembers.find(p => p.id === fb.panel_member);
+                return (
+                  <div key={fb.feedback_id} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <div className="font-medium text-gray-900">
+                      {panelist?.name || `Panel ID: ${fb.panel_member}`}
+                    </div>
+                    <div className="text-sm text-gray-600 mt-1">
+                      Rating: {fb.rating}/10 • {new Date(fb.created_at).toLocaleDateString()}
+                    </div>
+                    <div className="mt-2 text-gray-800 italic">“{fb.comments}”</div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Add Feedback Button */}
+        <div className="mb-8 text-center">
+          <button
+            onClick={handleAddFeedback}
+            disabled={availablePanelists.length === 0}
+            className={`px-6 py-3 font-medium rounded-lg focus:ring-2 focus:ring-offset-2 ${
+              availablePanelists.length === 0
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500"
+            }`}
+          >
+            + Add Feedback for Panel Member
+          </button>
+          <p className="text-sm text-gray-600 mt-2">
+            {availablePanelists.length} of {panelMembers.length} panel member(s) left
+          </p>
         </div>
+
+        {/* New Feedback Forms */}
+        <div className="space-y-6">
+          {feedbackForms.map((form) => (
+            <div key={form.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Feedback for: <span className="text-blue-600">{form.panelMemberName}</span>
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => removeForm(form.id)}
+                  className="text-red-500 hover:text-red-700 text-sm"
+                >
+                  Remove
+                </button>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Panel Member
+                </label>
+                <input
+                  type="text"
+                  value={form.panelMemberName}
+                  disabled
+                  className="w-full p-2 border border-gray-300 rounded bg-gray-100 text-gray-700"
+                />
+              </div>
+
+              <Rating10
+                value={form.rating}
+                setValue={(val) => updateForm(form.id, "rating", val)}
+              />
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Comments
+                </label>
+                <textarea
+                  className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500"
+                  rows="4"
+                  value={form.comments}
+                  onChange={(e) => updateForm(form.id, "comments", e.target.value)}
+                  placeholder="Enter your feedback..."
+                />
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => removeForm(form.id)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSubmit(form)}
+                  disabled={submitting || !form.comments.trim()}
+                  className={`px-4 py-2 rounded-lg font-medium text-white ${
+                    submitting
+                      ? "bg-gray-400"
+                      : form.comments.trim()
+                      ? "bg-blue-600 hover:bg-blue-700"
+                      : "bg-blue-400 cursor-not-allowed"
+                  }`}
+                >
+                  {submitting ? "Submitting..." : "Submit Feedback"}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Completion Message */}
+        {feedbackForms.length === 0 && availablePanelists.length === 0 && (
+          <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
+            <div className="text-green-500 mb-3">
+              <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-medium text-gray-900">All feedback collected!</h3>
+            <p className="text-gray-600 mt-2">
+              All {panelMembers.length} panel member(s) have submitted feedback.
+            </p>
+            <button
+              onClick={() => navigate("/interviews")}
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Back to Interviews
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

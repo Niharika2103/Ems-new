@@ -1206,9 +1206,9 @@ export const updateWeeklyApprovalStatus = async (req, res) => {
 
   try {
     const { employeeId, from, to } = req.body;
-    const status = "approved"; // default status
+    const status = "approved"; 
 
-    // ✅ Extract admin name from JWT token or request body
+    // Extract admin name
     let adminName = "System Admin";
     const authHeader = req.headers["authorization"];
 
@@ -1226,7 +1226,7 @@ export const updateWeeklyApprovalStatus = async (req, res) => {
 
     const updatedBy = adminName.substring(0, 255);
 
-    // ✅ 1. Update weekly attendance status to "approved" in PostgreSQL
+    // Update only weekly status
     const query = `
       UPDATE attendance
       SET weekly_status = $1,
@@ -1246,40 +1246,23 @@ export const updateWeeklyApprovalStatus = async (req, res) => {
       updatedBy,
     ]);
 
-    // ✅ 2. Handle if no pending records found
     if (result.rows.length === 0) {
       return res.status(200).json({
-        message: "No pending approvals found for the given week.",
+        message: "No pending weekly approvals found.",
         updated_count: 0,
       });
     }
 
-    console.log(`✅ Weekly records approved for employee: ${employeeId}`);
+  
 
-    // ✅ 3. Call Java backend to handle:
-    // - Assign default leaves (first approval)
-    // - Reset leaves for new year if week crosses Jan 1
-    // - Deduct taken leaves (SL, EL, etc.)
-    try {
-      await axios.post("http://localhost:9091/api/attendance/apply-default-leaves-on-approval", {
-        employeeId,
-        from,
-        to,
-        adminName: updatedBy,
-      });
-      console.log("✅ Leaves initialized, reset (if new year), and deducted successfully in Java service");
-    } catch (err) {
-      console.error("⚠️ Failed to apply default leaves on approval:", err.message);
-    }
-
-    // ✅ 4. Send success response to frontend
     res.status(200).json({
-      message: `Weekly attendance ${status} successfully by ${updatedBy}`,
+      message: `Weekly attendance approved by ${updatedBy}`,
       updated_count: result.rows.length,
       data: result.rows,
     });
+
   } catch (err) {
-    console.error("❌ Update Weekly Status Error:", err.message);
+    console.error("Update Weekly Status Error:", err.message);
     res.status(500).json({ error: "Failed to update weekly attendance" });
   } finally {
     client.release();
@@ -1357,6 +1340,72 @@ export const getPendingMonthlyApprovals = async (req, res) => {
 //   }
 // };
 
+// export const updateMonthlyApprovalStatus = async (req, res) => {
+//   const client = await pool.connect();
+
+//   try {
+//     const { employeeId, from, to } = req.body;
+//     const status = "approved";
+
+//     // ✅ Extract admin name from JWT token or body
+//     let adminName = "System Admin";
+//     const authHeader = req.headers["authorization"];
+
+//     if (authHeader && authHeader.startsWith("Bearer ")) {
+//       const token = authHeader.split(" ")[1];
+//       try {
+//         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+//         adminName = decoded.name || decoded.email || "System Admin";
+//       } catch (err) {
+//         console.warn("Invalid or expired token:", err.message);
+//       }
+//     } else if (req.body.updatedBy) {
+//       adminName = req.body.updatedBy;
+//     }
+
+//     const updatedBy = adminName.substring(0, 255);
+
+//     // ✅ Update query for monthly status
+//     const query = `
+//       UPDATE attendance
+//       SET monthly_status = $1,
+//           updated_by = $5,
+//           updated_at = NOW()
+//       WHERE employee_id = $2
+//         AND "date" BETWEEN $3 AND $4
+//         AND monthly_status = 'Pending_approval'
+//       RETURNING *;
+//     `;
+
+//     const result = await client.query(query, [
+//       status,
+//       employeeId,
+//       from,
+//       to,
+//       updatedBy,
+//     ]);
+
+//     // ✅ Response handling
+//     if (result.rows.length === 0) {
+//       return res.status(200).json({
+//         message: "No pending approvals found for the given month.",
+//         updated_count: 0,
+//       });
+//     }
+
+//     res.status(200).json({
+//       message: `Monthly attendance ${status} successfully by ${updatedBy}`,
+//       updated_count: result.rows.length,
+//       data: result.rows,
+//     });
+//   } catch (err) {
+//     console.error("Update Monthly Status Error:", err.message);
+//     res.status(500).json({ error: "Failed to update monthly attendance" });
+//   } finally {
+//     client.release();
+//   }
+// };
+
 export const updateMonthlyApprovalStatus = async (req, res) => {
   const client = await pool.connect();
 
@@ -1364,32 +1413,26 @@ export const updateMonthlyApprovalStatus = async (req, res) => {
     const { employeeId, from, to } = req.body;
     const status = "approved";
 
-    // ✅ Extract admin name from JWT token or body
+    // Extract admin name
     let adminName = "System Admin";
     const authHeader = req.headers["authorization"];
-
     if (authHeader && authHeader.startsWith("Bearer ")) {
       const token = authHeader.split(" ")[1];
       try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         adminName = decoded.name || decoded.email || "System Admin";
-      } catch (err) {
-        console.warn("Invalid or expired token:", err.message);
-      }
-    } else if (req.body.updatedBy) {
-      adminName = req.body.updatedBy;
+      } catch (err) {}
     }
-
     const updatedBy = adminName.substring(0, 255);
 
-    // ✅ Update query for monthly status
+    // 1️⃣ Update monthly status in DB
     const query = `
       UPDATE attendance
       SET monthly_status = $1,
           updated_by = $5,
           updated_at = NOW()
       WHERE employee_id = $2
-        AND "date" BETWEEN $3 AND $4
+        AND date BETWEEN $3 AND $4
         AND monthly_status = 'Pending_approval'
       RETURNING *;
     `;
@@ -1402,26 +1445,42 @@ export const updateMonthlyApprovalStatus = async (req, res) => {
       updatedBy,
     ]);
 
-    // ✅ Response handling
     if (result.rows.length === 0) {
       return res.status(200).json({
-        message: "No pending approvals found for the given month.",
+        message: "No pending approvals found for this month.",
         updated_count: 0,
       });
     }
 
+    // 2️⃣ CALL JAVA MONTHLY LEAVE ENGINE HERE
+    try {  
+      await axios.post(
+        "http://localhost:9191/api/attendance/apply-default-leaves-on-approval",
+        {
+          employeeId,
+          from,
+          to,
+          adminName: updatedBy,
+        }
+      );
+    } catch (err) {
+      console.error("⚠️ Monthly leave calculation failed:", err.message);
+    }
+
+    // 3️⃣ Return Response
     res.status(200).json({
-      message: `Monthly attendance ${status} successfully by ${updatedBy}`,
+      message: `Monthly attendance approved by ${updatedBy}`,
       updated_count: result.rows.length,
       data: result.rows,
     });
   } catch (err) {
-    console.error("Update Monthly Status Error:", err.message);
+    console.error("❌ Update Monthly Status Error:", err.message);
     res.status(500).json({ error: "Failed to update monthly attendance" });
   } finally {
     client.release();
   }
 };
+
 /* -------------------------------------------------------------------------- */
 /*        ADMIN UPDATES WORKED HOURS (Weekly or Monthly Pending Record)       */
 /* -------------------------------------------------------------------------- */
@@ -3733,6 +3792,57 @@ export const rescheduleInterviewReferral = async (req, res) => {
   }
 };
 
+export const getAllInterviewsWithDetails = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const query = `
+      SELECT 
+        i.interview_id,
+        i.referral_id,
+        i.interview_date,
+        i.interview_type AS round_name,
+        i.location,
+        i.status,
+        i.created_at,
+
+        -- Candidate Details
+        r.candidate_name,
+        r.candidate_email,
+        r.phone_number,
+        r.position,
+
+        -- Panel Members (Interviewer Names + Emails)
+        (
+            SELECT json_agg(json_build_object(
+                'id', u.id,
+                'name', u.name,
+                'email', u.email
+            ))
+            FROM user_employees_master u
+            WHERE u.name = ANY(i.interviewer)
+        ) AS panel_members
+      FROM interviews i
+      LEFT JOIN referrals r ON r.id = i.referral_id
+      ORDER BY i.interview_date DESC;
+    `;
+
+    const { rows } = await client.query(query);
+
+    return res.status(200).json({
+      message: "All interviews fetched successfully",
+      data: rows,
+    });
+
+  } catch (err) {
+    console.error("Get Interviews Error:", err);
+    return res.status(500).json({ error: "Failed to get interviews" });
+  } finally {
+    client.release();
+  }
+};
+
+
 export const addPanelFeedback = async (req, res) => {
   const client = await pool.connect();
 
@@ -3790,6 +3900,52 @@ export const addPanelFeedback = async (req, res) => {
   } catch (err) {
     console.error("Panel Feedback Error:", err);
     return res.status(500).json({ error: "Failed to submit feedback" });
+  } finally {
+    client.release();
+  }
+};
+
+
+export const getPanelFeedback = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { interview_id } = req.params;
+
+    // Validate interview exists (optional but recommended)
+    const { rows: interviewRows } = await client.query(
+      `SELECT interview_id FROM interviews WHERE interview_id = $1`,
+      [interview_id]
+    );
+
+    if (interviewRows.length === 0) {
+      return res.status(404).json({ error: "Interview not found" });
+    }
+
+    // Fetch only panel_feedback table data
+    const query = `
+      SELECT 
+        feedback_id,
+        interview_id,
+        panel_member,
+        rating,
+        comments,
+        created_at
+      FROM panel_feedback
+      WHERE interview_id = $1
+      ORDER BY created_at DESC
+    `;
+
+    const { rows } = await client.query(query, [interview_id]);
+
+    return res.status(200).json({
+      message: "Panel feedback fetched successfully",
+      feedback: rows
+    });
+
+  } catch (err) {
+    console.error("Get Panel Feedback Error:", err);
+    return res.status(500).json({ error: "Failed to fetch panel feedback" });
   } finally {
     client.release();
   }

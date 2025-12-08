@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { ProjectGetAll, ProjectAssign } from "../../features/Project/projectsSlice";
 import { fetchAllEmployees } from "../../features/employeesDetails/employeesSlice";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 export default function AssignProjectPage() {
   const [project, setProject] = useState("");
   const [user, setUser] = useState("");
@@ -46,10 +49,10 @@ export default function AssignProjectPage() {
       return;
     }
 
-    dispatch(ProjectAssign({ projectId: project, employeeId: user, role: "employee" }))
+    dispatch(ProjectAssign({ projectId: project, employeeId: user, role: "employee",employee_type:"fulltime" }))
       .unwrap()
       .then(() => {
-        alert("Project assigned successfully!");
+           toast.success("Project assigned successfully!");
         setProject("");
         setUser("");
         navigate("/dashboard/fetch_project");
@@ -66,6 +69,7 @@ export default function AssignProjectPage() {
 
   return (
     <>
+     <ToastContainer position="top-right" autoClose={3000} />
       <button
         onClick={handleClick}
         className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
