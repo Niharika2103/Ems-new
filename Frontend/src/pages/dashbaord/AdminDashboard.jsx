@@ -21,15 +21,7 @@ const AdminDashboard = () => {
     useSelector((state) => state.authSlice?.role) ||
     useSelector((state) => state.employeeSlice?.role);
 
-     const getAccountPath = () => {
-    if (storedUser?.employment_type === "fulltime") {
-      return "/dashboard/accounts";
-    }
-    if (role === "admin") {
-      return "/accounts/salary-structure";
-    }
-    return "/";
-  };
+    
 
   const stats = [
     {
@@ -86,7 +78,7 @@ const AdminDashboard = () => {
       icon: AccountBalanceIcon,
       iconBg: "bg-yellow-100",
       iconColor: "text-yellow-600",
-      onClick: () => navigate(getAccountPath()),
+      onClick: () => navigate("/dashboard/accounts"),
     },
 
      {
