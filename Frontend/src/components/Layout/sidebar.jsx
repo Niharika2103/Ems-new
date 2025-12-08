@@ -336,9 +336,10 @@ const Sidebar = ({ isOpen, handleClose }) => {
 
   return (
     <aside
-      className={`font-robo font-medium bg-[#51b4f2] text-white transition-all duration-300 flex flex-col ${
-        isOpen ? "w-56" : "w-16"
-      }`}
+      className={`font-robo font-medium bg-[#51b4f2] text-white transition-all duration-300 
+        flex flex-col 
+        ${ isOpen ? "w-56" : "w-16"}
+      `}
     >
       <div className="flex items-center justify-center py-4">
         {isOpen && <span className="ml-3 text-lg font-bold">{displayRole}</span>}
