@@ -318,5 +318,18 @@ public class AttendanceEntity {
 	}
 
 	
+	@Column(name = "lop", nullable = false)
+	private Integer lop = 0;
+
+	public Integer getLop() {
+		return lop;
+	}
+
+	public void setLop(Integer lop) {
+		this.lop = lop;
+	}
+
+	
+	
 }
 

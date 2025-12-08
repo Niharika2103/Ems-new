@@ -432,241 +432,365 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 	    return finalLeaves;
 	}
 
+//
 //	@Transactional
-//	public void initializeDefaultLeaves(UUID employeeId, String adminName) {
-//	    
-//	    boolean exists = attendanceRepository.existsByEmployee_IdAndProjectIsNull(employeeId);
-//	    if (exists) {
-//	        System.out.println("✅ Default leaves already exist for employee: " + employeeId);
-//	        return;
-//	    }
+//	public void updateApprovedRecordsWithDefaultLeaves(UUID employeeId, LocalDate from, LocalDate to, String adminName) {
 //
-//	    //  Fetch employee info
-//	    UserEmployeeMasterEntity employee = userRepository.findById(employeeId)
-//	            .orElseThrow(() -> new RuntimeException("Employee not found"));
+//	    List<AttendanceEntity> records = attendanceRepository
+//	            .findByEmployee_IdAndDateBetween(employeeId, from, to);
 //
+//	    if (records.isEmpty()) return;
+//
+//	    records.sort(Comparator.comparing(AttendanceEntity::getDate));
+//
+//	    UserEmployeeMasterEntity employee = records.get(0).getEmployee();
 //	    LocalDate joiningDate = employee.getDateOfJoining();
+//
 //	    if (joiningDate == null) {
-//	        throw new RuntimeException("Employee joining date is missing!");
+//	        throw new RuntimeException("Employee joining date missing for ID: " + employeeId);
 //	    }
 //
-//	    // Compute leaves dynamically using your helper
-//	    Map<String, Integer> leaveConfig = calculateLeavesBasedOnJoining(joiningDate);
+//	    // Fetch last approved before this range
+//	    List<AttendanceEntity> approvedBefore = attendanceRepository
+//	            .findLastApprovedBeforeDate(employeeId, from);
 //
-//	    // Create base attendance record
-//	    AttendanceEntity base = new AttendanceEntity();
-//	    base.setEmployee(employee);
-//	    base.setProject(null); // indicates organization-level base record
-//	    base.setDate(joiningDate); 
-//	    base.setYear(joiningDate.getYear());
-//	    base.setGender(employee.getGender());
+//	    AttendanceEntity lastRelevant = approvedBefore.isEmpty() ? null : approvedBefore.get(0);
 //
-//	    //  Default approval states
-//	    base.setStatus("approved");
-//	    base.setWeeklyStatus("approved");
-//	    base.setMonthlyStatus("approved");
+//	    // Leave balances
+//	    int currentSL = 0, currentEL = 0, currentHolidays = 0,
+//	            currentOptional = 0, currentExtra = 0, currentRemaining = 0;
 //
-//	    //  Assign leaves based on calculation
-//	    base.setSl(leaveConfig.get("SL"));
-//	    base.setEl(leaveConfig.get("EL"));
-//	    base.setExtraMilar(leaveConfig.get("Extra Milar"));
-//	    base.setHolidays(leaveConfig.get("Holidays"));
-//	    base.setOptionalHolidays(leaveConfig.get("Optional Holidays"));
+//	    // INITIALIZE FROM LAST RELEVANT
+//	    if (lastRelevant != null) {
+//	        currentSL = safeGet(lastRelevant.getSl(), 0);
+//	        currentEL = safeGet(lastRelevant.getEl(), 0);
+//	        currentHolidays = safeGet(lastRelevant.getHolidays(), 0);
+//	        currentOptional = safeGet(lastRelevant.getOptionalHolidays(), 0);
+//	        currentExtra = safeGet(lastRelevant.getExtraMilar(), 0);
+//	        currentRemaining = safeGet(lastRelevant.getRemainingLeaves(), 0);
+//	    } else {
+//	        // First time initialization → use joining date logic
+//	        Map<String, Integer> leaves = calculateLeavesBasedOnJoining(joiningDate);
+//	        currentSL = leaves.get("SL");
+//	        currentEL = leaves.get("EL");
+//	        currentHolidays = leaves.get("Holidays");
+//	        currentOptional = leaves.get("Optional Holidays");
+//	        currentExtra = leaves.get("Extra Milar");
+//	        currentRemaining =
+//	                currentSL + currentEL + currentHolidays + currentOptional + currentExtra;
+//	    }
 //
-//	    int totalLeaves = leaveConfig.values().stream().mapToInt(Integer::intValue).sum();
-//	    base.setRemainingLeaves(totalLeaves);
+//	    int lastProcessedYear = from.minusDays(1).getYear();
+//	    YearMonth lastMonth = null;
 //
-//	    // Initialize other leave types
-//	    base.setWorkingDays(0);
-//	    base.setWorkFromHome(0);
-//	    base.setMaternityLeave(0);
-//	    base.setPaternityLeave(0);
+//	    for (AttendanceEntity rec : records) {
 //
-//	    // Mandatory non-null columns
-//	    base.setWorkedHours(0.0);
-//	    base.setTotalWorkedHours(0.0);
-//	    base.setLeaveType("");
-//	    base.setUpdatedBy(adminName);
-//	    base.setUpdatedAt(LocalDateTime.now());
+//	        LocalDate recDate = rec.getDate();
+//	        int recYear = recDate.getYear();
+//	        YearMonth currentMonth = YearMonth.from(recDate);
 //
-//	    // Save record
-//	    attendanceRepository.save(base);
+//	        boolean inProbation = isInProbation(employeeId, recDate);
 //
-//	    System.out.println(" Default leaves (pro-rated) created for employee ID: "
-//	            + employee.getId() + " | Joined: " + joiningDate);
+//	        //==================================================
+//	        // YEAR CHANGE – ONLY IF NOT IN PROBATION
+//	        //==================================================
+//	        if (!inProbation && recYear > lastProcessedYear) {
+//
+//	            int carryForwardEL = currentEL >= 10 ? 10 : 0;
+//
+//	            Map<String, Integer> newLeaves =
+//	                    calculateLeavesBasedOnJoining(LocalDate.of(recYear, 1, 1));
+//
+//	            currentSL = newLeaves.get("SL");
+//	            currentEL = newLeaves.get("EL") + carryForwardEL;
+//	            currentHolidays = newLeaves.get("Holidays");
+//	            currentOptional = newLeaves.get("Optional Holidays");
+//	            currentExtra = newLeaves.get("Extra Milar");
+//
+//	            currentRemaining =
+//	                    currentSL + currentEL + currentHolidays + currentOptional + currentExtra;
+//	        }
+//
+//	        //==================================================
+//	        // PROBATION LOGIC — STRICT 1 SL PER MONTH
+//	        //==================================================
+//	        if (inProbation) {
+//
+//	            // Reset SL = 1 at START of each new month
+//	            if (lastMonth == null || !currentMonth.equals(lastMonth)) {
+//	                currentSL = 1;
+//	            }
+//
+//	            // SL cannot exceed 1 anytime
+//	            currentSL = Math.min(currentSL, 1);
+//
+//	            // Assign probation leave values
+//	            rec.setSl(currentSL);
+//	            rec.setEl(0);
+//	            rec.setExtraMilar(0);
+//	            rec.setOptionalHolidays(0);
+//
+//	            // Holidays allowed normally
+//	            rec.setHolidays(currentHolidays);
+//
+//	            // Remaining leaves = SL + holidays
+//	            rec.setRemainingLeaves(currentSL + currentHolidays);
+//
+//	            //============ Probation Leave DEDUCTION ============
+//	            String lt = rec.getLeaveType() == null ? "" : rec.getLeaveType().trim().toLowerCase();
+//
+//	            if (lt.equals("sl")) {
+//	                currentSL = Math.max(currentSL - 1, 0);
+//	            }
+//	            else if (lt.equals("holidays")) {
+//	                currentHolidays = Math.max(currentHolidays - 1, 0);
+//	            }
+//
+//	            // Update remaining after deduction
+//	            rec.setRemainingLeaves(currentSL + currentHolidays);
+//
+//	            // Save meta
+//	            rec.setStatus("approved");
+//	            rec.setUpdatedBy(adminName);
+//	            rec.setUpdatedAt(LocalDateTime.now());
+//
+//	            lastProcessedYear = recYear;
+//	            lastMonth = currentMonth;
+//	            lastRelevant = rec;
+//	            continue; // IMPORTANT → skip normal leave logic
+//	        }
+//
+//	        //==================================================
+//	        // NORMAL LEAVE LOGIC — AFTER PROBATION
+//	        //==================================================
+//
+//	        rec.setSl(currentSL);
+//	        rec.setEl(currentEL);
+//	        rec.setExtraMilar(currentExtra);
+//	        rec.setOptionalHolidays(currentOptional);
+//	        rec.setHolidays(currentHolidays);
+//
+//	        currentRemaining =
+//	                currentSL + currentEL + currentHolidays + currentOptional + currentExtra;
+//	        rec.setRemainingLeaves(currentRemaining);
+//
+//	        //============ Normal Leave DEDUCTION ============
+//
+//	        String leaveType = rec.getLeaveType();
+//	        if (leaveType != null && !leaveType.isBlank()) {
+//	            String t = leaveType.trim().toLowerCase();
+//
+//	            switch (t) {
+//	                case "sl" -> currentSL = Math.max(currentSL - 1, 0);
+//	                case "el" -> currentEL = Math.max(currentEL - 1, 0);
+//	                case "optional holidays" -> currentOptional = Math.max(currentOptional - 1, 0);
+//	                case "holidays" -> currentHolidays = Math.max(currentHolidays - 1, 0);
+//	                case "extra milar" -> currentExtra = Math.max(currentExtra - 1, 0);
+//	            }
+//	        }
+//
+//	        rec.setStatus("approved");
+//	        rec.setUpdatedBy(adminName);
+//	        rec.setUpdatedAt(LocalDateTime.now());
+//
+//	        lastProcessedYear = recYear;
+//	        lastMonth = currentMonth;
+//	        lastRelevant = rec;
+//	    }
+//
+//	    attendanceRepository.saveAll(records);
 //	}
+
 	@Transactional
 	public void updateApprovedRecordsWithDefaultLeaves(UUID employeeId, LocalDate from, LocalDate to, String adminName) {
 
-	    List<AttendanceEntity> records = attendanceRepository
-	            .findByEmployee_IdAndDateBetween(employeeId, from, to);
+	    List<AttendanceEntity> records =
+	            attendanceRepository.findByEmployee_IdAndDateBetween(employeeId, from, to);
 
 	    if (records.isEmpty()) return;
 
+	    // ALWAYS SORT BY DATE ASC
 	    records.sort(Comparator.comparing(AttendanceEntity::getDate));
 
 	    UserEmployeeMasterEntity employee = records.get(0).getEmployee();
 	    LocalDate joiningDate = employee.getDateOfJoining();
 
-	    if (joiningDate == null) {
-	        throw new RuntimeException("Employee joining date missing for ID: " + employeeId);
-	    }
+	    if (joiningDate == null)
+	        throw new RuntimeException("Employee joining date missing!");
 
-	    // Fetch last approved before this range
-	    List<AttendanceEntity> approvedBefore = attendanceRepository
-	            .findLastApprovedBeforeDate(employeeId, from);
+	    // BALANCES
+	    int slBalance = 0;
+	    int elBalance = 0;
 
-	    AttendanceEntity lastRelevant = approvedBefore.isEmpty() ? null : approvedBefore.get(0);
+	    // TRACK EARNED SL/EL THIS YEAR
+	    int slEarnedThisYear = 0;
+	    int elEarnedThisYear = 0;
 
-	    // Leave balances
-	    int currentSL = 0, currentEL = 0, currentHolidays = 0,
-	            currentOptional = 0, currentExtra = 0, currentRemaining = 0;
+	    int currentLOP = 0;
 
-	    // INITIALIZE FROM LAST RELEVANT
-	    if (lastRelevant != null) {
-	        currentSL = safeGet(lastRelevant.getSl(), 0);
-	        currentEL = safeGet(lastRelevant.getEl(), 0);
-	        currentHolidays = safeGet(lastRelevant.getHolidays(), 0);
-	        currentOptional = safeGet(lastRelevant.getOptionalHolidays(), 0);
-	        currentExtra = safeGet(lastRelevant.getExtraMilar(), 0);
-	        currentRemaining = safeGet(lastRelevant.getRemainingLeaves(), 0);
-	    } else {
-	        // First time initialization → use joining date logic
-	        Map<String, Integer> leaves = calculateLeavesBasedOnJoining(joiningDate);
-	        currentSL = leaves.get("SL");
-	        currentEL = leaves.get("EL");
-	        currentHolidays = leaves.get("Holidays");
-	        currentOptional = leaves.get("Optional Holidays");
-	        currentExtra = leaves.get("Extra Milar");
-	        currentRemaining =
-	                currentSL + currentEL + currentHolidays + currentOptional + currentExtra;
-	    }
+	    // YEARLY LIMITS
+	    int slYearLimit = 0;
+	    int elYearLimit = 0;
 
-	    int lastProcessedYear = from.minusDays(1).getYear();
+	    // TRACK MONTH/YEAR
 	    YearMonth lastMonth = null;
+	    int lastYear = -1;
 
 	    for (AttendanceEntity rec : records) {
 
 	        LocalDate recDate = rec.getDate();
 	        int recYear = recDate.getYear();
-	        YearMonth currentMonth = YearMonth.from(recDate);
+	        YearMonth currMonth = YearMonth.from(recDate);
 
 	        boolean inProbation = isInProbation(employeeId, recDate);
 
-	        //==================================================
-	        // YEAR CHANGE – ONLY IF NOT IN PROBATION
-	        //==================================================
-	        if (!inProbation && recYear > lastProcessedYear) {
+	        // ================================
+	        // YEAR CHANGE (NOT in PROBATION)
+	        // ================================
+	        if (!inProbation && lastYear != -1 && recYear > lastYear) {
 
-	            int carryForwardEL = currentEL >= 10 ? 10 : 0;
+	            // Carry forward EL → max 10
+	            int carry = Math.min(elBalance, 10);
 
-	            Map<String, Integer> newLeaves =
-	                    calculateLeavesBasedOnJoining(LocalDate.of(recYear, 1, 1));
+	            // Reset SL yearly
+	            slBalance = 0;
 
-	            currentSL = newLeaves.get("SL");
-	            currentEL = newLeaves.get("EL") + carryForwardEL;
-	            currentHolidays = newLeaves.get("Holidays");
-	            currentOptional = newLeaves.get("Optional Holidays");
-	            currentExtra = newLeaves.get("Extra Milar");
+	            // New year EL = carry
+	            elBalance = carry;
 
-	            currentRemaining =
-	                    currentSL + currentEL + currentHolidays + currentOptional + currentExtra;
+	            slEarnedThisYear = 0;
+	            elEarnedThisYear = 0;
+
+	            // New yearly limits
+	            Map<String, Integer> limits = calculateYearlyLimits(joiningDate, recYear);
+	            slYearLimit = limits.get("SL_LIMIT");
+	            elYearLimit = limits.get("EL_LIMIT");
+
+	            lastMonth = null; // force monthly reset
 	        }
 
-	        //==================================================
-	        // PROBATION LOGIC — STRICT 1 SL PER MONTH
-	        //==================================================
+	        // First-time yearly limit setup
+	        if (lastYear == -1) {
+	            Map<String, Integer> limits = calculateYearlyLimits(joiningDate, recYear);
+	            slYearLimit = limits.get("SL_LIMIT");
+	            elYearLimit = limits.get("EL_LIMIT");
+	        }
+
+	        // ================================
+	        // MONTH RESET SECTION
+	        // ================================
+	        if (lastMonth == null || !currMonth.equals(lastMonth)) {
+
+	            currentLOP = 0; // LOP resets every month
+
+	            if (inProbation) {
+	                // Probation rules:
+	                slBalance = 1;
+	                elBalance = 0;
+	            } else {
+	                // NORMAL RULES → MONTHLY ACCRUAL
+
+	                // SL accrues 1 per month, up to SL yearly limit
+	                if (slEarnedThisYear < slYearLimit) {
+	                    int addSL = Math.min(1, slYearLimit - slEarnedThisYear);
+	                    slBalance += addSL;
+	                    slEarnedThisYear += addSL;
+	                }
+
+	                // EL accrues 2 per month, up to EL yearly limit
+	                if (elEarnedThisYear < elYearLimit) {
+	                    int addEL = Math.min(2, elYearLimit - elEarnedThisYear);
+	                    elBalance += addEL;
+	                    elEarnedThisYear += addEL;
+	                }
+	            }
+	        }
+
+	        // ================================
+	        // LEAVE TYPE DEDUCTION LOGIC
+	        // ================================
+	        String lt = rec.getLeaveType() == null ? "" : rec.getLeaveType().trim().toLowerCase();
+
+	        switch (lt) {
+
+	            case "sl":
+	                if (slBalance > 0) {
+	                    slBalance--; // first SL is free
+	                } else {
+	                    currentLOP++; // more SL → LOP
+	                }
+	                break;
+
+	            case "el":
+	                if (!inProbation && elBalance > 0) {
+	                    elBalance--;
+	                } else {
+	                    currentLOP++; // no EL in probation OR EL insufficient
+	                }
+	                break;
+
+	            default:
+	                // Holidays / Optional / Extra Milar → NO LOP
+	                break;
+	        }
+
+	        // ================================
+	        // SAVE BACK TO ENTITY
+	        // ================================
+	        rec.setSl(slBalance);
+	        rec.setEl(elBalance);
+	        rec.setLop(currentLOP);
+
 	        if (inProbation) {
-
-	            // Reset SL = 1 at START of each new month
-	            if (lastMonth == null || !currentMonth.equals(lastMonth)) {
-	                currentSL = 1;
-	            }
-
-	            // SL cannot exceed 1 anytime
-	            currentSL = Math.min(currentSL, 1);
-
-	            // Assign probation leave values
-	            rec.setSl(currentSL);
-	            rec.setEl(0);
-	            rec.setExtraMilar(0);
-	            rec.setOptionalHolidays(0);
-
-	            // Holidays allowed normally
-	            rec.setHolidays(currentHolidays);
-
-	            // Remaining leaves = SL + holidays
-	            rec.setRemainingLeaves(currentSL + currentHolidays);
-
-	            //============ Probation Leave DEDUCTION ============
-	            String lt = rec.getLeaveType() == null ? "" : rec.getLeaveType().trim().toLowerCase();
-
-	            if (lt.equals("sl")) {
-	                currentSL = Math.max(currentSL - 1, 0);
-	            }
-	            else if (lt.equals("holidays")) {
-	                currentHolidays = Math.max(currentHolidays - 1, 0);
-	            }
-
-	            // Update remaining after deduction
-	            rec.setRemainingLeaves(currentSL + currentHolidays);
-
-	            // Save meta
-	            rec.setStatus("approved");
-	            rec.setUpdatedBy(adminName);
-	            rec.setUpdatedAt(LocalDateTime.now());
-
-	            lastProcessedYear = recYear;
-	            lastMonth = currentMonth;
-	            lastRelevant = rec;
-	            continue; // IMPORTANT → skip normal leave logic
-	        }
-
-	        //==================================================
-	        // NORMAL LEAVE LOGIC — AFTER PROBATION
-	        //==================================================
-
-	        rec.setSl(currentSL);
-	        rec.setEl(currentEL);
-	        rec.setExtraMilar(currentExtra);
-	        rec.setOptionalHolidays(currentOptional);
-	        rec.setHolidays(currentHolidays);
-
-	        currentRemaining =
-	                currentSL + currentEL + currentHolidays + currentOptional + currentExtra;
-	        rec.setRemainingLeaves(currentRemaining);
-
-	        //============ Normal Leave DEDUCTION ============
-
-	        String leaveType = rec.getLeaveType();
-	        if (leaveType != null && !leaveType.isBlank()) {
-	            String t = leaveType.trim().toLowerCase();
-
-	            switch (t) {
-	                case "sl" -> currentSL = Math.max(currentSL - 1, 0);
-	                case "el" -> currentEL = Math.max(currentEL - 1, 0);
-	                case "optional holidays" -> currentOptional = Math.max(currentOptional - 1, 0);
-	                case "holidays" -> currentHolidays = Math.max(currentHolidays - 1, 0);
-	                case "extra milar" -> currentExtra = Math.max(currentExtra - 1, 0);
-	            }
+	            rec.setRemainingLeaves(slBalance);
+	        } else {
+	            rec.setRemainingLeaves(slBalance + elBalance);
 	        }
 
 	        rec.setStatus("approved");
 	        rec.setUpdatedBy(adminName);
 	        rec.setUpdatedAt(LocalDateTime.now());
 
-	        lastProcessedYear = recYear;
-	        lastMonth = currentMonth;
-	        lastRelevant = rec;
+	        // UPDATE TRACKERS
+	        lastMonth = currMonth;
+	        lastYear = recYear;
 	    }
 
 	    attendanceRepository.saveAll(records);
 	}
 
 
-	private int safeGet(Integer value, int defaultValue) {
-	    return value != null ? value : defaultValue;
+
+//	private int safeGet(Integer value, int defaultValue) {
+//	    return value != null ? value : defaultValue;
+//	}
+	
+	private Map<String, Integer> calculateYearlyLimits(LocalDate joiningDate, int year) {
+
+	    final int FULL_SL = 10;
+	    final int FULL_EL = 25;
+
+	    int slLimit;
+	    int elLimit;
+
+	    if (year == joiningDate.getYear()) {
+	        int joiningMonth = joiningDate.getMonthValue();
+	        int monthsRemaining = 12 - joiningMonth + 1;
+
+	        slLimit = Math.min(FULL_SL, monthsRemaining * 1);
+	        elLimit = Math.min(FULL_EL, monthsRemaining * 2);
+
+	    } else {
+	        slLimit = FULL_SL;
+	        elLimit = FULL_EL;
+	    }
+
+	    Map<String, Integer> map = new HashMap<>();
+	    map.put("SL_LIMIT", slLimit);
+	    map.put("EL_LIMIT", elLimit);
+	    return map;
 	}
+
 
 	@Transactional
 	public Map<String, Integer> getEmployeeLeaves(UUID employeeId) {
