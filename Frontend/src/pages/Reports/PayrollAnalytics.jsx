@@ -133,27 +133,7 @@ const PayrollAnalytics = () => {
           </Card>
         </Grid>
         <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Quick Actions
-              </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <Button variant="outlined" fullWidth>
-                  Run Payroll Report
-                </Button>
-                <Button variant="outlined" fullWidth>
-                  Tax Summary
-                </Button>
-                <Button variant="outlined" fullWidth>
-                  Bonus Analysis
-                </Button>
-                <Button variant="outlined" fullWidth>
-                  Compliance Check
-                </Button>
-              </Box>
-            </CardContent>
-          </Card>
+          
         </Grid>
       </Grid>
     </Box>
