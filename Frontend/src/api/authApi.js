@@ -1,5 +1,7 @@
 import { superadminClient,employeeClient,adminClient,ProjectClient,AttendanceClient,SalaryStructureClient, freelancerClient ,vendorClient } from "./axiosClient";
 import { AUTH_API } from "../utils/constants";
+
+
 import { RestaurantMenuSharp } from "@mui/icons-material";
 
 
@@ -158,6 +160,12 @@ export const parseResumeApi = (formData) =>
     headers: { "Content-Type": "multipart/form-data" }
   });
 
+// ======================= GET INTERVIEWS BY APPLICATION ID =======================
+export const getInterviewsByApplicationApi = (application_id) => {
+  return adminClient.get(`/admin/interviews/${application_id}`);
+};
+
+// ================== Interview Panels ==================
 
 
 // ======== Letter Generation API ========
@@ -573,10 +581,15 @@ export const scheduleInterviewReferralApi = (referral_id, interviewData) =>
 export const rescheduleInterviewReferralApi = (referral_id, interviewData) =>
   adminClient.post(`${AUTH_API.ADMIN}/interviews/reschedule/${referral_id}`, interviewData);
 
+export const getAllInterviewsWithDetailsApi = () =>
+  adminClient.get(`${AUTH_API.ADMIN}/interviews/all`);
+
 // ================= Feedback APIs =================
 export const addPanelFeedbackApi = (interview_id, feedbackData) =>
   adminClient.post(`${AUTH_API.ADMIN}/interviews/${interview_id}/feedback`, feedbackData);
 
+export const getPanelFeedbackApi = (interview_id) =>
+  adminClient.get(`${AUTH_API.ADMIN}/panel-feedback/${interview_id}`);
 
 
 export const createFreelancerContractApi = (data) => {

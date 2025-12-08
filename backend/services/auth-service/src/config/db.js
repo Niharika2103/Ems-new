@@ -8,7 +8,7 @@ const pool = new Pool({
   host: process.env.PG_HOST,
   database: process.env.PG_DATABASE,
   password: process.env.PG_PASSWORD,
-  port: process.env.PG_PORT || 5432,
+  port: process.env.PG_PORT || 6432,
 
   max: 10, 
   idleTimeoutMillis: 30000, 
@@ -17,7 +17,7 @@ const pool = new Pool({
   // ssl: {
   //   rejectUnauthorized: false, // required for Azure
   // },
-  ssl:false,
+  ssl:false
 });
 
 pool.on("connect", () => {

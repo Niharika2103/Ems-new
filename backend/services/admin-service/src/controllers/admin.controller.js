@@ -3792,6 +3792,57 @@ export const rescheduleInterviewReferral = async (req, res) => {
   }
 };
 
+export const getAllInterviewsWithDetails = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const query = `
+      SELECT 
+        i.interview_id,
+        i.referral_id,
+        i.interview_date,
+        i.interview_type AS round_name,
+        i.location,
+        i.status,
+        i.created_at,
+
+        -- Candidate Details
+        r.candidate_name,
+        r.candidate_email,
+        r.phone_number,
+        r.position,
+
+        -- Panel Members (Interviewer Names + Emails)
+        (
+            SELECT json_agg(json_build_object(
+                'id', u.id,
+                'name', u.name,
+                'email', u.email
+            ))
+            FROM user_employees_master u
+            WHERE u.name = ANY(i.interviewer)
+        ) AS panel_members
+      FROM interviews i
+      LEFT JOIN referrals r ON r.id = i.referral_id
+      ORDER BY i.interview_date DESC;
+    `;
+
+    const { rows } = await client.query(query);
+
+    return res.status(200).json({
+      message: "All interviews fetched successfully",
+      data: rows,
+    });
+
+  } catch (err) {
+    console.error("Get Interviews Error:", err);
+    return res.status(500).json({ error: "Failed to get interviews" });
+  } finally {
+    client.release();
+  }
+};
+
+
 export const addPanelFeedback = async (req, res) => {
   const client = await pool.connect();
 
@@ -3849,6 +3900,52 @@ export const addPanelFeedback = async (req, res) => {
   } catch (err) {
     console.error("Panel Feedback Error:", err);
     return res.status(500).json({ error: "Failed to submit feedback" });
+  } finally {
+    client.release();
+  }
+};
+
+
+export const getPanelFeedback = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { interview_id } = req.params;
+
+    // Validate interview exists (optional but recommended)
+    const { rows: interviewRows } = await client.query(
+      `SELECT interview_id FROM interviews WHERE interview_id = $1`,
+      [interview_id]
+    );
+
+    if (interviewRows.length === 0) {
+      return res.status(404).json({ error: "Interview not found" });
+    }
+
+    // Fetch only panel_feedback table data
+    const query = `
+      SELECT 
+        feedback_id,
+        interview_id,
+        panel_member,
+        rating,
+        comments,
+        created_at
+      FROM panel_feedback
+      WHERE interview_id = $1
+      ORDER BY created_at DESC
+    `;
+
+    const { rows } = await client.query(query, [interview_id]);
+
+    return res.status(200).json({
+      message: "Panel feedback fetched successfully",
+      feedback: rows
+    });
+
+  } catch (err) {
+    console.error("Get Panel Feedback Error:", err);
+    return res.status(500).json({ error: "Failed to fetch panel feedback" });
   } finally {
     client.release();
   }

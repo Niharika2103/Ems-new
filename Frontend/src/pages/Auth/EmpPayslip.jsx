@@ -56,64 +56,75 @@ const EmpPayslip = () => {
   };
 
   useEffect(() => {
-    const getDecoded = async () => {
-      try {
-        const decoded = await decodeToken();
-        setUserId(decoded.id);
-        // In a real app, you would fetch salary structure data here
-        // For demo purposes, we'll set mock data
-        setTimeout(() => {
-          setSalaryStructure({
-            employeeName: "John Doe",
-            employeeId: "EMP00123",
-            designation: "Senior Software Engineer",
-            dateOfJoining: "2022-06-15",
-            dateOfBirth: "1990-03-25",
-            location: "Bangalore",
-            employmentType: "Permanent",
+  const fetchData = async () => {
+    try {
+      const decoded = await decodeToken();
+      setUserId(decoded.id);
 
-            // IDs
-            panNumber: "ABCDE1234F",
-            uanNumber: "123456789012",
-            pfNumber: "PF1234567",
-            esiNumber: "ESI987654",
+      // Call backend API
+      const res = await fetch(`http://localhost:5004/employee/salary/${decoded.id}`);
+      const data = await res.json();
 
-            // Bank
-            bankName: "HDFC Bank",
-            accountNumber: "XXXXXX1234",
-            ifscCode: "HDFC0001234",
-            paymentMethod: "Bank Transfer",
-
-            // Earnings
-            basicPay: "50000",
-            houseRentAllowance: "20000",
-            medicalAllowance: "5000",
-            conveyanceAllowance: "3000",
-            specialAllowance: "15000",
-            otherAllowance: "2000",
-            driftAllowance: "1000",
-
-            // Deductions
-            providentFund: "3000",
-            professionalTax: "200",
-            incomeTax: "5000",
-            loanDeductions: "0",
-            TotalDeductions: "8200",
-
-            // Dates & Days
-            effectiveFrom: "2024-01-01",
-            effectiveTo: "2024-12-31",
-            payableDays: "30",
-            lossofDaysDays: "0",
-            lossofpayreversalDays: "0",
-          });
-        }, 500);
-      } catch (error) {
-        console.error("Error decoding token:", error);
+      if (!data.success) {
+        console.error(data.error);
+        return;
       }
-    };
-    getDecoded();
-  }, []);
+
+      const e = data.employee;
+      const s = data.salary;
+
+      setSalaryStructure({
+        employeeName: e.name || "",
+        employeeId: e.employee_id || "",
+        designation: e.designation || "",
+        dateOfJoining: e.date_of_joining || "",
+        dateOfBirth: e.dob || "",
+        location: e.location || "",
+        employmentType: e.employment_type || "",
+
+        // IDs → from salary table (s), NOT employee table (e)
+        panNumber: s.pan_number || "",
+        uanNumber: s.uan_number || "",
+        pfNumber: s.pf_number || "",
+        esiNumber: s.esi_number || "",
+
+        // Bank → from salary table (s)
+        bankName: s.bank_name || "",
+        accountNumber: s.account_number || "",
+        ifscCode: s.ifsc_code || "",
+        paymentMethod: s.payment_method || "",
+
+        // Salary
+        basicPay: s.basic_pay || 0,
+        houseRentAllowance: s.hra || 0,
+        medicalAllowance: s.medical_allowance || 0,
+        conveyanceAllowance: s.conveyance_allowance || 0,
+        specialAllowance: s.special_allowance || 0,
+        otherAllowance: s.other_allowances || 0,
+        driftAllowance: s.da || 0,
+
+        providentFund: s.pf_employee || 0,
+        professionalTax: s.professional_tax || 0,
+        incomeTax: s.income_tax || 0,
+        loanDeductions: s.loan_deduction || 0,
+        TotalDeductions: s.total_deductions || 0,
+
+        effectiveFrom: s.effective_from || "",
+        effectiveTo: s.effective_to || "",
+        payableDays: s.payable_days || 0,
+        lossofDaysDays: s.loss_of_days || 0,
+        lossofpayreversalDays: s.loss_of_pay_reversal_days || 0,
+      });
+
+
+
+    } catch (error) {
+      console.error("Error fetching salary:", error);
+    }
+  };
+
+  fetchData();
+}, []);
 
   const downloadPayslip = async () => {
     if (!selectedDate) return;
