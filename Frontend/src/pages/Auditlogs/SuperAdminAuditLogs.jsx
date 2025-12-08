@@ -25,6 +25,12 @@ import {
 
 import VisibilityIcon from "@mui/icons-material/Visibility";
 
+// ------------------ HELPER TO GET TODAY'S DATE -------------------
+const getToday = () => {
+  const today = new Date();
+  return today.toISOString().split("T")[0]; // YYYY-MM-DD
+};
+
 // ------------------ DUMMY AUDIT LOG DATA -------------------
 const dummyAuditLogs = [
   {
@@ -80,9 +86,11 @@ const SuperAdminAuditLogs = () => {
   const [logs, setLogs] = useState([]);
   const [filteredLogs, setFilteredLogs] = useState([]);
 
+  // Default both dates = today's date
+  const [dateFrom, setDateFrom] = useState(getToday());
+  const [dateTo, setDateTo] = useState(getToday());
+
   const [search, setSearch] = useState("");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -172,7 +180,7 @@ const SuperAdminAuditLogs = () => {
   return (
     <Box p={3}>
       <Typography variant="h5" fontWeight="bold" gutterBottom>
-        SuperAdmin — Audit Logs
+        Super Admin — Audit Logs
       </Typography>
 
       {/* ------------------ FILTERS CARD ------------------ */}
@@ -258,6 +266,7 @@ const SuperAdminAuditLogs = () => {
           </TableBody>
         </Table>
 
+        {/* Pagination */}
         <TablePagination
           component="div"
           count={filteredLogs.length}
@@ -276,12 +285,14 @@ const SuperAdminAuditLogs = () => {
       {selectedLog && (
         <Dialog open={openModal} onClose={() => setOpenModal(false)} fullWidth maxWidth="md">
           <DialogTitle><b>Audit Log Details</b></DialogTitle>
+
           <DialogContent dividers>
             <Grid container spacing={2}>
+              
               <Grid item xs={12}>
                 <Typography variant="subtitle1" fontWeight="bold" color="primary">User Info</Typography>
               </Grid>
-
+              
               <Grid item xs={4}><b>User ID</b><div>{selectedLog.user}</div></Grid>
               <Grid item xs={4}><b>Name</b><div>{selectedLog.name}</div></Grid>
               <Grid item xs={4}><b>Email</b><div>{selectedLog.email}</div></Grid>
@@ -298,9 +309,17 @@ const SuperAdminAuditLogs = () => {
                 <Typography variant="subtitle1" fontWeight="bold" color="primary">Activity</Typography>
               </Grid>
 
-              <Grid item xs={4}><b>Level</b><Chip label={selectedLog.level} color={getLevelColor(selectedLog.level)} size="small"/></Grid>
+              <Grid item xs={4}><b>Level</b><Chip label={selectedLog.level} color={getLevelColor(selectedLog.level)} size="small" /></Grid>
               <Grid item xs={4}><b>Timestamp</b><div>{selectedLog.timestamp}</div></Grid>
-              <Grid item xs={4}><b>IP</b><div>{selectedLog.ipAddress}</div></Grid>
+              <Grid item xs={4}><b>IP Address</b><div>{selectedLog.ipAddress}</div></Grid>
+
+              <Grid item xs={12} mt={2}>
+                <b>Details:</b>
+                <Paper variant="outlined" sx={{ p: 2, mt: 1 }}>
+                  {selectedLog.details}
+                </Paper>
+              </Grid>
+
             </Grid>
           </DialogContent>
 
