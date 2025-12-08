@@ -83,6 +83,7 @@ import VendorLogin from "../pages/Auth/VendorLogin";
 import PayoutManagement from "../pages/Freelancer/payouts/PayoutManagement";
 import SettingsPage from "../pages/Settings/SettingsPage";
 import PanelFeedbackTable from "../pages/JobPosting/PanelFeedbackTable";
+import SuperAdminAuditLogs from "../pages/Auditlogs/SuperAdminAuditLogs";
 
 
 
@@ -619,6 +620,9 @@ function AppRoutes() {
        <Route path="/commision" element={<CommissionSystemDashboard />} />
        <Route path="/settings" element={<SettingsPage />} />
        <Route path="/feedback-table" element={<PanelFeedbackTable />} />
+
+       <Route path="/audit-logs" element={<SuperAdminAuditLogs />} />
+
        
 
        
