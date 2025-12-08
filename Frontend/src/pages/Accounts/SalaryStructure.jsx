@@ -214,9 +214,9 @@ const SalaryStructure = () => {
           employeeName: emp.name || "",
           employeeId: emp.employee_id || "",
           designation: emp.designation || "",
-          dateOfJoining: emp.date_of_joining ? emp.date_of_joining.split("T")[0] : "",
+          dateOfJoining: emp.date_of_joining ? emp.date_of_joining.split("T")[0] : getCurrentDate(),
           email: emp.email || "",
-          dateOfBirth: emp.dob ? emp.dob.split("T")[0] : "",
+          dateOfBirth: emp.dob ? emp.dob.split("T")[0] : getCurrentDate(),
         }));
 
         // 2) fetch salary by employee id (in the same flow)

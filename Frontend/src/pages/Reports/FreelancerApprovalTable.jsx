@@ -33,13 +33,28 @@ export default function FreelancerApprovalTable() {
     }
   };
 
+  // NEW: Create button click
+  const handleCreate = () => {
+    alert("Create Freelancer Form Coming Soon!");
+  };
+
   return (
     <Box p={3}>
-      <Typography variant="h5" fontWeight="bold" gutterBottom>
-        Freelancer Approval List
-      </Typography>
+      <Box display="flex" justifyContent="space-between" alignItems="center">
+        <Typography variant="h5" fontWeight="bold">
+          Freelancer Approval List
+        </Typography>
 
-      <TableContainer component={Paper} elevation={3}>
+        <Button 
+          variant="contained" 
+          color="primary"
+          onClick={handleCreate}
+        >
+          + Create Freelancer
+        </Button>
+      </Box>
+
+      <TableContainer component={Paper} elevation={3} sx={{ mt: 2 }}>
         <Table>
           <TableHead>
             <TableRow>
@@ -61,8 +76,6 @@ export default function FreelancerApprovalTable() {
 
                 <TableCell align="center">
                   <Stack direction="row" spacing={1} justifyContent="center">
-
-                    {/* APPROVE BUTTON */}
                     <Button
                       variant="contained"
                       color="success"
@@ -71,7 +84,6 @@ export default function FreelancerApprovalTable() {
                       Approve
                     </Button>
 
-                    {/* REJECT BUTTON */}
                     <Button
                       variant="outlined"
                       color="error"
@@ -79,7 +91,6 @@ export default function FreelancerApprovalTable() {
                     >
                       Reject
                     </Button>
-
                   </Stack>
                 </TableCell>
 

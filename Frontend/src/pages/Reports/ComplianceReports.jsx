@@ -141,7 +141,7 @@ const ComplianceReports = () => {
                   <TableCell>Last Audit</TableCell>
                   <TableCell>Next Audit</TableCell>
                   <TableCell>Progress</TableCell>
-                  <TableCell>Actions</TableCell>
+                  
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -177,11 +177,7 @@ const ComplianceReports = () => {
                         <Typography variant="body2">{row.progress}%</Typography>
                       </Box>
                     </TableCell>
-                    <TableCell>
-                      <Button size="small" variant="outlined">
-                        View Report
-                      </Button>
-                    </TableCell>
+                  
                   </TableRow>
                 ))}
               </TableBody>

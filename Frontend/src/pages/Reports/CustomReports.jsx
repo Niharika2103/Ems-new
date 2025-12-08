@@ -17,7 +17,6 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions,
   TextField,
   FormControl,
   InputLabel,
@@ -48,12 +47,7 @@ const CustomReports = () => {
     { name: 'Project Timeline', createdBy: 'Sarah Williams', lastRun: '2023-07-05', schedule: 'Weekly', status: 'Active' },
   ];
 
-  const reportTemplates = [
-    { name: 'HR Metrics', category: 'HR', fields: 12 },
-    { name: 'Financial Summary', category: 'Finance', fields: 8 },
-    { name: 'Project Status', category: 'Projects', fields: 15 },
-    { name: 'Compliance Check', category: 'Legal', fields: 10 },
-  ];
+ 
 
   const handleCreateReport = () => {
     setSelectedReport(null);
@@ -100,7 +94,7 @@ const CustomReports = () => {
                       <TableCell>Last Run</TableCell>
                       <TableCell>Schedule</TableCell>
                       <TableCell>Status</TableCell>
-                      <TableCell>Actions</TableCell>
+                     
                     </TableRow>
                   </TableHead>
                   <TableBody>
@@ -117,20 +111,7 @@ const CustomReports = () => {
                             size="small"
                           />
                         </TableCell>
-                        <TableCell>
-                          <IconButton size="small" onClick={() => handleEditReport(report)}>
-                            <EditIcon />
-                          </IconButton>
-                          <IconButton size="small">
-                            <RunIcon />
-                          </IconButton>
-                          <IconButton size="small">
-                            <DownloadIcon />
-                          </IconButton>
-                          <IconButton size="small">
-                            <DeleteIcon />
-                          </IconButton>
-                        </TableCell>
+                       
                       </TableRow>
                     ))}
                   </TableBody>
@@ -141,33 +122,7 @@ const CustomReports = () => {
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Report Templates
-              </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                {reportTemplates.map((template, index) => (
-                  <Card key={index} variant="outlined">
-                    <CardContent>
-                      <Typography variant="subtitle1" gutterBottom>
-                        {template.name}
-                      </Typography>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Chip label={template.category} size="small" />
-                        <Typography variant="body2" color="text.secondary">
-                          {template.fields} fields
-                        </Typography>
-                      </Box>
-                      <Button size="small" sx={{ mt: 1 }} fullWidth>
-                        Use Template
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </Box>
-            </CardContent>
-          </Card>
+         
         </Grid>
       </Grid>
 
@@ -238,12 +193,7 @@ const CustomReports = () => {
             </Grid>
           </Grid>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancel</Button>
-          <Button variant="contained" onClick={handleCloseDialog}>
-            {selectedReport ? 'Update Report' : 'Create Report'}
-          </Button>
-        </DialogActions>
+       
       </Dialog>
     </Box>
   );
