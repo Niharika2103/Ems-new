@@ -697,3 +697,8 @@ export const vendorForgotPasswordApi = (data) =>
 
 export const vendorResetPasswordApi = (data) =>
   vendorClient.post(`${AUTH_API.VENDOR}/vendor/reset-password`, data);
+
+// Fetch freelancer project assignments
+export const fetchFreelancerAssignmentsApi = () =>
+  employeeClient.get(`${AUTH_API.EMPLOYEE}/assignments/freelancers`);
+

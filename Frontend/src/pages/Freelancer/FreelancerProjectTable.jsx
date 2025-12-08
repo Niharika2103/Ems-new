@@ -2,31 +2,50 @@
 
 import React, { useState, useEffect } from "react";
 import { Search, User, Briefcase, Calendar } from "lucide-react";
+import { fetchFreelancerAssignmentsApi } from "../../api/authApi"; 
 
 const FreelancerProjectTable = () => {
-  const [projects, setProjects] = useState([]); // API data will come here
+  const [projects, setProjects] = useState([]);
   const [search, setSearch] = useState("");
 
-  // EXAMPLE how you will fetch data:
-  /*
   useEffect(() => {
-    fetch("/api/freelancer/projects")
-      .then(res => res.json())
-      .then(data => setProjects(data));
-  }, []);
-  */
+    const fetchAssignments = async () => {
+      try {
+        const response = await fetchFreelancerAssignmentsApi();
+        // Handle both Axios (response.data) and raw fetch (response)
+        setProjects(response.data || response);
+      } catch (error) {
+        console.error("Failed to fetch freelancer assignments:", error);
+      }
+    };
 
-  // 🔍 GLOBAL SEARCH (any field)
+    fetchAssignments();
+  }, []);
+
+  // Filter rows based on global search
   const filtered = projects.filter((p) =>
-    Object.values(p).some((v) =>
-      v?.toString().toLowerCase().includes(search.toLowerCase())
+    Object.values(p).some((value) =>
+      value?.toString().toLowerCase().includes(search.toLowerCase())
     )
   );
 
+  // Format ISO date string to "08 Dec 2025, 14:30"
+  const formatDateTime = (isoString) => {
+    if (!isoString) return "—";
+    const date = new Date(isoString);
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false, // 24-hour format (e.g., 14:30)
+    }).replace(",", ",");
+  };
+
   return (
     <div style={{ padding: "30px", width: "100%", maxWidth: "1150px", margin: "0 auto" }}>
-
-      {/* PAGE TITLE */}
+      {/* Page Header */}
       <h1 style={{ textAlign: "center", fontSize: "25px", marginBottom: "5px" }}>
         Freelancer Project Assignments
       </h1>
@@ -34,7 +53,7 @@ const FreelancerProjectTable = () => {
         Overview of project allocations and freelancer roles
       </p>
 
-      {/* SEARCH BAR */}
+      {/* Search Bar */}
       <div
         style={{
           display: "flex",
@@ -50,7 +69,7 @@ const FreelancerProjectTable = () => {
         <Search size={20} color="#666" />
         <input
           type="text"
-          placeholder="Search by project, employee, role, description, shift, OT, date..."
+          placeholder="Search by project, freelancer, role, description, or date..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           style={{
@@ -64,7 +83,7 @@ const FreelancerProjectTable = () => {
         />
       </div>
 
-      {/* TABLE */}
+      {/* Assignments Table */}
       <div
         style={{
           background: "#fff",
@@ -77,50 +96,32 @@ const FreelancerProjectTable = () => {
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ background: "#f8f9fa" }}>
-              <th style={thStyle}><Briefcase size={16} /> Name</th>
+              <th style={thStyle}><Briefcase size={16} /> Project Name</th>
               <th style={thStyle}>Description</th>
               <th style={thStyle}><User size={16} /> Freelancer</th>
               <th style={thStyle}>Role</th>
               <th style={thStyle}><Calendar size={16} /> Assigned At</th>
-              <th style={thStyle}>Shift</th>
-              <th style={thStyle}>OT</th>
             </tr>
           </thead>
-
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan="7" style={{ textAlign: "center", padding: "30px", color: "#888" }}>
+                <td colSpan="5" style={{ textAlign: "center", padding: "30px", color: "#888" }}>
                   No assignments found
                 </td>
               </tr>
             ) : (
               filtered.map((p) => (
                 <tr key={p.id} style={{ borderBottom: "1px solid #f1f1f1" }}>
-                  <td style={tdStyle}>{p.project}</td>
-                  <td style={tdStyle}>{p.description}</td>
-
-                  {/* Employee badge */}
+                  <td style={tdStyle}>{p.project_name || "—"}</td>
+                  <td style={tdStyle}>{p.description || "—"}</td>
                   <td style={tdStyle}>
-                    <span style={badgeBlue}>{p.employee}</span>
+                    <span style={badgeBlue}>{p.employee_name || "—"}</span>
                   </td>
-
-                  {/* Role badge */}
                   <td style={tdStyle}>
-                    <span style={badgePurple}>{p.role}</span>
+                    <span style={badgePurple}>{p.role || "—"}</span>
                   </td>
-
-                  <td style={tdStyle}>{p.assignmentDate}</td>
-
-                  {/* SHIFT */}
-                  <td style={tdStyle}>
-                    <span style={badgeShift(p.shift)}>{p.shift}</span>
-                  </td>
-
-                  {/* OVERTIME */}
-                  <td style={tdStyle}>
-                    <span style={badgeOT(p.overtime)}>{p.overtime}</span>
-                  </td>
+                  <td style={tdStyle}>{formatDateTime(p.assigned_at)}</td>
                 </tr>
               ))
             )}
@@ -131,9 +132,7 @@ const FreelancerProjectTable = () => {
   );
 };
 
-// ======================
-// STYLES
-// ======================
+// Reusable styles
 const thStyle = {
   padding: "14px",
   textAlign: "left",
@@ -163,31 +162,5 @@ const badgePurple = {
   fontSize: "13px",
   borderRadius: "10px",
 };
-
-const badgeShift = (shift) => ({
-  background:
-    shift === "Day"
-      ? "#e3f2fd"
-      : shift === "Night"
-      ? "#fce4ec"
-      : "#e8f5e9",
-  color:
-    shift === "Day"
-      ? "#1976d2"
-      : shift === "Night"
-      ? "#c2185b"
-      : "#2e7d32",
-  padding: "4px 10px",
-  borderRadius: "10px",
-  fontSize: "13px",
-});
-
-const badgeOT = (ot) => ({
-  background: ot !== "0 hours" ? "#fff3cd" : "#d4edda",
-  color: ot !== "0 hours" ? "#856404" : "#155724",
-  padding: "4px 10px",
-  borderRadius: "10px",
-  fontSize: "13px",
-});
 
 export default FreelancerProjectTable;

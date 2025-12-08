@@ -1459,3 +1459,44 @@ export const getEmployeeSalary = async (req, res) => {
   }
 };
 
+
+export const getFreelancerAssignments = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const query = `
+      SELECT 
+        pa.id,
+        pa.employee_id,
+        pa.project_id,
+        pa.role,
+        pa.employee_type,
+        pa.assigned_at,
+        
+        -- Employee details
+        u.name AS employee_name,
+        u.email AS employee_email,
+        u.employment_type,
+        
+        -- Project details
+        p.name AS project_name,   -- This is from projects table
+        p.description
+        
+
+      FROM project_assignments pa
+      LEFT JOIN user_employees_master u
+        ON pa.employee_id = u.id
+      LEFT JOIN projects p
+        ON pa.project_id = p.id
+      WHERE pa.employee_type = 'freelancer';
+    `;
+
+    const { rows } = await client.query(query);
+
+    return res.status(200).json(rows);
+  } catch (err) {
+    console.error("Get Freelancer Assignments Error:", err.message);
+    return res.status(500).json({ message: err.message });
+  } finally {
+    client.release();
+  }
+};

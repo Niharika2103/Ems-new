@@ -548,7 +548,7 @@ function AppRoutes() {
         <Route
           path="/candidate/feedback"
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["employee", "admin"]}>
               < PanelFeedback />
             </ProtectedRoute>
           }
@@ -618,8 +618,14 @@ function AppRoutes() {
        <Route path="/payout-management" element={<PayoutManagement />} />
        <Route path="/commision" element={<CommissionSystemDashboard />} />
        <Route path="/settings" element={<SettingsPage />} />
-       <Route path="/feedback-table" element={<PanelFeedbackTable />} />
        
+       <Route path="/feedback-table"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "employee"]}>
+              <  PanelFeedbackTable/>
+            </ProtectedRoute>
+          }
+        />
 
        
       </Route>

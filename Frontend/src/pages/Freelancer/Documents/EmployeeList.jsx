@@ -30,36 +30,7 @@ const EmployeeList = () => {
       gst: "https://example.com/docs/101-gst.pdf",
       status: "PENDING",
     },
-    {
-      id: 102,
-      name: "Rohit Sharma",
-      email: "rohit.sharma@example.com",
-      bankPassbook: "https://example.com/docs/102-passbook.pdf",
-      aadhar: "https://example.com/docs/102-aadhar.pdf",
-      pan: "https://example.com/docs/102-pan.pdf",
-      gst: "https://example.com/docs/102-gst.pdf",
-      status: "APPROVED",
-    },
-    {
-      id: 103,
-      name: "Manoj Kumar",
-      email: "manoj.kumar@example.com",
-      bankPassbook: "https://example.com/docs/103-passbook.pdf",
-      aadhar: "https://example.com/docs/103-aadhar.pdf",
-      pan: "https://example.com/docs/103-pan.pdf",
-      gst: "https://example.com/docs/103-gst.pdf",
-      status: "REJECTED",
-    },
-    {
-      id: 104,
-      name: "Keerthi Sharma",
-      email: "keerthi.sharma@example.com",
-      bankPassbook: "https://example.com/docs/104-passbook.pdf",
-      aadhar: "https://example.com/docs/104-aadhar.pdf",
-      pan: "https://example.com/docs/104-pan.pdf",
-      gst: "https://example.com/docs/104-gst.pdf",
-      status: "PENDING",
-    },
+    
   ]);
 
   // 🔹 Update status locally

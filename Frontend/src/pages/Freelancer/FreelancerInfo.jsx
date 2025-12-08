@@ -81,7 +81,7 @@ const FreelancerDashboard = () => {
       icon: AssignmentIcon,
       iconBg: "bg-sky-100",
       iconColor: "text-sky-600",
-      // onClick: () => navigate("/job-postings"),
+      // onClick: () => navigate("/payout-management"),
     },
     
   ];
