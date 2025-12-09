@@ -84,7 +84,7 @@ import PayoutManagement from "../pages/Freelancer/payouts/PayoutManagement";
 import SettingsPage from "../pages/Settings/SettingsPage";
 import PanelFeedbackTable from "../pages/JobPosting/PanelFeedbackTable";
 import SuperAdminAuditLogs from "../pages/Auditlogs/SuperAdminAuditLogs";
-import FreelancerApprovalTable from "../pages/Reports/FreelancerApprovalTable";
+import FreelancerApprovalTable from "../pages/Freelancer/FreelancerApprovalTable";
 
 
 function AppRoutes() {
