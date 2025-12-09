@@ -15,6 +15,19 @@ export const superadminRegisterApi = (data) =>
 export const superadminLoginApi = (data) =>
   superadminClient.post(`${AUTH_API.SUPERADMIN}/login`, data);
 
+//Superadmin auditlogs
+
+//  Get All SuperAdmin Audit Logs
+export const getAllSuperAdminAuditLogsApi = () =>
+  adminClient.get(`${AUTH_API.SUPERADMIN}/audit-logs`);
+
+
+//  SuperAdmin Logout API (same style as admin)
+export const superAdminLogoutApi = (email) => {
+  console.log("Calling backend SuperAdmin logout with email:", email);
+  return adminClient.post(`${AUTH_API.SUPERADMIN}/logout`, { email });
+};
+
 export const superadminVerifyOtpApi = (data) =>
   superadminClient.post(`${AUTH_API.SUPERADMIN}/mfa/verify`, data);
 
