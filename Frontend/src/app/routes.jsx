@@ -85,6 +85,7 @@ import SettingsPage from "../pages/Settings/SettingsPage";
 import PanelFeedbackTable from "../pages/JobPosting/PanelFeedbackTable";
 import SuperAdminAuditLogs from "../pages/Auditlogs/SuperAdminAuditLogs";
 import FreelancerApprovalTable from "../pages/Reports/FreelancerApprovalTable";
+import PerformanceReview from "../components/PerformanceReview";
 
 
 function AppRoutes() {
@@ -549,7 +550,7 @@ function AppRoutes() {
         <Route
           path="/candidate/feedback"
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["employee", "admin"]}>
               < PanelFeedback />
             </ProtectedRoute>
           }
@@ -632,6 +633,15 @@ function AppRoutes() {
 
 
        
+       <Route path="/feedback-table"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "employee"]}>
+              <  PanelFeedbackTable/>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route path="/performanceform" element={<PerformanceReview />} />
 
        
       </Route>

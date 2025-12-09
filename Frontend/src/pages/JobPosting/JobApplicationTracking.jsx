@@ -1008,52 +1008,85 @@ export default function ApplicationTrackingTable() {
                     }}
                   />
                 </Grid>
-                <Grid item xs={12}>
-                  <FormControl fullWidth>
-                    <InputLabel>Interview Type</InputLabel>
-                    <Select
-                      value={interviewType}
-                      onChange={(e) => setInterviewType(e.target.value)}
-                      label="Interview Type"
-                      sx={{
-                        minHeight: "56px",
-                        "& .MuiSelect-select": {
-                          padding: "12px 14px",
-                          fontSize: "0.875rem",
-                        },
-                      }}
-                    >
-                      {interviewTypes.map((type) => (
-                        <MenuItem key={type} value={type}>
-                          {type}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={12}>
-                  <FormControl fullWidth>
-                    <InputLabel>Interviewer</InputLabel>
-                    <Select
-                      value={interviewer}
-                      onChange={(e) => setInterviewer(e.target.value)}
-                      label="Interviewer"
-                      sx={{
-                        minHeight: "56px",
-                        "& .MuiSelect-select": {
-                          padding: "12px 14px",
-                          fontSize: "0.875rem",
-                        },
-                      }}
-                    >
-                      {interviewers.map((m) => (
-                        <MenuItem key={m.id} value={`${m.name} - ${m.role}`}>
-                          {m.name} — {m.role}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
+                {/* Interview Type */}
+<Grid item xs={12}>
+  <FormControl fullWidth>
+    <InputLabel
+      shrink // 👈 This forces the label to always float
+      sx={{
+        fontSize: '1.125rem',
+        fontWeight: '600',
+        color: 'rgba(0, 0, 0, 0.87)',
+      }}
+    >
+      Interview Type *
+    </InputLabel>
+    <Select
+      value={interviewType}
+      onChange={(e) => setInterviewType(e.target.value)}
+      label="Interview Type *"
+      displayEmpty
+      sx={{
+        fontSize: '1.05rem',
+        minHeight: '56px',
+        '& .MuiSelect-select': {
+          paddingTop: '14px',
+          paddingBottom: '14px',
+          fontSize: '1.05rem',
+        },
+      }}
+    >
+      <MenuItem value="" disabled>
+        <em>Select interview type</em>
+      </MenuItem>
+      {interviewTypes.map((type) => (
+        <MenuItem key={type} value={type} sx={{ fontSize: '1.05rem' }}>
+          {type}
+        </MenuItem>
+      ))}
+    </Select>
+  </FormControl>
+</Grid>
+
+{/* Interviewer */}
+<Grid item xs={12}>
+  <FormControl fullWidth>
+    <InputLabel
+      shrink // 👈 Always float
+      sx={{
+        fontSize: '1.125rem',
+        fontWeight: '600',
+        color: 'rgba(0, 0, 0, 0.87)',
+      }}
+    >
+      Interviewer *
+    </InputLabel>
+    <Select
+      value={interviewer}
+      onChange={(e) => setInterviewer(e.target.value)}
+      label="Interviewer *"
+      displayEmpty
+      sx={{
+        fontSize: '1.05rem',
+        minHeight: '56px',
+        '& .MuiSelect-select': {
+          paddingTop: '14px',
+          paddingBottom: '14px',
+          fontSize: '1.05rem',
+        },
+      }}
+    >
+      <MenuItem value="" disabled>
+        <em>Select interviewer</em>
+      </MenuItem>
+      {interviewers.map((m) => (
+        <MenuItem key={m.id} value={`${m.name} - ${m.role}`} sx={{ fontSize: '1.05rem' }}>
+          {m.name} — {m.role}
+        </MenuItem>
+      ))}
+    </Select>
+  </FormControl>
+</Grid>
                 <Grid item xs={12}>
                   <TextField
                     fullWidth
