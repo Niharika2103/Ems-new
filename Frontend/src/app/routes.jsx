@@ -86,6 +86,9 @@ import PanelFeedbackTable from "../pages/JobPosting/PanelFeedbackTable";
 import SuperAdminAuditLogs from "../pages/Auditlogs/SuperAdminAuditLogs";
 import FreelancerApprovalTable from "../pages/Freelancer/FreelancerApprovalTable";
 import AdminVerificationTabs from "../pages/Freelancer/FreelancerDocumentVerify";
+import PerformanceReview from "../pages/Reports/PerformanceReview";
+import AdminPerformanceReview from "../pages/Reports/AdminPerformanceReview";
+import AdminPerformanceTable from "../pages/Reports/AdminPerformanceTable";
 
 function AppRoutes() {
   return (
@@ -552,7 +555,7 @@ function AppRoutes() {
         <Route
           path="/candidate/feedback"
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["employee", "admin"]}>
               < PanelFeedback />
             </ProtectedRoute>
           }
@@ -635,6 +638,37 @@ function AppRoutes() {
 
 
        
+       <Route path="/feedback-table"
+          element={
+            <ProtectedRoute allowedRoles={["admin", "employee"]}>
+              <  PanelFeedbackTable/>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route path="/performanceform"
+        element={
+          <ProtectedRoute allowedRoles={["employee"]}>
+              <  PerformanceReview/>
+            </ProtectedRoute>
+          }
+        />
+
+         <Route path="/performancerating"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+              <  AdminPerformanceReview/>
+            </ProtectedRoute>
+          }
+        />
+        
+         <Route path="/performancetable"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+              <  AdminPerformanceTable/>
+            </ProtectedRoute>
+          }
+        />
 
        
       </Route>
