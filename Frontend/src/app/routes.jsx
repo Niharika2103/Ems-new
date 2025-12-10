@@ -85,7 +85,7 @@ import SettingsPage from "../pages/Settings/SettingsPage";
 import PanelFeedbackTable from "../pages/JobPosting/PanelFeedbackTable";
 import SuperAdminAuditLogs from "../pages/Auditlogs/SuperAdminAuditLogs";
 import FreelancerApprovalTable from "../pages/Freelancer/FreelancerApprovalTable";
-
+import AdminVerificationTabs from "../pages/Freelancer/FreelancerDocumentVerify";
 
 function AppRoutes() {
   return (
@@ -150,9 +150,12 @@ function AppRoutes() {
             <EmpPayslip />
           </ProtectedRoute>
         } />
-
-
-
+       <Route path="/freelancer/document/verify" element={
+       <ProtectedRoute allowedRoles={["admin"]}>
+        <AdminVerificationTabs/>
+       </ProtectedRoute>
+       }
+       />
         <Route path="dashboard/employee/leave" element={
           <ProtectedRoute allowedRoles={["employee"]}>
             <EmployeeLeave />
