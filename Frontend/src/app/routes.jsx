@@ -84,9 +84,10 @@ import PayoutManagement from "../pages/Freelancer/payouts/PayoutManagement";
 import SettingsPage from "../pages/Settings/SettingsPage";
 import PanelFeedbackTable from "../pages/JobPosting/PanelFeedbackTable";
 import SuperAdminAuditLogs from "../pages/Auditlogs/SuperAdminAuditLogs";
-import FreelancerApprovalTable from "../pages/Reports/FreelancerApprovalTable";
-import PerformanceReview from "../components/PerformanceReview";
-
+import FreelancerApprovalTable from "../pages/Freelancer/FreelancerApprovalTable";
+import PerformanceReview from "../pages/Reports/PerformanceReview";
+import AdminPerformanceReview from "../pages/Reports/AdminPerformanceReview";
+import AdminPerformanceTable from "../pages/Reports/AdminPerformanceTable";
 
 function AppRoutes() {
   return (
@@ -641,7 +642,29 @@ function AppRoutes() {
           }
         />
 
-        <Route path="/performanceform" element={<PerformanceReview />} />
+        <Route path="/performanceform"
+        element={
+          <ProtectedRoute allowedRoles={["employee"]}>
+              <  PerformanceReview/>
+            </ProtectedRoute>
+          }
+        />
+
+         <Route path="/performancerating"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+              <  AdminPerformanceReview/>
+            </ProtectedRoute>
+          }
+        />
+        
+         <Route path="/performancetable"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+              <  AdminPerformanceTable/>
+            </ProtectedRoute>
+          }
+        />
 
        
       </Route>

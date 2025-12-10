@@ -22,6 +22,7 @@ app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
 // base route for freelancer documents
 app.use("/freelancer", freelancerRoutes);
 
+
 const PORT = process.env.PORT || 5005;
 app.listen(PORT, () => {
   console.log(`🚀 Freelancer-service running on port ${PORT}`);
