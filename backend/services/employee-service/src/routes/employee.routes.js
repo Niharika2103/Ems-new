@@ -20,7 +20,7 @@ import {
   getFreelancers,
   createReferral,
   getMyReferrals,
-  getEmployeeSalary
+  getEmployeeSalary,
   getFullTimeEmployees
 
 
