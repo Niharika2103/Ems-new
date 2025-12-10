@@ -20,6 +20,8 @@ import {
   getFreelancers,
   createReferral,
   getMyReferrals,
+  getFullTimeEmployees
+
 
 } from "../controllers/employee.controller.js";
 

@@ -1507,3 +1507,31 @@ export const getMyReferrals = async (req, res) => {
     client.release();
   }
 };
+
+
+export const getFullTimeEmployees = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const query = `
+      SELECT 
+        id,
+        employee_id,
+        name,
+        email,
+        department,
+        employment_type
+      FROM ${USERS_TABLE}
+      WHERE role = 'employee' AND employment_type = 'fulltime'
+      ORDER BY name ASC;
+    `;
+
+    const { rows } = await client.query(query);
+
+    res.status(200).json(rows);
+  } catch (err) {
+    console.error("Get FullTime Employees Error:", err.message);
+    res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+};
