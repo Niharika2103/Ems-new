@@ -20,7 +20,8 @@ import {
   getFreelancers,
   createReferral,
   getMyReferrals,
-  getEmployeeSalary
+  getEmployeeSalary,
+  getFreelancerAssignments
 
 } from "../controllers/employee.controller.js";
 
@@ -90,6 +91,7 @@ router.get("/my-referrals/:employeeId", getMyReferrals);
 //emp salary 
 router.get("/salary/:employeeId", getEmployeeSalary);
 
+router.get("/employees/fulltime", getFullTimeEmployees);
 
 export default router;
 

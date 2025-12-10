@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import path from "path";
 import dotenv from "dotenv";
 import employeeRoutes from "./routes/employee.routes.js";
 dotenv.config();
@@ -9,6 +10,7 @@ app.use(cors({
   origin: "*" // your Vercel frontend domain
   
 }));
+app.use('/uploads', express.static(path.resolve('./src/uploads')));
 app.use(express.json());
 app.get("/test-email", async (req, res) => {
   try {
