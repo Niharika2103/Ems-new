@@ -85,6 +85,7 @@ import SettingsPage from "../pages/Settings/SettingsPage";
 import PanelFeedbackTable from "../pages/JobPosting/PanelFeedbackTable";
 import SuperAdminAuditLogs from "../pages/Auditlogs/SuperAdminAuditLogs";
 import FreelancerApprovalTable from "../pages/Freelancer/FreelancerApprovalTable";
+import AdminVerificationTabs from "../pages/Freelancer/FreelancerDocumentVerify";
 import PerformanceReview from "../pages/Reports/PerformanceReview";
 import AdminPerformanceReview from "../pages/Reports/AdminPerformanceReview";
 import AdminPerformanceTable from "../pages/Reports/AdminPerformanceTable";
@@ -160,9 +161,12 @@ function AppRoutes() {
             <EmpPayslip />
           </ProtectedRoute>
         } />
-
-
-
+       <Route path="/freelancer/document/verify" element={
+       <ProtectedRoute allowedRoles={["admin"]}>
+        <AdminVerificationTabs/>
+       </ProtectedRoute>
+       }
+       />
         <Route path="dashboard/employee/leave" element={
           <ProtectedRoute allowedRoles={["employee"]}>
             <EmployeeLeave />
