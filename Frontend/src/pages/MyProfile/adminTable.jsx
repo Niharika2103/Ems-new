@@ -22,19 +22,22 @@ import {
 import { decodeToken } from "../../api/decodeToekn";
 import { validateEmployeeEdit } from "../../utils/validation";
 
+
 export default function AdminTable() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
+  const currentDate = new Date().toISOString().split("T")[0];
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    date_of_joining: "",
+    date_of_joining:currentDate,
     phone: "",
     address: "",
     permanent_address: "",
-    dob: "",
+    dob: currentDate,
     department: "",
     gender: "",
     emergency_contact: "",
@@ -84,7 +87,7 @@ export default function AdminTable() {
   const handleEdit = (record) => {
     setEditingRecord(record);
     const formatDate = (isoString) => {
-      if (!isoString) return "";
+      if (!isoString) return currentDate;
       return isoString.split("T")[0];
     };
 

@@ -22,10 +22,10 @@ const storedUser = JSON.parse(localStorage.getItem("user"));
 
      const getJobInfoPath = () => {
     if (storedUser?.employment_type === "fulltime") {
-      return "/employee/application-tracking";
+      return "/job-posts";
     }
     if (role === "admin") {
-      return "/job-posts";
+      return "/employee/application-tracking";
     }
     return "/";
   };
@@ -37,7 +37,7 @@ const storedUser = JSON.parse(localStorage.getItem("user"));
       icon: GroupIcon,
       iconBg: "bg-sky-100",
       iconColor: "text-sky-600",
-      onClick: () => navigate("/published-jobs"),
+      onClick: () => navigate("/published-jobs"),//admin
     },
     {
       title: "Create Jobs",
@@ -45,7 +45,7 @@ const storedUser = JSON.parse(localStorage.getItem("user"));
       icon: AssignmentIcon,
       iconBg: "bg-sky-100",
       iconColor: "text-sky-600",
-      onClick: () => navigate("/job-postings"),
+      onClick: () => navigate("/job-postings"),//admin
     },
     {
     title: "Job Info",
@@ -75,22 +75,22 @@ const storedUser = JSON.parse(localStorage.getItem("user"));
       onClick: () => navigate("/feedback-table"),
     },
 
-    {
-      title: "Settings",
-      message: "Configure system settings",
-      icon: SettingsIcon,
-      iconBg: "bg-pink-100",
-      iconColor: "text-pink-600",
-    //   onClick: () => navigate("/settings"),
-    },
-    {
-      title: "Accounts",
-      message: "Manage accounts and transactions",
-      icon: AccountBalanceIcon,
-      iconBg: "bg-yellow-100",
-      iconColor: "text-yellow-600",
-    //   onClick: () => navigate("/accounts/salary-structure"),
-    },
+    // {
+    //   title: "Settings",
+    //   message: "Configure system settings",
+    //   icon: SettingsIcon,
+    //   iconBg: "bg-pink-100",
+    //   iconColor: "text-pink-600",
+    // //   onClick: () => navigate("/settings"),
+    // },
+    // {
+    //   title: "Accounts",
+    //   message: "Manage accounts and transactions",
+    //   icon: AccountBalanceIcon,
+    //   iconBg: "bg-yellow-100",
+    //   iconColor: "text-yellow-600",
+    // //   onClick: () => navigate("/accounts/salary-structure"),
+    // },
 
      
   ];
