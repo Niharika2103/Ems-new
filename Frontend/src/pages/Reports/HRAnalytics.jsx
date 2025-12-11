@@ -39,6 +39,7 @@ const HRAnalytics = () => {
     try {
       const response = await fetchFullTimeEmployeesApi();
       const backendEmployees = response.data;
+      
 
       // Inject dummy placeholder analytics
       const updatedEmployees = backendEmployees.map((emp) => ({
@@ -103,7 +104,7 @@ const HRAnalytics = () => {
       <Card>
         <CardContent>
           <Typography variant="h6" gutterBottom>
-            Full-Time Employees (With Dummy Performance Data)
+            Full-Time Employees 
           </Typography>
 
           <TableContainer component={Paper}>
