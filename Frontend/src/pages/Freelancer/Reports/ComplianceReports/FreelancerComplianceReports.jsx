@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
-  Grid,
   Card,
   CardContent,
   Button,
@@ -15,6 +14,7 @@ import {
   Paper,
   Chip,
   LinearProgress,
+  TextField,
 } from '@mui/material';
 import {
   Refresh as RefreshIcon,
@@ -25,6 +25,8 @@ import {
 } from '@mui/icons-material';
 
 const FreelancerComplianceReports = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+
   const complianceData = [
     { regulation: 'GDPR', status: 'Compliant', lastAudit: '2023-05-15', nextAudit: '2023-11-15', progress: 100 },
     { regulation: 'HIPAA', status: 'Compliant', lastAudit: '2023-04-22', nextAudit: '2023-10-22', progress: 100 },
@@ -59,10 +61,21 @@ const FreelancerComplianceReports = () => {
     }
   };
 
+  // 🔍 Filter based on search
+  const filteredData = complianceData.filter((item) =>
+    item.regulation.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.lastAudit.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.nextAudit.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <Box>
+
+      {/* Top Buttons */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4">Compliance Reports</Typography>
+
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Button variant="outlined" startIcon={<RefreshIcon />}>
             Refresh
@@ -73,65 +86,24 @@ const FreelancerComplianceReports = () => {
         </Box>
       </Box>
 
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <CheckIcon sx={{ fontSize: 40, color: 'success.main', mb: 1 }} />
-              <Typography variant="h4" color="success.main">
-                3
-              </Typography>
-              <Typography color="text.secondary">
-                Compliant Regulations
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <WarningIcon sx={{ fontSize: 40, color: 'warning.main', mb: 1 }} />
-              <Typography variant="h4" color="warning.main">
-                1
-              </Typography>
-              <Typography color="text.secondary">
-                Pending Review
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <ErrorIcon sx={{ fontSize: 40, color: 'error.main', mb: 1 }} />
-              <Typography variant="h4" color="error.main">
-                1
-              </Typography>
-              <Typography color="text.secondary">
-                Action Required
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h4" color="primary.main">
-                85%
-              </Typography>
-              <Typography color="text.secondary">
-                Overall Compliance
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+      {/* 🔍 Small Search Bar */}
+      <Box sx={{ mb: 3, width: '300px' }}>
+        <TextField
+          fullWidth
+          size="small"
+          label="Search Compliance"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </Box>
 
+      {/* Compliance Table */}
       <Card>
         <CardContent>
           <Typography variant="h6" gutterBottom>
             Regulatory Compliance Status
           </Typography>
+
           <TableContainer component={Paper}>
             <Table>
               <TableHead>
@@ -141,46 +113,54 @@ const FreelancerComplianceReports = () => {
                   <TableCell>Last Audit</TableCell>
                   <TableCell>Next Audit</TableCell>
                   <TableCell>Progress</TableCell>
-                  
                 </TableRow>
               </TableHead>
+
               <TableBody>
-                {complianceData.map((row, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{row.regulation}</TableCell>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        {getStatusIcon(row.status)}
-                        <Chip
-                          label={row.status}
-                          color={getStatusColor(row.status)}
-                          size="small"
-                        />
-                      </Box>
+                {filteredData.length > 0 ? (
+                  filteredData.map((row, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{row.regulation}</TableCell>
+
+                      <TableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          {getStatusIcon(row.status)}
+                          <Chip label={row.status} color={getStatusColor(row.status)} size="small" />
+                        </Box>
+                      </TableCell>
+
+                      <TableCell>{row.lastAudit}</TableCell>
+                      <TableCell>{row.nextAudit}</TableCell>
+
+                      <TableCell>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <LinearProgress
+                            variant="determinate"
+                            value={row.progress}
+                            sx={{ flexGrow: 1 }}
+                            color={
+                              row.progress === 100
+                                ? 'success'
+                                : row.progress >= 75
+                                ? 'warning'
+                                : 'error'
+                            }
+                          />
+                          <Typography variant="body2">{row.progress}%</Typography>
+                        </Box>
+                      </TableCell>
+
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center">
+                      No matching records found
                     </TableCell>
-                    <TableCell>{row.lastAudit}</TableCell>
-                    <TableCell>{row.nextAudit}</TableCell>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <LinearProgress
-                          variant="determinate"
-                          value={row.progress}
-                          sx={{ flexGrow: 1 }}
-                          color={
-                            row.progress === 100
-                              ? 'success'
-                              : row.progress >= 75
-                              ? 'warning'
-                              : 'error'
-                          }
-                        />
-                        <Typography variant="body2">{row.progress}%</Typography>
-                      </Box>
-                    </TableCell>
-                  
                   </TableRow>
-                ))}
+                )}
               </TableBody>
+
             </Table>
           </TableContainer>
         </CardContent>
