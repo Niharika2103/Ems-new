@@ -66,7 +66,10 @@ import {
   deleteInvoice,
   getNewEmployees,
   getProbationWithUser,
-  getMonthlyFinalSummary
+  getMonthlyFinalSummary,
+  updateTLReview,
+  fetchAllReviews,
+  getFinalRatingsForEmployees
  
 } from "../controllers/admin.controller.js";
 
@@ -291,4 +294,9 @@ router.get(
   "/monthly-final-summary/:employeeId/:year/:month",
   getMonthlyFinalSummary
 );
+router.put("/performance/update/:id", updateTLReview);           
+router.get("/performance/all", fetchAllReviews);
+
+router.get("/performance/final-ratings", getFinalRatingsForEmployees);
+
 export default router;

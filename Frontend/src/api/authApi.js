@@ -714,3 +714,20 @@ export const getMonthlyFinalSummaryApi = (employeeId, year, month) =>
     `${AUTH_API.ADMIN}/monthly-final-summary/${employeeId}/${year}/${month}`
   );
 
+
+// Performance Review APIs
+// export const submitSelfReviewApi = (data) =>
+//   employeeClient.post(`/employee/performance/submit`, data);
+// authApi.js or employeeApi.js
+export const submitSelfReviewApi = (data) => {
+  return employeeClient.post(`/employee/performance/submit`, data);
+};
+
+export const updateTLReviewApi = (id, data) =>
+  adminClient.put(`/admin/performance/update/${id}`, data);
+
+export const fetchAllPerformanceReviewsApi = () =>
+  adminClient.get(`/admin/performance/all`);
+
+export const fetchFinalRatingsApi = () =>
+  adminClient.get(`/admin/performance/final-ratings`);
