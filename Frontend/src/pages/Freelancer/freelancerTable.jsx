@@ -477,6 +477,7 @@ const handleInvoiceSubmit = async (e) => {
                   fullWidth
                   size="small"
                   InputLabelProps={{ shrink: true }}
+                  inputProps={{ max: getCurrentDate() }}
                 />
               </Grid>
 
@@ -491,6 +492,7 @@ const handleInvoiceSubmit = async (e) => {
                   fullWidth
                   size="small"
                   InputLabelProps={{ shrink: true }}
+                  inputProps={{ max: getCurrentDate() }}
                 />
               </Grid>
 

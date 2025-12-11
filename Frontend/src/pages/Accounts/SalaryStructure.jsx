@@ -566,6 +566,7 @@ const SalaryStructure = () => {
     name="dateOfJoining"
     InputLabelProps={{ shrink: true }}
     value={formData1.dateOfJoining || getCurrentDate()}
+    inputProps={{ max: getCurrentDate() }}  
     onChange={(e) =>
       setFormData1(prev => ({
         ...prev,
@@ -583,6 +584,7 @@ const SalaryStructure = () => {
     name="dateOfBirth"
     InputLabelProps={{ shrink: true }}
     value={formData1.dateOfBirth  || getCurrentDate()}
+    inputProps={{ max: getCurrentDate() }}  
     onChange={(e) =>
       setFormData1(prev => ({
         ...prev,

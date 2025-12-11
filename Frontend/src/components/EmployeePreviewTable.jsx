@@ -116,6 +116,8 @@ export default function EmployeePreviewTable({
                             }
                             error={!!errorObj.dateOfJoining}
                             helperText={errorObj.dateOfJoining}
+                            inputProps={{ max: new Date().toISOString().split("T")[0] }}
+
                           />
                         </TableCell>
                         <TableCell>
