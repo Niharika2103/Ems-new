@@ -600,37 +600,37 @@ export const getPanelFeedbackApi = (interview_id) =>
 
 
 export const createFreelancerContractApi = (data) => {
-  return freelancerClient.post(`${AUTH_API.FREELANCER}/admin/freelancer-contract/create`, data);
+  return adminClient.post(`${AUTH_API.ADMIN}/freelancer-contract/create`, data);
 };
 
 export const updateFreelancerContractApi = (contractId, data) => {
-  return freelancerClient.put(`${AUTH_API.FREELANCER}/admin/freelancer-contract/update/${contractId}`, data);
+  return adminClient.put(`${AUTH_API.ADMIN}/freelancer-contract/update/${contractId}`, data);
 };
 
 export const cancelFreelancerContractApi = (contractId) => {
-  return freelancerClient.patch(`${AUTH_API.FREELANCER}/admin/freelancer-contract/cancel/${contractId}`);
+  return adminClient.patch(`${AUTH_API.ADMIN}/freelancer-contract/cancel/${contractId}`);
 };
 
 export const updateFreelancerContractStatusApi = (contractId, status) => {
-  return freelancerClient.patch(`${AUTH_API.FREELANCER}/admin/freelancer-contract/status/${contractId}`, { status });
+  return adminClient.patch(`${AUTH_API.ADMIN}/freelancer-contract/status/${contractId}`, { status });
 };
 
 export const renewFreelancerContractApi = (contractId, newEndDate) => {
-  return freelancerClient.patch(`${AUTH_API.FREELANCER}/admin/freelancer-contract/renew/${contractId}`, {
+  return adminClient.patch(`${AUTH_API.ADMIN}/freelancer-contract/renew/${contractId}`, {
     new_end_date: newEndDate
   });
 };
 
 export const fetchFreelancerContractsApi = (freelancerId) => {
-  return freelancerClient.get(`${AUTH_API.FREELANCER}/admin/freelancer-contract/freelancer/${freelancerId}`);
+  return adminClient.get(`${AUTH_API.ADMIN}/freelancer-contract/freelancer/${freelancerId}`);
 };
 
 export const fetchAllFreelancerContractsApi = () => {
-  return freelancerClient.get(`${AUTH_API.FREELANCER}/admin/freelancer-contract/all`);
+  return adminClient.get(`${AUTH_API.ADMIN}/freelancer-contract/all`);
 };
 
 export const fetchFreelancerContractByIdApi = (contractId) => {
-  return freelancerClient.get(`${AUTH_API.FREELANCER}/admin/freelancer-contract/${contractId}`);
+  return adminClient.get(`${AUTH_API.ADMIN}/freelancer-contract/${contractId}`);
 };
 
 //Auditlogs
