@@ -102,6 +102,7 @@ const [selectedFreelancerContracts, setSelectedFreelancerContracts] = useState([
     department: "",
     gender: "",
     emergency_contact: "",
+    employment_type:"",
   });
 
   // Edit Record
@@ -122,6 +123,7 @@ const [selectedFreelancerContracts, setSelectedFreelancerContracts] = useState([
       permanent_address: record.permanent_address || "",
       department: record.department || "",
       gender: record.gender || "",
+      employment_type:record.employment_type || "",
       emergency_contact: record.emergency_contact || "",
       dob: formatDate(record.dob),
     });
