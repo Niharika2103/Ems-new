@@ -87,36 +87,44 @@ const FreelancerDocuments = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-// ✅ Handle submit with employeeId check
-  const handleSubmit = async () => {
-  if (!employeeId) {
-    console.error("❌ Employee ID not found. Cannot submit documents.");
-    return;
-  }
+    const handleSubmit = async () => {
+      if (!employeeId) {
+        console.error("❌ Employee ID not found. Cannot submit documents.");
+        return;
+      }
 
-  // Use correct keys from formData
-  console.log("Profile Photo:", formData.profilePhoto);
-  console.log("Is File?", formData.profilePhoto instanceof File);
+      const fd = new FormData();
 
-  const payload = {
-    id: employeeId,
-    gstNumber: formData.gstNumber,
-    bankPassbook: formData.bankPassbook,
-    aadhaarCard: formData.aadhaarCard,
-    panCard: formData.panCard,
-    photo: formData.profilePhoto, // <-- use profilePhoto here
-    gstCertificate: formData.gstCertificate,
-    gstReturns: formData.gstReturns,
-    freelancerDocument: formData.freelancerDocument, // if your backend expects this
-  };
+      fd.append("id", employeeId);
+      fd.append("gstNumber", formData.gstNumber || "");
 
-  try {
-    const response = await uploadFreelancerDocsApi(payload);
-    console.log("UPLOAD SUCCESS", response.data);
-  } catch (error) {
-    console.log("UPLOAD ERROR", error);
-  }
-};
+      // Single files
+      if (formData.profilePhoto) fd.append("photo", formData.profilePhoto);
+      if (formData.freelancerDocument)
+        fd.append("freelancerDocument", formData.freelancerDocument);
+      if (formData.bankPassbook) fd.append("bankPassbook", formData.bankPassbook);
+      if (formData.aadhaarCard) fd.append("aadhaarCard", formData.aadhaarCard);
+      if (formData.panCard) fd.append("panCard", formData.panCard);
+      if (formData.gstCertificate)
+        fd.append("gstCertificate", formData.gstCertificate);
+
+      // Multiple files (GST Returns)
+      if (Array.isArray(formData.gstReturns)) {
+        formData.gstReturns.forEach((file) => {
+          fd.append("gstReturns", file);
+        });
+      }
+
+      try {
+        const response = await uploadFreelancerDocsApi(fd);
+        console.log("UPLOAD SUCCESS", response.data);
+        alert("Documents uploaded successfully!");
+      } catch (error) {
+        console.log("UPLOAD ERROR", error);
+        alert("Upload failed");
+      }
+    };
+
 
 
 

@@ -1,6 +1,7 @@
 import React from "react";
 import axios from "axios";
 import html2pdf from "html2pdf.js";
+import { API_BASES } from "../../../../utils/constants";
 
 import {
   Box,
@@ -38,13 +39,16 @@ const FreelancerROI = () => {
   const [projectType, setProjectType] = React.useState("all");
   const [projectList, setProjectList] = React.useState([]);
 
-  // ⭐ Top card states
   const [totalSpend, setTotalSpend] = React.useState(0);
   const [avgRoi, setAvgRoi] = React.useState(0);
   const [activeProjects, setActiveProjects] = React.useState(0);
   const [costSavings, setCostSavings] = React.useState(0);
 
-  // ⭐ Trend states
+  const [prevSpend, setPrevSpend] = React.useState(0);
+  const [prevAvgRoi, setPrevAvgRoi] = React.useState(0);
+  const [prevActive, setPrevActive] = React.useState(0);
+  const [prevSavings, setPrevSavings] = React.useState(0);
+
   const [spendTrend, setSpendTrend] = React.useState(0);
   const [roiTrend, setRoiTrend] = React.useState(0);
   const [activeTrend, setActiveTrend] = React.useState(0);
@@ -55,13 +59,16 @@ const FreelancerROI = () => {
     return parseInt(value.toString().replace(/[^0-9-]/g, "")) || 0;
   };
 
-  // ⭐ ROI Calculation
   const calculateROI = (cost, value) => {
     if (!cost || cost === 0) return 0;
     return Math.round(((value - cost) / cost) * 100);
   };
 
-  // ⭐ TREND COLORS & ICONS
+  const calcTrend = (current, previous) => {
+    if (!previous || previous === 0) return 0;
+    return Math.round(((current - previous) / previous) * 100);
+  };
+
   const getTrendColor = (change) => {
     if (change > 0) return "success.main";
     if (change < 0) return "error.main";
@@ -95,7 +102,7 @@ const FreelancerROI = () => {
       setLoading(true);
 
       const response = await axios.get(
-        "http://localhost:5002/admin/reports/freelancer-roi"
+        `${API_BASES.ADMIN}/admin/reports/freelancer-roi`
       );
 
       if (response.data.success) {
@@ -113,7 +120,6 @@ const FreelancerROI = () => {
         ];
         setProjectList(uniqueProjects);
 
-        // ⭐ TOP CARD VALUES
         const totalSpendCalc = processedData.reduce(
           (sum, x) => sum + (x.cost || 0),
           0
@@ -141,12 +147,15 @@ const FreelancerROI = () => {
         setActiveProjects(activeProjectsCalc);
         setCostSavings(costSavingsCalc);
 
-        // ⭐ DYNAMIC TRENDS (Simple period comparison logic)
-        setSpendTrend(Math.round((totalSpendCalc * 0.15) / 1)); // +15%
-        setRoiTrend(8); // assume +8%
-        setActiveTrend(0); // stable
-        setSavingsTrend(12); // +12%
+        setSpendTrend(calcTrend(totalSpendCalc, prevSpend));
+        setRoiTrend(calcTrend(avgRoiCalc, prevAvgRoi));
+        setActiveTrend(calcTrend(activeProjectsCalc, prevActive));
+        setSavingsTrend(calcTrend(costSavingsCalc, prevSavings));
 
+        setPrevSpend(totalSpendCalc);
+        setPrevAvgRoi(avgRoiCalc);
+        setPrevActive(activeProjectsCalc);
+        setPrevSavings(costSavingsCalc);
       } else {
         setError("Failed to load ROI data");
       }
@@ -229,8 +238,9 @@ const FreelancerROI = () => {
         </Box>
       </Box>
 
-      {/* ⭐ TOP METRICS WITH DYNAMIC ARROWS */}
+      {/* ⭐ TOP METRICS */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
+
         {/* TOTAL SPEND */}
         <Grid item xs={12} sm={6} md={3}>
           <Card>
@@ -282,7 +292,7 @@ const FreelancerROI = () => {
           </Card>
         </Grid>
 
-        {/* COST SAVINGS */}
+        {/* ⭐ COST SAVINGS — FIXED NEGATIVE ARROW */}
         <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
@@ -290,11 +300,32 @@ const FreelancerROI = () => {
               <Typography variant="h5">₹{costSavings}</Typography>
 
               <Box sx={{ display: "flex", alignItems: "center", mt: 1 }}>
-                {getTrendIcon(savingsTrend)}
-                <Typography variant="body2" sx={{ color: getTrendColor(savingsTrend) }}>
-                  {getTrendLabel(savingsTrend)}
-                </Typography>
+                {costSavings < 0 ? (
+                  <>
+                    <TrendingUpIcon
+                      sx={{
+                        color: "error.main",
+                        mr: 0.5,
+                        transform: "rotate(180deg)",
+                      }}
+                    />
+                    <Typography variant="body2" sx={{ color: "error.main" }}>
+                      Loss
+                    </Typography>
+                  </>
+                ) : (
+                  <>
+                    {getTrendIcon(savingsTrend)}
+                    <Typography
+                      variant="body2"
+                      sx={{ color: getTrendColor(savingsTrend) }}
+                    >
+                      {getTrendLabel(savingsTrend)}
+                    </Typography>
+                  </>
+                )}
               </Box>
+
             </CardContent>
           </Card>
         </Grid>

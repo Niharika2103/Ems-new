@@ -28,9 +28,14 @@ export const uploadFreelancerDocs = async (req, res) => {
       gstCertificate: files?.gstCertificate?.[0] ? files.gstCertificate[0].filename : null,
       gstReturns: files?.gstReturns ? files.gstReturns.map(f => f.filename) : [],
       photo: files?.photo?.[0] ? files.photo[0].filename : null,
+
+      // ✅ Added freelancerDocument support
+      freelancerDocument: files?.freelancerDocument?.[0]
+        ? files.freelancerDocument[0].filename
+        : null,
     };
 
-    const updatedRow = await saveFreelancerDocumentsService(id, documentJson,gstNumber);
+    const updatedRow = await saveFreelancerDocumentsService(id, documentJson, gstNumber);
 
     return res.status(200).json({
       success: true,
@@ -78,7 +83,7 @@ export const uploadFreelancerDocs = async (req, res) => {
 //       success: true,
 //       data: {
 //         employeeId: row.id,
-//         gstNumber:row.gst,
+//         gstNumber: row.gst,
 //         document: parsedDoc,
 //       },
 //     });
@@ -169,6 +174,7 @@ export const getGoogleForm = async (req, res) => {
   }
 };
 
+
 // ================== SHEET → DB SYNC ==================
 export const syncFreelancerSheet = async (req, res) => {
   try {
@@ -225,7 +231,6 @@ export const syncFreelancerSheet = async (req, res) => {
     });
   }
 };
-
 
 
 

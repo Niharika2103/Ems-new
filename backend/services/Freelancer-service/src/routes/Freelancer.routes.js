@@ -8,7 +8,7 @@ import {
   listFreelancers,
   approveFreelancer,
   rejectFreelancer,
-    // getFreelancerDocs,
+  // getFreelancerDocs,
 } from "../controllers/Freelancer.controller.js";
 
 const router = express.Router();
@@ -20,6 +20,7 @@ const uploadFields = upload.fields([
   { name: "gstCertificate", maxCount: 1 },
   { name: "gstReturns", maxCount: 10 },
   { name: "photo", maxCount: 1 },
+  { name: "freelancerDocument", maxCount: 1 }, 
 ]);
 
 // Upload docs
