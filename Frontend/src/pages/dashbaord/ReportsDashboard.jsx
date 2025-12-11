@@ -40,7 +40,7 @@ const ReportsDashboard = () => {
       icon: TrendingUpIcon,
       iconBg: "bg-orange-100",
       iconColor: "text-orange-600",
-      onClick: () => navigate("/reports/freelancer-roi"),
+      onClick: () => navigate("/dashboard/employee/employeeroi"),
     },
     {
       title: "Custom Reports",

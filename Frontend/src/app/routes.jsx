@@ -91,6 +91,7 @@ import AdminPerformanceTable from "../pages/Reports/AdminPerformanceTable";
 import FreelancerReports from "../pages/Freelancer/Reports/FreelancerReports";
 import FreelancerHRAnalytics from "../pages/Freelancer/Reports/HRAnalytics/FreelancerHRAnalytics";
 import FreelanceROI from "../pages/Freelancer/Reports/ROI/FreelanceROI";
+import EmployeeRoi from "../pages/Freelancer/Reports/ROI/EmployeeRoi";
 import FreelancerPayrollAnalytics from "../pages/Freelancer/Reports/PayrollAnalytics/FreelamcerPayrollAnalytics";
 import FreelancerComplianceReports from "../pages/Freelancer/Reports/ComplianceReports/FreelancerComplianceReports";
 import FreelancerCustomReports from "../pages/Freelancer/Reports/CustomReports/FreelancerCustomReports";
@@ -353,6 +354,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <FreelancerInfo />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/employee/employeeroi"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <EmployeeRoi />
             </ProtectedRoute>
           }
         />
