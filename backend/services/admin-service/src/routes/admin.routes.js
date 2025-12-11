@@ -65,7 +65,8 @@ createProbation,
   sendInvoiceReminder,
   deleteInvoice,
   getNewEmployees,
-  getProbationWithUser
+  getProbationWithUser,
+  getMonthlyFinalSummary
  
 } from "../controllers/admin.controller.js";
 
@@ -279,4 +280,9 @@ router.get("/new-employees", getNewEmployees);
 router.post("/store-probation", createProbation);
 
 router.get("/probation/user", getProbationWithUser);
+
+router.get(
+  "/monthly-final-summary/:employeeId/:year/:month",
+  getMonthlyFinalSummary
+);
 export default router;

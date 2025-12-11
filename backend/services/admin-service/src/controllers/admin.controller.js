@@ -3950,3 +3950,51 @@ export const getPanelFeedback = async (req, res) => {
     client.release();
   }
 };
+
+export const getMonthlyFinalSummary = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { employeeId, year, month } = req.params;
+
+    if (!employeeId || !year || !month) {
+      return res.status(400).json({ error: "employeeId, year, month required" });
+    }
+
+    const monthNumber = parseInt(month, 10);
+
+    // Get last day of that month
+    const lastDateObj = new Date(year, monthNumber, 0);
+
+    // FIX: Local timezone format — NOT UTC
+    const lastDay = lastDateObj.toLocaleDateString("en-CA"); // YYYY-MM-DD
+    
+    const query = `
+      SELECT lop, working_days
+      FROM attendance
+      WHERE employee_id = $1
+      AND date = $2
+      LIMIT 1
+    `;
+
+    const result = await client.query(query, [employeeId, lastDay]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "No final month entry found" });
+    }
+
+    return res.json({
+      employeeId,
+      year,
+      month,
+      final_lop: result.rows[0].lop,
+      final_working_days: result.rows[0].working_days,
+    });
+
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+};
+

@@ -702,3 +702,8 @@ export const vendorResetPasswordApi = (data) =>
 export const fetchFreelancerAssignmentsApi = () =>
   employeeClient.get(`${AUTH_API.EMPLOYEE}/assignments/freelancers`);
 
+export const getMonthlyFinalSummaryApi = (employeeId, year, month) =>
+  adminClient.get(
+    `${AUTH_API.ADMIN}/monthly-final-summary/${employeeId}/${year}/${month}`
+  );
+
