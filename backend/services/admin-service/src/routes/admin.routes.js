@@ -106,8 +106,9 @@ import {
 // ❗ Keep disk storage for actual job application resumes
 import { uploadResume, uploadResumeBuffer } from "../middleware/uploadResume.js";
 
-//freelancer
+//freelancer and employee roi
 import { getFreelancerRoiReport } from "../controllers/freelancerRoi.controller.js";
+import { getEmployeeRoiReport } from "../controllers/employeeRoi.controller.js";
 
 
 const router = Router();
@@ -246,6 +247,7 @@ router.put("/applications/status/:application_id", updateApplicationStatus);
 // router.get("/panel-members", getPanelMembers);
 //freelancerroireport
 router.get("/reports/freelancer-roi", getFreelancerRoiReport);
+router.get("/reports/employee-roi", getEmployeeRoiReport);
 
 /* -------------------------------------------------------------------------- */
 /*                       FREELANCER CONTRACT ROUTES                           */

@@ -524,36 +524,23 @@ export const employeeDocDownloadbyAdminApi = (employeeId, docKey, index, onDownl
 
 
 // Upload freelancer documents
-export const uploadFreelancerDocsApi = (data) => {
-  const formData = new FormData();
-
-  // Single files
-  if (data.bankPassbook) formData.append("bankPassbook", data.bankPassbook);
-  if (data.aadhaarCard) formData.append("aadhaarCard", data.aadhaarCard);
-  if (data.panCard) formData.append("panCard", data.panCard);
-  if (data.gstCertificate) formData.append("gstCertificate", data.gstCertificate);
-  if (data.photo) formData.append("photo", data.photo);
-
-  // Multiple GST files
-  if (data.gstReturns && data.gstReturns.length > 0) {
-    data.gstReturns.forEach((file) => {
-      formData.append("gstReturns", file);
-    });
-  }
-
-  // Other fields
-  if (data.gstNumber) formData.append("gstNumber", data.gstNumber);
-  if (data.id) formData.append("id", data.id);
-
-   return freelancerClient.post(`${AUTH_API.FREELANCER}/upload`,
-    formData
-      );
+export const uploadFreelancerDocsApi = (formData) => {
+  return freelancerClient.post(
+    `${AUTH_API.FREELANCER}/upload`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
 };
 
-//GetAPI
+// Get API
 export const getFreelancerDocsApi = (id) => {
   return freelancerClient.get(`${AUTH_API.FREELANCER}/${id}`);
 };
+
 // ============== Referral (Employee) ======================
 export const createReferralApi = (formData) => {
   return employeeClient.post(`${AUTH_API.EMPLOYEE}/refer-candidate`, formData);
