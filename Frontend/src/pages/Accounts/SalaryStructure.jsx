@@ -214,9 +214,9 @@ const SalaryStructure = () => {
           employeeName: emp.name || "",
           employeeId: emp.employee_id || "",
           designation: emp.designation || "",
-          dateOfJoining: emp.date_of_joining ? emp.date_of_joining.split("T")[0] : "",
+          dateOfJoining: emp.date_of_joining ? emp.date_of_joining.split("T")[0] : getCurrentDate(),
           email: emp.email || "",
-          dateOfBirth: emp.dob ? emp.dob.split("T")[0] : "",
+          dateOfBirth: emp.dob ? emp.dob.split("T")[0] : getCurrentDate(),
         }));
 
         // 2) fetch salary by employee id (in the same flow)
@@ -544,7 +544,7 @@ const SalaryStructure = () => {
               </Grid>
 
               {/* Dates */}
-              <Grid item xs={12} sm={6}>
+              {/* <Grid item xs={12} sm={6}>
                 <TextField fullWidth type="date" label="Date of Joining"
                   name="dateOfJoining" InputLabelProps={{ shrink: true }}
                   value={formData1.dateOfJoining} InputProps={{ readOnly: true }}
@@ -556,12 +556,51 @@ const SalaryStructure = () => {
                   name="dateOfBirth" InputLabelProps={{ shrink: true }}
                   value={formData1.dateOfBirth} InputProps={{ readOnly: true }}
                 />
-              </Grid>
+              </Grid> */}
+
+              <Grid item xs={12} sm={6}>
+  <TextField
+    fullWidth
+    type="date"
+    label="Date of Joining"
+    name="dateOfJoining"
+    InputLabelProps={{ shrink: true }}
+    value={formData1.dateOfJoining || getCurrentDate()}
+    onChange={(e) =>
+      setFormData1(prev => ({
+        ...prev,
+        dateOfJoining: e.target.value
+      }))
+    }
+  />
+</Grid>
+
+<Grid item xs={12} sm={6}>
+  <TextField
+    fullWidth
+    type="date"
+    label="Date of Birth"
+    name="dateOfBirth"
+    InputLabelProps={{ shrink: true }}
+    value={formData1.dateOfBirth  || getCurrentDate()}
+    onChange={(e) =>
+      setFormData1(prev => ({
+        ...prev,
+        dateOfBirth: e.target.value
+      }))
+    }
+  />
+</Grid>
+
 
               {/* Location */}
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth
-                  sx={{ "& .MuiInputBase-root": { height: 60, borderRadius: "10px" } }}
+                  sx={{  minWidth: 200, "& .MuiInputBase-root": { height: 60, borderRadius: "10px",fontSize: "16px" },
+                  "& .MuiInputLabel-root": {
+        fontSize: "16px", // ⬅️ Bigger label text
+      }
+    }}
                   error={!!errors.location}
                 >
                   <InputLabel>Location</InputLabel>
@@ -630,7 +669,9 @@ const SalaryStructure = () => {
               {/* Payment Method */}
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth
-                  sx={{ "& .MuiInputBase-root": { height: 60, borderRadius: "10px" } }}
+                  sx={{ minWidth: 200, "& .MuiInputBase-root": { height: 60, borderRadius: "10px", fontSize: "16px" }, "& .MuiInputLabel-root": {
+        fontSize: "16px", // ⬅️ Larger label
+      }}}
                   error={!!errors.paymentMethod}
                 >
                   <InputLabel>Payment Method</InputLabel>

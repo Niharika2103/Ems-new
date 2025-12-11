@@ -656,8 +656,8 @@ export const getAdminById = async (req, res) => {
     const data = result.rows[0];
 
     // ✅ Build full URLs for uploaded files
-    const BASE_URL =
-      process.env.BASE_URL || `http://localhost:${process.env.PORT || 5002}`;
+    
+      const BASE_URL = process.env.BASE_URL || `http://localhost:${process.env.PORT}`;
 
     const responseData = {
       ...data,
@@ -1455,7 +1455,7 @@ export const updateMonthlyApprovalStatus = async (req, res) => {
     // 2️⃣ CALL JAVA MONTHLY LEAVE ENGINE HERE
     try {  
       await axios.post(
-        "http://localhost:9091/api/attendance/apply-default-leaves-on-approval",
+        "http://localhost:9191/api/attendance/apply-default-leaves-on-approval",
         {
           employeeId,
           from,

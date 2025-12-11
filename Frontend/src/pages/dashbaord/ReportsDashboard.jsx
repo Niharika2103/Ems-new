@@ -35,12 +35,12 @@ const ReportsDashboard = () => {
       onClick: () => navigate("/reports/compliance"),
     },
     {
-      title: "Freelancer ROI",
+      title: "Employee ROI",
       message: "Freelancer cost vs productivity insights",
       icon: TrendingUpIcon,
       iconBg: "bg-orange-100",
       iconColor: "text-orange-600",
-      onClick: () => navigate("/reports/freelancer-roi"),
+      onClick: () => navigate("/dashboard/employee/employeeroi"),
     },
     {
       title: "Custom Reports",

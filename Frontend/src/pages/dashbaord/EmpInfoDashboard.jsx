@@ -7,6 +7,8 @@ import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+
 
 const EmpInfoDashboard = () => {
   const navigate = useNavigate();
@@ -54,6 +56,16 @@ const EmpInfoDashboard = () => {
     return "/";
   }
 
+  const getPerformancepath =()=>{
+ if (storedUser?.employment_type === "fulltime") {
+      return "/performanceform";
+    }
+    if (role === "admin") {
+      return "/performancetable";
+    }
+    return "/";
+  }
+
   // Current page title
   const currentPage = pathnames[pathnames.length - 1] || "";
  const stats = [
@@ -89,6 +101,14 @@ const EmpInfoDashboard = () => {
     iconColor: "text-purple-600",
     onClick: () => navigate("/invoices"),
   },
+  {
+  title: "Performance",
+  message: "View your performance reviews",
+  icon: TrendingUpIcon,
+  iconBg: "bg-blue-100",
+  iconColor: "text-blue-600",
+  onClick: () => navigate(getPerformancepath()),//employee
+},
 ];
 
 // Add Probation card only if admin

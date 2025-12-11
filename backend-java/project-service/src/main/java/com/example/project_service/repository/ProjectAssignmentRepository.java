@@ -14,9 +14,6 @@ public interface ProjectAssignmentRepository extends JpaRepository<ProjectAssign
     List<ProjectAssignmentEntity> findByEmployeeId(UUID employeeId);
     List<ProjectAssignmentEntity> findByProjectId(UUID projectId);
     
-    @Query(value = "SELECT * FROM project_assignments WHERE employee_type = :employeeType", nativeQuery = true)
-    List<ProjectAssignmentEntity> findByEmployeeType(@Param("employeeType") String employeeType);
-    
     // Add this method to fetch employee name from user_employee_master
     @Query(value = "SELECT name FROM user_employees_master WHERE id = :employeeId", nativeQuery = true)
     String findEmployeeNameById(@Param("employeeId") UUID employeeId);

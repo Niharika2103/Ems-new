@@ -1,8 +1,8 @@
-import React from 'react';
+// src/components/reports/PayrollAnalytics.jsx
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
-  Grid,
   Card,
   CardContent,
   Button,
@@ -18,124 +18,203 @@ import {
   TableRow,
   Paper,
   Chip,
+  TextField,
+  Menu,
 } from '@mui/material';
 import {
   Refresh as RefreshIcon,
   Download as DownloadIcon,
-  FilterAlt as FilterIcon,
-  TrendingUp as TrendingUpIcon,
+  Search as SearchIcon,
 } from '@mui/icons-material';
 
-const PayrollAnalytics = () => {
-  const payrollData = [
-    { department: 'Engineering', payroll: '$450,000', variance: '+2.3%', headcount: 45 },
-    { department: 'Sales', payroll: '$320,000', variance: '+5.1%', headcount: 32 },
-    { department: 'Marketing', payroll: '$180,000', variance: '-1.2%', headcount: 18 },
-    { department: 'HR', payroll: '$120,000', variance: '+0.8%', headcount: 12 },
-    { department: 'Finance', payroll: '$150,000', variance: '+3.2%', headcount: 15 },
-  ];
+const getToday = () => new Date().toISOString().split('T')[0];
 
-  const metrics = [
-    { label: 'Total Monthly Payroll', value: '$1,220,000', trend: 'up', change: '+2.1%' },
-    { label: 'Avg Salary', value: '$85,200', trend: 'up', change: '+1.8%' },
-    { label: 'Overtime Cost', value: '$23,500', trend: 'down', change: '-5.2%' },
-    { label: 'Tax Compliance', value: '100%', trend: 'stable', change: '0%' },
-  ];
+const PayrollAnalytics = () => {
+  const [payrollData, setPayrollData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [departmentFilter, setDepartmentFilter] = useState('all');
+  const [startDate, setStartDate] = useState(getToday());
+  const [endDate, setEndDate] = useState(getToday());
+  const [anchorEl, setAnchorEl] = useState(null);
+
+  // 🔹 Realistic dummy data: employee-level payroll with dates
+  useEffect(() => {
+    const dummyPayroll = [
+      { id: 1, name: 'Alex Johnson', department: 'Engineering', salary: 95000, bonus: 8000, total: 103000, payDate: '2025-11-30' },
+      { id: 2, name: 'Maria Garcia', department: 'Marketing', salary: 78000, bonus: 5000, total: 83000, payDate: '2025-11-30' },
+      { id: 3, name: 'Raj Patel', department: 'Engineering', salary: 92000, bonus: 0, total: 92000, payDate: '2025-12-15' },
+      { id: 4, name: 'Linda Chen', department: 'Sales', salary: 85000, bonus: 12000, total: 97000, payDate: '2025-11-30' },
+      { id: 5, name: 'James Wilson', department: 'HR', salary: 72000, bonus: 3000, total: 75000, payDate: '2025-11-30' },
+      { id: 6, name: 'Sophie Müller', department: 'Engineering', salary: 98000, bonus: 10000, total: 108000, payDate: '2025-11-30' },
+      { id: 7, name: 'Carlos Rodriguez', department: 'Sales', salary: 80000, bonus: 9000, total: 89000, payDate: '2025-11-30' },
+      { id: 8, name: 'Aisha Khan', department: 'Finance', salary: 90000, bonus: 7000, total: 97000, payDate: '2025-12-15' },
+    ];
+    setPayrollData(dummyPayroll);
+    setFilteredData(dummyPayroll);
+  }, []);
+
+  useEffect(() => {
+    let result = payrollData;
+
+    // Search by employee name
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(emp => emp.name.toLowerCase().includes(term));
+    }
+
+    // Department filter
+    if (departmentFilter !== 'all') {
+      result = result.filter(emp => emp.department.toLowerCase() === departmentFilter);
+    }
+
+    // Date range filter (by payDate)
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setDate(end.getDate() + 1); // include end date
+
+      result = result.filter(emp => {
+        const pay = new Date(emp.payDate);
+        return pay >= start && pay < end;
+      });
+    }
+
+    setFilteredData(result);
+  }, [searchTerm, departmentFilter, startDate, endDate, payrollData]);
+
+  const handleExport = (format) => {
+    console.log(`[AUDIT] Payroll report exported in ${format}`);
+    alert(`Exporting Payroll Analytics report as ${format}...`);
+    setAnchorEl(null);
+  };
 
   return (
-    <Box>
+    <Box sx={{ p: 2 }}>
+      {/* Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">Payroll Analytics</Typography>
+        <Typography variant="h4" fontWeight="medium">
+          Payroll Analytics
+        </Typography>
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button variant="outlined" startIcon={<FilterIcon />}>
-            Filter
-          </Button>
-          <Button variant="outlined" startIcon={<RefreshIcon />}>
+          <Button
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={() => window.location.reload()}
+          >
             Refresh
           </Button>
-          <Button variant="contained" startIcon={<DownloadIcon />}>
+          <Button
+            variant="contained"
+            startIcon={<DownloadIcon />}
+            onClick={(e) => setAnchorEl(e.currentTarget)}
+          >
             Export
           </Button>
+          <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
+            <MenuItem onClick={() => handleExport('PDF')}>PDF</MenuItem>
+            <MenuItem onClick={() => handleExport('Excel')}>Excel (.xlsx)</MenuItem>
+            <MenuItem onClick={() => handleExport('CSV')}>CSV</MenuItem>
+          </Menu>
         </Box>
       </Box>
 
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        {metrics.map((metric, index) => (
-          <Grid item xs={12} sm={6} md={3} key={index}>
-            <Card>
-              <CardContent>
-                <Typography color="text.secondary" gutterBottom>
-                  {metric.label}
-                </Typography>
-                <Typography variant="h5" component="div">
-                  {metric.value}
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                  <TrendingUpIcon sx={{ color: 'success.main', mr: 0.5 }} />
-                  <Typography variant="body2" sx={{ color: 'success.main' }}>
-                    {metric.change} from last month
-                  </Typography>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+      {/* Filters + Search */}
+      <Box sx={{ mb: 3, display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'flex-end' }}>
+        <TextField
+          size="small"
+          placeholder="Search employee..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          InputProps={{ startAdornment: <SearchIcon sx={{ color: 'action.active', mr: 0.5 }} /> }}
+          sx={{ minWidth: 220 }}
+        />
 
-      <Box sx={{ mb: 3 }}>
-        <FormControl sx={{ minWidth: 120 }} size="small">
-          <InputLabel>Period</InputLabel>
-          <Select label="Period" defaultValue="current">
-            <MenuItem value="current">Current Month</MenuItem>
-            <MenuItem value="last">Last Month</MenuItem>
-            <MenuItem value="quarter">This Quarter</MenuItem>
-            <MenuItem value="year">This Year</MenuItem>
+        <FormControl size="small" sx={{ minWidth: 140 }}>
+          <InputLabel>Department</InputLabel>
+          <Select
+            value={departmentFilter}
+            label="Department"
+            onChange={(e) => setDepartmentFilter(e.target.value)}
+          >
+            <MenuItem value="all">All Departments</MenuItem>
+            <MenuItem value="engineering">Engineering</MenuItem>
+            <MenuItem value="marketing">Marketing</MenuItem>
+            <MenuItem value="sales">Sales</MenuItem>
+            <MenuItem value="hr">HR</MenuItem>
+            <MenuItem value="finance">Finance</MenuItem>
           </Select>
         </FormControl>
+
+        <TextField
+          label="Start Date"
+          type="date"
+          size="small"
+          InputLabelProps={{ shrink: true }}
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+          sx={{ minWidth: 140 }}
+        />
+
+        <TextField
+          label="End Date"
+          type="date"
+          size="small"
+          InputLabelProps={{ shrink: true }}
+          value={endDate}
+          onChange={(e) => setEndDate(e.target.value)}
+          sx={{ minWidth: 140 }}
+        />
       </Box>
 
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={8}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Payroll by Department
-              </Typography>
-              <TableContainer component={Paper}>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Department</TableCell>
-                      <TableCell align="right">Payroll</TableCell>
-                      <TableCell align="right">Variance</TableCell>
-                      <TableCell align="right">Headcount</TableCell>
+      {/* Payroll Table */}
+      <Card variant="outlined">
+        <CardContent>
+          <Typography variant="h6" fontWeight="medium" gutterBottom>
+            Employee Payroll Details
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {filteredData.length} record(s) found
+          </Typography>
+
+          <TableContainer component={Paper} sx={{ maxHeight: 550, overflow: 'auto' }}>
+            <Table size="small" stickyHeader>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Employee Name</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Department</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }} align="right">Base Salary</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }} align="right">Bonus</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }} align="right">Total Pay</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }} align="right">Pay Date</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filteredData.length > 0 ? (
+                  filteredData.map((emp) => (
+                    <TableRow key={emp.id} hover>
+                      <TableCell>{emp.name}</TableCell>
+                      <TableCell>{emp.department}</TableCell>
+                      <TableCell align="right">${emp.salary.toLocaleString()}</TableCell>
+                      <TableCell align="right">${emp.bonus.toLocaleString()}</TableCell>
+                      <TableCell align="right">${emp.total.toLocaleString()}</TableCell>
+                      <TableCell align="right">{emp.payDate}</TableCell>
                     </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {payrollData.map((row, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{row.department}</TableCell>
-                        <TableCell align="right">{row.payroll}</TableCell>
-                        <TableCell align="right">
-                          <Chip
-                            label={row.variance}
-                            color={row.variance.startsWith('+') ? 'success' : 'error'}
-                            size="small"
-                          />
-                        </TableCell>
-                        <TableCell align="right">{row.headcount}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} md={4}>
-          
-        </Grid>
-      </Grid>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
+                      <Typography color="text.secondary">
+                        No payroll records match the selected filters.
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </CardContent>
+      </Card>
     </Box>
   );
 };

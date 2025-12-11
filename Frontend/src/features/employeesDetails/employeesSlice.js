@@ -61,7 +61,7 @@ export const updateAdminProfile = createAsyncThunk(
   async ({ data, id }, thunkAPI) => {
     try {
       const response = await updateAdminProfileApi(data, id);
-      return response.data;
+     return response.data.admin;
     } catch (err) {
       return thunkAPI.rejectWithValue(err.response?.data?.error || err.message);
     }
@@ -187,7 +187,8 @@ const empDetailsSlice = createSlice({
       })
       .addCase(fetchAdminProfile.fulfilled, (state, action) => {
         state.loading = false;
-        state.profile = action.payload;
+        state.profile = action.payload.admin || action.payload;
+
       })
       .addCase(fetchAdminProfile.rejected, (state, action) => {
         state.loading = false;
@@ -246,7 +247,7 @@ const empDetailsSlice = createSlice({
       })
       .addCase(updateAdminProfile.fulfilled, (state, action) => {
         state.loading = false;
-        state.profile = action.payload;
+        state.profile = action.payload.admin;
         state.success = true;
       })
       .addCase(updateAdminProfile.rejected, (state, action) => {

@@ -75,24 +75,7 @@ const storedUser = JSON.parse(localStorage.getItem("user"));
       onClick: () => navigate("/feedback-table"),
     },
 
-    // {
-    //   title: "Settings",
-    //   message: "Configure system settings",
-    //   icon: SettingsIcon,
-    //   iconBg: "bg-pink-100",
-    //   iconColor: "text-pink-600",
-    // //   onClick: () => navigate("/settings"),
-    // },
-    // {
-    //   title: "Accounts",
-    //   message: "Manage accounts and transactions",
-    //   icon: AccountBalanceIcon,
-    //   iconBg: "bg-yellow-100",
-    //   iconColor: "text-yellow-600",
-    // //   onClick: () => navigate("/accounts/salary-structure"),
-    // },
-
-     
+   
   ];
 
   return (

@@ -267,7 +267,7 @@ const Sidebar = ({ isOpen, handleClose }) => {
       { name: "Job Posting", icon: <Briefcase size={20} />, path: "/dashboard/JobPostDashboard" },
       { name: "Attendance", icon: <Calendar size={20} />, path: "/dashboard/emp_attendance" },
       { name: "HR", icon: <CheckSquare size={20} />, path: "/hr" },
-      { name: "Payslip", icon: <Users size={20} />, path: "/slip" },
+      { name: "Payslip", icon: <Users size={20} />, path: "/payslip" },
       { name: "Reports", icon: <BarChart3 size={20} />, path: "/reports" },
     ];
   }

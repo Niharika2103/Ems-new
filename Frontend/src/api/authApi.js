@@ -67,25 +67,27 @@ export const revokeTempAdminApi = (email) =>
 export const getAdminProfileApi = (id) =>
   adminClient.get(`${AUTH_API.ADMIN}/get/${id}`);
 
-export const updateAdminProfileApi = (data, id) => {
-  const formData = new FormData();
+// export const updateAdminProfileApi = (data, id) => {
+//   const formData = new FormData();
 
-  Object.keys(data).forEach((key) => {
-    if (data[key] !== null && data[key] !== undefined) {
-      if (key === "profilePhoto" && data[key] instanceof File) {
-        formData.append("profilePhoto", data[key]);
-      } else if (key === "resume" && data[key] instanceof File) {
-        formData.append("resume", data[key]);
-      } else {
-        formData.append(key, data[key]);
-      }
-    }
-  }
-);
+//   Object.keys(data).forEach((key) => {
+//     if (data[key] !== null && data[key] !== undefined) {
+//       if (key === "profilePhoto" && data[key] instanceof File) {
+//         formData.append("profilePhoto", data[key]);
+//       } else if (key === "resume" && data[key] instanceof File) {
+//         formData.append("resume", data[key]);
+//       } else {
+//         formData.append(key, data[key]);
+//       }
+//     }
+//   }
+// );
 
+//   return adminClient.put(`${AUTH_API.ADMIN}/adminprofile-update/${id}`, formData);
+// };
+export const updateAdminProfileApi = (formData, id) => {
   return adminClient.put(`${AUTH_API.ADMIN}/adminprofile-update/${id}`, formData);
 };
-
 
 export const FetchallAdminApi = () =>
   adminClient.get(`${AUTH_API.ADMIN}/fetchall`)
@@ -208,6 +210,11 @@ export const employeeResetPasswordApi = (data) =>
 // Fetch all employees
 export const employeeFetchApi = () =>
   employeeClient.get(`${AUTH_API.EMPLOYEE}/get` );
+
+// Fetch only FULL-TIME employees (for HR Analytics)
+export const fetchFullTimeEmployeesApi = () =>
+  employeeClient.get(`${AUTH_API.EMPLOYEE}/employees/fulltime`);
+
 
 export const FetchFreelancerApi = () =>
   employeeClient.get(`${AUTH_API.EMPLOYEE}/freelancers` );

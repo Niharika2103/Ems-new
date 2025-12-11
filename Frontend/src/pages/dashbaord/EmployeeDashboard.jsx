@@ -35,7 +35,7 @@ const EmployeeDashboard = () => {
       icon: PeopleIcon,
       iconBg: "bg-purple-100",
       iconColor: "text-purple-600",
-      onClick: () => navigate("/hr"),
+      // onClick: () => navigate("/hr"),
     },
     {
       title: "Payslip",

@@ -44,26 +44,8 @@ public class ProjectAssignmentService {
         return assignmentRepository.findByEmployeeId(employeeId);
     }
     
-//    public List<ProjectAssignmentDTO> getAllAssignments() {
-//        return assignmentRepository.findAll().stream().map(a -> {
-//            Projects project = a.getProject();
-//            String employeeName = assignmentRepository.findEmployeeNameById(a.getEmployeeId());
-//
-//            return new ProjectAssignmentDTO(
-//                    project.getId(),
-//                    project.getName(),
-//                    project.getDescription(),
-//                    a.getEmployeeId(),
-//                    employeeName,
-//                    a.getRole(),
-//                    a.getAssignedAt()
-//            );
-//        }).collect(Collectors.toList());
-//    }
-    
     public List<ProjectAssignmentDTO> getAllAssignments() {
-        // Fetch only full-time employees
-        return assignmentRepository.findByEmployeeType("fulltime").stream().map(a -> {
+        return assignmentRepository.findAll().stream().map(a -> {
             Projects project = a.getProject();
             String employeeName = assignmentRepository.findEmployeeNameById(a.getEmployeeId());
 
@@ -78,6 +60,5 @@ public class ProjectAssignmentService {
             );
         }).collect(Collectors.toList());
     }
+
 }
-
-

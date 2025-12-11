@@ -809,28 +809,68 @@ export const getEmployeeById = async (req, res) => {
   }
 };
 
+// export const fetchEmployeeById = async (req, res) => {
+//   const client = await pool.connect();
+//   try {
+//     const { email } = req.params;
+//     if (!email) {
+//       return res.status(400).json({ error: "ID is required" });
+//     }
+
+//     const query = `
+//       SELECT *
+//       FROM ${USERS_TABLE}
+//       WHERE email = $1
+//       LIMIT 1;
+//     `;
+
+//     const { rows } = await client.query(query, [email]);
+
+//     if (rows.length === 0) {
+//       return res.status(404).json({ error: "User not found" });
+//     }
+
+//     return res.status(200).json(rows[0]);
+//   } catch (err) {
+//     console.error("Get Employee By ID Error:", err.message);
+//     return res.status(500).json({ message: err.message });
+//   } finally {
+//     client.release();
+//   }
+// };
 export const fetchEmployeeById = async (req, res) => {
   const client = await pool.connect();
   try {
     const { email } = req.params;
     if (!email) {
-      return res.status(400).json({ error: "ID is required" });
+      return res.status(400).json({ error: "Email is required" });
     }
-
     const query = `
       SELECT *
       FROM ${USERS_TABLE}
       WHERE email = $1
       LIMIT 1;
     `;
-
     const { rows } = await client.query(query, [email]);
-
     if (rows.length === 0) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    return res.status(200).json(rows[0]);
+    // ✅ ADD THIS: Build full URLs
+    const BASE_URL = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5204}`;
+    const employee = rows[0];
+    const safeEmployee = {
+      ...employee,
+      profile_photo: employee.profile_photo
+        ? `${BASE_URL}/uploads/${employee.profile_photo}`
+        : null,
+      resume: employee.resume
+        ? `${BASE_URL}/uploads/${employee.resume}`
+        : null,
+    };
+    delete safeEmployee.password;
+
+    return res.status(200).json(safeEmployee);
   } catch (err) {
     console.error("Get Employee By ID Error:", err.message);
     return res.status(500).json({ message: err.message });
@@ -838,7 +878,6 @@ export const fetchEmployeeById = async (req, res) => {
     client.release();
   }
 };
-
 // ================== Update Employee ==================
 export const updateEmployee = async (req, res) => {
   const client = await pool.connect();
@@ -1039,52 +1078,116 @@ export const verifyEmail = async (req, res) => {
   }
 };
 
+// export const updateEmployeeProfile = async (req, res) => {
+//   const client = await pool.connect();
+//   try {
+//     const { id } = req.params;
+
+//     const { rows: existingRows } = await client.query(
+//       `SELECT * FROM ${USERS_TABLE} WHERE id=$1`,
+//       [id]
+//     );
+//     const existingData = existingRows[0];
+
+//     if (!existingData) {
+//       return res.status(404).json({ error: "Employee not found" });
+//     }
+
+//     const updates = {};
+
+//     if (req.files?.profilePhoto?.[0]) {
+//       updates.profile_photo = req.files.profilePhoto[0].filename;
+//     }
+//     if (req.files?.resume?.[0]) {
+//       updates.resume = req.files.resume[0].filename;
+//     }
+
+//     if (Object.keys(updates).length === 0) {
+//       return res
+//         .status(400)
+//         .json({ message: "You can only update profile photo or resume." });
+//     }
+
+//     const setClauses = Object.keys(updates)
+//       .map((key, i) => `${key}=$${i + 1}`)
+//       .join(", ");
+//     const values = Object.values(updates);
+
+//     const query = `
+//       UPDATE ${USERS_TABLE}
+//       SET ${setClauses}
+//       WHERE id=$${values.length + 1}
+//       RETURNING *;
+//     `;
+
+//     const { rows } = await client.query(query, [...values, id]);
+//     res.json({
+//       message: "Profile updated successfully.",
+//       employee: rows[0],
+//     });
+//   } catch (err) {
+//     console.error("Update Employee Profile Error:", err.message);
+//     res.status(500).json({ message: err.message });
+//   } finally {
+//     client.release();
+//   }
+// };
+
 export const updateEmployeeProfile = async (req, res) => {
   const client = await pool.connect();
   try {
     const { id } = req.params;
-
     const { rows: existingRows } = await client.query(
       `SELECT * FROM ${USERS_TABLE} WHERE id=$1`,
       [id]
     );
     const existingData = existingRows[0];
-
     if (!existingData) {
       return res.status(404).json({ error: "Employee not found" });
     }
-
     const updates = {};
-
     if (req.files?.profilePhoto?.[0]) {
       updates.profile_photo = req.files.profilePhoto[0].filename;
     }
     if (req.files?.resume?.[0]) {
       updates.resume = req.files.resume[0].filename;
     }
-
     if (Object.keys(updates).length === 0) {
       return res
         .status(400)
         .json({ message: "You can only update profile photo or resume." });
     }
-
     const setClauses = Object.keys(updates)
       .map((key, i) => `${key}=$${i + 1}`)
       .join(", ");
     const values = Object.values(updates);
-
     const query = `
       UPDATE ${USERS_TABLE}
       SET ${setClauses}
       WHERE id=$${values.length + 1}
       RETURNING *;
     `;
-
     const { rows } = await client.query(query, [...values, id]);
+
+    // ✅ BUILD FULL URLs BEFORE SENDING RESPONSE
+    const BASE_URL = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5204}`;
+    const updatedEmployee = rows[0];
+    const safeEmployee = {
+      ...updatedEmployee,
+      profile_photo: updatedEmployee.profile_photo
+        ? `${BASE_URL}/uploads/${updatedEmployee.profile_photo}`
+        : null,
+      resume: updatedEmployee.resume
+        ? `${BASE_URL}/uploads/${updatedEmployee.resume}`
+        : null,
+    };
+
+    // Optional: remove password
+    delete safeEmployee.password;
+
     res.json({
       message: "Profile updated successfully.",
-      employee: rows[0],
+      employee: safeEmployee,
     });
   } catch (err) {
     console.error("Update Employee Profile Error:", err.message);
@@ -1405,7 +1508,6 @@ export const getMyReferrals = async (req, res) => {
   }
 };
 
-//fetching salary structure 
 
 export const getEmployeeSalary = async (req, res) => {
   const { employeeId } = req.params;
@@ -1459,43 +1561,28 @@ export const getEmployeeSalary = async (req, res) => {
   }
 };
 
-
-export const getFreelancerAssignments = async (req, res) => {
+export const getFullTimeEmployees = async (req, res) => {
   const client = await pool.connect();
   try {
     const query = `
       SELECT 
-        pa.id,
-        pa.employee_id,
-        pa.project_id,
-        pa.role,
-        pa.employee_type,
-        pa.assigned_at,
-        
-        -- Employee details
-        u.name AS employee_name,
-        u.email AS employee_email,
-        u.employment_type,
-        
-        -- Project details
-        p.name AS project_name,   -- This is from projects table
-        p.description
-        
-
-      FROM project_assignments pa
-      LEFT JOIN user_employees_master u
-        ON pa.employee_id = u.id
-      LEFT JOIN projects p
-        ON pa.project_id = p.id
-      WHERE pa.employee_type = 'freelancer';
+        id,
+        employee_id,
+        name,
+        email,
+        department,
+        employment_type
+      FROM ${USERS_TABLE}
+      WHERE role = 'employee' AND employment_type = 'fulltime'
+      ORDER BY name ASC;
     `;
 
     const { rows } = await client.query(query);
 
-    return res.status(200).json(rows);
+    res.status(200).json(rows);
   } catch (err) {
-    console.error("Get Freelancer Assignments Error:", err.message);
-    return res.status(500).json({ message: err.message });
+    console.error("Get FullTime Employees Error:", err.message);
+    res.status(500).json({ error: err.message });
   } finally {
     client.release();
   }
