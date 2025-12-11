@@ -83,14 +83,22 @@ const [selectedFreelancerContracts, setSelectedFreelancerContracts] = useState([
     );
   });
 
+  const getCurrentDate = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    date_of_joining: "",
+    date_of_joining: getCurrentDate(),
     phone: "",
     address: "",
     permanent_address: "",
-    dob: "",
+    dob: getCurrentDate(),
     department: "",
     gender: "",
     emergency_contact: "",
