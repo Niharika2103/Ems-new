@@ -5,8 +5,12 @@ import dotenv from "dotenv";
 import adminRoutes from "./routes/admin.routes.js";
 import path from "path";
 import pool from "./config/db.js"; // PostgreSQL connection
+import zohoAuthRoutes from "./routes/zohoAuthRoutes.js";
 dotenv.config();
 const app = express();
+
+
+app.use("/", zohoAuthRoutes);
 
 app.use(cors({
   origin: "*" // your Vercel frontend domain
