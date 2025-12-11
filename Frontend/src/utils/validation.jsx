@@ -299,7 +299,7 @@ export const validateEmployeeEdit = (formData) => {
   }
 
    if (!formData.designation || formData.designation.trim().length < 2) {
-    errors.designation = "Designation must be at least 2 characters";
+    errors.designation = "Designation is required";
   }
 
   const validTypes = ["freelancer", "contract", "fulltime"];

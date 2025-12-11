@@ -191,44 +191,43 @@ import {
   FilterAlt as FilterIcon,
 } from "@mui/icons-material";
 
-import { fetchFullTimeEmployeesApi } from "../../api/authApi";
+import { fetchFinalRatingsApi } from "../../api/authApi"; // ✅ Use real API
 
 const HRAnalytics = () => {
   const [employees, setEmployees] = useState([]);
 
-  // ➤ Pagination states
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
 
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
+const loadEmployees = async () => {
+    setLoading(true);
+    try {
+      const response = await fetchFullTimeEmployeesApi();
+      const backendEmployees = response.data;
+      
 
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
+      // Inject dummy placeholder analytics
+      const updatedEmployees = backendEmployees.map((emp) => ({
+        ...emp,
+        performance: "4.0",         // dummy rating
+        turnoverRisk: "Low",         // dummy risk
+        tenure: "1.5 years",         // dummy tenure
+      }));
+
+      setEmployees(formattedEmployees);
+    } catch (error) {
+      console.error("Error loading employees:", error);
+      setEmployees([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     loadEmployees();
   }, []);
 
-  const loadEmployees = async () => {
-    try {
-      const response = await fetchFullTimeEmployeesApi();
-      const backendEmployees = response.data;
-
-      const updatedEmployees = backendEmployees.map((emp) => ({
-        ...emp,
-        performance: "4.0",
-        turnoverRisk: "Low",
-        tenure: "1.5 years",
-      }));
-
-      setEmployees(updatedEmployees);
-    } catch (error) {
-      console.error("Error loading employees:", error);
-    }
+  // Optional: Export logic (you can enhance later)
+  const handleExport = () => {
+    alert("Export feature can be implemented (e.g., CSV download).");
   };
 
   return (
@@ -238,39 +237,41 @@ const HRAnalytics = () => {
         <Typography variant="h4">HR Analytics</Typography>
 
         <Box sx={{ display: "flex", gap: 1 }}>
-          <Button variant="outlined" startIcon={<FilterIcon />}>
+          <Button variant="outlined" startIcon={<FilterIcon />} disabled>
             Filter
           </Button>
-          <Button variant="outlined" startIcon={<RefreshIcon />} onClick={loadEmployees}>
+          <Button
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={loadEmployees}
+            disabled={loading}
+          >
             Refresh
           </Button>
-          <Button variant="contained" startIcon={<DownloadIcon />}>
+          <Button variant="contained" startIcon={<DownloadIcon />} onClick={handleExport}>
             Export
           </Button>
         </Box>
       </Box>
 
-      {/* Filters */}
+      {/* Optional Filters */}
       <Box sx={{ mb: 3 }}>
         <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
           <FormControl sx={{ minWidth: 120 }} size="small">
             <InputLabel>Department</InputLabel>
-            <Select label="Department" defaultValue="all">
+            <Select label="Department" defaultValue="all" disabled>
               <MenuItem value="all">All Departments</MenuItem>
               <MenuItem value="Engineering">Engineering</MenuItem>
-              <MenuItem value="Marketing">Marketing</MenuItem>
-              <MenuItem value="Sales">Sales</MenuItem>
-              <MenuItem value="HR">HR</MenuItem>
             </Select>
           </FormControl>
 
           <FormControl sx={{ minWidth: 120 }} size="small">
             <InputLabel>Risk Level</InputLabel>
-            <Select label="Risk Level" defaultValue="all">
+            <Select label="Risk Level" defaultValue="all" disabled>
               <MenuItem value="all">All Levels</MenuItem>
-              <MenuItem value="low">Low</MenuItem>
-              <MenuItem value="medium">Medium</MenuItem>
-              <MenuItem value="high">High</MenuItem>
+              <MenuItem value="Low">Low</MenuItem>
+              <MenuItem value="Medium">Medium</MenuItem>
+              <MenuItem value="High">High</MenuItem>
             </Select>
           </FormControl>
         </Box>
@@ -280,7 +281,7 @@ const HRAnalytics = () => {
       <Card>
         <CardContent>
           <Typography variant="h6" gutterBottom>
-            Full-Time Employees
+            Full-Time Employees 
           </Typography>
 
           <TableContainer component={Paper}>
@@ -288,8 +289,8 @@ const HRAnalytics = () => {
               <TableHead>
                 <TableRow>
                   <TableCell>Employee Name</TableCell>
-                  <TableCell>Department</TableCell>
-                  <TableCell>Performance Rating</TableCell>
+                  <TableCell>Designation</TableCell>
+                  <TableCell>Self / TL / Final Rating</TableCell>
                   <TableCell>Turnover Risk</TableCell>
                   <TableCell>Tenure</TableCell>
                 </TableRow>
@@ -299,21 +300,21 @@ const HRAnalytics = () => {
                 {employees.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} align="center">
-                      No employees found
+                      {loading ? "Loading..." : "No approved performance reviews found"}
                     </TableCell>
                   </TableRow>
                 ) : (
-                  employees
-                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                    .map((emp) => (
-                      <TableRow key={emp.id}>
-                        <TableCell>{emp.name}</TableCell>
-                        <TableCell>{emp.department}</TableCell>
-                        <TableCell>{emp.performance}/5</TableCell>
+                  employees.map((emp) => (
+                    <TableRow key={emp.id}>
+                      <TableCell>{emp.name}</TableCell>
+                      <TableCell>{emp.department}</TableCell>
+
+                      {/* Dummy values for now */}
+                      <TableCell>{emp.performance}/5</TableCell>
 
                         <TableCell>
                           <Chip
-                            label={emp.turnoverRisk}
+                            label={emp.turnoverRisk || "Unknown"}
                             color={
                               emp.turnoverRisk === "Low"
                                 ? "success"
@@ -325,9 +326,9 @@ const HRAnalytics = () => {
                           />
                         </TableCell>
 
-                        <TableCell>{emp.tenure}</TableCell>
-                      </TableRow>
-                    ))
+                      <TableCell>{emp.tenure || "–"}</TableCell>
+                    </TableRow>
+                  ))
                 )}
               </TableBody>
             </Table>
@@ -350,4 +351,3 @@ const HRAnalytics = () => {
 };
 
 export default HRAnalytics;
-

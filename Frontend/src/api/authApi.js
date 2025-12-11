@@ -704,3 +704,30 @@ export const vendorForgotPasswordApi = (data) =>
 
 export const vendorResetPasswordApi = (data) =>
   vendorClient.post(`${AUTH_API.VENDOR}/vendor/reset-password`, data);
+
+// Fetch freelancer project assignments
+export const fetchFreelancerAssignmentsApi = () =>
+  employeeClient.get(`${AUTH_API.EMPLOYEE}/assignments/freelancers`);
+
+export const getMonthlyFinalSummaryApi = (employeeId, year, month) =>
+  adminClient.get(
+    `${AUTH_API.ADMIN}/monthly-final-summary/${employeeId}/${year}/${month}`
+  );
+
+
+// Performance Review APIs
+// export const submitSelfReviewApi = (data) =>
+//   employeeClient.post(`/employee/performance/submit`, data);
+// authApi.js or employeeApi.js
+export const submitSelfReviewApi = (data) => {
+  return employeeClient.post(`/employee/performance/submit`, data);
+};
+
+export const updateTLReviewApi = (id, data) =>
+  adminClient.put(`/admin/performance/update/${id}`, data);
+
+export const fetchAllPerformanceReviewsApi = () =>
+  adminClient.get(`/admin/performance/all`);
+
+export const fetchFinalRatingsApi = () =>
+  adminClient.get(`/admin/performance/final-ratings`);

@@ -25,6 +25,7 @@ const ProjectForm = () => {
     startDate: "",
     endDate: "",
     status: "IN_PROGRESS",
+    estimatedCost: "",     // ➕ NEW FIELD
   });
 
   const handleChange = (e) => {
@@ -44,6 +45,7 @@ const ProjectForm = () => {
           startDate: "",
           endDate: "",
           status: "IN_PROGRESS",
+          estimatedCost: "",   // RESET NEW FIELD
         });
         navigate("/dashboard/fetch_project");
       }
@@ -113,6 +115,34 @@ const ProjectForm = () => {
               required
             />
 
+            {/* ➕ New Estimated Cost Field */}
+            <TextField
+  label="Estimated Cost"
+  name="estimatedCost"
+  type="number"
+  value={formData.estimatedCost}
+  onChange={handleChange}
+  fullWidth
+  required
+  inputProps={{
+    min: 0,
+    step: "0.01",
+    style: { MozAppearance: "textfield" }, // Remove arrows in Firefox
+  }}
+  InputProps={{
+    sx: {
+      "input::-webkit-outer-spin-button": {
+        WebkitAppearance: "none",
+        margin: 0,
+      },
+      "input::-webkit-inner-spin-button": {
+        WebkitAppearance: "none",
+        margin: 0,
+      },
+    },
+  }}
+/>
+
             <TextField
               label="Start Date"
               name="startDate"
@@ -146,7 +176,7 @@ const ProjectForm = () => {
             >
               <MenuItem value="IN_PROGRESS">In Progress</MenuItem>
               <MenuItem value="COMPLETED">Completed</MenuItem>
-              <MenuItem value="ON_HOLD">On Hold</MenuItem>
+              <MenuItem value="NOT_STARTED">Not Started</MenuItem>
             </TextField>
 
             <Box textAlign="right" mt={2}>

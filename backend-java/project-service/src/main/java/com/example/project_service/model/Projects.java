@@ -34,8 +34,19 @@ public class Projects {
     //private String status;
     @Enumerated(EnumType.STRING)
     private ProjectStatus status;
+    
+    @Column(name = "cost_estimated")
+    private Double estimatedCost;
 
-    public enum ProjectStatus {
+
+    public Double getEstimatedCost() {
+		return estimatedCost;
+	}
+	public void setEstimatedCost(Double estimatedCost) {
+		this.estimatedCost = estimatedCost;
+	}
+
+	public enum ProjectStatus {
         NOT_STARTED,
         IN_PROGRESS,
         COMPLETED
