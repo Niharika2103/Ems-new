@@ -656,8 +656,8 @@ export const getAdminById = async (req, res) => {
     const data = result.rows[0];
 
     // ✅ Build full URLs for uploaded files
-    const BASE_URL =
-      process.env.BASE_URL || `http://localhost:${process.env.PORT || 5002}`;
+    
+      const BASE_URL = process.env.BASE_URL || `http://localhost:${process.env.PORT}`;
 
     const responseData = {
       ...data,

@@ -46,7 +46,6 @@ import FreelancerAttendance from "../pages/Freelancer/FreelancerAttendance";
 import FreelancerHolidayList from "../pages/Freelancer/FreelancerHolidayList";
 import FreelancerProjectTable from "../pages/Freelancer/FreelancerProjectTable";
 import FreelancerDocuments from "../pages/Freelancer/FreelancerDocuments";
-import EmployeeList from '../pages/Freelancer/Documents/EmployeeList';
 import FreelancerAssignProjectpage from "../pages/Freelancer/FreelancerAssignProjectpage";
 import TimesheetApprovalList from '../pages/Freelancer/Attendance/TimesheetApprovalList';
 import ReferCandidatePage from "../pages/Referral/ReferCandidatePage";
@@ -161,7 +160,7 @@ function AppRoutes() {
             <EmpPayslip />
           </ProtectedRoute>
         } />
-       <Route path="/freelancer/document/verify" element={
+       <Route path="/admin/freelancer-documents" element={
        <ProtectedRoute allowedRoles={["admin"]}>
         <AdminVerificationTabs/>
        </ProtectedRoute>
@@ -185,14 +184,6 @@ function AppRoutes() {
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <FreelancerDashboard />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route path="/admin/freelancer-documents"
-          element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <EmployeeList />
             </ProtectedRoute>
           }
         />
