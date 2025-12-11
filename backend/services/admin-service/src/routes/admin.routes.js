@@ -56,7 +56,7 @@ import {
   getAllContracts,
   getContractsByFreelancer,
   getContractById,
-createProbation,
+  createProbation,
   createInvoice,
   getAllInvoices,
   getInvoiceById,
@@ -105,6 +105,10 @@ import {
 
 // ❗ Keep disk storage for actual job application resumes
 import { uploadResume, uploadResumeBuffer } from "../middleware/uploadResume.js";
+
+//freelancer
+import { getFreelancerRoiReport } from "../controllers/freelancerRoi.controller.js";
+
 
 const router = Router();
 
@@ -240,6 +244,8 @@ router.get("/applications/job/:jobId", getApplicationsByJob);
 router.put("/applications/status/:application_id", updateApplicationStatus);
 
 // router.get("/panel-members", getPanelMembers);
+//freelancerroireport
+router.get("/reports/freelancer-roi", getFreelancerRoiReport);
 
 /* -------------------------------------------------------------------------- */
 /*                       FREELANCER CONTRACT ROUTES                           */
