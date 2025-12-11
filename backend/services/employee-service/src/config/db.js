@@ -13,9 +13,8 @@ const pool = new Pool({
   idleTimeoutMillis: 30000, 
   connectionTimeoutMillis: 2000, 
   
-  ssl: {
-    rejectUnauthorized: false, // required for Azure
-  },
+  ssl:false
+
 });
 
 pool.on("connect", () => {

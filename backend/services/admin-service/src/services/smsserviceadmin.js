@@ -1,29 +1,35 @@
-// import axios from "axios";
+import twilio from "twilio";
 
-// export const sendSMS = async (number, message) => {
-//   try {
-//     if (!number) return;
+const client = twilio(
+  process.env.TWILIO_SID,
+  process.env.TWILIO_AUTH_TOKEN
+);
 
-//     const cleaned = number.replace(/\s+/g, ""); // remove spaces
+// Clean Indian numbers (ex: +91 90000 12345 → 9000012345)
+export const cleanPhone = (value) =>
+  value ? value.toString().replace(/\s+/g, "").replace("+91", "") : null;
 
-//     const data = {
-//       route: "v3",
-//       sender_id: "TXTIND",
-//       message: message,
-//       language: "english",
-//       numbers: cleaned
-//     };
+export const sendSMS = async (to, message) => {
+  try {
+    if (!to) {
+      console.log("❌ No phone number provided");
+      return;
+    }
 
-//     await axios.post("https://www.fast2sms.com/dev/bulkV2", data, {
-//       headers: {
-//         authorization: process.env.FAST2SMS_API_KEY,
-//         "Content-Type": "application/json",
-//       },
-//     });
+    const cleaned = cleanPhone(to);
 
-//     console.log("📲 SMS sent to:", cleaned);
+    const finalNumber = `+91${cleaned}`;
 
-//   } catch (err) {
-//     console.error("❌ SMS error:", err.response?.data || err.message);
-//   }
-// };
+    const response = await client.messages.create({
+      body: message,
+      from: process.env.TWILIO_PHONE,
+      to: finalNumber,
+    });
+
+    console.log("📲 SMS sent successfully:", response.sid);
+    return { success: true, sid: response.sid };
+  } catch (err) {
+    console.error("❌ SMS sending failed:", err.message);
+    return { success: false, error: err.message };
+  }
+};
