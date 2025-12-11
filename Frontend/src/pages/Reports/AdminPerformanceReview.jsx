@@ -1,3 +1,4 @@
+// AdminPerformanceReview.jsx
 import React, { useState } from "react";
 import {
   Box,
@@ -9,48 +10,96 @@ import {
   Divider,
   Chip,
   Grid,
+  Snackbar,
+  Alert,
 } from "@mui/material";
+import { updateTLReviewApi } from "../../api/authApi";
 
-export default function AdminPerformanceReview() {
+export default function AdminPerformanceReview({ employee, onStatusChange }) {
   const [form, setForm] = useState({
-    employeeName: "John Doe",
-    employeeId: "EMP123",
-    designation: "Software Engineer",
-    employeeRating: 4,
-    employeeStrengths: "Teamwork, leadership, punctuality",
-    employeeImprovements: "Better communication needed",
-    employeeComment: "I have improved in backend and want to work on frontend.",
-    tlRating: null,
-    tlComment: "",
-    status: "Pending", // Pending -> Approved / Rejected
+    id: employee.review_id,
+    employeeName: employee.employee_name,
+    employeeCode: employee.employee_code,
+    designation: employee.designation,
+    selfRating: employee.self_rating,
+    tlRating: employee.tl_rating || null,
+    tlComment: employee.tl_comments || "",
+    status: employee.status,
   });
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
+  const updateTLRating = (val) => {
+    setForm((prev) => ({ ...prev, tlRating: val }));
   };
 
-  const updateTLRating = (value) => {
-    setForm({ ...form, tlRating: value });
+  const handleCommentChange = (e) => {
+    setForm((prev) => ({ ...prev, tlComment: e.target.value }));
   };
 
-  const approveLetter = () => {
-    setForm({ ...form, status: "Approved" });
-    alert("Performance Review Approved");
+  const submitTLReview = async (status) => {
+    if (form.tlRating === null) {
+      setSnackbar({
+        open: true,
+        message: "Please provide a TL rating.",
+        severity: "warning",
+      });
+      return;
+    }
+
+    try {
+      await updateTLReviewApi(form.id, {
+        tl_rating: form.tlRating,
+        tl_comments: form.tlComment,
+        status,
+      });
+
+      setSnackbar({
+        open: true,
+        message: `Review ${status.toLowerCase()} successfully!`,
+        severity: "success",
+      });
+
+      // Close after short delay
+      setTimeout(() => {
+        onStatusChange();
+      }, 1000);
+    } catch (err) {
+      console.error("Update error:", err);
+      setSnackbar({
+        open: true,
+        message: "Failed to update review. Please try again.",
+        severity: "error",
+      });
+    }
   };
 
-  const rejectLetter = () => {
-    setForm({ ...form, status: "Rejected" });
-    alert("Performance Review Rejected");
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
   };
 
   return (
     <Box sx={{ maxWidth: 850, mx: "auto", mt: 4 }}>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
 
       <Typography variant="h4" fontWeight={600} sx={{ mb: 3 }}>
         Admin – Performance Review Approval
       </Typography>
 
-      <Card sx={{ mb: 3, p: 2, background: "#eef3ff" }}>
+      <Card sx={{ mb: 3, p: 2, backgroundColor: "#eef3ff" }}>
         <Chip
           label={`Status: ${form.status}`}
           color={
@@ -60,99 +109,46 @@ export default function AdminPerformanceReview() {
               ? "error"
               : "warning"
           }
-          sx={{ fontSize: 16, p: 2 }}
+          sx={{ fontSize: 16, fontWeight: 600 }}
         />
       </Card>
 
-      <Card sx={{ p: 4, boxShadow: 4 }}>
+      <Card sx={{ p: 4 }}>
         <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
-          Employee Self Review (Read Only)
+          Employee Self Review
         </Typography>
         <Divider sx={{ mb: 3 }} />
 
         <Grid container spacing={3}>
-          {/* Employee Info */}
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Employee Name"
-              value={form.employeeName}
-              fullWidth
-              InputProps={{ readOnly: true }}
-            />
+          <Grid item xs={6}>
+            <TextField label="Name" value={form.employeeName} fullWidth disabled />
           </Grid>
 
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Employee ID"
-              value={form.employeeId}
-              fullWidth
-              InputProps={{ readOnly: true }}
-            />
+          <Grid item xs={6}>
+            <TextField label="Employee ID" value={form.employeeCode} fullWidth disabled />
           </Grid>
 
           <Grid item xs={12}>
-            <TextField
-              label="Designation"
-              value={form.designation}
-              fullWidth
-              InputProps={{ readOnly: true }}
-            />
+            <TextField label="Designation" value={form.designation} fullWidth disabled />
           </Grid>
 
-          {/* Employee Self Rating */}
           <Grid item xs={12}>
             <Typography fontWeight={600}>Self Rating</Typography>
-            <Rating value={form.employeeRating} readOnly />
+            <Rating value={form.selfRating || 0} readOnly size="large" />
           </Grid>
 
-          {/* Strengths */}
-          <Grid item xs={12}>
-            <TextField
-              label="Employee Strengths"
-              value={form.employeeStrengths}
-              multiline
-              rows={3}
-              fullWidth
-              InputProps={{ readOnly: true }}
-            />
-          </Grid>
-
-          {/* Improvements */}
-          <Grid item xs={12}>
-            <TextField
-              label="Areas of Improvement"
-              value={form.employeeImprovements}
-              multiline
-              rows={3}
-              fullWidth
-              InputProps={{ readOnly: true }}
-            />
-          </Grid>
-
-          {/* Self Comments */}
-          <Grid item xs={12}>
-            <TextField
-              label="Self Comments"
-              value={form.employeeComment}
-              multiline
-              rows={4}
-              fullWidth
-              InputProps={{ readOnly: true }}
-            />
-          </Grid>
-
-          {/* ================== TL Review (Editable Only for TL Fields) ================== */}
+          {/* TL Review Section */}
           <Grid item xs={12}>
             <Divider sx={{ my: 3 }} />
-            <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
-              TL Review (Editable)
+            <Typography variant="h6" fontWeight={600}>
+              TL Review
             </Typography>
           </Grid>
 
           <Grid item xs={12}>
             <Typography fontWeight={600}>TL Rating</Typography>
             <Rating
-              value={form.tlRating}
+              value={form.tlRating || 0}
               onChange={(e, val) => updateTLRating(val)}
               size="large"
             />
@@ -160,36 +156,35 @@ export default function AdminPerformanceReview() {
 
           <Grid item xs={12}>
             <TextField
-              label="TL Final Comments"
+              label="TL Comments"
               value={form.tlComment}
-              onChange={handleChange}
-              name="tlComment"
+              onChange={handleCommentChange}
               multiline
               rows={4}
               fullWidth
             />
           </Grid>
 
-          {/* ================== Approve / Reject Buttons ================== */}
-          <Grid item xs={12} sm={6}>
+          {/* Action Buttons */}
+          <Grid item xs={6}>
             <Button
               variant="contained"
               color="success"
               fullWidth
               sx={{ py: 2 }}
-              onClick={approveLetter}
+              onClick={() => submitTLReview("Approved")}
             >
               Approve
             </Button>
           </Grid>
 
-          <Grid item xs={12} sm={6}>
+          <Grid item xs={6}>
             <Button
               variant="contained"
               color="error"
               fullWidth
               sx={{ py: 2 }}
-              onClick={rejectLetter}
+              onClick={() => submitTLReview("Rejected")}
             >
               Reject
             </Button>

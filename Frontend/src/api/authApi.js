@@ -704,3 +704,21 @@ export const vendorForgotPasswordApi = (data) =>
 
 export const vendorResetPasswordApi = (data) =>
   vendorClient.post(`${AUTH_API.VENDOR}/vendor/reset-password`, data);
+
+
+// Performance Review APIs
+// export const submitSelfReviewApi = (data) =>
+//   employeeClient.post(`/employee/performance/submit`, data);
+// authApi.js or employeeApi.js
+export const submitSelfReviewApi = (data) => {
+  return employeeClient.post(`/employee/performance/submit`, data);
+};
+
+export const updateTLReviewApi = (id, data) =>
+  adminClient.put(`/admin/performance/update/${id}`, data);
+
+export const fetchAllPerformanceReviewsApi = () =>
+  adminClient.get(`/admin/performance/all`);
+
+export const fetchFinalRatingsApi = () =>
+  adminClient.get(`/admin/performance/final-ratings`);

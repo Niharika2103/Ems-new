@@ -65,7 +65,10 @@ createProbation,
   sendInvoiceReminder,
   deleteInvoice,
   getNewEmployees,
-  getProbationWithUser
+  getProbationWithUser,
+  updateTLReview,
+  fetchAllReviews,
+  getFinalRatingsForEmployees
  
 } from "../controllers/admin.controller.js";
 
@@ -279,4 +282,10 @@ router.get("/new-employees", getNewEmployees);
 router.post("/store-probation", createProbation);
 
 router.get("/probation/user", getProbationWithUser);
+
+router.put("/performance/update/:id", updateTLReview);           
+router.get("/performance/all", fetchAllReviews);
+
+router.get("/performance/final-ratings", getFinalRatingsForEmployees);
+
 export default router;
