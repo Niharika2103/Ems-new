@@ -23,6 +23,7 @@ import {
   FormControlLabel,
   FormLabel,
   MenuItem,
+  FormControl, InputLabel, Select,
 } from "@mui/material";
 
 import { fetchAllFreelancer } from "../../features/freelancer/freelancerSlice";
@@ -102,6 +103,7 @@ const [selectedFreelancerContracts, setSelectedFreelancerContracts] = useState([
     department: "",
     gender: "",
     emergency_contact: "",
+    employment_type:"",
   });
 
   // Edit Record
@@ -122,6 +124,7 @@ const [selectedFreelancerContracts, setSelectedFreelancerContracts] = useState([
       permanent_address: record.permanent_address || "",
       department: record.department || "",
       gender: record.gender || "",
+      employment_type:record.employment_type || "",
       emergency_contact: record.emergency_contact || "",
       dob: formatDate(record.dob),
     });
@@ -542,22 +545,38 @@ const handleInvoiceSubmit = async (e) => {
               </Grid>
 
               {/* Department */}
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  select
-                  label="Department"
-                  name="department"
-                  value={formData.department}
-                  onChange={handleChange}
-                  fullWidth
-                  size="small"
-                >
-                  <MenuItem value="HR">HR</MenuItem>
-                  <MenuItem value="Finance">Finance</MenuItem>
-                  <MenuItem value="IT">IT</MenuItem>
-                  <MenuItem value="Sales">Sales</MenuItem>
-                </TextField>
-              </Grid>
+              <FormControl fullWidth>
+  <InputLabel
+    shrink
+    sx={{ fontSize: "1.125rem", fontWeight: "600" }}
+  >
+    Department *
+  </InputLabel>
+
+  <Select
+    name="department"
+    value={formData.department}
+    onChange={handleChange}
+    displayEmpty
+    sx={{
+      fontSize: "1.05rem",
+      minHeight: "56px",
+      borderRadius: "10px",
+      background: "#fafafa",
+      "& .MuiSelect-select": {
+        paddingTop: "14px",
+        paddingBottom: "14px",
+      },
+    }}
+  >
+    <MenuItem value="" disabled><em>Select Department</em></MenuItem>
+    <MenuItem value="HR">HR</MenuItem>
+    <MenuItem value="Finance">Finance</MenuItem>
+    <MenuItem value="IT">IT</MenuItem>
+    <MenuItem value="Sales">Sales</MenuItem>
+  </Select>
+</FormControl>
+
 
               {/* Designation */}
               <Grid item xs={12} sm={6}>
@@ -572,21 +591,37 @@ const handleInvoiceSubmit = async (e) => {
               </Grid>
 
               {/* Job Type */}
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  select
-                  label="Employment Type"
-                  name="employment_type"
-                  value={formData.employment_type}
-                  onChange={handleChange}
-                  fullWidth
-                  size="small"
-                >
-                  <MenuItem value="fulltime">Full Time</MenuItem>
-                  <MenuItem value="contract">Contract</MenuItem>
-                  <MenuItem value="freelancer">Freelancer</MenuItem>
-                </TextField>
-              </Grid>
+              <FormControl fullWidth>
+  <InputLabel
+    shrink
+    sx={{ fontSize: "1.125rem", fontWeight: "600" }}
+  >
+    Employment Type *
+  </InputLabel>
+
+  <Select
+    name="employment_type"
+    value={formData.employment_type}
+    onChange={handleChange}
+    displayEmpty
+    sx={{
+      fontSize: "1.05rem",
+      minHeight: "56px",
+      borderRadius: "10px",
+      background: "#fafafa",
+      "& .MuiSelect-select": {
+        paddingTop: "14px",
+        paddingBottom: "14px",
+      },
+    }}
+  >
+    <MenuItem value="" disabled><em>Select type</em></MenuItem>
+    <MenuItem value="fulltime">Full Time</MenuItem>
+    <MenuItem value="contract">Contract</MenuItem>
+    <MenuItem value="freelancer">Freelancer</MenuItem>
+  </Select>
+</FormControl>
+
 
               {/* Submit */}
               <Grid item xs={12}>
@@ -655,21 +690,33 @@ const handleInvoiceSubmit = async (e) => {
               </Grid>
 
               {/* Payment Type */}
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  select
-                  label="Payment Type *"
-                  name="payment_type"
-                  value={contractForm.payment_type}
-                  onChange={(e) => handleContractChange("payment_type", e.target.value)}
-                  fullWidth
-                  size="small"
-                >
-                  <MenuItem value="Hourly">Hourly</MenuItem>
-                  <MenuItem value="Monthly">Monthly</MenuItem>
-                  <MenuItem value="Fixed">Fixed</MenuItem>
-                </TextField>
-              </Grid>
+              <FormControl fullWidth>
+  <InputLabel shrink sx={{ fontSize: "1.125rem", fontWeight: "600" }}>
+    Payment Type *
+  </InputLabel>
+
+  <Select
+    name="payment_type"
+    value={contractForm.payment_type}
+    onChange={(e) => handleContractChange("payment_type", e.target.value)}
+    displayEmpty
+    sx={{
+      fontSize: "1.05rem",
+      minHeight: "56px",
+      borderRadius: "10px",
+      background: "#fafafa",
+      "& .MuiSelect-select": {
+        paddingTop: "14px",
+        paddingBottom: "14px",
+      },
+    }}
+  >
+    <MenuItem value="" disabled><em>Select payment type</em></MenuItem>
+    <MenuItem value="Hourly">Hourly</MenuItem>
+    <MenuItem value="Monthly">Monthly</MenuItem>
+    <MenuItem value="Fixed">Fixed</MenuItem>
+  </Select>
+</FormControl>
 
               {/* Payment Amount */}
               <Grid item xs={12} sm={6}>
@@ -685,22 +732,35 @@ const handleInvoiceSubmit = async (e) => {
               </Grid>
 
               {/* Payment Terms */}
-              <Grid item xs={12}>
-                <TextField
-                  select
-                  label="Payment Terms"
-                  name="payment_terms"
-                  value={contractForm.payment_terms}
-                  onChange={(e) => handleContractChange("payment_terms", e.target.value)}
-                  fullWidth
-                  size="small"
-                >
-                  <MenuItem value="Net 7">Net 7</MenuItem>
-                  <MenuItem value="Net 15">Net 15</MenuItem>
-                  <MenuItem value="Net 30">Net 30</MenuItem>
-                  <MenuItem value="Milestone Based">Milestone Based</MenuItem>
-                </TextField>
-              </Grid>
+              <FormControl fullWidth>
+  <InputLabel shrink sx={{ fontSize: "1.125rem", fontWeight: "600" }}>
+    Payment Terms
+  </InputLabel>
+
+  <Select
+    name="payment_terms"
+    value={contractForm.payment_terms}
+    onChange={(e) => handleContractChange("payment_terms", e.target.value)}
+    displayEmpty
+    sx={{
+      fontSize: "1rem",
+      minHeight: "48px",
+      borderRadius: "8px",
+      background: "#fafafa",
+      "& .MuiSelect-select": {
+        paddingTop: "10px",
+        paddingBottom: "10px",
+      },
+    }}
+  >
+    <MenuItem value="" disabled><em>Select terms</em></MenuItem>
+    <MenuItem value="Net 7">Net 7</MenuItem>
+    <MenuItem value="Net 15">Net 15</MenuItem>
+    <MenuItem value="Net 30">Net 30</MenuItem>
+    <MenuItem value="Milestone Based">Milestone Based</MenuItem>
+  </Select>
+</FormControl>
+
 
               {/* Scope of Work */}
               <Grid item xs={12}>

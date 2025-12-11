@@ -1560,7 +1560,6 @@ export const getEmployeeSalary = async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 };
-
 export const getFullTimeEmployees = async (req, res) => {
   const client = await pool.connect();
   try {
@@ -1571,6 +1570,7 @@ export const getFullTimeEmployees = async (req, res) => {
         name,
         email,
         department,
+        date_of_joining,
         employment_type
       FROM ${USERS_TABLE}
       WHERE role = 'employee' AND employment_type = 'fulltime'
@@ -1579,10 +1579,83 @@ export const getFullTimeEmployees = async (req, res) => {
 
     const { rows } = await client.query(query);
 
-    res.status(200).json(rows);
+    // Calculate tenure
+    const calculateTenure = (joiningDate) => {
+      const join = new Date(joiningDate);
+      const now = new Date();
+
+      let years = now.getFullYear() - join.getFullYear();
+      let months = now.getMonth() - join.getMonth();
+
+      if (months < 0) {
+        years--;
+        months += 12;
+      }
+
+      if (years <= 0) return `${months} months`;
+      if (months === 0) return `${years} years`;
+
+      return `${years} years ${months} months`;
+    };
+
+    const updated = rows.map((emp) => ({
+      ...emp,
+      tenure: calculateTenure(emp.date_of_joining),
+    }));
+
+    res.status(200).json(updated);
+
   } catch (err) {
     console.error("Get FullTime Employees Error:", err.message);
     res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+};
+export const submitSelfReview = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const {
+      employee_uuid,       // primary key UUID of employee
+      employee_name,
+      designation,
+      self_rating,
+      self_strengths,
+      self_improvements,
+      self_comments
+    } = req.body;
+
+    if (!employee_uuid)
+      return res.status(400).json({ error: "employee_uuid is required" });
+
+    const query = `
+      INSERT INTO performance_reviews (
+        employee_id, employee_name, employee_designation,
+        self_rating, self_strengths, self_improvements, self_comments,
+        status
+      )
+      VALUES ($1,$2,$3,$4,$5,$6,$7,'Self Reviewed')
+      RETURNING *;
+    `;
+
+    const { rows } = await client.query(query, [
+      employee_uuid,
+      employee_name,
+      designation,
+      self_rating,
+      self_strengths,
+      self_improvements,
+      self_comments
+    ]);
+
+    res.status(201).json({
+      message: "Self review submitted",
+      review: rows[0]
+    });
+
+  } catch (err) {
+    console.error("Submit Self Review Error:", err);
+    res.status(500).json({ error: "Internal server error" });
   } finally {
     client.release();
   }

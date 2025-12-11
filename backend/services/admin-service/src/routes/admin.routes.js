@@ -65,7 +65,11 @@ import {
   sendInvoiceReminder,
   deleteInvoice,
   getNewEmployees,
-  getProbationWithUser
+  getProbationWithUser,
+  getMonthlyFinalSummary,
+  updateTLReview,
+  fetchAllReviews,
+  getFinalRatingsForEmployees
  
 } from "../controllers/admin.controller.js";
 
@@ -287,4 +291,14 @@ router.get("/new-employees", getNewEmployees);
 router.post("/store-probation", createProbation);
 
 router.get("/probation/user", getProbationWithUser);
+
+router.get(
+  "/monthly-final-summary/:employeeId/:year/:month",
+  getMonthlyFinalSummary
+);
+router.put("/performance/update/:id", updateTLReview);           
+router.get("/performance/all", fetchAllReviews);
+
+router.get("/performance/final-ratings", getFinalRatingsForEmployees);
+
 export default router;
