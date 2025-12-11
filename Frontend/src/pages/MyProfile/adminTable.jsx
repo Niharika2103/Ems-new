@@ -17,6 +17,9 @@ import {
   FormControlLabel,
   FormLabel,
   MenuItem,
+  FormControl,
+  InputLabel,
+  Select
 } from "@mui/material";
 
 import { decodeToken } from "../../api/decodeToekn";
@@ -812,22 +815,48 @@ export default function AdminTable() {
         </Grid>
 
         <Grid item xs={12} sm={6}>
-          <TextField
-            select
-            label="Department"
-            name="department"
-            value={formData.department}
-            onChange={handleChange}
-            fullWidth
-            size="small"
-            margin="normal"
-          >
-            <MenuItem value="HR">HR</MenuItem>
-            <MenuItem value="Finance">Finance</MenuItem>
-            <MenuItem value="IT">IT</MenuItem>
-            <MenuItem value="Sales">Sales</MenuItem>
-          </TextField>
-        </Grid>
+  <FormControl fullWidth>
+    <InputLabel
+      shrink
+      sx={{
+        fontSize: "1.125rem",
+        fontWeight: "600",
+        color: "rgba(0, 0, 0, 0.87)",
+      }}
+    >
+      Department *
+    </InputLabel>
+
+    <Select
+      value={formData.department}
+      onChange={handleChange}
+      name="department"
+      label="Department *"
+      displayEmpty
+      sx={{
+        fontSize: "1.05rem",
+        minHeight: "56px",
+        borderRadius: "10px",
+        background: "#fafafa",
+        "& .MuiSelect-select": {
+          paddingTop: "14px",
+          paddingBottom: "14px",
+          fontSize: "1.05rem",
+        },
+      }}
+    >
+      <MenuItem value="" disabled>
+        <em>Select Department</em>
+      </MenuItem>
+
+      <MenuItem value="HR">HR</MenuItem>
+      <MenuItem value="Finance">Finance</MenuItem>
+      <MenuItem value="IT">IT</MenuItem>
+      <MenuItem value="Sales">Sales</MenuItem>
+    </Select>
+  </FormControl>
+</Grid>
+
 
         <Grid item xs={12} sm={6}>
           <TextField
@@ -841,22 +870,56 @@ export default function AdminTable() {
           />
         </Grid>
 
-        <Grid item xs={12} sm={6}>
-          <TextField
-            select
-            label="Employment Type"
-            name="employment_type"
-            value={formData.employment_type}
-            onChange={handleChange}
-            fullWidth
-            size="small"
-            margin="normal"
-          >
-            <MenuItem value="fulltime">Full Time</MenuItem>
-            <MenuItem value="contract">Contract</MenuItem>
-            <MenuItem value="freelancer">Freelancer</MenuItem>
-          </TextField>
-        </Grid>
+       <Grid item xs={12} sm={6}>
+  <FormControl fullWidth>
+    <InputLabel
+      shrink
+      sx={{
+        fontSize: "1.125rem",
+        fontWeight: "600",
+        color: "rgba(0, 0, 0, 0.87)",
+      }}
+    >
+      Employment Type *
+    </InputLabel>
+
+    <Select
+      value={formData.employment_type}
+      onChange={handleChange}
+      name="employment_type"
+      label="Employment Type *"
+      displayEmpty
+      sx={{
+        fontSize: "1.05rem",
+        minHeight: "56px",
+        borderRadius: "10px",
+        background: "#fafafa",
+        "& .MuiSelect-select": {
+          paddingTop: "14px",
+          paddingBottom: "14px",
+          fontSize: "1.05rem",
+        },
+      }}
+    >
+      <MenuItem value="" disabled>
+        <em>Select employment type</em>
+      </MenuItem>
+
+      <MenuItem value="fulltime" sx={{ fontSize: "1.05rem" }}>
+        Full Time
+      </MenuItem>
+
+      <MenuItem value="contract" sx={{ fontSize: "1.05rem" }}>
+        Contract
+      </MenuItem>
+
+      <MenuItem value="freelancer" sx={{ fontSize: "1.05rem" }}>
+        Freelancer
+      </MenuItem>
+    </Select>
+  </FormControl>
+</Grid>
+
 
         {/* Submit */}
         <Grid item xs={12}>

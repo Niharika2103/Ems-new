@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -18,16 +18,18 @@ import {
   TableRow,
   Paper,
   Chip,
+  TextField,
 } from '@mui/material';
 import {
   Refresh as RefreshIcon,
   Download as DownloadIcon,
-  FilterAlt as FilterIcon,
-  TrendingUp as TrendingUpIcon,
-  TrendingDown as TrendingDownIcon,
 } from '@mui/icons-material';
 
 const FreelancerHRAnalytics = () => {
+  const [departmentFilter, setDepartmentFilter] = useState("all");
+  const [riskFilter, setRiskFilter] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+
   const employeeData = [
     { name: 'John Smith', department: 'Engineering', performance: 4.5, turnoverRisk: 'Low', tenure: '3.2 years' },
     { name: 'Sarah Johnson', department: 'Marketing', performance: 3.8, turnoverRisk: 'Medium', tenure: '1.5 years' },
@@ -36,21 +38,30 @@ const FreelancerHRAnalytics = () => {
     { name: 'David Wilson', department: 'Engineering', performance: 3.5, turnoverRisk: 'High', tenure: '0.8 years' },
   ];
 
-  const metrics = [
-    { label: 'Employee Turnover', value: '12.5%', trend: 'down', change: '-2.3%' },
-    { label: 'Avg Time to Hire', value: '32 days', trend: 'stable', change: '+1 day' },
-    { label: 'Training Completion', value: '87%', trend: 'up', change: '+5%' },
-    { label: 'Employee Satisfaction', value: '4.2/5', trend: 'up', change: '+0.3' },
-  ];
+  // 🔍 Filter the table
+  const filteredData = employeeData.filter((emp) => {
+    const matchesSearch =
+      emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      emp.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      emp.turnoverRisk.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesDepartment =
+      departmentFilter === "all" || emp.department.toLowerCase() === departmentFilter;
+
+    const matchesRisk =
+      riskFilter === "all" || emp.turnoverRisk.toLowerCase() === riskFilter;
+
+    return matchesSearch && matchesDepartment && matchesRisk;
+  });
 
   return (
     <Box>
+
+      {/* Title + Buttons */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4">HR Analytics</Typography>
+
         <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button variant="outlined" startIcon={<FilterIcon />}>
-            Filter
-          </Button>
           <Button variant="outlined" startIcon={<RefreshIcon />}>
             Refresh
           </Button>
@@ -60,52 +71,43 @@ const FreelancerHRAnalytics = () => {
         </Box>
       </Box>
 
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        {metrics.map((metric, index) => (
-          <Grid item xs={12} sm={6} md={3} key={index}>
-            <Card>
-              <CardContent>
-                <Typography color="text.secondary" gutterBottom>
-                  {metric.label}
-                </Typography>
-                <Typography variant="h5" component="div">
-                  {metric.value}
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                  {metric.trend === 'up' ? (
-                    <TrendingUpIcon sx={{ color: 'success.main', mr: 0.5 }} />
-                  ) : metric.trend === 'down' ? (
-                    <TrendingDownIcon sx={{ color: 'error.main', mr: 0.5 }} />
-                  ) : null}
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: metric.trend === 'up' ? 'success.main' : metric.trend === 'down' ? 'error.main' : 'text.secondary',
-                    }}
-                  >
-                    {metric.change} from last month
-                  </Typography>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+      {/* 🔍 Smaller Search Bar */}
+      <Box sx={{ mb: 3, width: '300px' }}> 
+        <TextField
+          fullWidth
+          size="small"
+          label="Search"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          variant="outlined"
+        />
+      </Box>
 
+      {/* Dropdown Filters */}
       <Box sx={{ mb: 3 }}>
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-          <FormControl sx={{ minWidth: 120 }} size="small">
+          <FormControl sx={{ minWidth: 150 }} size="small">
             <InputLabel>Department</InputLabel>
-            <Select label="Department" defaultValue="all">
+            <Select
+              label="Department"
+              value={departmentFilter}
+              onChange={(e) => setDepartmentFilter(e.target.value)}
+            >
               <MenuItem value="all">All Departments</MenuItem>
               <MenuItem value="engineering">Engineering</MenuItem>
               <MenuItem value="marketing">Marketing</MenuItem>
               <MenuItem value="sales">Sales</MenuItem>
+              <MenuItem value="hr">HR</MenuItem>
             </Select>
           </FormControl>
-          <FormControl sx={{ minWidth: 120 }} size="small">
+
+          <FormControl sx={{ minWidth: 150 }} size="small">
             <InputLabel>Risk Level</InputLabel>
-            <Select label="Risk Level" defaultValue="all">
+            <Select
+              label="Risk Level"
+              value={riskFilter}
+              onChange={(e) => setRiskFilter(e.target.value)}
+            >
               <MenuItem value="all">All Levels</MenuItem>
               <MenuItem value="low">Low</MenuItem>
               <MenuItem value="medium">Medium</MenuItem>
@@ -115,11 +117,13 @@ const FreelancerHRAnalytics = () => {
         </Box>
       </Box>
 
+      {/* Table Section */}
       <Card>
         <CardContent>
           <Typography variant="h6" gutterBottom>
             Employee Performance & Turnover Risk
           </Typography>
+
           <TableContainer component={Paper}>
             <Table>
               <TableHead>
@@ -131,29 +135,39 @@ const FreelancerHRAnalytics = () => {
                   <TableCell>Tenure</TableCell>
                 </TableRow>
               </TableHead>
+
               <TableBody>
-                {employeeData.map((employee, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{employee.name}</TableCell>
-                    <TableCell>{employee.department}</TableCell>
-                    <TableCell>{employee.performance}/5</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={employee.turnoverRisk}
-                        color={
-                          employee.turnoverRisk === 'Low'
-                            ? 'success'
-                            : employee.turnoverRisk === 'Medium'
-                            ? 'warning'
-                            : 'error'
-                        }
-                        size="small"
-                      />
+                {filteredData.length > 0 ? (
+                  filteredData.map((employee, index) => (
+                    <TableRow key={index}>
+                      <TableCell>{employee.name}</TableCell>
+                      <TableCell>{employee.department}</TableCell>
+                      <TableCell>{employee.performance}/5</TableCell>
+                      <TableCell>
+                        <Chip
+                          label={employee.turnoverRisk}
+                          color={
+                            employee.turnoverRisk === 'Low'
+                              ? 'success'
+                              : employee.turnoverRisk === 'Medium'
+                              ? 'warning'
+                              : 'error'
+                          }
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>{employee.tenure}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center">
+                      No matching records found
                     </TableCell>
-                    <TableCell>{employee.tenure}</TableCell>
                   </TableRow>
-                ))}
+                )}
               </TableBody>
+
             </Table>
           </TableContainer>
         </CardContent>

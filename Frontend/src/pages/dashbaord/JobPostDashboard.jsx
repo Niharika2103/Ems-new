@@ -30,6 +30,8 @@ const storedUser = JSON.parse(localStorage.getItem("user"));
     return "/";
   };
 
+  const isAdmin = role === "admin"; //off onclick for employeeside
+
   const stats = [
     {
       title: "Manage Jobs",
@@ -37,7 +39,8 @@ const storedUser = JSON.parse(localStorage.getItem("user"));
       icon: GroupIcon,
       iconBg: "bg-sky-100",
       iconColor: "text-sky-600",
-      onClick: () => navigate("/published-jobs"),//admin
+      onClick: isAdmin ? () => navigate("/published-jobs") : () => {},
+  disabled: !isAdmin
     },
     {
       title: "Create Jobs",
@@ -45,7 +48,8 @@ const storedUser = JSON.parse(localStorage.getItem("user"));
       icon: AssignmentIcon,
       iconBg: "bg-sky-100",
       iconColor: "text-sky-600",
-      onClick: () => navigate("/job-postings"),//admin
+        onClick: isAdmin ? () => navigate("/job-postings") : () => {},
+  disabled: !isAdmin
     },
     {
     title: "Job Info",
@@ -63,7 +67,9 @@ const storedUser = JSON.parse(localStorage.getItem("user"));
       icon: GroupIcon,
       iconBg: "bg-sky-100",
       iconColor: "text-sky-600",
-      onClick: () => navigate("/offers/status"),
+      onClick: isAdmin ? () => navigate("/offers/status") : () => {},
+  disabled: !isAdmin
+      
     },
 
   {
