@@ -96,8 +96,8 @@ import FreelancerPayrollAnalytics from "../pages/Freelancer/Reports/PayrollAnaly
 import FreelancerComplianceReports from "../pages/Freelancer/Reports/ComplianceReports/FreelancerComplianceReports";
 import FreelancerCustomReports from "../pages/Freelancer/Reports/CustomReports/FreelancerCustomReports";
 import EmailTemplateEditor from "../pages/Templates/EmailTemplate/EmailTemplateEditor";
-// import WhatsAppTemplateEditor from "../pages/Templates/WatsupTemplate/WhatsAppTemplateEditor";
-
+import WhatsAppTemplateEditor from "../pages/Templates/WatsupTemplate/WatsupTemplateEditor";
+import CommunicationInfoDashboard from "../pages/dashbaord/CommunicationInfoDashboard";
 function AppRoutes() {
   return (
     <Routes>
@@ -722,7 +722,16 @@ function AppRoutes() {
         />
 
          <Route path="/email-template" element={<EmailTemplateEditor />} />
-         {/* <Route path="/watsup-template" element={<WhatsAppTemplateEditor />} /> */}
+         <Route path="/watsup-template" element={<WhatsAppTemplateEditor />} />
+
+         <Route
+          path="/communication-info"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <CommunicationInfoDashboard />
+            </ProtectedRoute>
+          }
+        />
 
        
       </Route>

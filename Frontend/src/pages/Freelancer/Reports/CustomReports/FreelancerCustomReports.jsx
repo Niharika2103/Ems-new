@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+// src/components/reports/CustomReports.jsx
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
-  Grid,
   Card,
   CardContent,
   Button,
@@ -14,194 +14,280 @@ import {
   TableRow,
   Paper,
   Chip,
+  TextField,
+  Menu,
   Dialog,
   DialogTitle,
   DialogContent,
-  TextField,
+  DialogActions,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  Switch,
+  FormGroup,
   FormControlLabel,
-  TablePagination,
+  Checkbox,
 } from '@mui/material';
 import {
   Refresh as RefreshIcon,
+  Download as DownloadIcon,
+  Search as SearchIcon,
   Add as AddIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
 } from '@mui/icons-material';
 
+const getToday = () => new Date().toISOString().split('T')[0];
+
 const FreelancerCustomReports = () => {
-  const [openDialog, setOpenDialog] = useState(false);
-  const [selectedReport, setSelectedReport] = useState(null);
+  const [templates, setTemplates] = useState([]);
+  const [filteredTemplates, setFilteredTemplates] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [startDate, setStartDate] = useState(getToday());
+  const [endDate, setEndDate] = useState(getToday());
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [openModal, setOpenModal] = useState(false);
+  const [currentTemplate, setCurrentTemplate] = useState(null);
 
-  // ⭐ Pagination State
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
-
-  const handleChangePage = (event, newPage) => setPage(newPage);
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  // Sample data
-  const customReports = [
-    { name: 'Monthly Performance', createdBy: 'John Doe', lastRun: '2023-07-01', schedule: 'Monthly', status: 'Active' },
-    { name: 'Quarterly Budget', createdBy: 'Jane Smith', lastRun: '2023-06-15', schedule: 'Quarterly', status: 'Active' },
-    { name: 'Employee Survey', createdBy: 'Mike Johnson', lastRun: '2023-05-20', schedule: 'One-time', status: 'Inactive' },
-    { name: 'Project Timeline', createdBy: 'Sarah Williams', lastRun: '2023-07-05', schedule: 'Weekly', status: 'Active' },
-    { name: 'Team Metrics', createdBy: 'David Wilson', lastRun: '2023-07-10', schedule: 'Monthly', status: 'Inactive' },
-    { name: 'Hiring Report', createdBy: 'Emma Brown', lastRun: '2023-07-03', schedule: 'Weekly', status: 'Active' },
+  // Available fields for custom reports
+  const availableFields = [
+    'Employee Name', 'Department', 'Performance', 'Salary', 'Hire Date',
+    'Project', 'Freelancer', 'ROI', 'Compliance Status'
   ];
 
-  const handleCreateReport = () => {
-    setSelectedReport(null);
-    setOpenDialog(true);
+  useEffect(() => {
+    const dummyTemplates = [
+      {
+        id: 1,
+        name: 'High Performers in Engineering',
+        fields: ['Employee Name', 'Department', 'Performance'],
+        lastRun: '2025-12-01',
+        createdBy: 'Alex Johnson',
+      },
+      {
+        id: 2,
+        name: 'Freelancer ROI > 75%',
+        fields: ['Project', 'Freelancer', 'ROI', 'Value Generated'],
+        lastRun: '2025-11-25',
+        createdBy: 'Maria Garcia',
+      },
+      {
+        id: 3,
+        name: 'Pending Compliance Items',
+        fields: ['Report Title', 'Category', 'Status', 'Due Date'],
+        lastRun: '2025-12-05',
+        createdBy: 'James Wilson',
+      },
+    ];
+    setTemplates(dummyTemplates);
+    setFilteredTemplates(dummyTemplates);
+  }, []);
+
+  useEffect(() => {
+    let result = templates;
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(t => t.name.toLowerCase().includes(term));
+    }
+
+    // Date filtering by lastRun
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setDate(end.getDate() + 1);
+
+      result = result.filter(t => {
+        const run = new Date(t.lastRun);
+        return run >= start && run < end;
+      });
+    }
+
+    setFilteredTemplates(result);
+  }, [searchTerm, startDate, endDate, templates]);
+
+  const handleExport = (format) => {
+    console.log(`[AUDIT] Custom report exported in ${format}`);
+    alert(`Exporting Custom report as ${format}...`);
+    setAnchorEl(null);
   };
 
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
-    setSelectedReport(null);
+  const handleSaveTemplate = () => {
+    if (currentTemplate.id) {
+      // Update
+      setTemplates(templates.map(t => t.id === currentTemplate.id ? currentTemplate : t));
+    } else {
+      // Create
+      const newTemplate = {
+        ...currentTemplate,
+        id: Date.now(),
+        lastRun: getToday(),
+        createdBy: 'Current User',
+      };
+      setTemplates([...templates, newTemplate]);
+    }
+    setOpenModal(false);
+    setCurrentTemplate(null);
+  };
+
+  const handleDelete = (id) => {
+    if (window.confirm('Are you sure you want to delete this template?')) {
+      setTemplates(templates.filter(t => t.id !== id));
+    }
+  };
+
+  const openTemplateForm = (template = null) => {
+    setCurrentTemplate(template || {
+      name: '',
+      fields: [],
+      lastRun: getToday(),
+      createdBy: 'Current User',
+    });
+    setOpenModal(true);
   };
 
   return (
-    <Box sx={{ width: "100%", px: 0 }}>
-      
-      {/* Page Header */}
+    <Box sx={{ p: 2 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">Custom Reports</Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={handleCreateReport}>
-          Create Report
-        </Button>
+        <Typography variant="h4" fontWeight="medium">
+          Custom Reports
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Button variant="outlined" startIcon={<RefreshIcon />} onClick={() => window.location.reload()}>
+            Refresh
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<DownloadIcon />}
+            onClick={(e) => setAnchorEl(e.currentTarget)}
+          >
+            Export
+          </Button>
+          <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
+            <MenuItem onClick={() => handleExport('PDF')}>PDF</MenuItem>
+            <MenuItem onClick={() => handleExport('Excel')}>Excel (.xlsx)</MenuItem>
+            <MenuItem onClick={() => handleExport('CSV')}>CSV</MenuItem>
+          </Menu>
+         
+        </Box>
       </Box>
 
-      {/* ⭐ FULL WIDTH GRID */}
-      <Grid container spacing={3} sx={{ mx: 0, width: "100%" }}>
+      <Box sx={{ mb: 3, display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'flex-end' }}>
+        <TextField
+          size="small"
+          placeholder="Search template name..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          InputProps={{ startAdornment: <SearchIcon sx={{ color: 'action.active', mr: 0.5 }} /> }}
+          sx={{ minWidth: 240 }}
+        />
 
-        {/* FULL WIDTH TABLE */}
-        <Grid item xs={12}>
-          <Card sx={{ mb: 3, width: "100%" }}>
-            <CardContent>
+        <TextField
+          label="Start Date"
+          type="date"
+          size=" small"
+          InputLabelProps={{ shrink: true }}
+          value={startDate}
+          onChange={(e) => setStartDate(e.target.value)}
+          sx={{ minWidth: 140 }}
+        />
 
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h6">My Custom Reports</Typography>
-                <Button variant="outlined" startIcon={<RefreshIcon />} size="small">
-                  Refresh
-                </Button>
-              </Box>
+        <TextField
+          label="End Date"
+          type="date"
+          size="small"
+          InputLabelProps={{ shrink: true }}
+          value={endDate}
+          onChange={(e) => setEndDate(e.target.value)}
+          sx={{ minWidth: 140 }}
+        />
+      </Box>
 
-              <TableContainer component={Paper} sx={{ width: "100%" }}>
-                <Table sx={{ width: "100%" }}>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Report Name</TableCell>
-                      <TableCell>Created By</TableCell>
-                      <TableCell>Last Run</TableCell>
-                      <TableCell>Schedule</TableCell>
-                      <TableCell>Status</TableCell>
+      <Card variant="outlined">
+        <CardContent>
+          <Typography variant="h6" fontWeight="medium" gutterBottom>
+            Saved Report Templates
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {filteredTemplates.length} template(s) found
+          </Typography>
+
+          <TableContainer component={Paper} sx={{ maxHeight: 500, overflow: 'auto' }}>
+            <Table size="small" stickyHeader>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Template Name</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }}>Fields Included</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }} align="right">Last Run</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }} align="right">Created By</TableCell>
+                  <TableCell sx={{ fontWeight: 'bold' }} align="center">Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {filteredTemplates.length > 0 ? (
+                  filteredTemplates.map((t) => (
+                    <TableRow key={t.id} hover>
+                      <TableCell>{t.name}</TableCell>
+                      <TableCell>
+                        <Chip label={`${t.fields.length} fields`} size="small" color="primary" />
+                      </TableCell>
+                      <TableCell align="right">{t.lastRun}</TableCell>
+                      <TableCell align="right">{t.createdBy}</TableCell>
+                      <TableCell align="center">
+                        <Button size="small" startIcon={<EditIcon />} onClick={() => openTemplateForm(t)} />
+                        <Button size="small" startIcon={<DeleteIcon />} onClick={() => handleDelete(t.id)} color="error" />
+                      </TableCell>
                     </TableRow>
-                  </TableHead>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
+                      <Typography color="text.secondary">No custom report templates found.</Typography>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </CardContent>
+      </Card>
 
-                  <TableBody>
-                    {customReports
-                      .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-                      .map((report, index) => (
-                        <TableRow key={index}>
-                          <TableCell>{report.name}</TableCell>
-                          <TableCell>{report.createdBy}</TableCell>
-                          <TableCell>{report.lastRun}</TableCell>
-                          <TableCell>{report.schedule}</TableCell>
-                          <TableCell>
-                            <Chip
-                              label={report.status}
-                              color={report.status === 'Active' ? 'success' : 'default'}
-                              size="small"
-                            />
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                  </TableBody>
-                </Table>
-
-                {/* ⭐ PAGINATION */}
-                <TablePagination
-                  component="div"
-                  count={customReports.length}
-                  page={page}
-                  onPageChange={handleChangePage}
-                  rowsPerPage={rowsPerPage}
-                  onRowsPerPageChange={handleChangeRowsPerPage}
-                  rowsPerPageOptions={[5, 10, 25]}
-                />
-              </TableContainer>
-
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-      {/* Create/Edit Report Dialog */}
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="md" fullWidth>
-        <DialogTitle>{selectedReport ? 'Edit Custom Report' : 'Create Custom Report'}</DialogTitle>
+      {/* Template Form Modal */}
+      <Dialog open={openModal} onClose={() => setOpenModal(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          {currentTemplate?.id ? 'Edit Template' : 'Create New Template'}
+        </DialogTitle>
         <DialogContent>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid item xs={12}>
-              <TextField fullWidth label="Report Name" defaultValue={selectedReport?.name || ''} />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Data Source</InputLabel>
-                <Select label="Data Source" defaultValue="hr">
-                  <MenuItem value="hr">HR Database</MenuItem>
-                  <MenuItem value="payroll">Payroll System</MenuItem>
-                  <MenuItem value="projects">Project Management</MenuItem>
-                  <MenuItem value="compliance">Compliance Database</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Report Type</InputLabel>
-                <Select label="Report Type" defaultValue="analytical">
-                  <MenuItem value="analytical">Analytical</MenuItem>
-                  <MenuItem value="summary">Summary</MenuItem>
-                  <MenuItem value="detailed">Detailed</MenuItem>
-                  <MenuItem value="comparative">Comparative</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12}>
-              <FormControlLabel control={<Switch defaultChecked />} label="Include visualizations" />
-            </Grid>
-
-            <Grid item xs={12}>
-              <FormControlLabel control={<Switch defaultChecked />} label="Schedule this report" />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Schedule Frequency</InputLabel>
-                <Select label="Schedule Frequency" defaultValue="monthly">
-                  <MenuItem value="daily">Daily</MenuItem>
-                  <MenuItem value="weekly">Weekly</MenuItem>
-                  <MenuItem value="monthly">Monthly</MenuItem>
-                  <MenuItem value="quarterly">Quarterly</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <TextField fullWidth label="Email Recipients" placeholder="email@example.com" />
-            </Grid>
-          </Grid>
+          <TextField
+            label="Template Name"
+            fullWidth
+            value={currentTemplate?.name || ''}
+            onChange={(e) => setCurrentTemplate({ ...currentTemplate, name: e.target.value })}
+            sx={{ mb: 2 }}
+          />
+          <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+            <InputLabel>Select Fields</InputLabel>
+            <Select
+              multiple
+              value={currentTemplate?.fields || []}
+              onChange={(e) => setCurrentTemplate({ ...currentTemplate, fields: e.target.value })}
+              renderValue={(selected) => `${selected.length} field(s) selected`}
+            >
+              {availableFields.map((field) => (
+                <MenuItem key={field} value={field}>
+                  <Checkbox checked={(currentTemplate?.fields || []).includes(field)} />
+                  {field}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
         </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenModal(false)}>Cancel</Button>
+          <Button variant="contained" onClick={handleSaveTemplate}>
+            {currentTemplate?.id ? 'Update' : 'Save'}
+          </Button>
+        </DialogActions>
       </Dialog>
-
     </Box>
   );
 };
