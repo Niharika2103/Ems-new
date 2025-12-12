@@ -857,7 +857,7 @@ export const fetchEmployeeById = async (req, res) => {
     }
 
     // ✅ ADD THIS: Build full URLs
-    const BASE_URL = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5204}`;
+    const BASE_URL = process.env.BASE_URL || `http://localhost:${process.env.PORT }`;
     const employee = rows[0];
     const safeEmployee = {
       ...employee,
@@ -1339,7 +1339,7 @@ export const applyParentalLeave = async (req, res) => {
         const { rows } = await client.query(query);
 
         const BASE_URL =
-          process.env.FREELANCER_SERVICE_URL || "http://localhost:5005";
+          process.env.FREELANCER_SERVICE_URL || `http://localhost:${process.env.PORT }`;
 
         const freelancers = rows.map((emp) => {
           let doc = {};
