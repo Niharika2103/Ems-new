@@ -1339,7 +1339,7 @@ export const applyParentalLeave = async (req, res) => {
         const { rows } = await client.query(query);
 
         const BASE_URL =
-          process.env.FREELANCER_SERVICE_URL || `http://localhost:${process.env.PORT }`;
+          process.env.FREELANCER_SERVICE_URL || "http://localhost:5005";
 
         const freelancers = rows.map((emp) => {
           let doc = {};
