@@ -702,6 +702,7 @@ export default function AdminTable() {
             size="small"
             margin="normal"
             InputLabelProps={{ shrink: true }}
+             inputProps={{ max: currentDate }}  
             sx={{
               "& .MuiOutlinedInput-root": {
                 borderRadius: "10px",
@@ -721,6 +722,7 @@ export default function AdminTable() {
             size="small"
             margin="normal"
             InputLabelProps={{ shrink: true }}
+            inputProps={{ max: currentDate }} 
             sx={{
               "& .MuiOutlinedInput-root": {
                 borderRadius: "10px",

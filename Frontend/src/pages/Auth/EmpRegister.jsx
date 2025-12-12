@@ -354,6 +354,7 @@ export default function EmployeeRegisterForm() {
                 fullWidth
                 size="small"
                 InputLabelProps={{ shrink: true }}
+                inputProps={{ max: getTodayDate() }}
                 error={!!errors.dateOfJoining}
                 helperText={errors.dateOfJoining}
                 required

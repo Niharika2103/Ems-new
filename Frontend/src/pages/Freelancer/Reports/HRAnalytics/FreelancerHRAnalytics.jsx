@@ -19,6 +19,7 @@ import {
   Paper,
   Chip,
   TextField,
+  TablePagination,
 } from '@mui/material';
 import {
   Refresh as RefreshIcon,
@@ -30,6 +31,19 @@ const FreelancerHRAnalytics = () => {
   const [riskFilter, setRiskFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
 
+  // Pagination States
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
   const employeeData = [
     { name: 'John Smith', department: 'Engineering', performance: 4.5, turnoverRisk: 'Low', tenure: '3.2 years' },
     { name: 'Sarah Johnson', department: 'Marketing', performance: 3.8, turnoverRisk: 'Medium', tenure: '1.5 years' },
@@ -38,7 +52,7 @@ const FreelancerHRAnalytics = () => {
     { name: 'David Wilson', department: 'Engineering', performance: 3.5, turnoverRisk: 'High', tenure: '0.8 years' },
   ];
 
-  // 🔍 Filter the table
+  // 🔍 Apply filters
   const filteredData = employeeData.filter((emp) => {
     const matchesSearch =
       emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -71,8 +85,8 @@ const FreelancerHRAnalytics = () => {
         </Box>
       </Box>
 
-      {/* 🔍 Smaller Search Bar */}
-      <Box sx={{ mb: 3, width: '300px' }}> 
+      {/* Search Bar */}
+      <Box sx={{ mb: 3, width: '300px' }}>
         <TextField
           fullWidth
           size="small"
@@ -138,27 +152,29 @@ const FreelancerHRAnalytics = () => {
 
               <TableBody>
                 {filteredData.length > 0 ? (
-                  filteredData.map((employee, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{employee.name}</TableCell>
-                      <TableCell>{employee.department}</TableCell>
-                      <TableCell>{employee.performance}/5</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={employee.turnoverRisk}
-                          color={
-                            employee.turnoverRisk === 'Low'
-                              ? 'success'
-                              : employee.turnoverRisk === 'Medium'
-                              ? 'warning'
-                              : 'error'
-                          }
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>{employee.tenure}</TableCell>
-                    </TableRow>
-                  ))
+                  filteredData
+                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                    .map((employee, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{employee.name}</TableCell>
+                        <TableCell>{employee.department}</TableCell>
+                        <TableCell>{employee.performance}/5</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={employee.turnoverRisk}
+                            color={
+                              employee.turnoverRisk === 'Low'
+                                ? 'success'
+                                : employee.turnoverRisk === 'Medium'
+                                ? 'warning'
+                                : 'error'
+                            }
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell>{employee.tenure}</TableCell>
+                      </TableRow>
+                    ))
                 ) : (
                   <TableRow>
                     <TableCell colSpan={5} align="center">
@@ -167,8 +183,18 @@ const FreelancerHRAnalytics = () => {
                   </TableRow>
                 )}
               </TableBody>
-
             </Table>
+
+            {/* Pagination */}
+            <TablePagination
+              component="div"
+              count={filteredData.length}
+              page={page}
+              onPageChange={handleChangePage}
+              rowsPerPage={rowsPerPage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+              rowsPerPageOptions={[5, 10, 25]}
+            />
           </TableContainer>
         </CardContent>
       </Card>

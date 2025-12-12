@@ -3,8 +3,8 @@ import {
   superAdminRegister,
   checkEmail,
   superAdminLogin,
-  superAdminLogout,           //Audit log
-  getAllSuperAdminAuditLogs,     //audit log
+  superAdminLogout,           //Superadmin Audit log
+  getAllSuperAdminAuditLogs,     //Superadmin audit log
   verifyMfaSetup, 
   updateSuperAdminProfile,
   getSuperadminById, 
