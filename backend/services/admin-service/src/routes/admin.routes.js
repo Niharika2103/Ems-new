@@ -69,7 +69,8 @@ import {
   getMonthlyFinalSummary,
   updateTLReview,
   fetchAllReviews,
-  getFinalRatingsForEmployees
+  getFinalRatingsForEmployees,
+  getFreelancerAnalytics
  
 } from "../controllers/admin.controller.js";
 
@@ -301,4 +302,5 @@ router.get("/performance/all", fetchAllReviews);
 
 router.get("/performance/final-ratings", getFinalRatingsForEmployees);
 
+router.get("/freelancers/analytics", getFreelancerAnalytics);
 export default router;
