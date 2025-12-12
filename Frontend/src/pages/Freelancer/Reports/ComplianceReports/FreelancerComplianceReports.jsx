@@ -15,6 +15,7 @@ import {
   Chip,
   LinearProgress,
   TextField,
+  TablePagination,
 } from '@mui/material';
 import {
   Refresh as RefreshIcon,
@@ -26,6 +27,19 @@ import {
 
 const FreelancerComplianceReports = () => {
   const [searchTerm, setSearchTerm] = useState("");
+
+  // ⭐ Pagination states
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
 
   const complianceData = [
     { regulation: 'GDPR', status: 'Compliant', lastAudit: '2023-05-15', nextAudit: '2023-11-15', progress: 100 },
@@ -61,7 +75,7 @@ const FreelancerComplianceReports = () => {
     }
   };
 
-  // 🔍 Filter based on search
+  // 🔍 Filter table results
   const filteredData = complianceData.filter((item) =>
     item.regulation.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -72,7 +86,7 @@ const FreelancerComplianceReports = () => {
   return (
     <Box>
 
-      {/* Top Buttons */}
+      {/* Header + Buttons */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4">Compliance Reports</Typography>
 
@@ -86,7 +100,7 @@ const FreelancerComplianceReports = () => {
         </Box>
       </Box>
 
-      {/* 🔍 Small Search Bar */}
+      {/* Search Bar */}
       <Box sx={{ mb: 3, width: '300px' }}>
         <TextField
           fullWidth
@@ -118,40 +132,42 @@ const FreelancerComplianceReports = () => {
 
               <TableBody>
                 {filteredData.length > 0 ? (
-                  filteredData.map((row, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{row.regulation}</TableCell>
+                  filteredData
+                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                    .map((row, index) => (
+                      <TableRow key={index}>
+                        <TableCell>{row.regulation}</TableCell>
 
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          {getStatusIcon(row.status)}
-                          <Chip label={row.status} color={getStatusColor(row.status)} size="small" />
-                        </Box>
-                      </TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {getStatusIcon(row.status)}
+                            <Chip label={row.status} color={getStatusColor(row.status)} size="small" />
+                          </Box>
+                        </TableCell>
 
-                      <TableCell>{row.lastAudit}</TableCell>
-                      <TableCell>{row.nextAudit}</TableCell>
+                        <TableCell>{row.lastAudit}</TableCell>
+                        <TableCell>{row.nextAudit}</TableCell>
 
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <LinearProgress
-                            variant="determinate"
-                            value={row.progress}
-                            sx={{ flexGrow: 1 }}
-                            color={
-                              row.progress === 100
-                                ? 'success'
-                                : row.progress >= 75
-                                ? 'warning'
-                                : 'error'
-                            }
-                          />
-                          <Typography variant="body2">{row.progress}%</Typography>
-                        </Box>
-                      </TableCell>
+                        <TableCell>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <LinearProgress
+                              variant="determinate"
+                              value={row.progress}
+                              sx={{ flexGrow: 1 }}
+                              color={
+                                row.progress === 100
+                                  ? 'success'
+                                  : row.progress >= 75
+                                  ? 'warning'
+                                  : 'error'
+                              }
+                            />
+                            <Typography variant="body2">{row.progress}%</Typography>
+                          </Box>
+                        </TableCell>
 
-                    </TableRow>
-                  ))
+                      </TableRow>
+                    ))
                 ) : (
                   <TableRow>
                     <TableCell colSpan={5} align="center">
@@ -160,8 +176,19 @@ const FreelancerComplianceReports = () => {
                   </TableRow>
                 )}
               </TableBody>
-
             </Table>
+
+            {/* ⭐ Table Pagination */}
+            <TablePagination
+              component="div"
+              count={filteredData.length}
+              page={page}
+              onPageChange={handleChangePage}
+              rowsPerPage={rowsPerPage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+              rowsPerPageOptions={[5, 10, 25]}
+            />
+
           </TableContainer>
         </CardContent>
       </Card>

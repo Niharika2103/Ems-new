@@ -209,6 +209,8 @@ const Profile = () => {
                     value={formData.dob}
                     onChange={handleChange}
                     InputLabelProps={{ shrink: true }}
+                    inputProps={{ max: new Date().toISOString().split("T")[0] }}
+
                   />
                 </Grid>
                 <Grid item xs={12} sm={6}>
