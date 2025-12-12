@@ -633,6 +633,10 @@ export const fetchFreelancerContractByIdApi = (contractId) => {
   return freelancerClient.get(`${AUTH_API.FREELANCER}/admin/freelancer-contract/${contractId}`);
 };
 
+// ================= Freelancer HR Analytics =================
+export const getFreelancerHRAnalyticsApi = () =>
+  adminClient.get(`/admin/freelancers/analytics`);
+
 //Auditlogs
 
 export const getAllAdminAuditLogsApi = () =>

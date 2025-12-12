@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
-  Grid,
   Card,
   CardContent,
   Button,
@@ -17,152 +16,177 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Chip,
   TextField,
-} from '@mui/material';
-import {
-  Refresh as RefreshIcon,
-  Download as DownloadIcon,
-} from '@mui/icons-material';
+  Chip,
+} from "@mui/material";
+import { Refresh as RefreshIcon, Download as DownloadIcon } from "@mui/icons-material";
+import { getFreelancerHRAnalyticsApi } from "../../../../api/authApi";
+
+
 
 const FreelancerHRAnalytics = () => {
-  const [departmentFilter, setDepartmentFilter] = useState("all");
-  const [riskFilter, setRiskFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [contractStatusFilter, setContractStatusFilter] = useState("all");
+  const [data, setData] = useState([]);
 
-  const employeeData = [
-    { name: 'John Smith', department: 'Engineering', performance: 4.5, turnoverRisk: 'Low', tenure: '3.2 years' },
-    { name: 'Sarah Johnson', department: 'Marketing', performance: 3.8, turnoverRisk: 'Medium', tenure: '1.5 years' },
-    { name: 'Mike Chen', department: 'Sales', performance: 4.2, turnoverRisk: 'Low', tenure: '4.1 years' },
-    { name: 'Emily Davis', department: 'HR', performance: 4.7, turnoverRisk: 'Low', tenure: '2.8 years' },
-    { name: 'David Wilson', department: 'Engineering', performance: 3.5, turnoverRisk: 'High', tenure: '0.8 years' },
-  ];
+  // Fetch backend data
+  const fetchData = async () => {
+    try {
+      const res = await getFreelancerHRAnalyticsApi();
+      setData(res.data);
+    } catch (err) {
+      console.error("Error fetching freelancer analytics:", err);
+    }
+  };
 
-  // 🔍 Filter the table
-  const filteredData = employeeData.filter((emp) => {
-    const matchesSearch =
-      emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      emp.turnoverRisk.toLowerCase().includes(searchTerm.toLowerCase());
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-    const matchesDepartment =
-      departmentFilter === "all" || emp.department.toLowerCase() === departmentFilter;
+  // Filtering logic
+  const filteredData = data.filter((row) => {
+    const searchMatch =
+      row.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      row.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      row.contract_title?.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesRisk =
-      riskFilter === "all" || emp.turnoverRisk.toLowerCase() === riskFilter;
+    const statusMatch =
+      statusFilter === "all" ||
+      (row.status && row.status.toLowerCase() === statusFilter);
 
-    return matchesSearch && matchesDepartment && matchesRisk;
+    const contractStatusMatch =
+      contractStatusFilter === "all" ||
+      (row.contract_status &&
+        row.contract_status.toLowerCase() === contractStatusFilter);
+
+    return searchMatch && statusMatch && contractStatusMatch;
   });
 
   return (
     <Box>
 
-      {/* Title + Buttons */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">HR Analytics</Typography>
+      {/* HEADER */}
+      <Box
+        sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}
+      >
+        <Typography variant="h4">Freelancer HR Analytics</Typography>
 
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button variant="outlined" startIcon={<RefreshIcon />}>
+        <Box sx={{ display: "flex", gap: 1 }}>
+          <Button variant="outlined" startIcon={<RefreshIcon />} onClick={fetchData}>
             Refresh
           </Button>
+
           <Button variant="contained" startIcon={<DownloadIcon />}>
             Export
           </Button>
         </Box>
       </Box>
 
-      {/* 🔍 Smaller Search Bar */}
-      <Box sx={{ mb: 3, width: '300px' }}> 
+      {/* SEARCH */}
+      <Box sx={{ mb: 3, width: "300px" }}>
         <TextField
           fullWidth
           size="small"
-          label="Search"
+          label="Search freelancers"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          variant="outlined"
         />
       </Box>
 
-      {/* Dropdown Filters */}
-      <Box sx={{ mb: 3 }}>
-        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-          <FormControl sx={{ minWidth: 150 }} size="small">
-            <InputLabel>Department</InputLabel>
-            <Select
-              label="Department"
-              value={departmentFilter}
-              onChange={(e) => setDepartmentFilter(e.target.value)}
-            >
-              <MenuItem value="all">All Departments</MenuItem>
-              <MenuItem value="engineering">Engineering</MenuItem>
-              <MenuItem value="marketing">Marketing</MenuItem>
-              <MenuItem value="sales">Sales</MenuItem>
-              <MenuItem value="hr">HR</MenuItem>
-            </Select>
-          </FormControl>
+      {/* FILTERS */}
+      <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
+        
+        {/* Freelancer Status */}
+        <FormControl size="small" sx={{ minWidth: 150 }}>
+          <InputLabel>Status</InputLabel>
+          <Select
+            label="Status"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+          >
+            <MenuItem value="all">All</MenuItem>
+            <MenuItem value="pending">Pending</MenuItem>
+            <MenuItem value="approved">Approved</MenuItem>
+            <MenuItem value="rejected">Rejected</MenuItem>
+          </Select>
+        </FormControl>
 
-          <FormControl sx={{ minWidth: 150 }} size="small">
-            <InputLabel>Risk Level</InputLabel>
-            <Select
-              label="Risk Level"
-              value={riskFilter}
-              onChange={(e) => setRiskFilter(e.target.value)}
-            >
-              <MenuItem value="all">All Levels</MenuItem>
-              <MenuItem value="low">Low</MenuItem>
-              <MenuItem value="medium">Medium</MenuItem>
-              <MenuItem value="high">High</MenuItem>
-            </Select>
-          </FormControl>
-        </Box>
+        {/* Contract Status */}
+        <FormControl size="small" sx={{ minWidth: 180 }}>
+          <InputLabel>Contract Status</InputLabel>
+          <Select
+            label="Contract Status"
+            value={contractStatusFilter}
+            onChange={(e) => setContractStatusFilter(e.target.value)}
+          >
+            <MenuItem value="all">All</MenuItem>
+            <MenuItem value="active">Active</MenuItem>
+            <MenuItem value="inactive">Inactive</MenuItem>
+            <MenuItem value="expired">Expired</MenuItem>
+          </Select>
+        </FormControl>
       </Box>
 
-      {/* Table Section */}
+      {/* TABLE */}
       <Card>
         <CardContent>
           <Typography variant="h6" gutterBottom>
-            Employee Performance & Turnover Risk
+            Freelancer Overview
           </Typography>
 
           <TableContainer component={Paper}>
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell>Employee Name</TableCell>
-                  <TableCell>Department</TableCell>
-                  <TableCell>Performance Rating</TableCell>
-                  <TableCell>Turnover Risk</TableCell>
-                  <TableCell>Tenure</TableCell>
+                  <TableCell><b>Name</b></TableCell>
+                  <TableCell><b>Email</b></TableCell>
+                  <TableCell><b>Department</b></TableCell>
+
+                  <TableCell><b>Contract Title</b></TableCell>
+                  <TableCell><b>Start Date</b></TableCell>
+                  <TableCell><b>End Date</b></TableCell>
+                  <TableCell><b>Version</b></TableCell>
+                  <TableCell><b>Contract Status</b></TableCell>
+
+                  <TableCell><b>Project Cost</b></TableCell>
                 </TableRow>
               </TableHead>
 
               <TableBody>
                 {filteredData.length > 0 ? (
-                  filteredData.map((employee, index) => (
-                    <TableRow key={index}>
-                      <TableCell>{employee.name}</TableCell>
-                      <TableCell>{employee.department}</TableCell>
-                      <TableCell>{employee.performance}/5</TableCell>
+                  filteredData.map((row, i) => (
+                    <TableRow key={i}>
+                      <TableCell>{row.name}</TableCell>
+                      <TableCell>{row.email}</TableCell>
+                      <TableCell>{row.department || "—"}</TableCell>
+
+                      <TableCell>{row.contract_title || "—"}</TableCell>
+                      <TableCell>{row.contract_start_date || "—"}</TableCell>
+                      <TableCell>{row.contract_end_date || "—"}</TableCell>
+                      <TableCell>{row.version || "—"}</TableCell>
+
                       <TableCell>
                         <Chip
-                          label={employee.turnoverRisk}
-                          color={
-                            employee.turnoverRisk === 'Low'
-                              ? 'success'
-                              : employee.turnoverRisk === 'Medium'
-                              ? 'warning'
-                              : 'error'
-                          }
+                          label={row.contract_status || "—"}
                           size="small"
+                          color={
+                            row.contract_status === "active"
+                              ? "success"
+                              : row.contract_status === "expired"
+                              ? "error"
+                              : "warning"
+                          }
                         />
                       </TableCell>
-                      <TableCell>{employee.tenure}</TableCell>
+
+                      <TableCell>{row.project_cost || "—"}</TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={5} align="center">
-                      No matching records found
+                    <TableCell colSpan={9} align="center">
+                      No matching freelancers found.
                     </TableCell>
                   </TableRow>
                 )}
