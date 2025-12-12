@@ -66,7 +66,12 @@ import {
   deleteInvoice,
   getNewEmployees,
   getProbationWithUser,
-  getMonthlyFinalSummary
+  getMonthlyFinalSummary,
+  validatePayroll,
+  runPayroll,
+  reversePayroll,
+  rerunPayroll,
+  getAllPayroll
  
 } from "../controllers/admin.controller.js";
 
@@ -291,4 +296,15 @@ router.get(
   "/monthly-final-summary/:employeeId/:year/:month",
   getMonthlyFinalSummary
 );
+
+router.post('/validate', validatePayroll);
+
+// POST /api/payroll/run
+router.post("/run", runPayroll);
+
+router.post("/reverse", reversePayroll);
+
+router.post("/rerun", rerunPayroll);
+
+router.get("/payroll", getAllPayroll);
 export default router;

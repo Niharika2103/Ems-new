@@ -3998,3 +3998,469 @@ export const getMonthlyFinalSummary = async (req, res) => {
   }
 };
 
+// export const validatePayroll = async (req, res) => {
+//   const client = await pool.connect();
+
+//   try {
+//     const { startDate, endDate, month, year } = req.body;
+
+//     // 1️⃣ Validate input
+//     if ((!startDate || !endDate) && (!month || !year)) {
+//       return res.status(400).json({ error: "Provide startDate/endDate or month+year" });
+//     }
+
+//     // 2️⃣ Build date range
+//     let fromDate, toDate;
+//     if (startDate && endDate) {
+//       fromDate = startDate;
+//       toDate = endDate;
+//     } else {
+//       const m = Number(month);
+//       const y = Number(year);
+//       fromDate = `${y}-${String(m).padStart(2, '0')}-01`;
+//       const lastDay = new Date(y, m, 0).getDate();
+//       toDate = `${y}-${String(m).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+//     }
+
+//     // 3️⃣ Fetch all active employees + their active salary structure
+//     const { rows: employees } = await client.query(`
+//       SELECT u.id AS employee_id, u.name AS name,
+//              s.status AS salary_status, s.basic_pay
+//       FROM user_employees_master u
+//       LEFT JOIN salary_structure s
+//         ON s.employee_id = u.id AND s.status = 'Active'
+//       WHERE u.is_active = true
+//     `);
+
+//     // 4️⃣ Fetch monthly_status from attendance
+//     const { rows: attendanceRows } = await client.query(`
+//       SELECT employee_id,
+//              MIN(monthly_status) AS monthly_status
+//       FROM attendance
+//       WHERE date BETWEEN $1 AND $2
+//       GROUP BY employee_id
+//     `, [fromDate, toDate]);
+
+//     // 5️⃣ Create map of attendance per employee
+//     const attendanceMap = {};
+//     attendanceRows.forEach(r => {
+//       attendanceMap[r.employee_id] = r.monthly_status || "Pending_approval";
+//     });
+
+//     // 6️⃣ Validate each employee
+//     const issues = [];
+//     let approvedCount = 0;
+//     let pendingCount = 0;
+
+//     employees.forEach(emp => {
+
+//       if (!attendanceMap[emp.employee_id]) {
+//     return;
+//   }
+//       // Check salary structure
+//       if (!emp.basic_pay || emp.salary_status !== 'Active') {
+//         issues.push(`${emp.name} does not have an active salary structure`);
+//       }
+
+//       // Check attendance status
+//       const status = (attendanceMap[emp.employee_id] || "Pending_approval").toLowerCase();
+//       if (status === "approved") {
+//         approvedCount++;
+//       } else {
+//         pendingCount++;
+//         issues.push(`${emp.name} attendance is Pending_approval`);
+//       }
+//     });
+
+//     // 7️⃣ Return response
+//     return res.json({
+//       status: pendingCount === 0 && issues.length === 0 ? "ready" : "warning",
+//       attendance_summary: {
+//         approved: approvedCount,
+//         pending_approval: pendingCount
+//       },
+//       total_employees: employees.length,
+//       issues
+//     });
+
+//   } catch (err) {
+//     console.error("VALIDATE PAYROLL ERROR", err);
+//     return res.status(500).json({ error: err.message });
+//   } finally {
+//     client.release();
+//   }
+// };
+
+export const validatePayroll = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { startDate, endDate, month, year } = req.body;
+
+    // 1️⃣ Validate input
+    if ((!startDate || !endDate) && (!month || !year)) {
+      return res.status(400).json({ error: "Provide startDate/endDate or month+year" });
+    }
+
+    // 2️⃣ Build date range
+    let fromDate, toDate;
+    if (startDate && endDate) {
+      fromDate = startDate;
+      toDate = endDate;
+    } else {
+      const m = Number(month);
+      const y = Number(year);
+      fromDate = `${y}-${String(m).padStart(2, '0')}-01`;
+      const lastDay = new Date(y, m, 0).getDate();
+      toDate = `${y}-${String(m).padStart(2, '0')}-${lastDay}`;
+    }
+
+    // 3️⃣ Fetch all ACTIVE employees and their salary structure
+    const { rows: employees } = await client.query(`
+      SELECT u.id AS employee_id, u.name AS name,
+             s.status AS salary_status, s.basic_pay
+      FROM user_employees_master u
+      LEFT JOIN salary_structure s
+        ON s.employee_id = u.id AND s.status = 'Active'
+      WHERE u.is_active = true
+    `);
+
+    // 4️⃣ Get direct APPROVED count from DB
+    const { rows: approvedRows } = await client.query(`
+      SELECT COUNT(DISTINCT employee_id) AS approved
+      FROM attendance
+      WHERE date BETWEEN $1 AND $2
+        AND LOWER(monthly_status) = 'approved'
+    `, [fromDate, toDate]);
+
+    // 5️⃣ Get direct PENDING count from DB
+    const { rows: pendingRows } = await client.query(`
+      SELECT COUNT(DISTINCT employee_id) AS pending
+      FROM attendance
+      WHERE date BETWEEN $1 AND $2
+        AND LOWER(monthly_status) = 'pending_approval'
+    `, [fromDate, toDate]);
+
+    const approvedCount = Number(approvedRows[0].approved);
+    const pendingCount = Number(pendingRows[0].pending);
+
+    // 6️⃣ Collect issues per employee
+    const issues = [];
+
+    employees.forEach(emp => {
+      // Salary validation
+      if (!emp.basic_pay || emp.salary_status !== "Active") {
+        issues.push(`${emp.name} does not have an active salary structure`);
+      }
+    });
+
+    // 7️⃣ Response
+    const canGenerate = pendingCount === 0 && issues.length === 0;
+
+    return res.json({
+      status: canGenerate ? "ready" : "warning",
+      can_generate: canGenerate,
+      attendance_summary: {
+        approved: approvedCount,
+        pending_approval: pendingCount
+      },
+      total_employees: employees.length,
+      issues
+    });
+
+  } catch (err) {
+    console.error("VALIDATE PAYROLL ERROR", err);
+    return res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+};
+
+async function generatePayrollId(client) {
+  // Fetch all existing payroll IDs
+  const { rows } = await client.query(
+    `SELECT payroll_id FROM payroll WHERE payroll_id IS NOT NULL`
+  );
+
+  const nums = rows
+    .map(r => r.payroll_id)
+    .filter(Boolean)
+    .map(id => {
+      const m = id.match(/PR0*([0-9]+)$/i); // match PR001, PR012, etc.
+      return m ? parseInt(m[1], 10) : NaN;
+    })
+    .filter(n => !isNaN(n))
+    .sort((a, b) => a - b);
+
+  // Find first missing number in sequence
+  let next = 1;
+  for (const n of nums) {
+    if (n === next) next++;
+    else if (n > next) break;
+  }
+
+  return `PR${next.toString().padStart(3, "0")}`;
+}
+
+
+export const runPayroll = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { month, year } = req.body;
+
+    if (!month || !year) {
+      return res.status(400).json({ error: "month and year are required" });
+    }
+
+    const monthNames = [
+      "JANUARY", "FEBRUARY", "MARCH", "APRIL",
+      "MAY", "JUNE", "JULY", "AUGUST",
+      "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"
+    ];
+
+    let normalizedMonth;
+
+    // If frontend sends number → convert to month name
+    if (/^\d+$/.test(month)) {
+      const m = parseInt(month);
+      if (m < 1 || m > 12) {
+        return res.status(400).json({ error: "Invalid month number" });
+      }
+      normalizedMonth = monthNames[m - 1]; // Convert to JANUARY
+    } else {
+      normalizedMonth = month.toUpperCase();
+    }
+
+    const payrollId = await generatePayrollId(client);
+
+    // 2️⃣ Fetch active salary structure rows
+    const { rows: employees } = await client.query(
+      `
+      SELECT 
+        id,
+        employee_id,
+        basic_pay,
+        gross_salary,
+        total_deductions,
+        net_salary
+      FROM salary_structure
+      WHERE status = 'Active'
+        AND month ILIKE $1
+        AND year = $2
+      ORDER BY created_at DESC;
+      `,
+      [normalizedMonth, year]
+    );
+
+    if (employees.length === 0) {
+      return res.status(400).json({ error: "No active employees found in salary structure" });
+    }
+
+    let totalGross = 0;
+    let totalNet = 0;
+    let totalDeductions = 0;
+
+    const processed = employees.map(emp => {
+      if (emp.gross_salary == null || emp.total_deductions == null || emp.net_salary == null) {
+        throw new Error(`Missing salary fields for employee_id=${emp.employee_id}`);
+      }
+
+      const gross = Number(emp.gross_salary) || 0;
+      const net = Number(emp.net_salary) || 0;
+      const deduct = Number(emp.total_deductions) || 0;
+
+      totalGross += gross;
+      totalNet += net;
+      totalDeductions += deduct;
+
+      return {
+        employee_id: emp.employee_id,
+        gross_salary: gross,
+        total_deductions: deduct,
+        net_salary: net
+      };
+    });
+
+    // 3️⃣ Insert into payroll table
+    const history = await client.query(
+      `
+      INSERT INTO payroll
+        (payroll_id, year, month, total_employees, total_gross, total_deductions, total_net, status, run_date)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, 'Completed', NOW())
+      RETURNING *;
+      `,
+      [payrollId, year, month, processed.length, totalGross, totalDeductions, totalNet]
+    );
+
+    return res.json({
+      message: "Payroll run completed successfully",
+      payrollId,
+      status: "Completed",
+      runDate: history.rows[0].run_date,
+      totalEmployees: processed.length,
+      totalGross,
+      totalDeductions,
+      totalNet,
+      history: history.rows[0]
+    });
+
+  } catch (err) {
+    console.error("RUN PAYROLL ERROR:", err);
+    return res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+};
+
+
+export const reversePayroll = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { id } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ error: "id is required" });
+    }
+
+    // 1️⃣ Check if payroll exists
+    const { rows } = await client.query(
+      `SELECT * FROM payroll WHERE id = $1`,
+      [id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Payroll ID not found" });
+    }
+
+    const payroll = rows[0];
+
+    if (payroll.status === "Reversed") {
+      return res.status(400).json({ error: "Payroll is already reversed" });
+    }
+
+    // 2️⃣ Update status to Reversed
+    await client.query(
+      `UPDATE payroll SET status = 'Reversed', run_date = NOW()  WHERE id = $1`,
+      [id]
+    );
+
+    return res.json({
+      message: `Payroll ${id} has been reversed successfully`,
+      payrollId: id
+    });
+
+  } catch (err) {
+    console.error("REVERSE PAYROLL ERROR:", err);
+    return res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+};
+
+
+export const rerunPayroll = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { month, year } = req.body;
+
+    if (!month || !year) {
+      return res.status(400).json({ error: "month and year are required" });
+    }
+
+    // 1️⃣ Reverse any previous payroll for this month/year (optional)
+    await client.query(
+      `UPDATE payroll SET status = 'Reversed', run_date = NOW()
+       WHERE month = $1 AND year = $2 AND status = 'Completed'`,
+      [month, year]
+    );
+
+    
+
+    const payrollId = await generatePayrollId(client);
+
+    // 3️⃣ Fetch active salary structure
+    const { rows: employees } = await client.query(`
+      SELECT
+        employee_id, gross_salary, total_deductions, net_salary
+      FROM salary_structure
+      WHERE status = 'Active'
+    `);
+
+    if (employees.length === 0) {
+      return res.status(400).json({ error: "No active employees found in salary structure" });
+    }
+
+    let totalGross = 0, totalNet = 0, totalDeductions = 0;
+
+    employees.forEach(emp => {
+      totalGross += Number(emp.gross_salary) || 0;
+      totalNet += Number(emp.net_salary) || 0;
+      totalDeductions += Number(emp.total_deductions) || 0;
+    });
+
+    // 4️⃣ Insert new payroll
+    const history = await client.query(
+      `INSERT INTO payroll
+        (payroll_id, year, month, total_employees, total_gross, total_deductions, total_net, status, run_date)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,'Completed',NOW())
+       RETURNING *`,
+      [payrollId, year, month, employees.length, totalGross, totalDeductions, totalNet]
+    );
+
+    return res.json({
+      message: `Payroll rerun completed successfully with ID ${payrollId}`,
+      payrollId,
+      totalEmployees: employees.length,
+      totalGross,
+      totalDeductions,
+      totalNet,
+      status: "Completed",
+      history: history.rows[0]
+    });
+
+  } catch (err) {
+    console.error("RERUN PAYROLL ERROR:", err);
+    return res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+};
+
+
+export const getAllPayroll = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { rows } = await client.query(`
+      SELECT 
+        id,
+        payroll_id,
+        year,
+        month,
+        total_employees,
+        total_gross,
+        total_deductions,
+        total_net,
+        status,
+        run_date
+        
+      FROM payroll
+      ORDER BY run_date DESC;
+    `);
+
+    return res.json({
+      count: rows.length,
+      payroll: rows
+    });
+
+  } catch (err) {
+    console.error("GET ALL PAYROLL ERROR:", err);
+    return res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+};
+

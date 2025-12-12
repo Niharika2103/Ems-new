@@ -714,3 +714,21 @@ export const getMonthlyFinalSummaryApi = (employeeId, year, month) =>
     `${AUTH_API.ADMIN}/monthly-final-summary/${employeeId}/${year}/${month}`
   );
 
+export const validatePayrollApi = (data) =>
+  adminClient.post(`${AUTH_API.ADMIN}/validate`, data);
+
+// 2️⃣ Run Payroll
+export const runPayrollApi = (data) =>
+  adminClient.post(`${AUTH_API.ADMIN}/run`, data);
+
+// 3️⃣ Reverse Payroll
+export const reversePayrollApi = (data) =>
+  adminClient.post(`${AUTH_API.ADMIN}/reverse`, data);
+
+// 4️⃣ Rerun Payroll
+export const rerunPayrollApi = (data) =>
+  adminClient.post(`${AUTH_API.ADMIN}/rerun`, data);
+
+// 5️⃣ Get all Payroll Records
+export const getAllPayrollApi = () =>
+  adminClient.get(`${AUTH_API.ADMIN}/payroll`);
