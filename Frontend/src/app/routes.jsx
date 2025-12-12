@@ -95,8 +95,8 @@ import EmployeeRoi from "../pages/Freelancer/Reports/ROI/EmployeeRoi";
 import FreelancerPayrollAnalytics from "../pages/Freelancer/Reports/PayrollAnalytics/FreelamcerPayrollAnalytics";
 import FreelancerComplianceReports from "../pages/Freelancer/Reports/ComplianceReports/FreelancerComplianceReports";
 import FreelancerCustomReports from "../pages/Freelancer/Reports/CustomReports/FreelancerCustomReports";
-
-
+import EmailTemplateEditor from "../pages/Templates/EmailTemplate/EmailTemplateEditor";
+// import WhatsAppTemplateEditor from "../pages/Templates/WatsupTemplate/WhatsAppTemplateEditor";
 
 function AppRoutes() {
   return (
@@ -720,6 +720,9 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
+         <Route path="/email-template" element={<EmailTemplateEditor />} />
+         {/* <Route path="/watsup-template" element={<WhatsAppTemplateEditor />} /> */}
 
        
       </Route>
