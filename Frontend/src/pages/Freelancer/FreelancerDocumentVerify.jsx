@@ -22,6 +22,8 @@ import {
   Chip,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchAllFreelancer } from "../../features/freelancer/freelancerSlice";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 
 export default function AdminVerificationTabs() {
@@ -29,8 +31,29 @@ export default function AdminVerificationTabs() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const dispatch = useDispatch();
 
-  // ⭐ DUMMY DATA
+
+   useEffect(() => {
+      dispatch(fetchAllFreelancer());
+    }, [dispatch]);
+     const freelancers = useSelector(
+        (state) => state.freelancerInfo.freelancerlist
+      );
+
+     // FILTER FREELANCERS
+  const filteredFreelancers = freelancers?.filter((item) => {
+    const search = searchText.toLowerCase();
+    return (
+      item.name?.toLowerCase().includes(search) ||
+      item.email?.toLowerCase().includes(search) ||
+      item.department?.toLowerCase().includes(search) ||
+      item.address?.toLowerCase().includes(search)
+    );
+  });
+
+  //  DUMMY DATA
   const dummy = [
     {
       id: "USR001",
@@ -106,11 +129,13 @@ export default function AdminVerificationTabs() {
             <Tab label="PAN Verification" />
             <Tab label="Aadhaar Verification" />
             <Tab label="Bank Verification" />
+            <Tab label="GST Verification" />
+
           </Tabs>
 
           <Divider sx={{ my: 2 }} />
 
-          {/* ⭐ SEARCH BAR */}
+          {/* SEARCH BAR */}
           <TextField
             placeholder="Search by name, email, ID"
             value={search}
@@ -126,7 +151,7 @@ export default function AdminVerificationTabs() {
             sx={{ width: 300, mb: 2 }}
           />
 
-          {/* ⭐ TABLE */}
+          {/* TABLE */}
           <TableContainer>
             <Table>
               <TableHead>
@@ -140,7 +165,7 @@ export default function AdminVerificationTabs() {
               </TableHead>
 
               <TableBody>
-                {filtered.map((row) => (
+                {filteredFreelancers.map((row) => (
                   <TableRow key={row.id} hover>
                     <TableCell>
                       <Stack direction="row" spacing={2} alignItems="center">
@@ -173,7 +198,7 @@ export default function AdminVerificationTabs() {
         </CardContent>
       </Card>
 
-      {/* ⭐ MODAL WITH DYNAMIC TABS */}
+      {/*  MODAL WITH DYNAMIC TABS */}
       <Modal open={modalOpen} onClose={closeModal}>
         <Box
           sx={{
@@ -197,7 +222,7 @@ export default function AdminVerificationTabs() {
 
               <Divider sx={{ my: 2 }} />
 
-              {/* ⭐ TAB 0 → PAN */}
+              {/*  TAB 0 → PAN */}
               {tab === 0 && (
                 <>
                   <Typography fontWeight={700}>PAN Number: {selected.panNumber}</Typography>
@@ -212,7 +237,7 @@ export default function AdminVerificationTabs() {
                 </>
               )}
 
-              {/* ⭐ TAB 1 → AADHAAR */}
+              {/*  TAB 1 → AADHAAR */}
               {tab === 1 && (
                 <>
                   <Typography fontWeight={700}>Aadhaar: {selected.aadhaarNumber}</Typography>
@@ -227,13 +252,30 @@ export default function AdminVerificationTabs() {
                 </>
               )}
 
-              {/* ⭐ TAB 2 → BANK */}
+              {/*  TAB 2 → BANK */}
               {tab === 2 && (
                 <>
                   <Typography fontWeight={700}>Bank Account</Typography>
                   <Typography>Account: {selected.bankAccount}</Typography>
                   <Typography>IFSC: {selected.ifsc}</Typography>
-                  <a href={selected.bankUrl} target="_blank">View Passbook</a>
+                  {/* <a href={selected.bankUrl} target="_blank">View Passbook</a> */}
+                {selected.document_url?.bankPassbook ? (
+  <a
+    href={
+      selected.document_url.bankPassbook instanceof File
+        ? URL.createObjectURL(selected.document_url.bankPassbook)
+        : selected.document_url.bankPassbook
+    }
+    target="_blank"
+    rel="noopener noreferrer"
+    style={{ display: "block", marginTop: 10 }}
+  >
+    View Bank Passbook
+  </a>
+) : (
+  <Typography>No Passbook Uploaded</Typography>
+)}
+
                   <Button
                     variant="contained"
                     sx={{ mt: 2 }}
