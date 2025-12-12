@@ -37,10 +37,19 @@ const EmployeeProfile = () => {
   const dispatch = useDispatch();
   const { profile, loading } = useSelector((state) => state.employeeDetails);
 
+  const getCurrentDate = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+
   const [formData, setFormData] = useState({
     name: "",
-    dob: "",
-    date_of_joining: "",
+    dob: getCurrentDate(),
+    date_of_joining: getCurrentDate(),
     gender: "",
     email: "",
     phone: "",
@@ -206,6 +215,7 @@ const EmployeeProfile = () => {
                     value={formData.dob}
                     onChange={handleChange}
                     InputLabelProps={{ shrink: true }}
+                    inputProps={{ max: getCurrentDate() }}
                     InputProps={{
                       startAdornment: <CakeIcon sx={{ color: "#2196f3", mr: 1 }} />,
                     }}
@@ -272,6 +282,7 @@ const EmployeeProfile = () => {
                     value={formData.date_of_joining}
                     onChange={handleChange}
                     InputLabelProps={{ shrink: true }}
+                    inputProps={{ max: getCurrentDate() }}
                     InputProps={{
                       startAdornment: <EventIcon sx={{ color: "#2196f3", mr: 1 }} />,
                     }}

@@ -40,8 +40,9 @@ import {
   getAllPanels,
   scheduleInterviewReferral,
   rescheduleInterviewReferral,
+  getAllInterviewsWithDetails,
   addPanelFeedback,
-
+  getPanelFeedback,
   // === EXTRA AUDIT LOG CONTROLLERS ===
   adminLogout,
   getAllAdminAuditLogs,
@@ -55,7 +56,7 @@ import {
   getAllContracts,
   getContractsByFreelancer,
   getContractById,
-createProbation,
+  createProbation,
   createInvoice,
   getAllInvoices,
   getInvoiceById,
@@ -64,7 +65,11 @@ createProbation,
   sendInvoiceReminder,
   deleteInvoice,
   getNewEmployees,
-  getProbationWithUser
+  getProbationWithUser,
+  getMonthlyFinalSummary,
+  updateTLReview,
+  fetchAllReviews,
+  getFinalRatingsForEmployees
  
 } from "../controllers/admin.controller.js";
 
@@ -104,6 +109,11 @@ import {
 
 // ❗ Keep disk storage for actual job application resumes
 import { uploadResume, uploadResumeBuffer } from "../middleware/uploadResume.js";
+
+//freelancer and employee roi
+import { getFreelancerRoiReport } from "../controllers/freelancerRoi.controller.js";
+import { getEmployeeRoiReport } from "../controllers/employeeRoi.controller.js";
+
 
 const router = Router();
 
@@ -196,11 +206,17 @@ router.post("/interviews/schedule/:referral_id", scheduleInterviewReferral);
 // Reschedule interview (insert a new row)
 router.post("/interviews/reschedule/:referral_id", rescheduleInterviewReferral);
 
+router.get(
+  "/interviews/all",
+  getAllInterviewsWithDetails
+);
+
 router.post(
   "/interviews/:interview_id/feedback",
   addPanelFeedback
 );
 
+router.get("/panel-feedback/:interview_id", getPanelFeedback);
 /* ========== Job Posting ========== */
 router.post("/admin/job-posts", createJobPost);
 router.get("/admin/job-posts", getAdminJobPosts);
@@ -233,6 +249,9 @@ router.get("/applications/job/:jobId", getApplicationsByJob);
 router.put("/applications/status/:application_id", updateApplicationStatus);
 
 // router.get("/panel-members", getPanelMembers);
+//freelancerroireport
+router.get("/reports/freelancer-roi", getFreelancerRoiReport);
+router.get("/reports/employee-roi", getEmployeeRoiReport);
 
 /* -------------------------------------------------------------------------- */
 /*                       FREELANCER CONTRACT ROUTES                           */
@@ -272,4 +291,14 @@ router.get("/new-employees", getNewEmployees);
 router.post("/store-probation", createProbation);
 
 router.get("/probation/user", getProbationWithUser);
+
+router.get(
+  "/monthly-final-summary/:employeeId/:year/:month",
+  getMonthlyFinalSummary
+);
+router.put("/performance/update/:id", updateTLReview);           
+router.get("/performance/all", fetchAllReviews);
+
+router.get("/performance/final-ratings", getFinalRatingsForEmployees);
+
 export default router;

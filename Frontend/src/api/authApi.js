@@ -1,5 +1,7 @@
 import { superadminClient,employeeClient,adminClient,ProjectClient,AttendanceClient,SalaryStructureClient, freelancerClient ,vendorClient } from "./axiosClient";
 import { AUTH_API } from "../utils/constants";
+
+
 import { RestaurantMenuSharp } from "@mui/icons-material";
 
 
@@ -12,6 +14,19 @@ export const superadminRegisterApi = (data) =>
 
 export const superadminLoginApi = (data) =>
   superadminClient.post(`${AUTH_API.SUPERADMIN}/login`, data);
+
+//Superadmin auditlogs
+
+//  Get All SuperAdmin Audit Logs
+export const getAllSuperAdminAuditLogsApi = () =>
+  adminClient.get(`${AUTH_API.SUPERADMIN}/audit-logs`);
+
+
+//  SuperAdmin Logout API (same style as admin)
+export const superAdminLogoutApi = (email) => {
+  console.log("Calling backend SuperAdmin logout with email:", email);
+  return adminClient.post(`${AUTH_API.SUPERADMIN}/logout`, { email });
+};
 
 export const superadminVerifyOtpApi = (data) =>
   superadminClient.post(`${AUTH_API.SUPERADMIN}/mfa/verify`, data);
@@ -65,25 +80,27 @@ export const revokeTempAdminApi = (email) =>
 export const getAdminProfileApi = (id) =>
   adminClient.get(`${AUTH_API.ADMIN}/get/${id}`);
 
-export const updateAdminProfileApi = (data, id) => {
-  const formData = new FormData();
+// export const updateAdminProfileApi = (data, id) => {
+//   const formData = new FormData();
 
-  Object.keys(data).forEach((key) => {
-    if (data[key] !== null && data[key] !== undefined) {
-      if (key === "profilePhoto" && data[key] instanceof File) {
-        formData.append("profilePhoto", data[key]);
-      } else if (key === "resume" && data[key] instanceof File) {
-        formData.append("resume", data[key]);
-      } else {
-        formData.append(key, data[key]);
-      }
-    }
-  }
-);
+//   Object.keys(data).forEach((key) => {
+//     if (data[key] !== null && data[key] !== undefined) {
+//       if (key === "profilePhoto" && data[key] instanceof File) {
+//         formData.append("profilePhoto", data[key]);
+//       } else if (key === "resume" && data[key] instanceof File) {
+//         formData.append("resume", data[key]);
+//       } else {
+//         formData.append(key, data[key]);
+//       }
+//     }
+//   }
+// );
 
+//   return adminClient.put(`${AUTH_API.ADMIN}/adminprofile-update/${id}`, formData);
+// };
+export const updateAdminProfileApi = (formData, id) => {
   return adminClient.put(`${AUTH_API.ADMIN}/adminprofile-update/${id}`, formData);
 };
-
 
 export const FetchallAdminApi = () =>
   adminClient.get(`${AUTH_API.ADMIN}/fetchall`)
@@ -158,6 +175,12 @@ export const parseResumeApi = (formData) =>
     headers: { "Content-Type": "multipart/form-data" }
   });
 
+// ======================= GET INTERVIEWS BY APPLICATION ID =======================
+export const getInterviewsByApplicationApi = (application_id) => {
+  return adminClient.get(`/admin/interviews/${application_id}`);
+};
+
+// ================== Interview Panels ==================
 
 
 // ======== Letter Generation API ========
@@ -200,6 +223,11 @@ export const employeeResetPasswordApi = (data) =>
 // Fetch all employees
 export const employeeFetchApi = () =>
   employeeClient.get(`${AUTH_API.EMPLOYEE}/get` );
+
+// Fetch only FULL-TIME employees (for HR Analytics)
+export const fetchFullTimeEmployeesApi = () =>
+  employeeClient.get(`${AUTH_API.EMPLOYEE}/employees/fulltime`);
+
 
 export const FetchFreelancerApi = () =>
   employeeClient.get(`${AUTH_API.EMPLOYEE}/freelancers` );
@@ -265,9 +293,9 @@ export const ProjectInsertApi = (data) =>
 export const ProjectFetchAllApi = () =>
   ProjectClient.get(`${AUTH_API.PROJECT}/projects`);
 //project assign to employee
-export const ProjectAssignApi = (projectId, employeeId, role = "employee") => {
+export const ProjectAssignApi = (projectId, employeeId, role = "employee",employee_type) => {
   return ProjectClient.post(
-    `${AUTH_API.PROJECT}/projects/${projectId}/assign?employeeId=${employeeId}&role=${role}`
+    `${AUTH_API.PROJECT}/projects/${projectId}/assign?employeeId=${employeeId}&role=${role}&employee_type=${employee_type}`
   );
 }
 //assigned project 
@@ -509,36 +537,23 @@ export const employeeDocDownloadbyAdminApi = (employeeId, docKey, index, onDownl
 
 
 // Upload freelancer documents
-export const uploadFreelancerDocsApi = (data) => {
-  const formData = new FormData();
-
-  // Single files
-  if (data.bankPassbook) formData.append("bankPassbook", data.bankPassbook);
-  if (data.aadhaarCard) formData.append("aadhaarCard", data.aadhaarCard);
-  if (data.panCard) formData.append("panCard", data.panCard);
-  if (data.gstCertificate) formData.append("gstCertificate", data.gstCertificate);
-  if (data.photo) formData.append("photo", data.photo);
-
-  // Multiple GST files
-  if (data.gstReturns && data.gstReturns.length > 0) {
-    data.gstReturns.forEach((file) => {
-      formData.append("gstReturns", file);
-    });
-  }
-
-  // Other fields
-  if (data.gstNumber) formData.append("gstNumber", data.gstNumber);
-  if (data.id) formData.append("id", data.id);
-
-   return freelancerClient.post(`${AUTH_API.FREELANCER}/upload`,
-    formData
-      );
+export const uploadFreelancerDocsApi = (formData) => {
+  return freelancerClient.post(
+    `${AUTH_API.FREELANCER}/upload`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
 };
 
-//GetAPI
+// Get API
 export const getFreelancerDocsApi = (id) => {
   return freelancerClient.get(`${AUTH_API.FREELANCER}/${id}`);
 };
+
 // ============== Referral (Employee) ======================
 export const createReferralApi = (formData) => {
   return employeeClient.post(`${AUTH_API.EMPLOYEE}/refer-candidate`, formData);
@@ -573,10 +588,15 @@ export const scheduleInterviewReferralApi = (referral_id, interviewData) =>
 export const rescheduleInterviewReferralApi = (referral_id, interviewData) =>
   adminClient.post(`${AUTH_API.ADMIN}/interviews/reschedule/${referral_id}`, interviewData);
 
+export const getAllInterviewsWithDetailsApi = () =>
+  adminClient.get(`${AUTH_API.ADMIN}/interviews/all`);
+
 // ================= Feedback APIs =================
 export const addPanelFeedbackApi = (interview_id, feedbackData) =>
   adminClient.post(`${AUTH_API.ADMIN}/interviews/${interview_id}/feedback`, feedbackData);
 
+export const getPanelFeedbackApi = (interview_id) =>
+  adminClient.get(`${AUTH_API.ADMIN}/panel-feedback/${interview_id}`);
 
 
 export const createFreelancerContractApi = (data) => {
@@ -684,3 +704,30 @@ export const vendorForgotPasswordApi = (data) =>
 
 export const vendorResetPasswordApi = (data) =>
   vendorClient.post(`${AUTH_API.VENDOR}/vendor/reset-password`, data);
+
+// Fetch freelancer project assignments
+export const fetchFreelancerAssignmentsApi = () =>
+  employeeClient.get(`${AUTH_API.EMPLOYEE}/assignments/freelancers`);
+
+export const getMonthlyFinalSummaryApi = (employeeId, year, month) =>
+  adminClient.get(
+    `${AUTH_API.ADMIN}/monthly-final-summary/${employeeId}/${year}/${month}`
+  );
+
+
+// Performance Review APIs
+// export const submitSelfReviewApi = (data) =>
+//   employeeClient.post(`/employee/performance/submit`, data);
+// authApi.js or employeeApi.js
+export const submitSelfReviewApi = (data) => {
+  return employeeClient.post(`/employee/performance/submit`, data);
+};
+
+export const updateTLReviewApi = (id, data) =>
+  adminClient.put(`/admin/performance/update/${id}`, data);
+
+export const fetchAllPerformanceReviewsApi = () =>
+  adminClient.get(`/admin/performance/all`);
+
+export const fetchFinalRatingsApi = () =>
+  adminClient.get(`/admin/performance/final-ratings`);

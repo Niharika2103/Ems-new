@@ -26,7 +26,8 @@
     "puppeteer": "^24.30.0",
     "qrcode": "^1.5.4",
     "speakeasy": "^2.0.0",
-    "textract": "^2.5.0"
+    "textract": "^2.5.0",
+    "twilio": "^5.10.7"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

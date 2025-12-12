@@ -196,8 +196,9 @@ import {
 import { useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 
-import { adminLogoutApi } from "../../api/authApi";   // ✅ added
-import { decodeToken } from "../../api/decodeToekn";  // ✅ added
+// ✅ BOTH LOGOUT APIs
+import { adminLogoutApi, superAdminLogoutApi } from "../../api/authApi";
+import { decodeToken } from "../../api/decodeToekn";
 
 const Sidebar = ({ isOpen, handleClose }) => {
   const adminRole = useSelector((state) => state.adminSlice?.role);
@@ -214,39 +215,31 @@ const Sidebar = ({ isOpen, handleClose }) => {
     useSelector((state) => state.employeeSlice?.employment_type) ||
     localStorage.getItem("employment_type");
 
-  // ⬇ NEW STATES for logout fix
+  // EMAIL for logout
   const [email, setEmail] = useState("");
-  const [userData, setUserData] = useState(null);
-  const [emp, setEmp] = useState(null);
 
-  // ⬇ Load user info for logout (EMAIL)
   useEffect(() => {
     const loadUser = async () => {
       try {
         const decoded = await decodeToken();
-        setUserData(decoded);
-
         const stored = JSON.parse(localStorage.getItem("user") || "null");
-        setEmp(stored);
-
         const finalEmail = decoded?.email || stored?.email || "";
-        console.log("Sidebar Logout Email:", finalEmail);
 
         setEmail(finalEmail);
-      } catch (error) {
-        console.error("Sidebar decode error:", error);
+        console.log("Sidebar Logout Email:", finalEmail);
+      } catch (err) {
+        console.error("Decode Error:", err);
       }
     };
-
     loadUser();
   }, []);
 
-  // Employee menus
+  // ⭐ EMPLOYEE MENUS
   let employeeMenus = [];
 
   if (employment_type === "freelancer") {
     employeeMenus = [
-      { name: "Dashboard", icon: <Home size={20} />, path: "/freelancer/dashboard" },
+      { name: "Dashboard", icon: <Home size={20} />, path: "/dashboard" },
       { name: "Attendance", icon: <Calendar size={20} />, path: "/freelancer/attendance" },
       { name: "Tasks", icon: <CheckSquare size={20} />, path: "/freelancer/tasks" },
       { name: "Payments", icon: <Users size={20} />, path: "/freelancer/payments" },
@@ -261,18 +254,17 @@ const Sidebar = ({ isOpen, handleClose }) => {
       { name: "Reports", icon: <BarChart3 size={20} />, path: "/reports" },
     ];
   } else {
-    // Full time employee
     employeeMenus = [
       { name: "Dashboard", icon: <Home size={20} />, path: "/dashboard" },
       { name: "Job Posting", icon: <Briefcase size={20} />, path: "/dashboard/JobPostDashboard" },
       { name: "Attendance", icon: <Calendar size={20} />, path: "/dashboard/emp_attendance" },
       { name: "HR", icon: <CheckSquare size={20} />, path: "/hr" },
-      { name: "Payslip", icon: <Users size={20} />, path: "/slip" },
+      { name: "Payslip", icon: <Users size={20} />, path: "/payslip" },
       { name: "Reports", icon: <BarChart3 size={20} />, path: "/reports" },
     ];
   }
 
-  // Admin & Superadmin Menus
+  // ⭐ ADMIN + SUPERADMIN MENUS
   const roleMenus = {
     admin: [
       { name: "Dashboard", icon: <Home size={20} />, path: "/dashboard" },
@@ -300,58 +292,59 @@ const Sidebar = ({ isOpen, handleClose }) => {
   const finalMenus =
     role === "employee" ? employeeMenus : roleMenus[role] || [];
 
-  // ⭐ FIXED LOGOUT FUNCTION — SAME AS HEADER
+  // ⭐ FIXED LOGOUT — calls correct backend
   const handleLogout = async () => {
     try {
-      console.log("Sidebar Logout clicked. Email =", email);
-
       if (email) {
-        await adminLogoutApi(email);     // 🔥 backend logout API call
-      } else {
-        console.warn("No email found for logout.");
+        if (role === "superadmin") {
+          await superAdminLogoutApi(email);
+        } else if (role === "admin") {
+          await adminLogoutApi(email);
+        }
       }
     } catch (error) {
-      console.error("Sidebar Logout API Error:", error);
+      console.error("Logout API Error:", error);
     }
 
-    // Clear all session values
     localStorage.clear();
 
-    // Redirect based on role
     if (role === "admin") window.location.replace("/#/admin/login");
     else if (role === "superadmin") window.location.replace("/#/superadmin/login");
-    else if (role === "employee") window.location.replace("/#/login");
-    else window.location.replace("/#/");
+    else window.location.replace("/#/login");
 
     if (handleClose) handleClose();
   };
 
-  // Role display
+  // ROLE DISPLAY
   let displayRole = role?.toUpperCase();
   if (role === "employee") {
-    if (employment_type === "freelancer") displayRole = "FREELANCER";
-    else if (employment_type === "contract") displayRole = "CONTRACT";
-    else displayRole = "EMPLOYEE";
+    displayRole =
+      employment_type === "freelancer"
+        ? "FREELANCER"
+        : employment_type === "contract"
+        ? "CONTRACT"
+        : "EMPLOYEE";
   }
 
   return (
     <aside
-      className={`font-robo font-medium bg-[#51b4f2] text-white transition-all duration-300 flex flex-col ${
-        isOpen ? "w-56" : "w-16"
-      }`}
+      className={`font-robo font-medium bg-[#51b4f2] text-white transition-all duration-300 
+        flex flex-col ${isOpen ? "w-56" : "w-16"}`}
     >
       <div className="flex items-center justify-center py-4">
         {isOpen && <span className="ml-3 text-lg font-bold">{displayRole}</span>}
       </div>
 
+      {/* PROFILE IMAGE */}
       <div className="flex items-center justify-center py-2 ml-3">
         <img
-          src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD..."
+          src="/default-user.jpg"
           alt="User"
           className="w-12 h-12 rounded-full border-2 border-white"
         />
       </div>
 
+      {/* MENUS */}
       <div className="flex-1 mt-6 ml-6">
         <ul className="space-y-2">
           {finalMenus.map((item) => (
@@ -359,32 +352,31 @@ const Sidebar = ({ isOpen, handleClose }) => {
               <NavLink
                 to={item.path}
                 className={({ isActive }) =>
-                  `group flex items-center p-2 rounded-l-full cursor-pointer transition-all duration-300 ease-in-out
-                  hover:bg-white hover:scale-105 hover:shadow-white ${isActive ? "bg-white text-[#51b4f2] font-semibold" : "text-white"}`
+                  `group flex items-center p-2 rounded-l-full cursor-pointer transition-all
+                   hover:bg-white hover:scale-105 ${
+                     isActive ? "bg-white text-[#51b4f2]" : "text-white"
+                   }`
                 }
               >
-                <span className={`transition-colors duration-300 ${isOpen ? "mr-3" : ""} group-hover:text-sky-600`}>
+                <span className={`${isOpen ? "mr-3" : ""} group-hover:text-sky-600`}>
                   {item.icon}
                 </span>
-                {isOpen && (
-                  <span className="transition-colors duration-300 group-hover:text-sky-600">{item.name}</span>
-                )}
+                {isOpen && <span>{item.name}</span>}
               </NavLink>
             </li>
           ))}
 
-          {/* 🔥 LOGOUT */}
+          {/* LOGOUT */}
           <li>
             <button
               onClick={handleLogout}
-              className="w-full text-left group flex items-center p-2 rounded-l-full cursor-pointer transition-all duration-300 ease-in-out hover:bg-white hover:scale-105 hover:shadow-white text-white"
+              className="w-full text-left group flex items-center p-2 
+              rounded-l-full cursor-pointer hover:bg-white hover:scale-105 text-white"
             >
-              <span className={`transition-colors duration-300 ${isOpen ? "mr-3" : ""} group-hover:text-sky-600`}>
+              <span className={`${isOpen ? "mr-3" : ""} group-hover:text-sky-600`}>
                 <LogOut size={20} />
               </span>
-              {isOpen && (
-                <span className="transition-colors duration-300 group-hover:text-sky-600">Logout</span>
-              )}
+              {isOpen && <span>Logout</span>}
             </button>
           </li>
         </ul>

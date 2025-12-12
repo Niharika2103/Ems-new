@@ -6,6 +6,8 @@ import GroupIcon from "@mui/icons-material/Group";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import PersonIcon from "@mui/icons-material/Person";
 import AssignmentIcon from "@mui/icons-material/Assignment";
+import BarChartIcon from "@mui/icons-material/BarChart";
+
 
 const FreelancerDashboard = () => {
   const navigate = useNavigate();
@@ -43,7 +45,24 @@ const FreelancerDashboard = () => {
     iconBg: "bg-green-100",
     iconColor: "text-green-600",
     onClick: () => navigate("/dashboard/freelancer/projects"),
-  },];
+  },
+ {
+    title: " Freelancer Projects Form",
+    message: "View all assigned and active projects",
+    icon: AssignmentIcon,
+    iconBg: "bg-green-100",
+    iconColor: "text-green-600",
+    onClick: () => navigate("/freelancers/approved"),
+  },
+  {
+    title: " Freelancer Reports",
+    message: "View all reports projects",
+    icon: BarChartIcon,
+    iconBg: "bg-green-100",
+    iconColor: "text-green-600",
+    onClick: () => navigate("/dashboard/freelancer/freelancerreports"),
+  },
+];
 
   return (
     <>

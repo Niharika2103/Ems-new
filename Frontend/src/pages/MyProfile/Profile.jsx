@@ -6,7 +6,6 @@ import {
   fetchSuperAdminProfile,
   updateSuperAdminProfile,
 } from "../../features/employeesDetails/employeesSlice";
-import { sendEmailOtp, verifyEmailOtp } from "../../features/verify/emailVerify";
 import { decodeToken } from "../../api/decodeToekn";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -16,7 +15,6 @@ import {
   Paper,
   Avatar,
   Typography,
-  Divider,
   TextField,
   Button,
   RadioGroup,
@@ -36,7 +34,6 @@ import {
   ContactEmergency as EmergencyIcon,
   UploadFile as UploadIcon,
 } from "@mui/icons-material";
-import { validateProfileForm } from "../../utils/validation";
 
 const Profile = () => {
   const dispatch = useDispatch();
@@ -52,168 +49,157 @@ const Profile = () => {
     address: "",
     permanent_address: "",
     emergency_contact: "",
-    profilePhoto: null,
+    // ❌ Removed profilePhoto from formData
   });
 
-  const [otp, setOtp] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
-  const [emailOtp, setEmailOtp] = useState("");
-  const [emailVerified, setEmailVerified] = useState(false);
-  const [phoneVerified, setPhoneVerified] = useState(false);
-  const [data, setData] = useState(null);
+  const [profilePicFile, setProfilePicFile] = useState(null); // ✅ Separate file state
+  const [decoded, setDecoded] = useState(null);
 
   const roles =
-    useSelector((state) => state.adminSlice) ||
-    useSelector((state) => state.authSlice?.role) ||
+    useSelector((state) => state.adminSlice?.role) ||
     localStorage.getItem("role");
 
+  // 🔥 Fetch logged-in profile
   useEffect(() => {
-    const getDecoded = async () => {
+    const loadProfile = async () => {
       try {
-        const decoded = await decodeToken();
-        setData(decoded);
+        const decodedData = await decodeToken();
+        setDecoded(decodedData);
+
         if (roles === "admin") {
-          dispatch(fetchAdminProfile(decoded.id));
+          dispatch(fetchAdminProfile(decodedData.id));
         } else if (roles === "superadmin") {
-          dispatch(fetchSuperAdminProfile(decoded.id));
+          dispatch(fetchSuperAdminProfile(decodedData.id));
         }
-      } catch (error) {
-        console.error("Error decoding token:", error);
+      } catch (err) {
+        console.error("Error decoding:", err);
       }
     };
-    getDecoded();
+    loadProfile();
   }, [dispatch, roles]);
 
+  // 🔥 Sync form fields when profile updates
   useEffect(() => {
-    if (profile) setFormData({ ...formData, ...profile });
+    if (profile) {
+      setFormData({
+        name: profile.name || "",
+        dob: profile.dob ? profile.dob.split("T")[0] : "",
+        gender: profile.gender || "",
+        email: profile.email || "",
+        phone: profile.phone || "",
+        department: profile.department || "",
+        address: profile.address || "",
+        permanent_address: profile.permanent_address || "",
+        emergency_contact: profile.emergency_contact || "",
+      });
+      // ✅ Reset file state — only URL matters for display
+      setProfilePicFile(null);
+    }
   }, [profile]);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-    setFormData({
-      ...formData,
-      [name]: files ? files[0] : value,
-    });
-  };
-
-  const handleSendOtp = () => {
-    setOtpSent(true);
-    alert("Mock OTP sent to phone");
-  };
-
-  const handleSendEmailOtp = () => {
-    setEmailSent(true);
-    alert("Mock OTP sent to email");
-  };
-
- const handleSubmit = (e) => {
-  e.preventDefault();
-  const id = data?.id;
-  if (!id) return;
-
-  if (roles === "admin") {
-    // Build FormData for multipart upload
-    const formDataToSend = new FormData();
-
-    // Append text fields (skip files)
-    Object.entries(formData).forEach(([key, value]) => {
-      if (key === "profilePhoto") {
-        // Handle separately below
-        return;
-      }
-      // Only append non-file fields; ensure empty strings are sent if needed
-      formDataToSend.append(key, value || "");
-    });
-
-    // Append file if present
-    if (formData.profilePhoto instanceof File) {
-      formDataToSend.append("profilePhoto", formData.profilePhoto);
+    if (name === "profilePhoto" && files?.[0]) {
+      setProfilePicFile(files[0]);
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
     }
-    // Note: if you later add "resume", handle similarly
+  };
 
-    dispatch(updateAdminProfile({ data: formDataToSend, id }))
-      .unwrap()
-      .then(() => toast.success("Profile updated successfully!"))
-      .catch((err) => {
-        console.error("Update error:", err);
-        toast.error("Update failed");
+  // 🔥 Submit handler
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!decoded?.id) return;
+
+    if (roles === "admin") {
+      const sendData = new FormData();
+
+      // Append all text fields
+      Object.entries(formData).forEach(([key, value]) => {
+        sendData.append(key, value || "");
       });
-  } else if (roles === "superadmin") {
-    dispatch(updateSuperAdminProfile({ data: formData, id }));
-  }
-};
+
+      // Append file if selected
+      if (profilePicFile) {
+        sendData.append("profilePhoto", profilePicFile);
+      }
+
+      dispatch(updateAdminProfile({ data: sendData, id: decoded.id }))
+        .unwrap()
+        .then(() => {
+          toast.success("Profile updated successfully!");
+          // ✅ Re-fetch to get updated profile_photo URL
+          dispatch(fetchAdminProfile(decoded.id));
+        });
+
+    } else if (roles === "superadmin") {
+      dispatch(updateSuperAdminProfile({ data: formData, id: decoded.id }))
+        .unwrap()
+        .then(() => {
+          toast.success("Profile updated successfully!");
+          dispatch(fetchSuperAdminProfile(decoded.id));
+        });
+    }
+  };
+
+  // ✅ Determine photo source for Avatar
+  const photoSrc = profilePicFile
+    ? URL.createObjectURL(profilePicFile)
+    : profile?.profile_photo || undefined;
 
   return (
     <>
-      <ToastContainer position="top-right" autoClose={2000} />
+      <ToastContainer position="top-right" autoClose={1500} />
       <Box sx={{ backgroundColor: "#f4f6f8", minHeight: "100vh", p: 4 }}>
-        <Paper
-          elevation={6}
-          sx={{
-            maxWidth: 950,
-            mx: "auto",
-            p: 4,
-            borderRadius: 4,
-            backgroundColor: "white",
-          }}
-        >
-          {/* Header Card */}
+        <Paper elevation={6} sx={{ maxWidth: 950, mx: "auto", p: 4, borderRadius: 4 }}>
+          
+          {/* Header */}
           <Box
-            display="flex"
+            display="4"
             alignItems="center"
             gap={3}
             sx={{
               background: "linear-gradient(45deg, #2196f3, #21cbf3)",
-              borderRadius: 3,
               p: 3,
+              borderRadius: 3,
               color: "white",
             }}
           >
             <Avatar
+              key={profile?.profile_photo || 'default'} // ✅ Force re-render when URL changes
               sx={{
                 width: 90,
                 height: 90,
                 fontSize: 32,
                 bgcolor: "white",
                 color: "#2196f3",
-                fontWeight: 600,
               }}
-              src={
-                formData.profilePhoto instanceof File
-                  ? URL.createObjectURL(formData.profilePhoto)
-                  : profile?.profile_photo || undefined
-              }
+              src={photoSrc}
             >
-              {formData.name?.[0]?.toUpperCase() || "A"}
+              {formData.name?.charAt(0)?.toUpperCase() || "A"}
             </Avatar>
+
             <Box>
-              <Typography variant="h5" fontWeight="bold">
-                {formData.name || "Admin User"}
-              </Typography>
-              <Typography variant="subtitle2" color="rgba(255,255,255,0.8)">
-                {roles === "admin" ? "Admin Information" : "Super Admin"}
+              <Typography variant="h5">{formData.name || "Admin User"}</Typography>
+              <Typography variant="subtitle2">
+                {roles === "admin" ? "Admin Profile" : "Super Admin Profile"}
               </Typography>
             </Box>
           </Box>
 
+          {/* FORM */}
           <Box component="form" onSubmit={handleSubmit} sx={{ mt: 4 }}>
-            {/* PERSONAL INFORMATION */}
-            <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
-              👤 Personal Information
-            </Typography>
+            
+            {/* Personal Info */}
+            <Typography variant="h6" sx={{ mb: 2 }}>👤 Personal Information</Typography>
             <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Full Name"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                  />
+                  <TextField fullWidth label="Full Name" name="name" value={formData.name} onChange={handleChange} />
                 </Grid>
-
                 <Grid item xs={12} sm={6}>
                   <TextField
                     fullWidth
@@ -223,32 +209,19 @@ const Profile = () => {
                     value={formData.dob}
                     onChange={handleChange}
                     InputLabelProps={{ shrink: true }}
-                    InputProps={{
-                      startAdornment: <DobIcon sx={{ color: "#2196f3", mr: 1 }} />,
-                    }}
+                    inputProps={{ max: new Date().toISOString().split("T")[0] }}
+
                   />
                 </Grid>
-
                 <Grid item xs={12} sm={6}>
-                  <FormLabel><GenderIcon sx={{ mr: 1 }} />Gender</FormLabel>
+                  <FormLabel><GenderIcon sx={{ mr: 1 }} /> Gender</FormLabel>
                   <RadioGroup row name="gender" value={formData.gender} onChange={handleChange}>
                     <FormControlLabel value="Male" control={<Radio />} label="Male" />
                     <FormControlLabel value="Female" control={<Radio />} label="Female" />
                   </RadioGroup>
                 </Grid>
-
                 <Grid item xs={12} sm={6}>
-                  <TextField
-                    select
-                    label="Department"
-                    name="department"
-                    value={formData.department}
-                    onChange={handleChange}
-                    fullWidth
-                    InputProps={{
-                      startAdornment: <DepartmentIcon sx={{ color: "#2196f3", mr: 1 }} />,
-                    }}
-                  >
+                  <TextField select fullWidth label="Department" name="department" value={formData.department} onChange={handleChange}>
                     <MenuItem value="HR">HR</MenuItem>
                     <MenuItem value="IT">IT</MenuItem>
                     <MenuItem value="Finance">Finance</MenuItem>
@@ -258,103 +231,41 @@ const Profile = () => {
               </Grid>
             </Paper>
 
-            {/* CONTACT INFORMATION */}
-            <Typography variant="h6" fontWeight={600} sx={{ mt: 4, mb: 2 }}>
-              📞 Contact Information
-            </Typography>
+            {/* Contact Info */}
+            <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>📞 Contact Information</Typography>
             <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    fullWidth
-                    InputProps={{
-                      startAdornment: <EmailIcon sx={{ color: "#2196f3", mr: 1 }} />,
-                    }}
-                  />
+                  <TextField fullWidth label="Email" name="email" value={formData.email} onChange={handleChange} />
                 </Grid>
-
                 <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Phone Number"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    fullWidth
-                    InputProps={{
-                      startAdornment: <PhoneIcon sx={{ color: "#2196f3", mr: 1 }} />,
-                    }}
-                  />
+                  <TextField fullWidth label="Phone" name="phone" value={formData.phone} onChange={handleChange} />
                 </Grid>
-
-
                 <Grid item xs={12} sm={6}>
-                  <TextField
-                    label="Emergency Contact"
-                    name="emergency_contact"
-                    value={formData.emergency_contact}
-                    onChange={handleChange}
-                    fullWidth
-                    InputProps={{
-                      startAdornment: <EmergencyIcon sx={{ color: "#2196f3", mr: 1 }} />,
-                    }}
-                  />
+                  <TextField fullWidth label="Emergency Contact" name="emergency_contact" value={formData.emergency_contact} onChange={handleChange} />
                 </Grid>
               </Grid>
             </Paper>
 
-            {/* ADDRESS SECTION */}
-            <Typography variant="h6" fontWeight={600} sx={{ mt: 4, mb: 2 }}>
-              🏠 Address Information
-            </Typography>
-            <Paper variant="outlined" sx={{ p: 2, borderRadius: 3 }}>
+            {/* Address */}
+            <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>🏠 Address Information</Typography>
+            <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>
               <Grid container spacing={2}>
                 <Grid item xs={12}>
-                  <TextField
-                    label="Current Address"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleChange}
-                    multiline
-                    rows={1.5}
-                    fullWidth
-                    InputProps={{
-                      startAdornment: <AddressIcon sx={{ color: "#2196f3", mr: 1 }} />,
-                    }}
-                  />
+                  <TextField fullWidth label="Current Address" name="address" value={formData.address} onChange={handleChange} multiline rows={2} />
                 </Grid>
                 <Grid item xs={12}>
-                  <TextField
-                    label="Permanent Address"
-                    name="permanent_address"
-                    value={formData.permanent_address}
-                    onChange={handleChange}
-                    multiline
-                    rows={1.5}
-                    fullWidth
-                    InputProps={{
-                      startAdornment: <AddressIcon sx={{ color: "#2196f3", mr: 1 }} />,
-                    }}
-                  />
+                  <TextField fullWidth label="Permanent Address" name="permanent_address" value={formData.permanent_address} onChange={handleChange} multiline rows={2} />
                 </Grid>
               </Grid>
             </Paper>
 
-            {/* PROFILE PHOTO */}
-            <Typography variant="h6" fontWeight={600} sx={{ mt: 4, mb: 2 }}>
-              📸 Profile Photo
-            </Typography>
+            {/* Profile Photo */}
+            <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>📸 Profile Photo</Typography>
             <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>
               <Box display="flex" alignItems="center" gap={3}>
                 <Avatar
-                  src={
-                    formData.profilePhoto instanceof File
-                      ? URL.createObjectURL(formData.profilePhoto)
-                      : profile?.profile_photo || undefined
-                  }
+                  src={photoSrc}
                   sx={{ width: 70, height: 70 }}
                 />
                 <label htmlFor="photo-upload">
@@ -366,29 +277,16 @@ const Profile = () => {
                     style={{ display: "none" }}
                     onChange={handleChange}
                   />
-                  <IconButton
-                    component="span"
-                    color="primary"
-                    sx={{ bgcolor: "#e3f2fd", p:1.2, borderRadius: 2 }}
-                  >
+                  <IconButton component="span" color="primary" sx={{ bgcolor: "#e3f2fd", p: 1.2, borderRadius: 2 }}>
                     <UploadIcon />
                   </IconButton>
                 </label>
               </Box>
             </Paper>
 
+            {/* Submit */}
             <Box textAlign="center" mt={4}>
-              <Button
-                type="submit"
-                variant="contained"
-                size="large"
-                sx={{
-                  px: 6,
-                  py: 1.5,
-                  borderRadius: 3,
-                  background: "linear-gradient(45deg, #2196f3, #21cbf3)",
-                }}
-              >
+              <Button type="submit" variant="contained" size="large" sx={{ px: 5, py: 1.4 }}>
                 {loading ? "Updating..." : "Update Profile"}
               </Button>
             </Box>

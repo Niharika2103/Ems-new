@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -16,145 +16,181 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TablePagination,
   Paper,
   Chip,
-} from '@mui/material';
+} from "@mui/material";
+
 import {
   Refresh as RefreshIcon,
   Download as DownloadIcon,
   FilterAlt as FilterIcon,
-  TrendingUp as TrendingUpIcon,
-  TrendingDown as TrendingDownIcon,
-} from '@mui/icons-material';
+} from "@mui/icons-material";
+
+import { fetchFinalRatingsApi } from "../../api/authApi";
 
 const HRAnalytics = () => {
-  const employeeData = [
-    { name: 'John Smith', department: 'Engineering', performance: 4.5, turnoverRisk: 'Low', tenure: '3.2 years' },
-    { name: 'Sarah Johnson', department: 'Marketing', performance: 3.8, turnoverRisk: 'Medium', tenure: '1.5 years' },
-    { name: 'Mike Chen', department: 'Sales', performance: 4.2, turnoverRisk: 'Low', tenure: '4.1 years' },
-    { name: 'Emily Davis', department: 'HR', performance: 4.7, turnoverRisk: 'Low', tenure: '2.8 years' },
-    { name: 'David Wilson', department: 'Engineering', performance: 3.5, turnoverRisk: 'High', tenure: '0.8 years' },
-  ];
+  const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const metrics = [
-    { label: 'Employee Turnover', value: '12.5%', trend: 'down', change: '-2.3%' },
-    { label: 'Avg Time to Hire', value: '32 days', trend: 'stable', change: '+1 day' },
-    { label: 'Training Completion', value: '87%', trend: 'up', change: '+5%' },
-    { label: 'Employee Satisfaction', value: '4.2/5', trend: 'up', change: '+0.3' },
-  ];
+  // 🔥 Pagination states
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+
+  const loadEmployees = async () => {
+    setLoading(true);
+    try {
+      const response = await fetchFinalRatingsApi();
+      const realEmployees = response.data;
+
+      const formattedEmployees = realEmployees.map((emp) => ({
+        id: emp.employee_uuid,
+        name: emp.employee_name,
+        department: emp.designation || "General",
+        performance: emp.final_rating,
+        turnoverRisk: emp.turnover_risk,
+        tenure: emp.tenure,
+        selfRating: emp.self_rating,
+        tlRating: emp.tl_rating,
+      }));
+
+      setEmployees(formattedEmployees);
+    } catch (error) {
+      console.error("Error loading employees:", error);
+      setEmployees([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadEmployees();
+  }, []);
+
+  const handleExport = () => {
+    alert("Export feature coming soon.");
+  };
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+      {/* Header */}
+      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}>
         <Typography variant="h4">HR Analytics</Typography>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button variant="outlined" startIcon={<FilterIcon />}>
+
+        <Box sx={{ display: "flex", gap: 1 }}>
+          <Button variant="outlined" startIcon={<FilterIcon />} disabled>
             Filter
           </Button>
-          <Button variant="outlined" startIcon={<RefreshIcon />}>
+          <Button
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={loadEmployees}
+            disabled={loading}
+          >
             Refresh
           </Button>
-          <Button variant="contained" startIcon={<DownloadIcon />}>
+          <Button variant="contained" startIcon={<DownloadIcon />} onClick={handleExport}>
             Export
           </Button>
         </Box>
       </Box>
 
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        {metrics.map((metric, index) => (
-          <Grid item xs={12} sm={6} md={3} key={index}>
-            <Card>
-              <CardContent>
-                <Typography color="text.secondary" gutterBottom>
-                  {metric.label}
-                </Typography>
-                <Typography variant="h5" component="div">
-                  {metric.value}
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', mt: 1 }}>
-                  {metric.trend === 'up' ? (
-                    <TrendingUpIcon sx={{ color: 'success.main', mr: 0.5 }} />
-                  ) : metric.trend === 'down' ? (
-                    <TrendingDownIcon sx={{ color: 'error.main', mr: 0.5 }} />
-                  ) : null}
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      color: metric.trend === 'up' ? 'success.main' : metric.trend === 'down' ? 'error.main' : 'text.secondary',
-                    }}
-                  >
-                    {metric.change} from last month
-                  </Typography>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-
+      {/* Filters */}
       <Box sx={{ mb: 3 }}>
-        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+        <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
           <FormControl sx={{ minWidth: 120 }} size="small">
             <InputLabel>Department</InputLabel>
-            <Select label="Department" defaultValue="all">
+            <Select label="Department" defaultValue="all" disabled>
               <MenuItem value="all">All Departments</MenuItem>
-              <MenuItem value="engineering">Engineering</MenuItem>
-              <MenuItem value="marketing">Marketing</MenuItem>
-              <MenuItem value="sales">Sales</MenuItem>
+              <MenuItem value="Engineering">Engineering</MenuItem>
             </Select>
           </FormControl>
+
           <FormControl sx={{ minWidth: 120 }} size="small">
             <InputLabel>Risk Level</InputLabel>
-            <Select label="Risk Level" defaultValue="all">
+            <Select label="Risk Level" defaultValue="all" disabled>
               <MenuItem value="all">All Levels</MenuItem>
-              <MenuItem value="low">Low</MenuItem>
-              <MenuItem value="medium">Medium</MenuItem>
-              <MenuItem value="high">High</MenuItem>
+              <MenuItem value="Low">Low</MenuItem>
+              <MenuItem value="Medium">Medium</MenuItem>
+              <MenuItem value="High">High</MenuItem>
             </Select>
           </FormControl>
         </Box>
       </Box>
 
+      {/* Employee Table */}
       <Card>
         <CardContent>
           <Typography variant="h6" gutterBottom>
-            Employee Performance & Turnover Risk
+            Full-Time Employees – Performance Analytics
           </Typography>
+
           <TableContainer component={Paper}>
             <Table>
               <TableHead>
                 <TableRow>
                   <TableCell>Employee Name</TableCell>
-                  <TableCell>Department</TableCell>
-                  <TableCell>Performance Rating</TableCell>
+                  <TableCell>Designation</TableCell>
+                  <TableCell>Self / TL / Final Rating</TableCell>
                   <TableCell>Turnover Risk</TableCell>
                   <TableCell>Tenure</TableCell>
                 </TableRow>
               </TableHead>
+
               <TableBody>
-                {employeeData.map((employee, index) => (
-                  <TableRow key={index}>
-                    <TableCell>{employee.name}</TableCell>
-                    <TableCell>{employee.department}</TableCell>
-                    <TableCell>{employee.performance}/5</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={employee.turnoverRisk}
-                        color={
-                          employee.turnoverRisk === 'Low'
-                            ? 'success'
-                            : employee.turnoverRisk === 'Medium'
-                            ? 'warning'
-                            : 'error'
-                        }
-                        size="small"
-                      />
+                {employees.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} align="center">
+                      {loading ? "Loading..." : "No approved performance reviews found"}
                     </TableCell>
-                    <TableCell>{employee.tenure}</TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  employees
+                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                    .map((emp) => (
+                      <TableRow key={emp.id}>
+                        <TableCell>{emp.name}</TableCell>
+                        <TableCell>{emp.department}</TableCell>
+
+                        <TableCell>
+                          {emp.selfRating || "–"} / {emp.tlRating || "–"} /{" "}
+                          <strong>{emp.performance || "–"}</strong>
+                        </TableCell>
+
+                        <TableCell>
+                          <Chip
+                            label={emp.turnoverRisk || "Unknown"}
+                            color={
+                              emp.turnoverRisk === "Low"
+                                ? "success"
+                                : emp.turnoverRisk === "Medium"
+                                ? "warning"
+                                : "error"
+                            }
+                            size="small"
+                          />
+                        </TableCell>
+
+                        <TableCell>{emp.tenure || "–"}</TableCell>
+                      </TableRow>
+                    ))
+                )}
               </TableBody>
             </Table>
+
+            {/* 🔥 PAGINATION HERE */}
+            <TablePagination
+              rowsPerPageOptions={[5, 10, 20]}
+              component="div"
+              count={employees.length}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onPageChange={(e, newPage) => setPage(newPage)}
+              onRowsPerPageChange={(e) => {
+                setRowsPerPage(parseInt(e.target.value, 10));
+                setPage(0);
+              }}
+            />
           </TableContainer>
         </CardContent>
       </Card>

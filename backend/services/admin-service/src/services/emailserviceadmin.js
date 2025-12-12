@@ -5,14 +5,14 @@ dotenv.config();
  
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
-  port: process.env.SMTP_PORT,
-  secure: false, // set to true if using port 465
+  port: Number(process.env.SMTP_PORT),  // Must use 465 for Gmail
+  secure: true,                         // Gmail SMTP requires secure:true on 465
   auth: {
     user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
+    pass: process.env.SMTP_PASS,        // MUST BE 16-digit app password without spaces
   },
   tls: {
-    rejectUnauthorized: false, // allow self-signed certificates
+    rejectUnauthorized: false,
   },
 });
  
@@ -31,7 +31,6 @@ export async function sendEmail(
       html,
     };
  
-    // Add attachment if provided
     if (attachmentPath && attachmentName) {
       mailOptions.attachments = [
         {

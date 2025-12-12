@@ -5,8 +5,12 @@ import dotenv from "dotenv";
 import adminRoutes from "./routes/admin.routes.js";
 import path from "path";
 import pool from "./config/db.js"; // PostgreSQL connection
+import zohoAuthRoutes from "./routes/zohoAuthRoutes.js";
 dotenv.config();
 const app = express();
+
+
+app.use("/", zohoAuthRoutes);
 
 app.use(cors({
   origin: "*" // your Vercel frontend domain
@@ -29,5 +33,5 @@ app.use("/admin", adminRoutes);
   }
 })();
 
-const PORT = process.env.PORT || 5102;
+const PORT = process.env.PORT || 5202;
 app.listen(PORT, () => console.log(`Admin service running on port ${PORT}`));

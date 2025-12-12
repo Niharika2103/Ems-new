@@ -12,7 +12,25 @@ import AssignmentIcon from "@mui/icons-material/Assignment";
 
 const JobPostDashboard = () => {
   const navigate = useNavigate();
+const storedUser = JSON.parse(localStorage.getItem("user"));
+    const role =
+    storedUser?.employment_type ||
+    localStorage.getItem("role") ||
+    useSelector((state) => state.adminSlice) ||
+    useSelector((state) => state.authSlice?.role) ||
+    useSelector((state) => state.employeeSlice?.role);
 
+     const getJobInfoPath = () => {
+    if (storedUser?.employment_type === "fulltime") {
+      return "/job-posts";
+    }
+    if (role === "admin") {
+      return "/employee/application-tracking";
+    }
+    return "/";
+  };
+
+  const isAdmin = role === "admin"; //off onclick for employeeside
 
   const stats = [
     {
@@ -21,7 +39,8 @@ const JobPostDashboard = () => {
       icon: GroupIcon,
       iconBg: "bg-sky-100",
       iconColor: "text-sky-600",
-      onClick: () => navigate("/published-jobs"),
+      onClick: isAdmin ? () => navigate("/published-jobs") : () => {},
+  disabled: !isAdmin
     },
     {
       title: "Create Jobs",
@@ -29,7 +48,8 @@ const JobPostDashboard = () => {
       icon: AssignmentIcon,
       iconBg: "bg-sky-100",
       iconColor: "text-sky-600",
-      onClick: () => navigate("/job-postings"),
+        onClick: isAdmin ? () => navigate("/job-postings") : () => {},
+  disabled: !isAdmin
     },
     {
     title: "Job Info",
@@ -37,8 +57,7 @@ const JobPostDashboard = () => {
     icon: PersonIcon,
     iconBg: "bg-sky-100",
     iconColor: "text-sky-600",
-    // onClick: () => navigate("/job-posts"),
-   onClick: () => navigate("/employee/application-tracking"),
+   onClick: () => navigate(getJobInfoPath()),
 
   },
 
@@ -48,7 +67,9 @@ const JobPostDashboard = () => {
       icon: GroupIcon,
       iconBg: "bg-sky-100",
       iconColor: "text-sky-600",
-      onClick: () => navigate("/offers/status"),
+      onClick: isAdmin ? () => navigate("/offers/status") : () => {},
+  disabled: !isAdmin
+      
     },
 
   {
@@ -60,24 +81,7 @@ const JobPostDashboard = () => {
       onClick: () => navigate("/feedback-table"),
     },
 
-    {
-      title: "Settings",
-      message: "Configure system settings",
-      icon: SettingsIcon,
-      iconBg: "bg-pink-100",
-      iconColor: "text-pink-600",
-    //   onClick: () => navigate("/settings"),
-    },
-    {
-      title: "Accounts",
-      message: "Manage accounts and transactions",
-      icon: AccountBalanceIcon,
-      iconBg: "bg-yellow-100",
-      iconColor: "text-yellow-600",
-    //   onClick: () => navigate("/accounts/salary-structure"),
-    },
-
-     
+   
   ];
 
   return (

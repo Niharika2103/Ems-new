@@ -27,12 +27,20 @@ export default function EmployeeRegisterForm() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { loading, preview } = useSelector((state) => state.employee);
+  const getTodayDate = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
     // employeeId: "",
-    dateOfJoining: "",
+    dateOfJoining: getTodayDate(),
     role: "employee",
     address: "",
     phone: "",
@@ -346,6 +354,7 @@ export default function EmployeeRegisterForm() {
                 fullWidth
                 size="small"
                 InputLabelProps={{ shrink: true }}
+                inputProps={{ max: getTodayDate() }}
                 error={!!errors.dateOfJoining}
                 helperText={errors.dateOfJoining}
                 required

@@ -35,7 +35,7 @@ const EmployeeDashboard = () => {
       icon: PeopleIcon,
       iconBg: "bg-purple-100",
       iconColor: "text-purple-600",
-      onClick: () => navigate("/hr"),
+      // onClick: () => navigate("/hr"),
     },
     {
       title: "Payslip",
@@ -45,14 +45,7 @@ const EmployeeDashboard = () => {
       iconColor: "text-pink-600",
       onClick: () => navigate("/payslip"),
     },
-    {
-      title: "Accounts",
-      message: "Manage accounts and transactions",
-      icon: AccountBalanceIcon,
-      iconBg: "bg-yellow-100",
-      iconColor: "text-yellow-600",
-      onClick: () => navigate("/accounts"),
-    },
+   
   ];
 
   return (

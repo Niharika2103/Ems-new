@@ -1,15 +1,10 @@
 // interview.controller.js
 import pool from "../config/db.js";
 import { sendEmail } from "../services/emailserviceadmin.js";
-// import { sendSMS } from "../services/smsserviceadmin.js";  // <-- SMS DISABLED
-
-// helper to clean phone numbers (kept for future use)
-const cleanPhone = (value) =>
-  value ? value.toString().replace(/\s+/g, "").replace("+91", "") : null;
+import { sendSMS, cleanPhone } from "../services/smsserviceadmin.js";
 
 /* ============================================================
-   1️⃣ Schedule Interview (Manual Google Meet Link)
-   For ALL candidates who applied to the same job
+   1️⃣ Schedule Interview (Email + SMS)
    ============================================================ */
 export const scheduleInterview = async (req, res) => {
   try {
@@ -33,7 +28,7 @@ export const scheduleInterview = async (req, res) => {
     const finalDateTime = `${interview_date} ${interview_time}`;
 
     /* ------------------------------------------------
-       1️⃣ Fetch job_id of selected application
+       1️⃣ Find job_id
     ------------------------------------------------ */
     const jobResult = await pool.query(
       `SELECT job_id FROM applications WHERE application_id = $1`,
@@ -50,10 +45,10 @@ export const scheduleInterview = async (req, res) => {
     const jobId = jobResult.rows[0].job_id;
 
     /* ------------------------------------------------
-       2️⃣ Fetch ALL applications for that job
+       2️⃣ Fetch ALL applications for this job
     ------------------------------------------------ */
     const appsResult = await pool.query(
-      `SELECT application_id, candidate_name, email, phone
+      `SELECT application_id, candidate_name, email, phone 
        FROM applications
        WHERE job_id = $1`,
       [jobId]
@@ -61,7 +56,7 @@ export const scheduleInterview = async (req, res) => {
 
     const allApplications = appsResult.rows;
 
-    if (allApplications.length === 0) {
+    if (!allApplications.length) {
       return res.status(404).json({
         success: false,
         message: "No applications found for this job",
@@ -69,13 +64,14 @@ export const scheduleInterview = async (req, res) => {
     }
 
     /* ------------------------------------------------
-       3️⃣ Fetch panel contacts (if any)
+       3️⃣ Fetch panel info
     ------------------------------------------------ */
     let panelContacts = [];
-
     if (panel_member_ids.length > 0) {
       const panelResult = await pool.query(
-        `SELECT email, phone FROM user_employees_master WHERE id = ANY($1)`,
+        `SELECT id, name, email, phone
+         FROM user_master
+         WHERE id = ANY($1)`,
         [panel_member_ids]
       );
       panelContacts = panelResult.rows;
@@ -84,7 +80,7 @@ export const scheduleInterview = async (req, res) => {
     const panelEmails = panelContacts.map((p) => p.email).filter(Boolean);
 
     /* ------------------------------------------------
-       4️⃣ Meeting link + interviewer
+       4️⃣ Meeting link
     ------------------------------------------------ */
     const finalMeetingLink = meeting_link || "Online";
 
@@ -92,17 +88,22 @@ export const scheduleInterview = async (req, res) => {
       panelEmails.length > 0 ? panelEmails.join(",") : interviewer;
 
     /* ------------------------------------------------
-       5️⃣ Create interview rows for ALL candidates
+       5️⃣ Create interview rows
     ------------------------------------------------ */
     const createdInterviews = [];
 
     for (const app of allApplications) {
       const insertQuery = `
         INSERT INTO interviews (
-          application_id, interview_date, interview_type,
-          interviewer, location, status, created_at
+          application_id,
+          interview_date,
+          interview_type,
+          interviewer,
+          location,
+          status,
+          created_at
         )
-        VALUES ($1,$2,$3,$4,$5,'SCHEDULED',NOW())
+        VALUES ($1, $2, $3, $4, $5, 'SCHEDULED', NOW())
         RETURNING *;
       `;
 
@@ -117,105 +118,113 @@ export const scheduleInterview = async (req, res) => {
       createdInterviews.push(insertResult.rows[0]);
 
       await pool.query(
-        `UPDATE applications SET status='INTERVIEW', updated_at=NOW()
-         WHERE application_id=$1`,
+        `UPDATE applications 
+         SET status = 'INTERVIEW', updated_at = NOW()
+         WHERE application_id = $1`,
         [app.application_id]
       );
     }
 
     /* ------------------------------------------------
-       6️⃣ Send EMAIL (SMS Disabled)
+       6️⃣ Send EMAIL + SMS to candidates
     ------------------------------------------------ */
-    try {
-      // ---- Candidate Emails ----
-      for (const app of allApplications) {
-        await sendEmail(
-          app.email,
-          "Interview Scheduled",
-          `
-          <h2>Hello ${app.candidate_name},</h2>
-          <p>Your interview has been scheduled.</p>
-          <p><strong>Date:</strong> ${interview_date}</p>
-          <p><strong>Time:</strong> ${interview_time}</p>
-          <p><strong>Type:</strong> ${interview_type}</p>
-          <p><strong>Meeting Link:</strong>
-             <a href="${finalMeetingLink}" target="_blank">${finalMeetingLink}</a>
-          </p>
-          `
-        );
+    for (const app of allApplications) {
+      const candidateEmail = app.email;
+      const candidatePhone = cleanPhone(app.phone);
 
-        /* --------------------------
-           SMS DISABLED FOR CANDIDATES
-        -------------------------- 
-        const candidatePhone = cleanPhone(app.phone);
-        if (candidatePhone) {
+      // EMAIL
+      if (candidateEmail) {
+        try {
+          await sendEmail(
+            candidateEmail,
+            "Interview Scheduled",
+            `
+            <h2>Hello ${app.candidate_name},</h2>
+            <p>Your interview has been scheduled.</p>
+            <p><strong>Date:</strong> ${interview_date}</p>
+            <p><strong>Time:</strong> ${interview_time}</p>
+            <p><strong>Type:</strong> ${interview_type}</p>
+            <p><strong>Meeting Link:</strong>
+              <a href="${finalMeetingLink}" target="_blank">${finalMeetingLink}</a>
+            </p>
+          `
+          );
+        } catch (e) {
+          console.error("❌ Failed to send email:", candidateEmail, e.message);
+        }
+      }
+
+      // SMS
+      if (candidatePhone) {
+        try {
           await sendSMS(
             candidatePhone,
-            \`Hi ${app.candidate_name}, your interview for job ${jobId} is on ${interview_date} at ${interview_time}. Link: ${finalMeetingLink}\`
+            `Hi ${app.candidate_name}, your interview for ${interview_type} is scheduled on ${interview_date} at ${interview_time}. Link: ${finalMeetingLink} - HR Team`
+
           );
+        } catch (e) {
+          console.error("❌ Failed to send SMS:", candidatePhone, e.message);
         }
-        */
       }
-
-      // ---- Panel Emails ----
-      for (const panel of panelContacts) {
-        await sendEmail(
-          panel.email,
-          "Interviews Scheduled",
-          `
-          <h2>Multiple Interviews Scheduled</h2>
-          <p>Job ID: ${jobId}</p>
-          <p><strong>Date:</strong> ${interview_date}</p>
-          <p><strong>Time:</strong> ${interview_time}</p>
-          <p><strong>Type:</strong> ${interview_type}</p>
-          <p>Candidates: ${allApplications.length}</p>
-          <p><strong>Meeting Link:</strong>
-             <a href="${finalMeetingLink}" target="_blank">${finalMeetingLink}</a>
-          </p>
-          `
-        );
-
-        /* --------------------------
-           SMS DISABLED FOR PANEL
-        -------------------------- 
-        const panelPhone = cleanPhone(panel.phone);
-        if (panelPhone) {
-          await sendSMS(
-            panelPhone,
-            \`You have ${allApplications.length} interviews for job ${jobId} on ${interview_date} at ${interview_time}. Link: ${finalMeetingLink}\`
-          );
-        }
-        */
-      }
-
-      console.log("📧 Emails sent (SMS disabled)");
-
-    } catch (notifyErr) {
-      console.error("Notification Error:", notifyErr);
     }
 
     /* ------------------------------------------------
-       7️⃣ Final Response
+       7️⃣ Send Panel EMAIL + SMS
     ------------------------------------------------ */
+    for (const panel of panelContacts) {
+      const panelEmail = panel.email;
+      const panelPhone = cleanPhone(panel.phone);
+
+      // Email
+      if (panelEmail) {
+        try {
+          await sendEmail(
+            panelEmail,
+            "Interview Panel Assignment",
+            `
+            <h2>Hello ${panel.name},</h2>
+            <p>You have been added as a panel member.</p>
+            <p><strong>Date:</strong> ${interview_date}</p>
+            <p><strong>Time:</strong> ${interview_time}</p>
+            <p><strong>Type:</strong> ${interview_type}</p>
+            <p><strong>Total Candidates:</strong> ${allApplications.length}</p>
+            <p><strong>Link:</strong> ${finalMeetingLink}</p>
+          `
+          );
+        } catch (e) {
+          console.error("❌ Failed to send panel email:", panelEmail, e.message);
+        }
+      }
+
+      // SMS
+      if (panelPhone) {
+        try {
+          await sendSMS(
+            panelPhone,
+            `Hi ${panel.name}, you are assigned to an interview panel on ${interview_date} at ${interview_time}. Total candidates: ${allApplications.length}. Link: ${finalMeetingLink} - HR Team`
+
+          );
+        } catch (e) {
+          console.error("❌ Failed to send panel SMS:", panelPhone, e.message);
+        }
+      }
+    }
+
     return res.json({
       success: true,
-      message: `Interview scheduled for ${allApplications.length} candidates (SMS disabled)`,
+      message: `Interview scheduled for ${allApplications.length} candidates`,
       interviews: createdInterviews,
       meet_link: finalMeetingLink,
       job_id: jobId,
     });
-
   } catch (err) {
     console.error("Schedule Interview Error:", err);
-    return res.status(500).json({
-      success: false,
-      message: "Server error",
-    });
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
 /* ============================================================
-   Remaining Endpoints – No Change
+   OTHER ENDPOINTS
    ============================================================ */
 
 export const getInterviewsByApplication = async (req, res) => {
@@ -224,7 +233,7 @@ export const getInterviewsByApplication = async (req, res) => {
 
     const result = await pool.query(
       `SELECT * FROM interviews 
-       WHERE application_id=$1 
+       WHERE application_id = $1 
        ORDER BY interview_date ASC`,
       [application_id]
     );
@@ -244,16 +253,13 @@ export const updateInterviewStatus = async (req, res) => {
     const allowedStatuses = ["SCHEDULED", "COMPLETED", "NO_SHOW", "CANCELLED"];
 
     if (!allowedStatuses.includes(status)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid status",
-      });
+      return res.status(400).json({ success: false, message: "Invalid status" });
     }
 
     const response = await pool.query(
       `UPDATE interviews 
-       SET status=$1, updated_at=NOW()
-       WHERE interview_id=$2 
+       SET status = $1, updated_at = NOW()
+       WHERE interview_id = $2 
        RETURNING *`,
       [status, interview_id]
     );
@@ -272,27 +278,83 @@ export const updateInterviewStatus = async (req, res) => {
 export const rescheduleInterview = async (req, res) => {
   try {
     const { interview_id } = req.params;
-    const { interview_date, interview_time } = req.body;
+    const { interview_date, interview_time, meeting_link } = req.body;
 
-    if (!interview_date || !interview_time) {
+    if (!interview_date || !interview_time || !meeting_link) {
       return res.status(400).json({
         success: false,
-        message: "New date & time required",
+        message: "Date, time & meeting link are required",
       });
     }
 
-    const newDateTime = `${interview_date}T${interview_time}`;
+    const newDateTime = `${interview_date} ${interview_time}`;
+
+    const oldInterview = await pool.query(
+      `SELECT application_id FROM interviews WHERE interview_id = $1`,
+      [interview_id]
+    );
+
+    if (oldInterview.rowCount === 0) {
+      return res.status(404).json({ success: false, message: "Interview not found" });
+    }
+
+    const application_id = oldInterview.rows[0].application_id;
+
+    const appResult = await pool.query(
+      `SELECT candidate_name, email, phone 
+       FROM applications 
+       WHERE application_id = $1`,
+      [application_id]
+    );
+
+    const candidate = appResult.rows[0];
 
     const result = await pool.query(
-      `UPDATE interviews 
-       SET interview_date=$1, status='RESCHEDULED', updated_at=NOW()
-       WHERE interview_id=$2 RETURNING *`,
-      [newDateTime, interview_id]
+      `UPDATE interviews
+       SET interview_date = $1,
+           location = $2,
+           status = 'RESCHEDULED',
+           updated_at = NOW()
+       WHERE interview_id = $3 
+       RETURNING *`,
+      [newDateTime, meeting_link, interview_id]
     );
+
+    // EMAIL
+    try {
+      await sendEmail(
+        candidate.email,
+        "Interview Rescheduled",
+        `
+        <h2>Hello ${candidate.candidate_name},</h2>
+        <p>Your interview has been rescheduled.</p>
+        <p><strong>New Date:</strong> ${interview_date}</p>
+        <p><strong>New Time:</strong> ${interview_time}</p>
+        <p><strong>Meeting Link:</strong>
+          <a href="${meeting_link}" target="_blank">${meeting_link}</a>
+        </p>
+      `
+      );
+    } catch (e) {
+      console.error("❌ Failed email:", candidate.email, e.message);
+    }
+
+    // SMS
+    if (candidate.phone) {
+      try {
+        await sendSMS(
+          cleanPhone(candidate.phone),
+          `Hi ${candidate.candidate_name}, your interview has been rescheduled to ${interview_date} at ${interview_time}. New link: ${meeting_link} - HR Team`
+
+        );
+      } catch (e) {
+        console.error("❌ Failed SMS:", candidate.phone, e.message);
+      }
+    }
 
     return res.json({
       success: true,
-      message: "Interview rescheduled",
+      message: "Interview rescheduled (email + SMS sent)",
       interview: result.rows[0],
     });
   } catch (err) {
@@ -305,21 +367,71 @@ export const cancelInterview = async (req, res) => {
   try {
     const { interview_id } = req.params;
 
-    const result = await pool.query(
-      `UPDATE interviews 
-       SET status='CANCELLED', updated_at=NOW()
-       WHERE interview_id=$1 RETURNING *`,
+    const oldInterview = await pool.query(
+      `SELECT application_id FROM interviews WHERE interview_id = $1`,
       [interview_id]
     );
 
+    if (oldInterview.rowCount === 0) {
+      return res.status(404).json({ success: false, message: "Interview not found" });
+    }
+
+    const application_id = oldInterview.rows[0].application_id;
+
+    const app = await pool.query(
+      `SELECT candidate_name, email, phone
+       FROM applications 
+       WHERE application_id = $1`,
+      [application_id]
+    );
+
+    const candidate = app.rows[0];
+
+    const result = await pool.query(
+      `UPDATE interviews
+       SET status = 'CANCELLED', updated_at = NOW()
+       WHERE interview_id = $1
+       RETURNING *`,
+      [interview_id]
+    );
+
+    // EMAIL
+    try {
+      await sendEmail(
+        candidate.email,
+        "Interview Cancelled",
+        `
+        <h2>Hello ${candidate.candidate_name},</h2>
+        <p>Your interview has been cancelled.</p>
+      `
+      );
+    } catch (e) {
+      console.error("❌ Failed email:", candidate.email, e.message);
+    }
+
+    // SMS
+    if (candidate.phone) {
+      try {
+        await sendSMS(
+          cleanPhone(candidate.phone),
+          `Hi ${candidate.candidate_name}, your interview has been cancelled. We will inform you if it is rescheduled. - HR Team`
+
+        );
+      } catch (e) {
+        console.error("❌ Failed SMS:", candidate.phone, e.message);
+      }
+    }
+
     return res.json({
       success: true,
-      message: "Interview cancelled",
+      message: "Interview cancelled (email + SMS sent)",
       interview: result.rows[0],
     });
-
   } catch (err) {
     console.error("Cancel Error:", err);
-    return res.status(500).json({ success: false, message: "Server error" });
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
   }
 };
