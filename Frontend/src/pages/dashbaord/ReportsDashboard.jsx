@@ -36,7 +36,7 @@ const ReportsDashboard = () => {
     },
     {
       title: "Employee ROI",
-      message: "Freelancer cost vs productivity insights",
+      message: "Employee cost vs productivity insights",
       icon: TrendingUpIcon,
       iconBg: "bg-orange-100",
       iconColor: "text-orange-600",

@@ -18,6 +18,7 @@ import {
   Paper,
   TextField,
   Chip,
+  TablePagination,
 } from "@mui/material";
 import { Refresh as RefreshIcon, Download as DownloadIcon } from "@mui/icons-material";
 import { getFreelancerHRAnalyticsApi } from "../../../../api/authApi";
@@ -191,8 +192,18 @@ const FreelancerHRAnalytics = () => {
                   </TableRow>
                 )}
               </TableBody>
-
             </Table>
+
+            {/* Pagination */}
+            <TablePagination
+              component="div"
+              count={filteredData.length}
+              page={page}
+              onPageChange={handleChangePage}
+              rowsPerPage={rowsPerPage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+              rowsPerPageOptions={[5, 10, 25]}
+            />
           </TableContainer>
         </CardContent>
       </Card>

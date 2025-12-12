@@ -12,14 +12,23 @@ const __dirname = path.dirname(__filename);
 const uploadBasePath = path.join(__dirname, "..", "..", "uploads");
 
 // Ensure folders exist
-const subFolders = ["passbook", "aadhaar", "pan", "gstCertificate", "gstReturns", "photo"];
+const subFolders = [
+  "passbook",
+  "aadhaar",
+  "pan",
+  "gstCertificate",
+  "gstReturns",
+  "photo",
+  "freelancerDocument"   
+];
+
 subFolders.forEach((folder) => {
   const fullPath = path.join(uploadBasePath, folder);
   if (!fs.existsSync(fullPath)) {
     fs.mkdirSync(fullPath, { recursive: true });
   }
 });
-//
+
 // Allowed file types
 const allowedMimeTypes = [
   "image/jpeg",
@@ -49,6 +58,7 @@ const storage = multer.diskStorage({
       gstCertificate: "gstCertificate",
       gstReturns: "gstReturns",
       photo: "photo",
+      freelancerDocument: "freelancerDocument" 
     };
 
     const subFolder = folderMap[file.fieldname] || "others";

@@ -25,7 +25,7 @@ const SuperAdminDashboard = () => {
       icon: SettingsIcon,
       iconBg: "bg-purple-100",
       iconColor: "text-purple-600",
-      onClick: () => navigate("/system-config"),
+      // onClick: () => navigate("/system-config"),
     },
     {
       title: "Audit Logs",
@@ -41,7 +41,7 @@ const SuperAdminDashboard = () => {
       icon: AccountBalanceIcon,
       iconBg: "bg-yellow-100",
       iconColor: "text-yellow-600",
-      onClick: () => navigate("/accounts"),
+      // onClick: () => navigate("/accounts"),
     },
   ];
 
