@@ -98,6 +98,7 @@ import FreelancerCustomReports from "../pages/Freelancer/Reports/CustomReports/F
 import EmailTemplateEditor from "../pages/Templates/EmailTemplate/EmailTemplateEditor";
 import WhatsAppTemplateEditor from "../pages/Templates/WatsupTemplate/WatsupTemplateEditor";
 import CommunicationInfoDashboard from "../pages/dashbaord/CommunicationInfoDashboard";
+import EventWebhooks from "../pages/Templates/Webhook/EventWebhooks";
 function AppRoutes() {
   return (
     <Routes>
@@ -723,6 +724,7 @@ function AppRoutes() {
 
          <Route path="/email-template" element={<EmailTemplateEditor />} />
          <Route path="/watsup-template" element={<WhatsAppTemplateEditor />} />
+         <Route path="/webhook" element={<EventWebhooks />} />
 
          <Route
           path="/communication-info"
