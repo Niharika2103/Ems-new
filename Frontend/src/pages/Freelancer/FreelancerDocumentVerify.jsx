@@ -24,73 +24,91 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllFreelancer } from "../../features/freelancer/freelancerSlice";
-import VisibilityIcon from "@mui/icons-material/Visibility";
+
+// OCR + PDF
+import { getDocument } from "pdfjs-dist";
+import Tesseract from "tesseract.js";
+
+// -----------------------------------------------------------
+// OCR + PDF BASED IFSC EXTRACTOR
+// -----------------------------------------------------------
+const extractIFSC_OCR = async (fileOrUrl) => {
+  try {
+    let pdfBuffer;
+
+    // Case 1 → File upload
+    if (fileOrUrl instanceof File) {
+      pdfBuffer = await fileOrUrl.arrayBuffer();
+    }
+    // Case 2 → URL string
+    else {
+      const resp = await fetch(fileOrUrl);
+      const blob = await resp.blob();
+      pdfBuffer = await blob.arrayBuffer();
+    }
+
+    const pdf = await getDocument({ data: pdfBuffer }).promise;
+
+    // Loop all PDF pages
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      const page = await pdf.getPage(pageNum);
+
+      // Render page to canvas (important for OCR)
+      const viewport = page.getViewport({ scale: 2 });
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+
+      await page.render({ canvasContext: ctx, viewport }).promise;
+
+      // OCR the canvas
+      const ocrResult = await Tesseract.recognize(canvas, "eng");
+
+      const text = ocrResult.data.text.toUpperCase().replace(/\s+/g, "");
+
+      // Flexible IFSC pattern
+      const match = text.match(/[A-Z]{4}0[0-9]{6}/);
+
+      if (match) return match[0];
+    }
+
+    return null;
+  } catch (err) {
+    console.error("OCR IFSC Error:", err);
+    return null;
+  }
+};
+
+// -----------------------------------------------------------
+// MAIN COMPONENT
+// -----------------------------------------------------------
 
 export default function AdminVerificationTabs() {
   const [tab, setTab] = useState(0);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [searchText, setSearchText] = useState("");
+
   const dispatch = useDispatch();
 
+  useEffect(() => {
+    dispatch(fetchAllFreelancer());
+  }, [dispatch]);
 
-   useEffect(() => {
-      dispatch(fetchAllFreelancer());
-    }, [dispatch]);
-     const freelancers = useSelector(
-        (state) => state.freelancerInfo.freelancerlist
-      );
+  const freelancers = useSelector(
+    (state) => state.freelancerInfo.freelancerlist
+  );
 
-     // FILTER FREELANCERS
   const filteredFreelancers = freelancers?.filter((item) => {
-    const search = searchText.toLowerCase();
+    const s = search.toLowerCase();
     return (
-      item.name?.toLowerCase().includes(search) ||
-      item.email?.toLowerCase().includes(search) ||
-      item.department?.toLowerCase().includes(search) ||
-      item.address?.toLowerCase().includes(search)
+      item.name?.toLowerCase().includes(s) ||
+      item.email?.toLowerCase().includes(s) ||
+      item.id?.toLowerCase().includes(s)
     );
   });
-
-  //  DUMMY DATA
-  const dummy = [
-    {
-      id: "USR001",
-      name: "Vignesh Kumar",
-      email: "viki@example.com",
-      phone: "9876543210",
-      panNumber: "ABCDE1234F",
-      aadhaarNumber: "1234-5678-9012",
-      bankAccount: "1234567890",
-      ifsc: "HDFC0001234",
-      panUrl: "https://dummy.com/pan.pdf",
-      aadhaarUrl: "https://dummy.com/aadhaar.pdf",
-      bankUrl: "https://dummy.com/bank.pdf",
-      status: "pending",
-    },
-    {
-      id: "USR002",
-      name: "Sanjay",
-      email: "sanjay@example.com",
-      phone: "9876512345",
-      panNumber: "PQRSX9876Q",
-      aadhaarNumber: "3456-7788-9900",
-      bankAccount: "4567891230",
-      ifsc: "ICIC0004587",
-      panUrl: "https://dummy.com/pan2.pdf",
-      aadhaarUrl: "https://dummy.com/aadhaar2.pdf",
-      bankUrl: "https://dummy.com/bank2.pdf",
-      status: "verified",
-    },
-  ];
-
-  const filtered = dummy.filter(
-    (f) =>
-      f.name.toLowerCase().includes(search.toLowerCase()) ||
-      f.email.toLowerCase().includes(search.toLowerCase()) ||
-      f.id.toLowerCase().includes(search.toLowerCase())
-  );
 
   const statusChip = (st) => {
     switch (st) {
@@ -113,7 +131,33 @@ export default function AdminVerificationTabs() {
   const closeModal = () => setModalOpen(false);
 
   const verify = (type) => {
-    alert(`${type} Verification Triggered ✔ (Dummy)`);
+    alert(`${type} verification triggered.`);
+  };
+
+  // -----------------------------------------------------------
+  // BANK PDF → OCR → Extract IFSC
+  // -----------------------------------------------------------
+  const readPassbookOCR = async () => {
+    if (!selected?.document_url?.bankPassbook) {
+      alert("No passbook uploaded");
+      return;
+    }
+
+    const file = selected.document_url.bankPassbook;
+
+    // RUN OCR
+    const ifsc = await extractIFSC_OCR(file);
+
+    if (ifsc) {
+      alert("Extracted IFSC: " + ifsc);
+      setSelected((prev) => ({ ...prev, extractedIFSC: ifsc }));
+    } else {
+      alert("IFSC not found (PDF very unclear or low quality)");
+    }
+
+    // open PDF in new tab
+    const url = file instanceof File ? URL.createObjectURL(file) : file;
+    window.open(url, "_blank");
   };
 
   return (
@@ -124,18 +168,15 @@ export default function AdminVerificationTabs() {
             Admin Verification Dashboard
           </Typography>
 
-          {/* ⭐ TAB MENU */}
           <Tabs value={tab} onChange={(e, v) => setTab(v)}>
             <Tab label="PAN Verification" />
             <Tab label="Aadhaar Verification" />
             <Tab label="Bank Verification" />
             <Tab label="GST Verification" />
-
           </Tabs>
 
           <Divider sx={{ my: 2 }} />
 
-          {/* SEARCH BAR */}
           <TextField
             placeholder="Search by name, email, ID"
             value={search}
@@ -165,7 +206,7 @@ export default function AdminVerificationTabs() {
               </TableHead>
 
               <TableBody>
-                {filteredFreelancers.map((row) => (
+                {filteredFreelancers?.map((row) => (
                   <TableRow key={row.id} hover>
                     <TableCell>
                       <Stack direction="row" spacing={2} alignItems="center">
@@ -198,7 +239,7 @@ export default function AdminVerificationTabs() {
         </CardContent>
       </Card>
 
-      {/*  MODAL WITH DYNAMIC TABS */}
+      {/* MODAL */}
       <Modal open={modalOpen} onClose={closeModal}>
         <Box
           sx={{
@@ -222,14 +263,17 @@ export default function AdminVerificationTabs() {
 
               <Divider sx={{ my: 2 }} />
 
-              {/*  TAB 0 → PAN */}
+              {/* PAN TAB */}
               {tab === 0 && (
                 <>
-                  <Typography fontWeight={700}>PAN Number: {selected.panNumber}</Typography>
-                  <a href={selected.panUrl} target="_blank">View Document</a>
+                  <Typography>PAN Number: {selected.panNumber}</Typography>
+                  <a href={selected.panUrl} target="_blank">
+                    View PAN Document
+                  </a>
+
                   <Button
-                    variant="contained"
                     sx={{ mt: 2 }}
+                    variant="contained"
                     onClick={() => verify("PAN")}
                   >
                     Verify PAN
@@ -237,14 +281,17 @@ export default function AdminVerificationTabs() {
                 </>
               )}
 
-              {/*  TAB 1 → AADHAAR */}
+              {/* AADHAAR TAB */}
               {tab === 1 && (
                 <>
-                  <Typography fontWeight={700}>Aadhaar: {selected.aadhaarNumber}</Typography>
-                  <a href={selected.aadhaarUrl} target="_blank">View Document</a>
+                  <Typography>Aadhaar: {selected.aadhaarNumber}</Typography>
+                  <a href={selected.aadhaarUrl} target="_blank">
+                    View Aadhaar
+                  </a>
+
                   <Button
-                    variant="contained"
                     sx={{ mt: 2 }}
+                    variant="contained"
                     onClick={() => verify("Aadhaar")}
                   >
                     Verify Aadhaar
@@ -252,33 +299,37 @@ export default function AdminVerificationTabs() {
                 </>
               )}
 
-              {/*  TAB 2 → BANK */}
+              {/* BANK TAB */}
               {tab === 2 && (
                 <>
-                  <Typography fontWeight={700}>Bank Account</Typography>
-                  <Typography>Account: {selected.bankAccount}</Typography>
-                  <Typography>IFSC: {selected.ifsc}</Typography>
-                  {/* <a href={selected.bankUrl} target="_blank">View Passbook</a> */}
-                {selected.document_url?.bankPassbook ? (
-  <a
-    href={
-      selected.document_url.bankPassbook instanceof File
-        ? URL.createObjectURL(selected.document_url.bankPassbook)
-        : selected.document_url.bankPassbook
-    }
-    target="_blank"
-    rel="noopener noreferrer"
-    style={{ display: "block", marginTop: 10 }}
-  >
-    View Bank Passbook
-  </a>
-) : (
-  <Typography>No Passbook Uploaded</Typography>
-)}
+                  <Typography fontWeight={700}>Bank Details</Typography>
+                  <Typography>Account Number: {selected.bankAccount}</Typography>
+                  <Typography>IFSC (Saved): {selected.ifsc}</Typography>
+
+                  {selected.extractedIFSC && (
+                    <Typography sx={{ mt: 1 }}>
+                      Extracted from PDF:{" "}
+                      <b style={{ color: "green" }}>
+                        {selected.extractedIFSC}
+                      </b>
+                    </Typography>
+                  )}
+
+                  {selected.document_url?.bankPassbook ? (
+                    <Button
+                      sx={{ mt: 2 }}
+                      variant="outlined"
+                      onClick={readPassbookOCR}
+                    >
+                      Read Passbook (OCR IFSC)
+                    </Button>
+                  ) : (
+                    <Typography>No Passbook Uploaded</Typography>
+                  )}
 
                   <Button
                     variant="contained"
-                    sx={{ mt: 2 }}
+                    sx={{ mt: 2, ml: 2 }}
                     onClick={() => verify("Bank")}
                   >
                     Verify Bank
@@ -286,7 +337,24 @@ export default function AdminVerificationTabs() {
                 </>
               )}
 
-              <Button sx={{ mt: 3 }} onClick={closeModal}>Close</Button>
+              {/* GST TAB */}
+              {tab === 3 && (
+                <>
+                  <Typography>GST Number: {selected.gstNumber}</Typography>
+
+                  <Button
+                    sx={{ mt: 2 }}
+                    variant="contained"
+                    onClick={() => verify("GST")}
+                  >
+                    Verify GST
+                  </Button>
+                </>
+              )}
+
+              <Button sx={{ mt: 3 }} onClick={closeModal}>
+                Close
+              </Button>
             </>
           )}
         </Box>
