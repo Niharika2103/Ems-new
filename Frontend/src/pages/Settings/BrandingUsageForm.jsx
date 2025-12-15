@@ -85,7 +85,7 @@ export default function BrandingUsageForm({ onClose }) {
                     control={
                         <Checkbox
                             checked={letters}
-                            onChange={(e) => setLetter(e.target.checked)}
+                            onChange={(e) => setLetters(e.target.checked)}
                         />
                     }
                     label="Apply branding to default letters"

@@ -83,14 +83,14 @@ function BrandingSection() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerKey, setDrawerKey] = useState(null); // 'identity' | 'usage' | 'whitelabel'
 
-  const openDrawer = (key) => {
-    setDrawerKey(key);
+   const openDrawer = (key) => {
+    setDrawerKey(key);      // 👈 always set fresh key
     setDrawerOpen(true);
   };
 
   const closeDrawer = () => {
     setDrawerOpen(false);
-    setDrawerKey(null);
+    setDrawerKey('');       // 👈 reset properly
   };
 
   return (
@@ -153,25 +153,22 @@ function BrandingSection() {
               </Typography>
             </CardContent>
             <CardActions sx={{ px: 2, pb: 2 }}>
-              <Button variant="outlined" size="small" onClick={() => openDrawer('whitelabelform')}>
+              <Button variant="outlined" size="small"  onClick={() => openDrawer('whitelabelform')}>
                 Edit
               </Button>
             </CardActions>
           </Card>
         </Grid>
       </Grid>
+<RightDrawer open={drawerOpen} onClose={closeDrawer} title="Branding">
+  {drawerKey === 'identity' && <BrandingIdentityForm onClose={closeDrawer} />}
+  {drawerKey === 'usage' && <BrandingUsageForm onClose={closeDrawer} />}
+  {drawerKey === 'whitelabel' && <BrandingWhiteLabelForm onClose={closeDrawer} />}
+  {drawerKey === 'whitelabelform' && (
+    <BrandingWhiteLabelTenantForm onClose={closeDrawer} />
+  )}
+</RightDrawer>
 
-      <RightDrawer open={drawerOpen} onClose={closeDrawer} title="Branding">
-       {drawerKey === 'identity' && <BrandingIdentityForm onClose={closeDrawer} />}
-{drawerKey === 'usage' && <BrandingUsageForm onClose={closeDrawer} />}
-
-        {drawerKey === 'whitelabel' && <BrandingWhiteLabelForm onClose={closeDrawer} />}
-        {drawerKey === 'whitelabelform' && (
-  <BrandingWhiteLabelTenantForm onClose={closeDrawer} />
-)}
-
-
-      </RightDrawer>
     </>
   );
 }

@@ -751,3 +751,18 @@ export const updateBranding = (formData) => {
     }
   );
 };
+
+export const updateWhiteLabel = (data) =>{
+ return settingsClient.put(`${AUTH_API.SETTINGS}/white-label`, data);
+}
+export const getTenantBrandingApi = (tenantKey) => {
+  return settingsClient.get(`${AUTH_API.SETTINGS}/api/tenants/${tenantKey}/branding`);
+};
+
+export const updateTenantBrandingApi = (tenantKey, formData) => {
+  return settingsClient.put(`${AUTH_API.SETTINGS}/api/tenants/${tenantKey}/branding`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};

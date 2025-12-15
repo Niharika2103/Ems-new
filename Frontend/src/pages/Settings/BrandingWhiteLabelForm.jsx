@@ -1,23 +1,41 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   Box,
-    Stack,  
-    FormControl,
-    FormControlLabel,
-    InputLabel,
-    Select,
-    MenuItem,
-    Checkbox,
+  Stack,
+  FormControl,
+  FormControlLabel,
+  InputLabel,
+  Select,
+  MenuItem,
+  Checkbox,
   Button,
-} from '@mui/material';
-    
+} from "@mui/material";
+import { fetchSettings ,updateWhiteLabel} from "../../api/authApi";
+
 export default function BrandingWhiteLabelForm({ onClose }) {
   const [enabled, setEnabled] = useState(false);
-  const [tenant, setTenant] = useState('');
+  const [tenant, setTenant] = useState("");
 
-  const handleSubmit = (e) => {
+  // 🔹 Load existing white-label config
+  useEffect(() => {
+    fetchSettings().then((res) => {
+      const wl = res.data?.whiteLabel;
+      if (!wl) return;
+
+      setEnabled(!!wl.enabled);
+      setTenant(wl.activeTenant || "");
+    });
+  }, []);
+
+  // 🔹 Save
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log({ enabled, tenant });
+
+    await updateWhiteLabel({
+      enabled,
+      activeTenant: tenant,
+    });
+
     onClose();
   };
 
@@ -25,8 +43,13 @@ export default function BrandingWhiteLabelForm({ onClose }) {
     <Box component="form" onSubmit={handleSubmit}>
       <Stack spacing={2}>
         <FormControlLabel
-          control={<Checkbox checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />}
-          label="Enable white‑label"
+          control={
+            <Checkbox
+              checked={enabled}
+              onChange={(e) => setEnabled(e.target.checked)}
+            />
+          }
+          label="Enable white-label branding"
         />
 
         {enabled && (
@@ -37,6 +60,7 @@ export default function BrandingWhiteLabelForm({ onClose }) {
               label="Tenant"
               value={tenant}
               onChange={(e) => setTenant(e.target.value)}
+              required
             >
               <MenuItem value="tenant-a">Tenant A</MenuItem>
               <MenuItem value="tenant-b">Tenant B</MenuItem>
@@ -45,7 +69,7 @@ export default function BrandingWhiteLabelForm({ onClose }) {
           </FormControl>
         )}
 
-        <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ mt: 1 }}>
+        <Stack direction="row" spacing={1} justifyContent="flex-end">
           <Button onClick={onClose}>Cancel</Button>
           <Button type="submit" variant="contained">
             Save
