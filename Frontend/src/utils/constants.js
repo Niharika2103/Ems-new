@@ -2,7 +2,7 @@ import { SalaryStructureClient } from "../api/axiosClient";
 
 // Different base URLs per r
 export const API_BASES = {
-  SUPERADMIN: import.meta.env.VITE_SUPERADMIN_URL || "http://localhost:5101",
+  SUPERADMIN: import.meta.env.VITE_SUPERADMIN_URL || "http://localhost:5001",
   ADMIN: import.meta.env.VITE_ADMIN_URL || "http://localhost:5202",
   EMPLOYEE: import.meta.env.VITE_EMPLOYEE_URL || "http://localhost:5009",
   PROJECT:import.meta.env.VITE_Project_URL || "http://localhost:8081/api",
