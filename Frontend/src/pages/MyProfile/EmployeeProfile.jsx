@@ -177,7 +177,7 @@ const EmployeeProfile = () => {
                 {formData.name || "Employee Name"}
               </Typography>
               <Typography variant="subtitle2" color="rgba(255,255,255,0.8)">
-                {formData.department || "Department"} • Employee
+                {formData.department || "Department"} 
               </Typography>
               <Typography variant="body2" color="rgba(255,255,255,0.8)" sx={{ mt: 0.5 }}>
                 {formData.email || "email@company.com"}

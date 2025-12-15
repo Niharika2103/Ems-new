@@ -1,5 +1,5 @@
 // SettingsPage.jsx
-import React, { useState } from 'react';
+import React, { useEffect,useState } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -24,11 +24,18 @@ import {
   Stack,
   Divider,
 } from '@mui/material';
+import BrandingIdentityForm from '../Settings/BrandingIdentityForm.jsx';
+import BrandingUsageForm from '../Settings/BrandingUsageForm.jsx';
+import BrandingWhiteLabelForm from '../Settings/BrandingWhiteLabelForm.jsx';
+import BrandingWhiteLabelTenantForm from './BrandingWhiteLabelTenantForm.jsx';
+
 import CloseIcon from '@mui/icons-material/Close';
 import { useNavigate } from 'react-router-dom';
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('branding');
+ 
+
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
@@ -136,155 +143,40 @@ function BrandingSection() {
             </CardActions>
           </Card>
         </Grid>
+
+         <Grid item xs={12} md={4}>
+          <Card sx={{ height: '100%' }}>
+            <CardContent>
+              <Typography variant="h6">White‑label Tanent Form</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                Create white‑label and configure tenant branding.
+              </Typography>
+            </CardContent>
+            <CardActions sx={{ px: 2, pb: 2 }}>
+              <Button variant="outlined" size="small" onClick={() => openDrawer('whitelabelform')}>
+                Edit
+              </Button>
+            </CardActions>
+          </Card>
+        </Grid>
       </Grid>
 
       <RightDrawer open={drawerOpen} onClose={closeDrawer} title="Branding">
-        {drawerKey === 'identity' && <BrandingIdentityForm onClose={closeDrawer} />}
-        {drawerKey === 'usage' && <BrandingUsageForm onClose={closeDrawer} />}
+       {drawerKey === 'identity' && <BrandingIdentityForm onClose={closeDrawer} />}
+{drawerKey === 'usage' && <BrandingUsageForm onClose={closeDrawer} />}
+
         {drawerKey === 'whitelabel' && <BrandingWhiteLabelForm onClose={closeDrawer} />}
+        {drawerKey === 'whitelabelform' && (
+  <BrandingWhiteLabelTenantForm onClose={closeDrawer} />
+)}
+
+
       </RightDrawer>
     </>
   );
 }
 
-function BrandingIdentityForm({ onClose }) {
-  const [companyName, setCompanyName] = useState('');
-  const [primaryColor, setPrimaryColor] = useState('#1976d2');
-  const [secondaryColor, setSecondaryColor] = useState('#2e7d32');
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log({ companyName, primaryColor, secondaryColor });
-    onClose();
-  };
-
-  return (
-    <Box component="form" onSubmit={handleSubmit}>
-      <Stack spacing={2}>
-        <Button variant="outlined" component="label">
-          Upload logo
-          <input type="file" accept="image/*" hidden />
-        </Button>
-
-        <TextField
-          label="Company name"
-          value={companyName}
-          onChange={(e) => setCompanyName(e.target.value)}
-          fullWidth
-          required
-        />
-
-        <TextField
-          label="Primary color"
-          type="color"
-          value={primaryColor}
-          onChange={(e) => setPrimaryColor(e.target.value)}
-          fullWidth
-          InputLabelProps={{ shrink: true }}
-        />
-
-        <TextField
-          label="Secondary color"
-          type="color"
-          value={secondaryColor}
-          onChange={(e) => setSecondaryColor(e.target.value)}
-          fullWidth
-          InputLabelProps={{ shrink: true }}
-        />
-
-        <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ mt: 1 }}>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="contained">
-            Save
-          </Button>
-        </Stack>
-      </Stack>
-    </Box>
-  );
-}
-
-function BrandingUsageForm({ onClose }) {
-  const [portal, setPortal] = useState(true);
-  const [payslip, setPayslip] = useState(true);
-  const [email, setEmail] = useState(true);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log({ portal, payslip, email });
-    onClose();
-  };
-
-  return (
-    <Box component="form" onSubmit={handleSubmit}>
-      <Stack spacing={1}>
-        <FormControlLabel
-          control={<Checkbox checked={portal} onChange={(e) => setPortal(e.target.checked)} />}
-          label="Apply branding to employee portal"
-        />
-        <FormControlLabel
-          control={<Checkbox checked={payslip} onChange={(e) => setPayslip(e.target.checked)} />}
-          label="Apply branding to payslips"
-        />
-        <FormControlLabel
-          control={<Checkbox checked={email} onChange={(e) => setEmail(e.target.checked)} />}
-          label="Apply branding to email templates"
-        />
-
-        <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ mt: 2 }}>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="contained">
-            Save
-          </Button>
-        </Stack>
-      </Stack>
-    </Box>
-  );
-}
-
-function BrandingWhiteLabelForm({ onClose }) {
-  const [enabled, setEnabled] = useState(false);
-  const [tenant, setTenant] = useState('');
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log({ enabled, tenant });
-    onClose();
-  };
-
-  return (
-    <Box component="form" onSubmit={handleSubmit}>
-      <Stack spacing={2}>
-        <FormControlLabel
-          control={<Checkbox checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />}
-          label="Enable white‑label"
-        />
-
-        {enabled && (
-          <FormControl fullWidth>
-            <InputLabel id="tenant-label">Tenant</InputLabel>
-            <Select
-              labelId="tenant-label"
-              label="Tenant"
-              value={tenant}
-              onChange={(e) => setTenant(e.target.value)}
-            >
-              <MenuItem value="tenant-a">Tenant A</MenuItem>
-              <MenuItem value="tenant-b">Tenant B</MenuItem>
-              <MenuItem value="tenant-c">Tenant C</MenuItem>
-            </Select>
-          </FormControl>
-        )}
-
-        <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ mt: 1 }}>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="contained">
-            Save
-          </Button>
-        </Stack>
-      </Stack>
-    </Box>
-  );
-}
 
 /* ---------- Salary Cycle ---------- */
 

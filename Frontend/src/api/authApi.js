@@ -1,8 +1,6 @@
-import { superadminClient,employeeClient,adminClient,ProjectClient,AttendanceClient,SalaryStructureClient, freelancerClient ,vendorClient } from "./axiosClient";
+import { superadminClient,employeeClient,adminClient,ProjectClient,AttendanceClient,
+  SalaryStructureClient, freelancerClient ,vendorClient,settingsClient } from "./axiosClient";
 import { AUTH_API } from "../utils/constants";
-
-
-import { RestaurantMenuSharp } from "@mui/icons-material";
 
 
 // ================= SuperAdmin =================
@@ -735,3 +733,21 @@ export const fetchAllPerformanceReviewsApi = () =>
 
 export const fetchFinalRatingsApi = () =>
   adminClient.get(`/admin/performance/final-ratings`);
+
+//branding settings APIs
+
+export const fetchSettings = () => {
+  return settingsClient.get(`${AUTH_API.SETTINGS}`);
+};
+
+export const updateBranding = (formData) => {
+  return settingsClient.put(
+    `${AUTH_API.SETTINGS}/branding`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+};
