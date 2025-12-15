@@ -56,11 +56,13 @@ const EmployeeProfile = () => {
     address: "",
     emergency_contact: "",
     department: "",
+    designation: "",
     permanent_address: "",
     profilePhoto: null,
     resume: null,
   });
 
+  const [resumeUploaded, setResumeUploaded] = useState(false);
   const [userId, setUserId] = useState(null);
 
   // Fetch employee profile
@@ -120,6 +122,7 @@ const EmployeeProfile = () => {
       .unwrap()
       .then((res) => {
         toast.success(res.message || "Profile updated successfully");
+         setResumeUploaded(true); 
         dispatch(fetchEmployeeProfile(profile.email));
       })
       .catch((err) => {
@@ -272,6 +275,22 @@ const EmployeeProfile = () => {
                     disabled
                   />
                 </Grid>
+                <Grid item xs={12} sm={6}>
+  <TextField
+    fullWidth
+    label="Designation"
+    name="designation"
+    value={formData.designation}
+    onChange={handleChange}
+    InputProps={{
+      startAdornment: (
+        <WorkIcon sx={{ color: "#2196f3", mr: 1 }} />
+      ),
+    }}
+    disabled
+  />
+</Grid>
+
 
                 <Grid item xs={12} sm={6}>
                   <TextField
@@ -405,47 +424,38 @@ const EmployeeProfile = () => {
 
                 {/* Resume Upload */}
                 <Grid item xs={12} sm={6}>
-                  <Box>
-                    <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>
-                      Resume
-                    </Typography>
-                    <Box display="flex" alignItems="center" gap={2}>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: "#666",
-                          flex: 1,
-                          fontStyle: formData.resume || profile?.resume ? "normal" : "italic"
-                        }}
-                      >
-                        {formData.resume instanceof File
-                          ? formData.resume.name
-                          : profile?.resume
-                            ? profile.resume.split("/").pop()
-                            : "No resume uploaded"}
-                      </Typography>
-                      <input
-                        type="file"
-                        name="resume"
-                        accept=".pdf,.doc,.docx"
-                        style={{ display: "none" }}
-                        id="resume-upload"
-                        onChange={handleChange}
-                      />
-                      <label htmlFor="resume-upload">
-                        <Button
-                          variant="outlined"
-                          component="span"
-                          size="small"
-                          startIcon={<UploadIcon />}
-                          sx={{ borderRadius: 2 }}
-                        >
-                          Upload Resume
-                        </Button>
-                      </label>
-                    </Box>
-                  </Box>
-                </Grid>
+  <Box>
+    <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>
+      Resume
+    </Typography>
+
+    <Box display="flex" alignItems="center" gap={2}>
+      {/* Resume name */}
+      <Typography
+        variant="body2"
+        sx={{
+          color: "green",
+          flex: 1,
+          fontWeight: 600,
+        }}
+      >
+        {formData.resume instanceof File
+          ? formData.resume.name
+          : profile?.resume
+          ? profile.resume.split("/").pop()
+          : "Resume uploaded"}
+      </Typography>
+
+      {/* ✅ GREEN TICK ONLY */}
+      {(resumeUploaded || profile?.resume) && (
+        <IconButton disabled>
+          <UploadIcon sx={{ color: "green" }} />
+        </IconButton>
+      )}
+    </Box>
+  </Box>
+</Grid>
+
               </Grid>
             </Paper>
 
