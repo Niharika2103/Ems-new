@@ -21,72 +21,117 @@ import {
   InputAdornment,
   Chip,
 } from "@mui/material";
+
 import SearchIcon from "@mui/icons-material/Search";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllFreelancer } from "../../features/freelancer/freelancerSlice";
 
-// OCR + PDF
-import { getDocument } from "pdfjs-dist";
-import Tesseract from "tesseract.js";
+// PDF.js for text-based PDF extraction
+import * as pdfjsLib from "pdfjs-dist";
+import "pdfjs-dist/build/pdf.worker.min.mjs";
 
-// -----------------------------------------------------------
-// OCR + PDF BASED IFSC EXTRACTOR
-// -----------------------------------------------------------
-const extractIFSC_OCR = async (fileOrUrl) => {
+// OCR (for scanned PDFs)
+import { createWorker } from "tesseract.js";
+
+// ------------------------------------------------------
+// Convert PDF page → IMAGE (for OCR)
+// ------------------------------------------------------
+const pdfPageToImage = async (page) => {
+  const viewport = page.getViewport({ scale: 2 });
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+
+  canvas.width = viewport.width;
+  canvas.height = viewport.height;
+
+  await page.render({ canvasContext: ctx, viewport }).promise;
+
+  return canvas.toDataURL("image/png");
+};
+
+// ------------------------------------------------------
+// OCR Extraction (fallback for scanned passbooks)
+// ------------------------------------------------------
+const extractIFSC_OCR = async (fileUrl) => {
   try {
-    let pdfBuffer;
+    console.log("⚠️ Running OCR fallback…");
 
-    // Case 1 → File upload
-    if (fileOrUrl instanceof File) {
-      pdfBuffer = await fileOrUrl.arrayBuffer();
-    }
-    // Case 2 → URL string
-    else {
-      const resp = await fetch(fileOrUrl);
-      const blob = await resp.blob();
-      pdfBuffer = await blob.arrayBuffer();
-    }
+    const response = await fetch(fileUrl);
+    const blob = await response.blob();
+    const buffer = await blob.arrayBuffer();
 
-    const pdf = await getDocument({ data: pdfBuffer }).promise;
+    const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
 
-    // Loop all PDF pages
-    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-      const page = await pdf.getPage(pageNum);
+    const worker = await createWorker("eng");
+    let extracted = "";
 
-      // Render page to canvas (important for OCR)
-      const viewport = page.getViewport({ scale: 2 });
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
 
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
+      // Convert page to image
+      const img = await pdfPageToImage(page);
 
-      await page.render({ canvasContext: ctx, viewport }).promise;
+      // Run OCR on image
+      const { data } = await worker.recognize(img);
 
-      // OCR the canvas
-      const ocrResult = await Tesseract.recognize(canvas, "eng");
-
-      const text = ocrResult.data.text.toUpperCase().replace(/\s+/g, "");
-
-      // Flexible IFSC pattern
-      const match = text.match(/[A-Z]{4}0[0-9]{6}/);
-
-      if (match) return match[0];
+      extracted += data.text + " ";
     }
 
-    return null;
+    await worker.terminate();
+
+    extracted = extracted.replace(/\s+/g, "").toUpperCase();
+
+    const match = extracted.match(/[A-Z]{4}0[A-Z0-9]{6}/);
+
+    return match ? match[0] : null;
   } catch (err) {
-    console.error("OCR IFSC Error:", err);
+    console.error("OCR Failed:", err);
     return null;
   }
 };
 
-// -----------------------------------------------------------
-// MAIN COMPONENT
-// -----------------------------------------------------------
+// ------------------------------------------------------
+// Master IFSC Extractor (Text → OCR fallback)
+// ------------------------------------------------------
+const extractIFSC = async (fileUrl, password = null) => {
+  try {
+    const response = await fetch(fileUrl);
+    const blob = await response.blob();
+    const buffer = await blob.arrayBuffer();
 
+    const pdf = await pdfjsLib
+      .getDocument({
+        data: buffer,
+        password: password || undefined,
+      })
+      .promise;
+
+    let text = "";
+
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      text += content.items.map((t) => t.str).join(" ");
+    }
+
+    const cleaned = text.replace(/\s+/g, "").toUpperCase();
+    const match = cleaned.match(/[A-Z]{4}0[A-Z0-9]{6}/);
+
+    if (match) return match[0];
+
+    // Fallback → OCR
+    return await extractIFSC_OCR(fileUrl);
+  } catch (err) {
+    console.log("PDF Error → Switching to OCR");
+    return await extractIFSC_OCR(fileUrl);
+  }
+};
+
+// ------------------------------------------------------
+// MAIN COMPONENT
+// ------------------------------------------------------
 export default function AdminVerificationTabs() {
-  const [tab, setTab] = useState(0);
+  const [tab, setTab] = useState(2); // default bank tab for testing
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -130,34 +175,29 @@ export default function AdminVerificationTabs() {
 
   const closeModal = () => setModalOpen(false);
 
-  const verify = (type) => {
-    alert(`${type} verification triggered.`);
-  };
+  // ------------------------------------------------------
+  // BANK PDF Extraction Handler
+  // ------------------------------------------------------
+  const openPassbook = async () => {
+    const fileUrl = selected?.document_url?.bankPassbook;
 
-  // -----------------------------------------------------------
-  // BANK PDF → OCR → Extract IFSC
-  // -----------------------------------------------------------
-  const readPassbookOCR = async () => {
-    if (!selected?.document_url?.bankPassbook) {
-      alert("No passbook uploaded");
+    if (!fileUrl) {
+      alert("No passbook uploaded!");
       return;
     }
 
-    const file = selected.document_url.bankPassbook;
+    const password = prompt("Enter PDF Password (if any):");
 
-    // RUN OCR
-    const ifsc = await extractIFSC_OCR(file);
+    const ifsc = await extractIFSC(fileUrl, password);
 
     if (ifsc) {
-      alert("Extracted IFSC: " + ifsc);
+      alert("IFSC Found: " + ifsc);
       setSelected((prev) => ({ ...prev, extractedIFSC: ifsc }));
     } else {
-      alert("IFSC not found (PDF very unclear or low quality)");
+      alert("❌ Unable to extract IFSC from this PDF");
     }
 
-    // open PDF in new tab
-    const url = file instanceof File ? URL.createObjectURL(file) : file;
-    window.open(url, "_blank");
+    window.open(fileUrl, "_blank");
   };
 
   return (
@@ -192,7 +232,6 @@ export default function AdminVerificationTabs() {
             sx={{ width: 300, mb: 2 }}
           />
 
-          {/* TABLE */}
           <TableContainer>
             <Table>
               <TableHead>
@@ -263,52 +302,15 @@ export default function AdminVerificationTabs() {
 
               <Divider sx={{ my: 2 }} />
 
-              {/* PAN TAB */}
-              {tab === 0 && (
-                <>
-                  <Typography>PAN Number: {selected.panNumber}</Typography>
-                  <a href={selected.panUrl} target="_blank">
-                    View PAN Document
-                  </a>
-
-                  <Button
-                    sx={{ mt: 2 }}
-                    variant="contained"
-                    onClick={() => verify("PAN")}
-                  >
-                    Verify PAN
-                  </Button>
-                </>
-              )}
-
-              {/* AADHAAR TAB */}
-              {tab === 1 && (
-                <>
-                  <Typography>Aadhaar: {selected.aadhaarNumber}</Typography>
-                  <a href={selected.aadhaarUrl} target="_blank">
-                    View Aadhaar
-                  </a>
-
-                  <Button
-                    sx={{ mt: 2 }}
-                    variant="contained"
-                    onClick={() => verify("Aadhaar")}
-                  >
-                    Verify Aadhaar
-                  </Button>
-                </>
-              )}
-
-              {/* BANK TAB */}
               {tab === 2 && (
                 <>
-                  <Typography fontWeight={700}>Bank Details</Typography>
-                  <Typography>Account Number: {selected.bankAccount}</Typography>
-                  <Typography>IFSC (Saved): {selected.ifsc}</Typography>
+                  <Typography fontWeight={700}>Bank Account</Typography>
+                  <Typography>Account: {selected.bankAccount}</Typography>
+                  <Typography>IFSC: {selected.ifsc}</Typography>
 
                   {selected.extractedIFSC && (
                     <Typography sx={{ mt: 1 }}>
-                      Extracted from PDF:{" "}
+                      Extracted IFSC:{" "}
                       <b style={{ color: "green" }}>
                         {selected.extractedIFSC}
                       </b>
@@ -317,38 +319,15 @@ export default function AdminVerificationTabs() {
 
                   {selected.document_url?.bankPassbook ? (
                     <Button
-                      sx={{ mt: 2 }}
                       variant="outlined"
-                      onClick={readPassbookOCR}
+                      sx={{ mt: 2 }}
+                      onClick={openPassbook}
                     >
-                      Read Passbook (OCR IFSC)
+                      View / Extract IFSC
                     </Button>
                   ) : (
                     <Typography>No Passbook Uploaded</Typography>
                   )}
-
-                  <Button
-                    variant="contained"
-                    sx={{ mt: 2, ml: 2 }}
-                    onClick={() => verify("Bank")}
-                  >
-                    Verify Bank
-                  </Button>
-                </>
-              )}
-
-              {/* GST TAB */}
-              {tab === 3 && (
-                <>
-                  <Typography>GST Number: {selected.gstNumber}</Typography>
-
-                  <Button
-                    sx={{ mt: 2 }}
-                    variant="contained"
-                    onClick={() => verify("GST")}
-                  >
-                    Verify GST
-                  </Button>
                 </>
               )}
 

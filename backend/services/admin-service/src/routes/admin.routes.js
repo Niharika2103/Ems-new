@@ -74,6 +74,18 @@ import {
  
 } from "../controllers/admin.controller.js";
 
+
+import {
+  sendBulkEmailToAllEmployees,
+  getAllEmailTemplates,
+  getEmailTemplateById,
+  createEmailTemplate,
+  updateEmailTemplate,
+  deleteEmailTemplate,
+  toggleEmailTemplateStatus
+} from "../controllers/email.controller.js";
+
+
 // Job post imports
 import {
   createJobPost,
@@ -303,4 +315,32 @@ router.get("/performance/all", fetchAllReviews);
 router.get("/performance/final-ratings", getFinalRatingsForEmployees);
 
 router.get("/freelancers/analytics", getFreelancerAnalytics);
+
+/* ============================================================
+   ⭐ ADD NEW EMAIL TEMPLATE SEND ROUTE (ONLY THIS WAS ADDED)
+============================================================ */
+// Get all templates
+router.get("/email-templates", getAllEmailTemplates);
+
+// Create template
+router.post("/email-templates/create", createEmailTemplate);
+
+// Send email to all employees
+router.post("/email-templates/send-all", sendBulkEmailToAllEmployees);
+
+// 🔥 IMPORTANT — toggle BEFORE /:id routes
+router.patch("/email-templates/:id/toggle", toggleEmailTemplateStatus);
+
+// Get template by ID
+router.get("/email-templates/:id", getEmailTemplateById);
+
+// Update template
+router.put("/email-templates/:id", updateEmailTemplate);
+
+// Delete template
+router.delete("/email-templates/:id", deleteEmailTemplate);
+
+
+
+
 export default router;

@@ -9,6 +9,12 @@ import { sendEmail } from "../services/emailService.js";
 import fs from "fs";
 import speakeasy from "speakeasy";
 import dotenv from "dotenv";
+import axios from "axios";
+dotenv.config();
+
+const FREELANCER_URL = `${process.env.FREELANCER_PROTOCOL}://${process.env.FREELANCER_HOST}:${process.env.FREELANCER_PORT}`;
+console.log("FREELANCER_URL =", FREELANCER_URL);
+
 
 
 const USERS_TABLE = "user_employees_master";
@@ -1337,9 +1343,12 @@ export const applyParentalLeave = async (req, res) => {
         `;
 
         const { rows } = await client.query(query);
+        const FREELANCER_URL = process.env.FREELANCER_SERVICE_URL;
+        const BASE_URL = FREELANCER_URL; // same for file links
 
-        const BASE_URL =
-          process.env.FREELANCER_SERVICE_URL || `http://localhost:${process.env.PORT }`;
+        const response = await axios.get(`${FREELANCER_URL}/freelancer/list`);
+
+
 
         const freelancers = rows.map((emp) => {
           let doc = {};
