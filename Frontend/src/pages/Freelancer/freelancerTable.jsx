@@ -101,6 +101,7 @@ const [selectedFreelancerContracts, setSelectedFreelancerContracts] = useState([
     permanent_address: "",
     dob: getCurrentDate(),
     department: "",
+    designation: "",
     gender: "",
     emergency_contact: "",
     employment_type:"",
@@ -109,6 +110,8 @@ const [selectedFreelancerContracts, setSelectedFreelancerContracts] = useState([
   // Edit Record
   const handleEdit = (record) => {
     setEditingRecord(record);
+
+    const data = record.data;
 
     const formatDate = (isoString) => {
       if (!isoString) return "";
@@ -123,6 +126,7 @@ const [selectedFreelancerContracts, setSelectedFreelancerContracts] = useState([
       address: record.address || "",
       permanent_address: record.permanent_address || "",
       department: record.department || "",
+      designation: record.designation || "",
       gender: record.gender || "",
       employment_type:record.employment_type || "",
       emergency_contact: record.emergency_contact || "",

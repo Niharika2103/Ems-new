@@ -857,7 +857,7 @@ export const fetchEmployeeById = async (req, res) => {
     }
 
     // ✅ ADD THIS: Build full URLs
-    const BASE_URL = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5204}`;
+    const BASE_URL = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5009}`;
     const employee = rows[0];
     const safeEmployee = {
       ...employee,

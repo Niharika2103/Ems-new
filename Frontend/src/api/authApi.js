@@ -731,3 +731,29 @@ export const fetchAllPerformanceReviewsApi = () =>
 
 export const fetchFinalRatingsApi = () =>
   adminClient.get(`/admin/performance/final-ratings`);
+
+
+//payroll analytics
+// export const getMonthlyPayrollSummaryApi = (month, year) =>
+//   adminClient.get(`${AUTH_API.ADMIN}/payroll/summary?month=${month}&year=${year}`);
+
+// PAYROLL SUMMARY
+// PAYROLL SUMMARY
+export const getMonthlyPayrollSummaryApi = (month, year) =>
+  adminClient.get(`/admin/payroll/summary?month=${month}&year=${year}`);
+
+// DEPT PAYROLL
+export const getDepartmentWisePayrollApi = (month, year) =>
+  adminClient.get(`/admin/payroll/department-wise?month=${month}&year=${year}`);
+
+// TREND
+export const getPayrollTrendApi = (limit = 6) =>
+  adminClient.get(`/admin/payroll/trend?limit=${limit}`);
+
+// TREND 3 MONTHS
+export const getPayrollTrend3Api = () =>
+  adminClient.get(`/admin/payroll/trend/3-months`);
+
+// TREND 12 MONTHS
+export const getPayrollTrend12Api = () =>
+  adminClient.get(`/admin/payroll/trend/12-months`);

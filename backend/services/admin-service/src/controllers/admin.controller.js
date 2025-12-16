@@ -4261,3 +4261,290 @@ export const getFinalRatingsForEmployees = async (req, res) => {
     client.release();
   }
 };
+
+//payroll analytics
+
+// ===============================
+// ⭐ PAYROLL ANALYTICS (READ-ONLY, GET REQUEST)
+// ===============================
+// export const getPayrollAnalytics = async (req, res) => {
+//   const client = await pool.connect();
+
+//   try {
+//     // Auto detect current month & year
+//     const month = new Date().getMonth() + 1;
+//     const year = new Date().getFullYear();
+
+//     const query = `
+//       SELECT 
+//         u.department,
+//         SUM(s.gross_salary) AS total_payroll,
+//         COUNT(s.employee_id) AS headcount
+//       FROM salary_structure s
+//       JOIN user_employees_master u 
+//           ON u.id = s.employee_id
+//       WHERE EXTRACT(MONTH FROM s.created_at) = $1
+//         AND EXTRACT(YEAR FROM s.created_at) = $2
+//       GROUP BY u.department;
+//     `;
+
+//     const { rows } = await client.query(query, [month, year]);
+
+//     const formatted = rows.map((row) => ({
+//       department: row.department,
+//       total_payroll: Number(row.total_payroll),
+//       headcount: Number(row.headcount)
+//     }));
+
+//     return res.status(200).json({
+//       success: true,
+//       month,
+//       year,
+//       total_departments: formatted.length,
+//       departments: formatted
+//     });
+
+//   } catch (err) {
+//     console.error("Payroll Analytics Error:", err);
+//     return res.status(500).json({ error: err.message });
+//   } finally {
+//     client.release();
+//   }
+// };
+export const getDepartmentWisePayroll = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { month, year } = req.query;
+
+    if (!month || !year) {
+      return res.status(400).json({ success: false, message: "month and year are required" });
+    }
+
+    // Convert month names (e.g., "MARCH") to month numbers
+    const monthLower = String(month).trim().toLowerCase();
+
+    const monthNames = {
+      january: "1",
+      february: "2",
+      march: "3",
+      april: "4",
+      may: "5",
+      june: "6",
+      july: "7",
+      august: "8",
+      september: "9",
+      october: "10",
+      november: "11",
+      december: "12",
+    };
+
+    let monthNum = monthNames[monthLower] || monthLower; // if "3" keep "3", if "march" → "3"
+
+    const m1 = String(monthNum);             // "3"
+    const m2 = m1.padStart(2, "0");          // "03"
+
+    const query = `
+      SELECT 
+        u.department,
+        COUNT(s.employee_id) AS total_employees,
+        SUM(s.gross_salary) AS total_gross,
+        SUM(s.total_deductions) AS total_deductions,
+        SUM(s.net_salary) AS total_net
+      FROM salary_structure s
+      JOIN user_employees_master u 
+        ON u.id = s.employee_id
+      WHERE (
+        LOWER(s.month) = LOWER($1) OR 
+        LOWER(s.month) = LOWER($2) OR 
+        s.month = $3 OR 
+        s.month = $4
+      )
+      AND s.year = $5
+      GROUP BY u.department
+      ORDER BY total_gross DESC;
+    `;
+
+    const { rows } = await client.query(query, [
+      monthLower,    // "march"
+      monthNum,      // "3"
+      m1,            // "3"
+      m2,            // "03"
+      Number(year),
+    ]);
+
+    return res.json({
+      success: true,
+      departmentPayroll: rows,
+    });
+
+  } catch (err) {
+    console.error("DEPT PAYROLL ERROR:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  } finally {
+    client.release();
+  }
+};
+
+
+
+
+
+export const getMonthlyPayrollSummary = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { month, year } = req.query;
+
+    if (!month || !year) {
+      return res.status(400).json({ error: "month and year are required" });
+    }
+
+    const monthNum = String(Number(month));     
+    const monthZero = monthNum.padStart(2, "0");
+
+    const query = `
+      SELECT 
+        total_employees,
+        total_gross,
+        total_deductions,
+        total_net
+      FROM payroll
+      WHERE (month = $1 OR month = $2 OR month = $3)
+        AND year = $4
+        AND status = 'Completed'
+      LIMIT 1;
+    `;
+
+    const { rows } = await client.query(query, [
+      month,
+      monthNum,
+      monthZero,
+      year,
+    ]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "No payroll found for this month/year" });
+    }
+
+    res.json({
+      month,
+      year,
+      totalEmployees: rows[0].total_employees,
+      totalGross: rows[0].total_gross,
+      totalDeductions: rows[0].total_deductions,
+      totalNet: rows[0].total_net,
+    });
+
+  } catch (err) {
+    console.error("MONTHLY PAYROLL SUMMARY ERROR:", err);
+    res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+};
+
+export const getPayrollTrend = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    let limit = parseInt(req.query.limit) || 6; // default is 6 months
+
+    // Prevent invalid values
+    if (limit < 1 || limit > 36) {
+      limit = 6;
+    }
+
+    const query = `
+      SELECT
+        month,
+        year,
+        total_gross,
+        total_net,
+        total_employees
+      FROM payroll
+      WHERE status = 'Completed'
+      ORDER BY year DESC, month::int DESC
+      LIMIT $1
+    `;
+
+    const { rows } = await client.query(query, [limit]);
+
+    res.json({
+      success: true,
+      months_requested: limit,
+      trend: rows.reverse(), // oldest → latest
+    });
+
+  } catch (err) {
+    console.error("PAYROLL TREND ERROR:", err);
+    res.status(500).json({ success: false, error: err.message });
+  } finally {
+    client.release();
+  }
+};
+
+export const getPayrollTrend3Months = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    let limit = 3; // force 3 months
+
+    const query = `
+      SELECT
+        month,
+        year,
+        total_gross,
+        total_net,
+        total_employees
+      FROM payroll
+      WHERE status = 'Completed'
+      ORDER BY year DESC, month::int DESC
+      LIMIT $1
+    `;
+
+    const { rows } = await client.query(query, [limit]);
+
+    res.json({
+      success: true,
+      months_requested: limit,
+      trend: rows.reverse(),
+    });
+
+  } catch (err) {
+    console.error("PAYROLL TREND 3 MONTH ERROR:", err);
+    res.status(500).json({ success: false, error: err.message });
+  } finally {
+    client.release();
+  }
+};
+
+export const getPayrollTrend12Months = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    let limit = 12; // force 12 months
+
+    const query = `
+      SELECT
+        month,
+        year,
+        total_gross,
+        total_net,
+        total_employees
+      FROM payroll
+      WHERE status = 'Completed'
+      ORDER BY year DESC, month::int DESC
+      LIMIT $1
+    `;
+
+    const { rows } = await client.query(query, [limit]);
+
+    res.json({
+      success: true,
+      months_requested: limit,
+      trend: rows.reverse(),
+    });
+
+  } catch (err) {
+    console.error("PAYROLL TREND 12 MONTH ERROR:", err);
+    res.status(500).json({ success: false, error: err.message });
+  } finally {
+    client.release();
+  }
+};
