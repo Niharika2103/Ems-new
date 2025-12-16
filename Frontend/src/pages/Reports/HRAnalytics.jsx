@@ -16,6 +16,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TablePagination,
   Paper,
   Chip,
 } from "@mui/material";
@@ -26,24 +27,26 @@ import {
   FilterAlt as FilterIcon,
 } from "@mui/icons-material";
 
-import { fetchFinalRatingsApi } from "../../api/authApi"; // ✅ Use real API
+import { fetchFinalRatingsApi } from "../../api/authApi";
 
 const HRAnalytics = () => {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // 🔥 Pagination states
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
 
-const loadEmployees = async () => {
+  const loadEmployees = async () => {
     setLoading(true);
     try {
       const response = await fetchFinalRatingsApi();
-      const realEmployees = response.data; // ← Real data from backend
+      const realEmployees = response.data;
 
-      // Map to match your table structure
       const formattedEmployees = realEmployees.map((emp) => ({
         id: emp.employee_uuid,
         name: emp.employee_name,
-        department: emp.designation || "General", // You don't have department, so use designation as fallback
+        department: emp.designation || "General",
         performance: emp.final_rating,
         turnoverRisk: emp.turnover_risk,
         tenure: emp.tenure,
@@ -64,9 +67,8 @@ const loadEmployees = async () => {
     loadEmployees();
   }, []);
 
-  // Optional: Export logic (you can enhance later)
   const handleExport = () => {
-    alert("Export feature can be implemented (e.g., CSV download).");
+    alert("Export feature coming soon.");
   };
 
   return (
@@ -93,7 +95,7 @@ const loadEmployees = async () => {
         </Box>
       </Box>
 
-      {/* Filters (optional – you can enhance filtering later) */}
+      {/* Filters */}
       <Box sx={{ mb: 3 }}>
         <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
           <FormControl sx={{ minWidth: 120 }} size="small">
@@ -143,36 +145,52 @@ const loadEmployees = async () => {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  employees.map((emp) => (
-                    <TableRow key={emp.id}>
-                      <TableCell>{emp.name}</TableCell>
-                      <TableCell>{emp.department}</TableCell>
+                  employees
+                    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+                    .map((emp) => (
+                      <TableRow key={emp.id}>
+                        <TableCell>{emp.name}</TableCell>
+                        <TableCell>{emp.department}</TableCell>
 
-                      <TableCell>
-                        {emp.selfRating || "–"} / {emp.tlRating || "–"} /{" "}
-                        <strong>{emp.performance || "–"}</strong>
-                      </TableCell>
+                        <TableCell>
+                          {emp.selfRating || "–"} / {emp.tlRating || "–"} /{" "}
+                          <strong>{emp.performance || "–"}</strong>
+                        </TableCell>
 
-                      <TableCell>
-                        <Chip
-                          label={emp.turnoverRisk || "Unknown"}
-                          color={
-                            emp.turnoverRisk === "Low"
-                              ? "success"
-                              : emp.turnoverRisk === "Medium"
-                              ? "warning"
-                              : "error"
-                          }
-                          size="small"
-                        />
-                      </TableCell>
+                        <TableCell>
+                          <Chip
+                            label={emp.turnoverRisk || "Unknown"}
+                            color={
+                              emp.turnoverRisk === "Low"
+                                ? "success"
+                                : emp.turnoverRisk === "Medium"
+                                ? "warning"
+                                : "error"
+                            }
+                            size="small"
+                          />
+                        </TableCell>
 
-                      <TableCell>{emp.tenure || "–"}</TableCell>
-                    </TableRow>
-                  ))
+                        <TableCell>{emp.tenure || "–"}</TableCell>
+                      </TableRow>
+                    ))
                 )}
               </TableBody>
             </Table>
+
+            {/* 🔥 PAGINATION HERE */}
+            <TablePagination
+              rowsPerPageOptions={[5, 10, 20]}
+              component="div"
+              count={employees.length}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              onPageChange={(e, newPage) => setPage(newPage)}
+              onRowsPerPageChange={(e) => {
+                setRowsPerPage(parseInt(e.target.value, 10));
+                setPage(0);
+              }}
+            />
           </TableContainer>
         </CardContent>
       </Card>

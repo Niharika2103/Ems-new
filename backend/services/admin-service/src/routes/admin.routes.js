@@ -74,7 +74,8 @@ import {
   getMonthlyPayrollSummary,
   getPayrollTrend,
   getPayrollTrend3Months,
-  getPayrollTrend12Months
+  getPayrollTrend12Months,
+  getFreelancerAnalytics
  
 } from "../controllers/admin.controller.js";
 
@@ -314,4 +315,5 @@ router.get("/payroll/trend", getPayrollTrend);
 router.get("/payroll/trend/3-months", getPayrollTrend3Months);
 router.get("/payroll/trend/12-months", getPayrollTrend12Months);
 
+router.get("/freelancers/analytics", getFreelancerAnalytics);
 export default router;

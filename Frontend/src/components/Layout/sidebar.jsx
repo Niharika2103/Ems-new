@@ -239,7 +239,7 @@ const Sidebar = ({ isOpen, handleClose }) => {
 
   if (employment_type === "freelancer") {
     employeeMenus = [
-      { name: "Dashboard", icon: <Home size={20} />, path: "/freelancer/dashboard" },
+      { name: "Dashboard", icon: <Home size={20} />, path: "/dashboard" },
       { name: "Attendance", icon: <Calendar size={20} />, path: "/freelancer/attendance" },
       { name: "Tasks", icon: <CheckSquare size={20} />, path: "/freelancer/tasks" },
       { name: "Payments", icon: <Users size={20} />, path: "/freelancer/payments" },

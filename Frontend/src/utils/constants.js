@@ -2,15 +2,15 @@ import { SalaryStructureClient } from "../api/axiosClient";
 
 // Different base URLs per r
 export const API_BASES = {
-  SUPERADMIN: import.meta.env.VITE_SUPERADMIN_URL || "http://localhost:5101",
-  ADMIN: import.meta.env.VITE_ADMIN_URL || "http://localhost:5002",
-  EMPLOYEE: import.meta.env.VITE_EMPLOYEE_URL || "http://localhost:5204",
+  SUPERADMIN: import.meta.env.VITE_SUPERADMIN_URL || "http://localhost:5001",
+  ADMIN: import.meta.env.VITE_ADMIN_URL || "http://localhost:5202",
+  EMPLOYEE: import.meta.env.VITE_EMPLOYEE_URL || "http://localhost:5009",
   PROJECT:import.meta.env.VITE_Project_URL || "http://localhost:8081/api",
   ATTENDANCE:import.meta.env.VITE_Attendance_URL || "http://localhost:9191/api",
   SALARYSTRUCTURE:import.meta.env.VITE_SalaryStructure_URL || "http://localhost:9092",
   FREELANCER: import.meta.env.VITE_FREELANCER_URL || "http://localhost:5005",
   VENDOR: import.meta.env.VITE_VENDOR_URL || "http://localhost:5010",
-
+SETTINGS: import.meta.env.VITE_SETTINGS_URL || "http://localhost:5007",
 };
 
 
@@ -24,7 +24,8 @@ export const AUTH_API = {
   ATTENDANCE:`${API_BASES.ATTENDANCE}`,
   SALARYSTRUCTURE:`${API_BASES.SALARYSTRUCTURE}/salary`,
   FREELANCER: `${API_BASES.FREELANCER}/freelancer`,
-  VENDOR: `${API_BASES.VENDOR}/vendor` 
+  VENDOR: `${API_BASES.VENDOR}/vendor` ,
+  SETTINGS: `${API_BASES.SETTINGS}/api/system-settings`,
 };
 
 export const ROLES = {
@@ -36,6 +37,7 @@ export const ROLES = {
   SALARYSTRUCTURE:"salarystructure",
   FREELANCER: "freelancer",
   VENDOR: "vendor",
+  SETTINGS: "settings",
 };
 
 export const OTP_LENGTH = 6;

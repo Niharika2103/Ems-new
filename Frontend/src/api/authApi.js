@@ -1,8 +1,6 @@
-import { superadminClient,employeeClient,adminClient,ProjectClient,AttendanceClient,SalaryStructureClient, freelancerClient ,vendorClient } from "./axiosClient";
+import { superadminClient,employeeClient,adminClient,ProjectClient,AttendanceClient,
+  SalaryStructureClient, freelancerClient ,vendorClient,settingsClient } from "./axiosClient";
 import { AUTH_API } from "../utils/constants";
-
-
-import { RestaurantMenuSharp } from "@mui/icons-material";
 
 
 // ================= SuperAdmin =================
@@ -633,6 +631,10 @@ export const fetchFreelancerContractByIdApi = (contractId) => {
   return freelancerClient.get(`${AUTH_API.FREELANCER}/admin/freelancer-contract/${contractId}`);
 };
 
+// ================= Freelancer HR Analytics =================
+export const getFreelancerHRAnalyticsApi = () =>
+  adminClient.get(`/admin/freelancers/analytics`);
+
 //Auditlogs
 
 export const getAllAdminAuditLogsApi = () =>
@@ -757,3 +759,35 @@ export const getPayrollTrend3Api = () =>
 // TREND 12 MONTHS
 export const getPayrollTrend12Api = () =>
   adminClient.get(`/admin/payroll/trend/12-months`);
+//branding settings APIs
+
+export const fetchSettings = () => {
+  return settingsClient.get(`${AUTH_API.SETTINGS}`);
+};
+
+export const updateBranding = (formData) => {
+  return settingsClient.put(
+    `${AUTH_API.SETTINGS}/branding`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+};
+
+export const updateWhiteLabel = (data) =>{
+ return settingsClient.put(`${AUTH_API.SETTINGS}/white-label`, data);
+}
+export const getTenantBrandingApi = (tenantKey) => {
+  return settingsClient.get(`${AUTH_API.SETTINGS}/api/tenants/${tenantKey}/branding`);
+};
+
+export const updateTenantBrandingApi = (tenantKey, formData) => {
+  return settingsClient.put(`${AUTH_API.SETTINGS}/api/tenants/${tenantKey}/branding`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};

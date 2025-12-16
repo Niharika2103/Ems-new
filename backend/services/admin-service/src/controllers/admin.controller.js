@@ -4548,3 +4548,36 @@ export const getPayrollTrend12Months = async (req, res) => {
     client.release();
   }
 };
+
+export const getFreelancerAnalytics = async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        u.id,
+        u.name,
+        u.email,
+        u.department,
+
+        c.contract_title,
+        c.contract_start_date,
+        c.contract_end_date,
+        c.version,
+        c.contract_status,
+
+        r.project_cost
+
+      FROM user_employees_master u
+      LEFT JOIN freelancer_contracts c ON u.id = c.freelancer_id
+      LEFT JOIN freelancer_responses r ON u.email = r.email  -- matching based on email
+      WHERE u.employment_type = 'freelancer'
+      ORDER BY u.created_at DESC;
+    `;
+
+    const result = await pool.query(query);
+    return res.json(result.rows);
+
+  } catch (error) {
+    console.error("Error fetching freelancer analytics:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};

@@ -1325,27 +1325,113 @@ export const applyParentalLeave = async (req, res) => {
   }
 };
 
-export const getFreelancers = async (req, res) => {
-  
-  const client = await pool.connect();
-  try {
-    const query = `
-      SELECT *
-      FROM ${USERS_TABLE}
-    WHERE role= 'employee'
-and employment_type = 'freelancer';
-    `;
+    export const getFreelancers = async (req, res) => {
+      const client = await pool.connect();
 
-    const { rows } = await client.query(query);
-    return res.status(200).json(rows);
+      try {
+        const query = `
+          SELECT *
+          FROM ${USERS_TABLE}
+          WHERE role = 'employee'
+          AND employment_type = 'freelancer';
+        `;
 
-  } catch (err) {
-    console.error("Get Freelancers Error:", err.message);
-    return res.status(500).json({ message: err.message });
-  } finally {
-    client.release();
-  }
-};
+        const { rows } = await client.query(query);
+
+        const BASE_URL =
+          process.env.FREELANCER_SERVICE_URL || "http://localhost:5005";
+
+        const freelancers = rows.map((emp) => {
+          let doc = {};
+
+          // ---- PARSE DOCUMENT JSON SAFELY ----
+          try {
+            doc = emp.document_url ? JSON.parse(emp.document_url) : {};
+          } catch {
+            doc = emp.document_url || {};
+          }
+
+          // ---- HANDLE ALL POSSIBLE KEY NAMES ----
+          const bankPassbookFile =
+            doc.bankPassbook ||
+            doc.passbook ||
+            doc.bank_passbook ||
+            doc.bankpassbook ||
+            null;
+
+          const aadhaarFile =
+            doc.aadhaarCard ||
+            doc.aadhaar ||
+            doc.aadharCard ||
+            null;
+
+          const panFile =
+            doc.panCard ||
+            doc.pancard ||
+            null;
+
+          const gstCertFile =
+            doc.gstCertificate ||
+            doc.gst_certificate ||
+            null;
+
+          const freelancerDocFile =
+            doc.freelancerDocument ||
+            doc.freelancer_document ||
+            null;
+
+          const gstReturns =
+            Array.isArray(doc.gstReturns) ? doc.gstReturns : [];
+
+          // ---- FILENAME ENCODER ----
+          const enc = (file) => (file ? encodeURIComponent(file) : null);
+
+          // ---- BUILD FULL URLS ----
+          const documentUrls = {
+            photo: doc.photo
+              ? `${BASE_URL}/uploads/photo/${enc(doc.photo)}`
+              : null,
+
+            bankPassbook: bankPassbookFile
+              ? `${BASE_URL}/uploads/passbook/${enc(bankPassbookFile)}`
+              : null,
+
+            aadhaarCard: aadhaarFile
+              ? `${BASE_URL}/uploads/aadhaar/${enc(aadhaarFile)}`
+              : null,
+
+            panCard: panFile
+              ? `${BASE_URL}/uploads/pan/${enc(panFile)}`
+              : null,
+
+            gstCertificate: gstCertFile
+              ? `${BASE_URL}/uploads/gstCertificate/${enc(gstCertFile)}`
+              : null,
+
+            freelancerDocument: freelancerDocFile
+              ? `${BASE_URL}/uploads/freelancerDocument/${enc(freelancerDocFile)}`
+              : null,
+
+            gstReturns: gstReturns.map(
+              (file) => `${BASE_URL}/uploads/gstReturns/${enc(file)}`
+            ),
+          };
+
+          // ---- FINAL CLEANED FREELANCER RESPONSE ----
+          return {
+            ...emp,
+            document_url: documentUrls,
+          };
+        });
+
+        return res.status(200).json(freelancers);
+      } catch (err) {
+        console.error("Get Freelancers Error:", err.message);
+        return res.status(500).json({ message: err.message });
+      } finally {
+        client.release();
+      }
+    };
 
 // to create referrals
 export const createReferral = async (req, res) => {
