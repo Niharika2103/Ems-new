@@ -809,15 +809,14 @@ export const getEmployees = async (req, res) => {
 
 
 // ================== Get Employee by ID ==================
+// ================== Get Employee by Email (for employee profile) ==================
 export const getEmployeeById = async (req, res) => {
   const client = await pool.connect();
   try {
     const { email } = req.params;
-
     if (!email) {
       return res.status(400).json({ error: "Email is required" });
     }
-
     const query = `
       SELECT *
       FROM ${USERS_TABLE}
@@ -825,14 +824,26 @@ export const getEmployeeById = async (req, res) => {
       AND role = 'employee'
       LIMIT 1;
     `;
-
     const { rows } = await client.query(query, [email]);
-
     if (rows.length === 0) {
       return res.status(404).json({ error: "Employee not found" });
     }
 
-    return res.status(200).json(rows[0]);
+    // ✅ ADD FULL URL LOGIC HERE TOO
+    const BASE_URL = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5009}`;
+    const employee = rows[0];
+    const safeEmployee = {
+      ...employee,
+      profile_photo: employee.profile_photo
+        ? `${BASE_URL}/uploads/${employee.profile_photo}`
+        : null,
+      resume: employee.resume
+        ? `${BASE_URL}/uploads/${employee.resume}`
+        : null,
+    };
+    delete safeEmployee.password;
+
+    return res.status(200).json(safeEmployee);
   } catch (err) {
     console.error("Get Employee By ID Error:", err.message);
     return res.status(500).json({ message: err.message });
@@ -841,35 +852,7 @@ export const getEmployeeById = async (req, res) => {
   }
 };
 
-// export const fetchEmployeeById = async (req, res) => {
-//   const client = await pool.connect();
-//   try {
-//     const { email } = req.params;
-//     if (!email) {
-//       return res.status(400).json({ error: "ID is required" });
-//     }
-
-//     const query = `
-//       SELECT *
-//       FROM ${USERS_TABLE}
-//       WHERE email = $1
-//       LIMIT 1;
-//     `;
-
-//     const { rows } = await client.query(query, [email]);
-
-//     if (rows.length === 0) {
-//       return res.status(404).json({ error: "User not found" });
-//     }
-
-//     return res.status(200).json(rows[0]);
-//   } catch (err) {
-//     console.error("Get Employee By ID Error:", err.message);
-//     return res.status(500).json({ message: err.message });
-//   } finally {
-//     client.release();
-//   }
-// };
+// ================== Fetch Employee by Email (general) ==================
 export const fetchEmployeeById = async (req, res) => {
   const client = await pool.connect();
   try {
@@ -888,7 +871,7 @@ export const fetchEmployeeById = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // ✅ ADD THIS: Build full URLs
+    // ✅ FULL URL LOGIC (already present, just fix port)
     const BASE_URL = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5009}`;
     const employee = rows[0];
     const safeEmployee = {
