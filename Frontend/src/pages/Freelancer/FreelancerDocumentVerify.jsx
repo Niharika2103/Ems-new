@@ -175,6 +175,38 @@ export default function AdminVerificationTabs() {
 
   const closeModal = () => setModalOpen(false);
 
+  const verify = async (type) => {
+  if (!selected?.extractedIFSC) {
+    alert("No IFSC code extracted!");
+    return;
+  }
+
+  const url = `https://ifsc.razorpay.com/${selected.extractedIFSC}`;
+
+  try {
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      alert("Invalid IFSC Code or API Error");
+      return;
+    }
+
+    const data = await response.json();
+
+    alert(
+      `✅ ${type} Verification Successful\n\n` +
+      `Bank: ${data.BANK}\n` +
+      `Branch: ${data.BRANCH}\n` +
+      `Address: ${data.ADDRESS}\n` +
+      `State: ${data.STATE}\n` +
+      `District: ${data.DISTRICT}`
+    );
+  } catch (err) {
+    alert("API request failed. Please check internet or try again.");
+    console.error(err);
+  }
+};
+
   // ------------------------------------------------------
   // BANK PDF Extraction Handler
   // ------------------------------------------------------
@@ -305,9 +337,6 @@ export default function AdminVerificationTabs() {
               {tab === 2 && (
                 <>
                   <Typography fontWeight={700}>Bank Account</Typography>
-                  <Typography>Account: {selected.bankAccount}</Typography>
-                  <Typography>IFSC: {selected.ifsc}</Typography>
-
                   {selected.extractedIFSC && (
                     <Typography sx={{ mt: 1 }}>
                       Extracted IFSC:{" "}
@@ -318,6 +347,7 @@ export default function AdminVerificationTabs() {
                   )}
 
                   {selected.document_url?.bankPassbook ? (
+                    <>
                     <Button
                       variant="outlined"
                       sx={{ mt: 2 }}
@@ -325,6 +355,14 @@ export default function AdminVerificationTabs() {
                     >
                       View / Extract IFSC
                     </Button>
+                     <Button
+                    variant="contained"
+                    sx={{ mt: 2, ml: 2 }}
+                    onClick={() => verify("Bank")}
+                  >
+                    Verify Bank
+                  </Button>
+                  </>
                   ) : (
                     <Typography>No Passbook Uploaded</Typography>
                   )}

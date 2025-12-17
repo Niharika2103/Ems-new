@@ -736,4 +736,20 @@ export const fetchAllPerformanceReviewsApi = () =>
 export const fetchFinalRatingsApi = () =>
   adminClient.get(`/admin/performance/final-ratings`);
 
+// ================= Leave Policy (Admin Settings) =================
 
+// Get all leave types
+export const getLeaveTypesApi = () =>
+  adminClient.get(`/admin/settings/getleave-types`);
+
+// Create leave type
+export const createLeaveTypeApi = (data) =>
+  adminClient.post(`/admin/settings/leave-types`, data);
+
+// Update leave type
+export const updateLeaveTypeApi = (id, data) =>
+  adminClient.put(`/admin/settings/leave-types/${id}`, data);
+
+// Enable / Disable leave type
+export const toggleLeaveTypeStatusApi = (id, isActive) =>
+  adminClient.patch(`/admin/settings/leave-types/${id}/status`, { isActive });

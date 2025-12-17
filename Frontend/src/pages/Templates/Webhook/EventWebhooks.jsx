@@ -598,44 +598,6 @@ const EventWebhooks = () => {
 
         {/* Right Column - Quick Stats & Guide */}
         <Grid item xs={12} md={4}>
-          <Card sx={{ mb: 3 }}>
-            <CardContent>
-              <Typography variant="h6" fontWeight={600} gutterBottom>Quick Stats</Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={6}>
-                  <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'primary.light', borderRadius: 2 }}>
-                    <Typography variant="h4" color="white">{webhooks.length}</Typography>
-                    <Typography variant="body2" color="white">Total Webhooks</Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={6}>
-                  <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'success.light', borderRadius: 2 }}>
-                    <Typography variant="h4" color="white">
-                      {webhooks.filter(w => w.status === 'active').length}
-                    </Typography>
-                    <Typography variant="body2" color="white">Active</Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={6}>
-                  <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'info.light', borderRadius: 2 }}>
-                    <Typography variant="h4" color="white">
-                      {Math.round(webhooks.reduce((sum, w) => sum + w.successRate, 0) / webhooks.length) || 0}%
-                    </Typography>
-                    <Typography variant="body2" color="white">Success Rate</Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={6}>
-                  <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'warning.light', borderRadius: 2 }}>
-                    <Typography variant="h4" color="white">
-                      {webhooks.reduce((sum, w) => sum + w.events.length, 0)}
-                    </Typography>
-                    <Typography variant="body2" color="white">Events Monitored</Typography>
-                  </Box>
-                </Grid>
-              </Grid>
-            </CardContent>
-          </Card>
-
           <Card>
             <CardContent>
               <Typography variant="h6" fontWeight={600} gutterBottom>How It Works</Typography>

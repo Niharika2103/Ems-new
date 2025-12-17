@@ -7,6 +7,7 @@ import path from "path";
 import pool from "./config/db.js"; // PostgreSQL connection
 import zohoAuthRoutes from "./routes/zohoAuthRoutes.js";
 import "./cron/emailCron.js";
+import leavePolicyRoutes from "./routes/leavePolicy.routes.js";
 dotenv.config();
 const app = express();
 
@@ -22,7 +23,7 @@ app.use(express.json());
 
 app.use("/admin", adminRoutes);
 
-
+app.use("/admin", leavePolicyRoutes);
 // Test PostgreSQL connection on startup
 (async () => {
   try {
