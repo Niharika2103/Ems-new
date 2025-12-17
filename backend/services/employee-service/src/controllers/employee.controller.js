@@ -754,21 +754,46 @@ export const bulkInsertEmployees = async (req, res) => {
 };
 
 // ================== Get All Employees ==================
-export const getEmployees = async (req, res) => {
-  const client = await pool.connect();
-  try {
+// export const getEmployees = async (req, res) => {
+//   const client = await pool.connect();
+//   try {
     // Fetch all users with role in ['admin', 'superadmin', 'employee']
     // const query = `
     //   SELECT *
     //   FROM ${USERS_TABLE}
     //   WHERE role IN ('admin', 'superadmin', 'employee');
     // `;
+//     const query = `
+//       SELECT *
+//       FROM ${USERS_TABLE}
+//       WHERE 
+//         role IN ('admin', 'superadmin')
+//         OR (role = 'employee' AND employment_type = 'fulltime');
+//     `;
+
+//     const { rows } = await client.query(query);
+
+//     return res.status(200).json(rows);
+//   } catch (err) {
+//     console.error("Get Employees Error:", err.message);
+//     return res.status(500).json({ message: err.message });
+//   } finally {
+//     client.release();
+//   }
+// };
+
+export const getEmployees = async (req, res) => {
+  const client = await pool.connect();
+  try {
     const query = `
       SELECT *
       FROM ${USERS_TABLE}
-      WHERE 
-        role IN ('admin', 'superadmin')
-        OR (role = 'employee' AND employment_type = 'fulltime');
+      WHERE employment_type = 'fulltime'
+      AND (
+            LOWER(role) = 'employee'
+         OR LOWER(role_1) = 'employee'
+         OR LOWER(role_2) = 'employee'
+      );
     `;
 
     const { rows } = await client.query(query);
@@ -781,6 +806,7 @@ export const getEmployees = async (req, res) => {
     client.release();
   }
 };
+
 
 // ================== Get Employee by ID ==================
 export const getEmployeeById = async (req, res) => {
