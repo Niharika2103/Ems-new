@@ -1,10 +1,5 @@
 // SettingsPage.jsx
-<<<<<<< HEAD
 import React, { useEffect,useState } from 'react';
-=======
-import React, { useState, useEffect } from 'react';
-
->>>>>>> fe9182e2d8f3d78cf1a2503fa252d96e12c98e2c
 import {
   AppBar,
   Toolbar,
