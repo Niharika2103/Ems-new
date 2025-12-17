@@ -1,8 +1,6 @@
-import { superadminClient,employeeClient,adminClient,ProjectClient,AttendanceClient,SalaryStructureClient, freelancerClient ,vendorClient } from "./axiosClient";
+import { superadminClient,employeeClient,adminClient,ProjectClient,AttendanceClient,
+  SalaryStructureClient, freelancerClient ,vendorClient,settingsClient } from "./axiosClient";
 import { AUTH_API } from "../utils/constants";
-
-
-import { RestaurantMenuSharp } from "@mui/icons-material";
 
 
 // ================= SuperAdmin =================
@@ -14,6 +12,19 @@ export const superadminRegisterApi = (data) =>
 
 export const superadminLoginApi = (data) =>
   superadminClient.post(`${AUTH_API.SUPERADMIN}/login`, data);
+
+//Superadmin auditlogs
+
+//  Get All SuperAdmin Audit Logs
+export const getAllSuperAdminAuditLogsApi = () =>
+  adminClient.get(`${AUTH_API.SUPERADMIN}/audit-logs`);
+
+
+//  SuperAdmin Logout API (same style as admin)
+export const superAdminLogoutApi = (email) => {
+  console.log("Calling backend SuperAdmin logout with email:", email);
+  return adminClient.post(`${AUTH_API.SUPERADMIN}/logout`, { email });
+};
 
 export const superadminVerifyOtpApi = (data) =>
   superadminClient.post(`${AUTH_API.SUPERADMIN}/mfa/verify`, data);
@@ -524,36 +535,23 @@ export const employeeDocDownloadbyAdminApi = (employeeId, docKey, index, onDownl
 
 
 // Upload freelancer documents
-export const uploadFreelancerDocsApi = (data) => {
-  const formData = new FormData();
-
-  // Single files
-  if (data.bankPassbook) formData.append("bankPassbook", data.bankPassbook);
-  if (data.aadhaarCard) formData.append("aadhaarCard", data.aadhaarCard);
-  if (data.panCard) formData.append("panCard", data.panCard);
-  if (data.gstCertificate) formData.append("gstCertificate", data.gstCertificate);
-  if (data.photo) formData.append("photo", data.photo);
-
-  // Multiple GST files
-  if (data.gstReturns && data.gstReturns.length > 0) {
-    data.gstReturns.forEach((file) => {
-      formData.append("gstReturns", file);
-    });
-  }
-
-  // Other fields
-  if (data.gstNumber) formData.append("gstNumber", data.gstNumber);
-  if (data.id) formData.append("id", data.id);
-
-   return freelancerClient.post(`${AUTH_API.FREELANCER}/upload`,
-    formData
-      );
+export const uploadFreelancerDocsApi = (formData) => {
+  return freelancerClient.post(
+    `${AUTH_API.FREELANCER}/upload`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
 };
 
-//GetAPI
+// Get API
 export const getFreelancerDocsApi = (id) => {
   return freelancerClient.get(`${AUTH_API.FREELANCER}/${id}`);
 };
+
 // ============== Referral (Employee) ======================
 export const createReferralApi = (formData) => {
   return employeeClient.post(`${AUTH_API.EMPLOYEE}/refer-candidate`, formData);
@@ -632,6 +630,10 @@ export const fetchAllFreelancerContractsApi = () => {
 export const fetchFreelancerContractByIdApi = (contractId) => {
   return freelancerClient.get(`${AUTH_API.FREELANCER}/admin/freelancer-contract/${contractId}`);
 };
+
+// ================= Freelancer HR Analytics =================
+export const getFreelancerHRAnalyticsApi = () =>
+  adminClient.get(`/admin/freelancers/analytics`);
 
 //Auditlogs
 
@@ -732,3 +734,121 @@ export const rerunPayrollApi = (data) =>
 // 5️⃣ Get all Payroll Records
 export const getAllPayrollApi = () =>
   adminClient.get(`${AUTH_API.ADMIN}/payroll`);
+
+// Performance Review APIs
+// export const submitSelfReviewApi = (data) =>
+//   employeeClient.post(`/employee/performance/submit`, data);
+// authApi.js or employeeApi.js
+export const submitSelfReviewApi = (data) => {
+  return employeeClient.post(`/employee/performance/submit`, data);
+};
+
+export const updateTLReviewApi = (id, data) =>
+  adminClient.put(`/admin/performance/update/${id}`, data);
+
+export const fetchAllPerformanceReviewsApi = () =>
+  adminClient.get(`/admin/performance/all`);
+
+export const fetchFinalRatingsApi = () =>
+  adminClient.get(`/admin/performance/final-ratings`);
+
+
+//payroll analytics
+// export const getMonthlyPayrollSummaryApi = (month, year) =>
+//   adminClient.get(`${AUTH_API.ADMIN}/payroll/summary?month=${month}&year=${year}`);
+
+// PAYROLL SUMMARY
+// PAYROLL SUMMARY
+export const getMonthlyPayrollSummaryApi = (month, year) =>
+  adminClient.get(`/admin/payroll/summary?month=${month}&year=${year}`);
+
+// DEPT PAYROLL
+export const getDepartmentWisePayrollApi = (month, year) =>
+  adminClient.get(`/admin/payroll/department-wise?month=${month}&year=${year}`);
+
+// TREND
+export const getPayrollTrendApi = (limit = 6) =>
+  adminClient.get(`/admin/payroll/trend?limit=${limit}`);
+
+// TREND 3 MONTHS
+export const getPayrollTrend3Api = () =>
+  adminClient.get(`/admin/payroll/trend/3-months`);
+
+// TREND 12 MONTHS
+export const getPayrollTrend12Api = () =>
+  adminClient.get(`/admin/payroll/trend/12-months`);
+//branding settings APIs
+
+export const fetchSettings = () => {
+  return settingsClient.get(`${AUTH_API.SETTINGS}/system-settings`);
+};
+
+export const updateBranding = (formData) => {
+  return settingsClient.put(
+    `${AUTH_API.SETTINGS}/system-settings/branding`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+};
+
+export const updateWhiteLabel = (data) =>{
+ return settingsClient.put(`${AUTH_API.SETTINGS}/system-settings/white-label`, data);
+}
+export const getTenantBrandingApi = (tenantKey) => {
+  return settingsClient.get(`${AUTH_API.SETTINGS}/system-settings/tenants/${tenantKey}/branding`);
+};
+
+export const updateTenantBrandingApi = (tenantKey, formData) => {
+  return settingsClient.put(`${AUTH_API.SETTINGS}/system-settings/tenants/${tenantKey}/branding`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
+
+//whatsapp template 
+export const getTemplatesApi = () =>{
+  return settingsClient.get(`${AUTH_API.SETTINGS}/whatsapp/template/fetch`);
+}
+
+export const createTemplateApi = (data) =>
+  {
+  return settingsClient.post(`${AUTH_API.SETTINGS}/whatsapp/template`, data);
+}
+
+
+export const updateTemplateApi = (id, data) =>
+   {
+  return settingsClient.put(`${AUTH_API.SETTINGS}/whatsapp/template/${id}`, data);
+}
+
+export const updateTemplateStatusApi = (id, status) =>
+   {
+  return settingsClient.patch(`${AUTH_API.SETTINGS}/whatsapp/template/${id}/status`, { status });
+
+}
+
+export const deleteTemplateApi = (id) =>{
+   return settingsClient.delete(`${AUTH_API.SETTINGS}/whatsapp/template/${id}`);
+}
+// ================= Leave Policy (Admin Settings) =================
+
+// Get all leave types
+export const getLeaveTypesApi = () =>
+  adminClient.get(`/admin/settings/getleave-types`);
+
+// Create leave type
+export const createLeaveTypeApi = (data) =>
+  adminClient.post(`/admin/settings/leave-types`, data);
+
+// Update leave type
+export const updateLeaveTypeApi = (id, data) =>
+  adminClient.put(`/admin/settings/leave-types/${id}`, data);
+
+// Enable / Disable leave type
+export const toggleLeaveTypeStatusApi = (id, isActive) =>
+  adminClient.patch(`/admin/settings/leave-types/${id}/status`, { isActive });

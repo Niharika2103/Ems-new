@@ -2931,9 +2931,14 @@ export const getContractById = async (req, res) => {
 
 
 
+
+import { createZohoInvoice, createZohoCustomer } from "../services/zohoInvoiceService.js";
+
+
 /* -----------------------------------------------------
-   1. CREATE INVOICE
+   1. CREATE INVOICE (LOCAL + ZOHO CUSTOMER + ZOHO INVOICE + PDF)
 ----------------------------------------------------- */
+
 export const createInvoice = async (req, res) => {
   try {
     const {
@@ -2943,6 +2948,8 @@ export const createInvoice = async (req, res) => {
       invoice_date,
       due_date,
       created_by,
+      freelancer_name,
+      freelancer_email
     } = req.body;
 
     const GST_PERCENT = 18;
@@ -2952,20 +2959,25 @@ export const createInvoice = async (req, res) => {
     const tds_amount = (amount * TDS_PERCENT) / 100;
     const net_payable = amount + tax_amount - tds_amount;
 
-    // Generate invoice number
+    /* -----------------------------------------------------
+       A. Generate Invoice Number (Local EMS)
+    ----------------------------------------------------- */
     const dateObj = new Date(invoice_date);
-    const ym = `${dateObj.getFullYear()}${String(
-      dateObj.getMonth() + 1
-    ).padStart(2, "0")}`;
+    const ym = `${dateObj.getFullYear()}${String(dateObj.getMonth() + 1).padStart(2, "0")}`;
 
     const seqQuery = await pool.query(
-      `SELECT COUNT(*) + 1 AS seq FROM invoices WHERE to_char(invoice_date, 'YYYYMM') = $1`,
+      `SELECT COUNT(*) + 1 AS seq 
+       FROM invoices 
+       WHERE to_char(invoice_date, 'YYYYMM') = $1`,
       [ym]
     );
-    const seq = seqQuery.rows[0].seq;
 
+    const seq = seqQuery.rows[0].seq;
     const invoice_number = `INV-${ym}-${String(seq).padStart(4, "0")}`;
 
+    /* -----------------------------------------------------
+       B. Insert into EMS Database
+    ----------------------------------------------------- */
     const insertQuery = `
       INSERT INTO invoices (
         freelancer_id, contract_id, invoice_number,
@@ -2989,16 +3001,116 @@ export const createInvoice = async (req, res) => {
       created_by,
     ]);
 
+    const localInvoice = result.rows[0];
+
+
+    /* -----------------------------------------------------
+       C. Create Invoice in Zoho Using DEFAULT Customer ID
+    ----------------------------------------------------- */
+    const ZOHO_CUSTOMER_ID = process.env.DEFAULT_ZOHO_CUSTOMER_ID;
+
+    const zohoInvoicePayload = {
+      customer_id: ZOHO_CUSTOMER_ID,
+      date: invoice_date,
+      due_date: due_date,
+      reference_number: invoice_number,
+      line_items: [
+        {
+          item_name: "Freelancer Payment",
+          rate: amount,
+          quantity: 1
+        }
+      ]
+    };
+
+    let zohoInvoiceId = null, zohoInvoiceNumber = null, zohoInvoiceUrl = null;
+
+    try {
+      const zohoResp = await createZohoInvoice(zohoInvoicePayload);
+
+      zohoInvoiceId = zohoResp.invoice?.invoice_id || null;
+      zohoInvoiceNumber = zohoResp.invoice?.invoice_number || null;
+      zohoInvoiceUrl = zohoResp.invoice?.invoice_url || null;
+
+    } catch (err) {
+      console.error("Zoho Invoice ERROR:", err.response?.data || err);
+    }
+
+
+    /* -----------------------------------------------------
+       D. Generate EMS PDF Automatically
+    ----------------------------------------------------- */
+    const templatePath = path.join(process.cwd(), "src/templates/invoiceTemplate.html");
+    let html = fs.readFileSync(templatePath, "utf-8");
+
+    html = html
+      .replace(/{{invoice_number}}/g, invoice_number)
+      .replace(/{{invoice_date}}/g, invoice_date)
+      .replace(/{{due_date}}/g, due_date)
+      .replace(/{{freelancer_name}}/g, freelancer_name)
+      .replace(/{{freelancer_email}}/g, freelancer_email)
+      .replace(/{{amount}}/g, amount)
+      .replace(/{{tax_amount}}/g, tax_amount)
+      .replace(/{{tds_amount}}/g, tds_amount)
+      .replace(/{{net_payable}}/g, net_payable);
+
+    const pdfDir = "uploads/invoices";
+    if (!fs.existsSync(pdfDir)) fs.mkdirSync(pdfDir, { recursive: true });
+
+    const fileName = `Invoice_${invoice_number}.pdf`;
+    const filePath = path.join(pdfDir, fileName);
+
+    const browser = await puppeteer.launch({
+      headless: "new",
+      args: ["--no-sandbox"],
+    });
+
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: "networkidle0" });
+
+    await page.pdf({ path: filePath, format: "A4", printBackground: true });
+
+    await browser.close();
+
+    await pool.query(
+      `UPDATE invoices SET pdf_file=$1 WHERE id=$2`,
+      [fileName, localInvoice.id]
+    );
+
+    /* -----------------------------------------------------
+       E. Save Zoho Invoice Info
+    ----------------------------------------------------- */
+    await pool.query(
+      `UPDATE invoices
+       SET zoho_invoice_id=$1,
+           zoho_invoice_number=$2,
+           zoho_invoice_url=$3
+       WHERE id=$4`,
+      [zohoInvoiceId, zohoInvoiceNumber, zohoInvoiceUrl, localInvoice.id]
+    );
+
+    /* -----------------------------------------------------
+       F. Send Final Response
+    ----------------------------------------------------- */
     res.json({
       success: true,
-      message: "Invoice created successfully",
-      invoice: result.rows[0],
+      message: "Invoice created in EMS + Zoho + PDF generated",
+      invoice: {
+        ...localInvoice,
+        pdf_file: fileName,
+        pdf_url: `${process.env.SERVER_URL}/uploads/invoices/${fileName}`,
+        zoho_invoice_id: zohoInvoiceId,
+        zoho_invoice_number: zohoInvoiceNumber,
+        zoho_invoice_url: zohoInvoiceUrl
+      }
     });
+
   } catch (err) {
     console.error("Invoice Create Error:", err);
     res.status(500).json({ error: "Failed to create invoice" });
   }
 };
+
 
 /* -----------------------------------------------------
    2. GET ALL INVOICES
@@ -3021,6 +3133,11 @@ export const getAllInvoices = async (req, res) => {
       pdf_url: inv.pdf_file
         ? `${serverUrl}/uploads/invoices/${inv.pdf_file}`
         : null,
+      zoho: {
+        id: inv.zoho_invoice_id,
+        number: inv.zoho_invoice_number,
+        url: inv.zoho_invoice_url
+      }
     }));
 
     res.json(updated);
@@ -3049,6 +3166,12 @@ export const getInvoiceById = async (req, res) => {
     invoice.pdf_url = invoice.pdf_file
       ? `${serverUrl}/uploads/invoices/${invoice.pdf_file}`
       : null;
+
+    invoice.zoho = {
+      id: invoice.zoho_invoice_id,
+      number: invoice.zoho_invoice_number,
+      url: invoice.zoho_invoice_url
+    };
 
     res.json(invoice);
   } catch (err) {
@@ -3993,6 +4116,147 @@ export const getMonthlyFinalSummary = async (req, res) => {
 
   } catch (err) {
     return res.status(500).json({ error: err.message });
+}};
+export const updateTLReview = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { id } = req.params; // review_id
+    const { tl_rating, tl_comments, status } = req.body;
+
+    if (!tl_rating || !status) {
+      return res.status(400).json({ error: "TL Rating and Status are required" });
+    }
+
+    const query = `
+      UPDATE performance_reviews
+      SET 
+        tl_rating = $1,
+        tl_comments = $2,
+        status = $3,
+        updated_at = NOW()
+      WHERE id = $4
+      RETURNING *;
+    `;
+
+    const { rows } = await client.query(query, [
+      tl_rating,
+      tl_comments || null,
+      status,
+      id
+    ]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Review not found" });
+    }
+
+    res.status(200).json({
+      message: "TL Review updated successfully",
+      review: rows[0],
+    });
+
+  } catch (err) {
+    console.error("TL Review Update Error:", err);
+    res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+};
+export const fetchAllReviews = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const query = `
+      SELECT 
+        pr.id AS review_id,
+        ue.id AS employee_uuid,
+        ue.employee_id AS employee_code,
+        ue.name AS employee_name,
+        ue.designation,
+        pr.self_rating,
+        pr.tl_rating,
+        pr.status
+      FROM performance_reviews pr
+      JOIN user_employees_master ue
+        ON ue.id = pr.employee_id
+      ORDER BY pr.updated_at DESC;
+    `;
+
+    const { rows } = await client.query(query);
+    res.json(rows);
+
+  } catch (err) {
+    console.error("Fetch Review Error:", err);
+    res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+};
+export const getFinalRatingsForEmployees = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const query = `
+      SELECT 
+        ue.id AS employee_uuid,
+        ue.employee_id AS employee_code,
+        ue.name AS employee_name,
+        ue.designation,
+        ue.date_of_joining,
+        pr.self_rating,
+        pr.tl_rating,
+        pr.status
+      FROM performance_reviews pr
+      JOIN user_employees_master ue
+        ON ue.id = pr.employee_id
+      WHERE pr.status = 'Approved';
+    `;
+
+    const { rows } = await client.query(query);
+
+    // --- calculate tenure ---
+    const calculateTenure = (joinDate) => {
+      const join = new Date(joinDate);
+      const now = new Date();
+
+      let years = now.getFullYear() - join.getFullYear();
+      let months = now.getMonth() - join.getMonth();
+
+      if (months < 0) {
+        years--;
+        months += 12;
+      }
+
+      if (years <= 0) return `${months} months`;
+      if (months === 0) return `${years} years`;
+
+      return `${years} years ${months} months`;
+    };
+
+    const calcTurnoverRisk = (rating) => {
+      if (rating <= 2) return "High";
+      if (rating === 3) return "Medium";
+      return "Low";
+    };
+
+    const formatted = rows.map((emp) => {
+      const finalRating = Math.round(((emp.self_rating || 0) + (emp.tl_rating || 0)) / 2);
+
+      return {
+        employee_uuid: emp.employee_uuid,
+        employee_code: emp.employee_code,
+        employee_name: emp.employee_name,
+        designation: emp.designation,
+        self_rating: emp.self_rating,
+        tl_rating: emp.tl_rating,
+        final_rating: finalRating,
+        turnover_risk: calcTurnoverRisk(finalRating),
+        tenure: calculateTenure(emp.date_of_joining)
+      };
+    });
+
+    res.status(200).json(formatted);
+
+  } catch (err) {
+    console.error("Fetch Ratings Error:", err);
+    res.status(500).json({ error: err.message });
   } finally {
     client.release();
   }
@@ -4085,6 +4349,50 @@ export const getMonthlyFinalSummary = async (req, res) => {
 
 //   } catch (err) {
 //     console.error("VALIDATE PAYROLL ERROR", err);
+//payroll analytics
+
+// ===============================
+// ⭐ PAYROLL ANALYTICS (READ-ONLY, GET REQUEST)
+// ===============================
+// export const getPayrollAnalytics = async (req, res) => {
+//   const client = await pool.connect();
+
+//   try {
+//     // Auto detect current month & year
+//     const month = new Date().getMonth() + 1;
+//     const year = new Date().getFullYear();
+
+//     const query = `
+//       SELECT 
+//         u.department,
+//         SUM(s.gross_salary) AS total_payroll,
+//         COUNT(s.employee_id) AS headcount
+//       FROM salary_structure s
+//       JOIN user_employees_master u 
+//           ON u.id = s.employee_id
+//       WHERE EXTRACT(MONTH FROM s.created_at) = $1
+//         AND EXTRACT(YEAR FROM s.created_at) = $2
+//       GROUP BY u.department;
+//     `;
+
+//     const { rows } = await client.query(query, [month, year]);
+
+//     const formatted = rows.map((row) => ({
+//       department: row.department,
+//       total_payroll: Number(row.total_payroll),
+//       headcount: Number(row.headcount)
+//     }));
+
+//     return res.status(200).json({
+//       success: true,
+//       month,
+//       year,
+//       total_departments: formatted.length,
+//       departments: formatted
+//     });
+
+//   } catch (err) {
+//     console.error("Payroll Analytics Error:", err);
 //     return res.status(500).json({ error: err.message });
 //   } finally {
 //     client.release();
@@ -4171,6 +4479,79 @@ export const validatePayroll = async (req, res) => {
   } catch (err) {
     console.error("VALIDATE PAYROLL ERROR", err);
     return res.status(500).json({ error: err.message });
+    } finally {
+    client.release();
+  }
+};
+export const getDepartmentWisePayroll = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { month, year } = req.query;
+
+    if (!month || !year) {
+      return res.status(400).json({ success: false, message: "month and year are required" });
+    }
+
+    // Convert month names (e.g., "MARCH") to month numbers
+    const monthLower = String(month).trim().toLowerCase();
+
+    const monthNames = {
+      january: "1",
+      february: "2",
+      march: "3",
+      april: "4",
+      may: "5",
+      june: "6",
+      july: "7",
+      august: "8",
+      september: "9",
+      october: "10",
+      november: "11",
+      december: "12",
+    };
+
+    let monthNum = monthNames[monthLower] || monthLower; // if "3" keep "3", if "march" → "3"
+
+    const m1 = String(monthNum);             // "3"
+    const m2 = m1.padStart(2, "0");          // "03"
+
+    const query = `
+      SELECT 
+        u.department,
+        COUNT(s.employee_id) AS total_employees,
+        SUM(s.gross_salary) AS total_gross,
+        SUM(s.total_deductions) AS total_deductions,
+        SUM(s.net_salary) AS total_net
+      FROM salary_structure s
+      JOIN user_employees_master u 
+        ON u.id = s.employee_id
+      WHERE (
+        LOWER(s.month) = LOWER($1) OR 
+        LOWER(s.month) = LOWER($2) OR 
+        s.month = $3 OR 
+        s.month = $4
+      )
+      AND s.year = $5
+      GROUP BY u.department
+      ORDER BY total_gross DESC;
+    `;
+
+    const { rows } = await client.query(query, [
+      monthLower,    // "march"
+      monthNum,      // "3"
+      m1,            // "3"
+      m2,            // "03"
+      Number(year),
+    ]);
+
+    return res.json({
+      success: true,
+      departmentPayroll: rows,
+    });
+
+  } catch (err) {
+    console.error("DEPT PAYROLL ERROR:", err);
+    return res.status(500).json({ success: false, error: err.message });
   } finally {
     client.release();
   }
@@ -4464,3 +4845,196 @@ export const getAllPayroll = async (req, res) => {
   }
 };
 
+export const getMonthlyPayrollSummary = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { month, year } = req.query;
+
+    if (!month || !year) {
+      return res.status(400).json({ error: "month and year are required" });
+    }
+
+    const monthNum = String(Number(month));     
+    const monthZero = monthNum.padStart(2, "0");
+
+    const query = `
+      SELECT 
+        total_employees,
+        total_gross,
+        total_deductions,
+        total_net
+      FROM payroll
+      WHERE (month = $1 OR month = $2 OR month = $3)
+        AND year = $4
+        AND status = 'Completed'
+      LIMIT 1;
+    `;
+
+    const { rows } = await client.query(query, [
+      month,
+      monthNum,
+      monthZero,
+      year,
+    ]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "No payroll found for this month/year" });
+    }
+
+    res.json({
+      month,
+      year,
+      totalEmployees: rows[0].total_employees,
+      totalGross: rows[0].total_gross,
+      totalDeductions: rows[0].total_deductions,
+      totalNet: rows[0].total_net,
+    });
+
+  } catch (err) {
+    console.error("MONTHLY PAYROLL SUMMARY ERROR:", err);
+    res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+};
+
+export const getPayrollTrend = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    let limit = parseInt(req.query.limit) || 6; // default is 6 months
+
+    // Prevent invalid values
+    if (limit < 1 || limit > 36) {
+      limit = 6;
+    }
+
+    const query = `
+      SELECT
+        month,
+        year,
+        total_gross,
+        total_net,
+        total_employees
+      FROM payroll
+      WHERE status = 'Completed'
+      ORDER BY year DESC, month::int DESC
+      LIMIT $1
+    `;
+
+    const { rows } = await client.query(query, [limit]);
+
+    res.json({
+      success: true,
+      months_requested: limit,
+      trend: rows.reverse(), // oldest → latest
+    });
+
+  } catch (err) {
+    console.error("PAYROLL TREND ERROR:", err);
+    res.status(500).json({ success: false, error: err.message });
+  } finally {
+    client.release();
+  }
+};
+
+export const getPayrollTrend3Months = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    let limit = 3; // force 3 months
+
+    const query = `
+      SELECT
+        month,
+        year,
+        total_gross,
+        total_net,
+        total_employees
+      FROM payroll
+      WHERE status = 'Completed'
+      ORDER BY year DESC, month::int DESC
+      LIMIT $1
+    `;
+
+    const { rows } = await client.query(query, [limit]);
+
+    res.json({
+      success: true,
+      months_requested: limit,
+      trend: rows.reverse(),
+    });
+
+  } catch (err) {
+    console.error("PAYROLL TREND 3 MONTH ERROR:", err);
+    res.status(500).json({ success: false, error: err.message });
+  } finally {
+    client.release();
+  }
+};
+
+export const getPayrollTrend12Months = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    let limit = 12; // force 12 months
+
+    const query = `
+      SELECT
+        month,
+        year,
+        total_gross,
+        total_net,
+        total_employees
+      FROM payroll
+      WHERE status = 'Completed'
+      ORDER BY year DESC, month::int DESC
+      LIMIT $1
+    `;
+
+    const { rows } = await client.query(query, [limit]);
+
+    res.json({
+      success: true,
+      months_requested: limit,
+      trend: rows.reverse(),
+    });
+
+  } catch (err) {
+    console.error("PAYROLL TREND 12 MONTH ERROR:", err);
+    res.status(500).json({ success: false, error: err.message });
+  } finally {
+    client.release();
+  }
+};
+
+
+export const getFreelancerAnalytics = async (req, res) => {
+  try {
+    const query = `
+      SELECT
+        u.id,
+        u.name,
+        u.email,
+        u.department,
+ 
+        c.contract_title,
+        c.contract_start_date,
+        c.contract_end_date,
+        c.version,
+        c.contract_status,
+ 
+        r.project_cost
+ 
+      FROM user_employees_master u
+      LEFT JOIN freelancer_contracts c ON u.id = c.freelancer_id
+      LEFT JOIN freelancer_responses r ON u.email = r.email  -- matching based on email
+      WHERE u.employment_type = 'freelancer'
+      ORDER BY u.created_at DESC;
+    `;
+ 
+    const result = await pool.query(query);
+    return res.json(result.rows);
+ 
+  } catch (error) {
+    console.error("Error fetching freelancer analytics:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};

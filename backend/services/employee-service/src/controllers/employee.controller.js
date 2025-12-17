@@ -9,6 +9,12 @@ import { sendEmail } from "../services/emailService.js";
 import fs from "fs";
 import speakeasy from "speakeasy";
 import dotenv from "dotenv";
+import axios from "axios";
+dotenv.config();
+
+const FREELANCER_URL = `${process.env.FREELANCER_PROTOCOL}://${process.env.FREELANCER_HOST}:${process.env.FREELANCER_PORT}`;
+console.log("FREELANCER_URL =", FREELANCER_URL);
+
 
 
 const USERS_TABLE = "user_employees_master";
@@ -748,21 +754,46 @@ export const bulkInsertEmployees = async (req, res) => {
 };
 
 // ================== Get All Employees ==================
-export const getEmployees = async (req, res) => {
-  const client = await pool.connect();
-  try {
+// export const getEmployees = async (req, res) => {
+//   const client = await pool.connect();
+//   try {
     // Fetch all users with role in ['admin', 'superadmin', 'employee']
     // const query = `
     //   SELECT *
     //   FROM ${USERS_TABLE}
     //   WHERE role IN ('admin', 'superadmin', 'employee');
     // `;
+//     const query = `
+//       SELECT *
+//       FROM ${USERS_TABLE}
+//       WHERE 
+//         role IN ('admin', 'superadmin')
+//         OR (role = 'employee' AND employment_type = 'fulltime');
+//     `;
+
+//     const { rows } = await client.query(query);
+
+//     return res.status(200).json(rows);
+//   } catch (err) {
+//     console.error("Get Employees Error:", err.message);
+//     return res.status(500).json({ message: err.message });
+//   } finally {
+//     client.release();
+//   }
+// };
+
+export const getEmployees = async (req, res) => {
+  const client = await pool.connect();
+  try {
     const query = `
       SELECT *
       FROM ${USERS_TABLE}
-      WHERE 
-        role IN ('admin', 'superadmin')
-        OR (role = 'employee' AND employment_type = 'fulltime');
+      WHERE employment_type = 'fulltime'
+      AND (
+            LOWER(role) = 'employee'
+         OR LOWER(role_1) = 'employee'
+         OR LOWER(role_2) = 'employee'
+      );
     `;
 
     const { rows } = await client.query(query);
@@ -775,6 +806,7 @@ export const getEmployees = async (req, res) => {
     client.release();
   }
 };
+
 
 // ================== Get Employee by ID ==================
 export const getEmployeeById = async (req, res) => {
@@ -857,7 +889,7 @@ export const fetchEmployeeById = async (req, res) => {
     }
 
     // ✅ ADD THIS: Build full URLs
-    const BASE_URL = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5204}`;
+    const BASE_URL = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5009}`;
     const employee = rows[0];
     const safeEmployee = {
       ...employee,
@@ -1325,27 +1357,116 @@ export const applyParentalLeave = async (req, res) => {
   }
 };
 
-export const getFreelancers = async (req, res) => {
-  
-  const client = await pool.connect();
-  try {
-    const query = `
-      SELECT *
-      FROM ${USERS_TABLE}
-    WHERE role= 'employee'
-and employment_type = 'freelancer';
-    `;
+    export const getFreelancers = async (req, res) => {
+      const client = await pool.connect();
 
-    const { rows } = await client.query(query);
-    return res.status(200).json(rows);
+      try {
+        const query = `
+          SELECT *
+          FROM ${USERS_TABLE}
+          WHERE role = 'employee'
+          AND employment_type = 'freelancer';
+        `;
 
-  } catch (err) {
-    console.error("Get Freelancers Error:", err.message);
-    return res.status(500).json({ message: err.message });
-  } finally {
-    client.release();
-  }
-};
+        const { rows } = await client.query(query);
+        const FREELANCER_URL = process.env.FREELANCER_SERVICE_URL;
+        const BASE_URL = FREELANCER_URL; // same for file links
+
+        const response = await axios.get(`${FREELANCER_URL}/freelancer/list`);
+
+
+
+        const freelancers = rows.map((emp) => {
+          let doc = {};
+
+          // ---- PARSE DOCUMENT JSON SAFELY ----
+          try {
+            doc = emp.document_url ? JSON.parse(emp.document_url) : {};
+          } catch {
+            doc = emp.document_url || {};
+          }
+
+          // ---- HANDLE ALL POSSIBLE KEY NAMES ----
+          const bankPassbookFile =
+            doc.bankPassbook ||
+            doc.passbook ||
+            doc.bank_passbook ||
+            doc.bankpassbook ||
+            null;
+
+          const aadhaarFile =
+            doc.aadhaarCard ||
+            doc.aadhaar ||
+            doc.aadharCard ||
+            null;
+
+          const panFile =
+            doc.panCard ||
+            doc.pancard ||
+            null;
+
+          const gstCertFile =
+            doc.gstCertificate ||
+            doc.gst_certificate ||
+            null;
+
+          const freelancerDocFile =
+            doc.freelancerDocument ||
+            doc.freelancer_document ||
+            null;
+
+          const gstReturns =
+            Array.isArray(doc.gstReturns) ? doc.gstReturns : [];
+
+          // ---- FILENAME ENCODER ----
+          const enc = (file) => (file ? encodeURIComponent(file) : null);
+
+          // ---- BUILD FULL URLS ----
+          const documentUrls = {
+            photo: doc.photo
+              ? `${BASE_URL}/uploads/photo/${enc(doc.photo)}`
+              : null,
+
+            bankPassbook: bankPassbookFile
+              ? `${BASE_URL}/uploads/passbook/${enc(bankPassbookFile)}`
+              : null,
+
+            aadhaarCard: aadhaarFile
+              ? `${BASE_URL}/uploads/aadhaar/${enc(aadhaarFile)}`
+              : null,
+
+            panCard: panFile
+              ? `${BASE_URL}/uploads/pan/${enc(panFile)}`
+              : null,
+
+            gstCertificate: gstCertFile
+              ? `${BASE_URL}/uploads/gstCertificate/${enc(gstCertFile)}`
+              : null,
+
+            freelancerDocument: freelancerDocFile
+              ? `${BASE_URL}/uploads/freelancerDocument/${enc(freelancerDocFile)}`
+              : null,
+
+            gstReturns: gstReturns.map(
+              (file) => `${BASE_URL}/uploads/gstReturns/${enc(file)}`
+            ),
+          };
+
+          // ---- FINAL CLEANED FREELANCER RESPONSE ----
+          return {
+            ...emp,
+            document_url: documentUrls,
+          };
+        });
+
+        return res.status(200).json(freelancers);
+      } catch (err) {
+        console.error("Get Freelancers Error:", err.message);
+        return res.status(500).json({ message: err.message });
+      } finally {
+        client.release();
+      }
+    };
 
 // to create referrals
 export const createReferral = async (req, res) => {
@@ -1560,7 +1681,6 @@ export const getEmployeeSalary = async (req, res) => {
     return res.status(500).json({ error: "Internal server error" });
   }
 };
-
 export const getFullTimeEmployees = async (req, res) => {
   const client = await pool.connect();
   try {
@@ -1571,6 +1691,7 @@ export const getFullTimeEmployees = async (req, res) => {
         name,
         email,
         department,
+        date_of_joining,
         employment_type
       FROM ${USERS_TABLE}
       WHERE role = 'employee' AND employment_type = 'fulltime'
@@ -1579,10 +1700,83 @@ export const getFullTimeEmployees = async (req, res) => {
 
     const { rows } = await client.query(query);
 
-    res.status(200).json(rows);
+    // Calculate tenure
+    const calculateTenure = (joiningDate) => {
+      const join = new Date(joiningDate);
+      const now = new Date();
+
+      let years = now.getFullYear() - join.getFullYear();
+      let months = now.getMonth() - join.getMonth();
+
+      if (months < 0) {
+        years--;
+        months += 12;
+      }
+
+      if (years <= 0) return `${months} months`;
+      if (months === 0) return `${years} years`;
+
+      return `${years} years ${months} months`;
+    };
+
+    const updated = rows.map((emp) => ({
+      ...emp,
+      tenure: calculateTenure(emp.date_of_joining),
+    }));
+
+    res.status(200).json(updated);
+
   } catch (err) {
     console.error("Get FullTime Employees Error:", err.message);
     res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+};
+export const submitSelfReview = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const {
+      employee_uuid,       // primary key UUID of employee
+      employee_name,
+      designation,
+      self_rating,
+      self_strengths,
+      self_improvements,
+      self_comments
+    } = req.body;
+
+    if (!employee_uuid)
+      return res.status(400).json({ error: "employee_uuid is required" });
+
+    const query = `
+      INSERT INTO performance_reviews (
+        employee_id, employee_name, employee_designation,
+        self_rating, self_strengths, self_improvements, self_comments,
+        status
+      )
+      VALUES ($1,$2,$3,$4,$5,$6,$7,'Self Reviewed')
+      RETURNING *;
+    `;
+
+    const { rows } = await client.query(query, [
+      employee_uuid,
+      employee_name,
+      designation,
+      self_rating,
+      self_strengths,
+      self_improvements,
+      self_comments
+    ]);
+
+    res.status(201).json({
+      message: "Self review submitted",
+      review: rows[0]
+    });
+
+  } catch (err) {
+    console.error("Submit Self Review Error:", err);
+    res.status(500).json({ error: "Internal server error" });
   } finally {
     client.release();
   }

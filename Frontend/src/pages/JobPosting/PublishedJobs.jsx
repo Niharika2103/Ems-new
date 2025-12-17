@@ -169,7 +169,10 @@ const PublishedJobs = () => {
 
   return (
     <div style={{ padding: 30, background: "#f5f7fa", minHeight: "100vh" }}>
-      <h1>All Job Posts (Admin View)</h1>
+      <h1 style={{ fontSize: "30px", fontWeight: "500", marginBottom: "20px" }}>
+  All Job Posts
+</h1>
+
 
       <Card style={{ marginBottom: 20, padding: 20 }}>
         <Input

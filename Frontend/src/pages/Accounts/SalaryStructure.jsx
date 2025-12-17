@@ -97,11 +97,11 @@ const SalaryStructure = () => {
 
 
   const initialFormData = {
-    employeeName: '',
-    employeeId: '',
-    designation: '',
-    dateOfJoining: getCurrentDate(),
-    dateOfBirth:  getCurrentDate(),
+    // employeeName: '',
+    // employeeId: '',
+    // designation: '',
+    // dateOfJoining: getCurrentDate(),
+    // dateOfBirth:  getCurrentDate(),
 
     panNumber: '',
     // aadharNumber: '',
@@ -135,7 +135,7 @@ const SalaryStructure = () => {
     lossofpayreversalDays: '',
 
     location: '',
-    employmentType: ''
+    // employment_type: ''
   };
   const initialFormData1 = {
 
@@ -172,7 +172,7 @@ const SalaryStructure = () => {
     lossofpayreversalDays: '',
 
     location: '',
-    employmentType: ''
+    employment_type: ''
   };
 
   const [activeStep, setActiveStep] = useState(0);
@@ -184,7 +184,7 @@ const SalaryStructure = () => {
   // errors: { fieldName: "error message" }
   const [errors, setErrors] = useState({});
   const steps = ['Employee Details', 'Bank & IDs', 'Salary Components', 'Review & Generate'];
-  const employmentTypes = ['Permanent', 'Contract', 'Intern', 'Trainee', 'Consultant'];
+  // const employmentTypes = ['Permanent', 'Contract', 'Intern', 'Trainee', 'Consultant'];
   const paymentMethods = ['Bank Transfer', 'Cash', 'Cheque'];
   const locations = ['Bangalore', 'Hyderabad', 'Pune', 'Gurgaon', 'Mumbai', 'Chennai', 'Remote'];
 
@@ -214,6 +214,7 @@ const SalaryStructure = () => {
           employeeName: emp.name || "",
           employeeId: emp.employee_id || "",
           designation: emp.designation || "",
+          employment_type:emp.employment_type || "",
           dateOfJoining: emp.date_of_joining ? emp.date_of_joining.split("T")[0] : getCurrentDate(),
           email: emp.email || "",
           dateOfBirth: emp.dob ? emp.dob.split("T")[0] : getCurrentDate(),
@@ -228,11 +229,11 @@ const SalaryStructure = () => {
               ...prev,
               ...mapBackendToForm(salary),
               // optionally copy employee fields to formData if your UI expects them there:
-              employeeName: emp.name || "",
-              employeeId: emp.employee_id || "",
-              designation: emp.designation || "",
-              dateOfJoining: emp.date_of_joining ? emp.date_of_joining.split("T")[0] : "",
-              dateOfBirth: emp.dob ? emp.dob.split("T")[0] : "",
+              // employeeName: emp.name || "",
+              // employeeId: emp.employee_id || "",
+              // designation: emp.designation || "",
+              // dateOfJoining: emp.date_of_joining ? emp.date_of_joining.split("T")[0] : "",
+              // dateOfBirth: emp.dob ? emp.dob.split("T")[0] : "",
             }));
           } else {
             // no salary found — keep defaults (or clear fields as needed)
@@ -517,30 +518,46 @@ const SalaryStructure = () => {
 
             <Grid container spacing={3}>
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="Employee Name"
-                  name="employeeName" value={formData1.employeeName} InputProps={{ readOnly: true }}
-                />
+                <TextField
+  fullWidth
+  label="Employee Name"
+  value={formData1.employeeName || ""}
+  InputLabelProps={{ shrink: true }}
+  disabled
+/>
               </Grid>
 
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="Employee ID"
-                  name="employeeId" value={formData1.employeeId}
-                />
+               <TextField
+  fullWidth
+  label="Employee ID"
+  value={formData1.employeeId || ""}
+  InputLabelProps={{ shrink: true }}
+  disabled
+/>
               </Grid>
 
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="Designation"
-                  name="designation" value={formData1.designation} InputProps={{ readOnly: true }}
-                />
+                <TextField
+  fullWidth
+  label="Designation"
+  value={formData1.designation || ""}
+  InputLabelProps={{ shrink: true }}
+  disabled
+/>
               </Grid>
 
 
 
               {/* Employment Type */}
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="Employment Type"
-                  name="employmentType" value={formData1.employmentType} InputProps={{ readOnly: true }}
-                />
+                <TextField
+  fullWidth
+  label="Employment Type"
+  value={formData1.employment_type || ""}
+  InputLabelProps={{ shrink: true }}
+  disabled
+/>
               </Grid>
 
               {/* Dates */}
@@ -560,36 +577,26 @@ const SalaryStructure = () => {
 
               <Grid item xs={12} sm={6}>
   <TextField
-    fullWidth
-    type="date"
-    label="Date of Joining"
-    name="dateOfJoining"
-    InputLabelProps={{ shrink: true }}
-    value={formData1.dateOfJoining || getCurrentDate()}
-    onChange={(e) =>
-      setFormData1(prev => ({
-        ...prev,
-        dateOfJoining: e.target.value
-      }))
-    }
-  />
+  fullWidth
+  type="date"
+  label="Date of Joining"
+  value={formData1.dateOfJoining || ""}
+  InputLabelProps={{ shrink: true }}
+  disabled
+/>
+
 </Grid>
 
 <Grid item xs={12} sm={6}>
-  <TextField
-    fullWidth
-    type="date"
-    label="Date of Birth"
-    name="dateOfBirth"
-    InputLabelProps={{ shrink: true }}
-    value={formData1.dateOfBirth  || getCurrentDate()}
-    onChange={(e) =>
-      setFormData1(prev => ({
-        ...prev,
-        dateOfBirth: e.target.value
-      }))
-    }
-  />
+ <TextField
+  fullWidth
+  type="date"
+  label="Date of Birth"
+  value={formData1.dateOfBirth || ""}
+  InputLabelProps={{ shrink: true }}
+  disabled
+/>
+
 </Grid>
 
 
@@ -828,13 +835,13 @@ const SalaryStructure = () => {
                     <TableContainer>
                       <Table size="small">
                         <TableBody>
-                          <TableRow><TableCell>Name</TableCell><TableCell>{formData.employeeName}</TableCell></TableRow>
-                          <TableRow><TableCell>Employee ID</TableCell><TableCell>{formData.employeeId}</TableCell></TableRow>
-                          <TableRow><TableCell>Designation</TableCell><TableCell>{formData.designation}</TableCell></TableRow>
-                          <TableRow><TableCell>DOJ</TableCell><TableCell>{formData.dateOfJoining}</TableCell></TableRow>
-                          <TableRow><TableCell>DOB</TableCell><TableCell>{formData.dateOfBirth}</TableCell></TableRow>
+                          <TableRow><TableCell>Name</TableCell><TableCell>{formData1.employeeName}</TableCell></TableRow>
+                          <TableRow><TableCell>Employee ID</TableCell><TableCell>{formData1.employeeId}</TableCell></TableRow>
+                          <TableRow><TableCell>Designation</TableCell><TableCell>{formData1.designation}</TableCell></TableRow>
+                          <TableRow><TableCell>DOJ</TableCell><TableCell>{formData1.dateOfJoining}</TableCell></TableRow>
+                          <TableRow><TableCell>DOB</TableCell><TableCell>{formData1.dateOfBirth}</TableCell></TableRow>
                           <TableRow><TableCell>Location</TableCell><TableCell>{formData.location}</TableCell></TableRow>
-                          <TableRow><TableCell>Employment Type</TableCell><TableCell>{formData.employmentType}</TableCell></TableRow>
+                          <TableRow><TableCell>Employment Type</TableCell><TableCell>{formData1.employment_type}</TableCell></TableRow>
                         </TableBody>
                       </Table>
                     </TableContainer>
