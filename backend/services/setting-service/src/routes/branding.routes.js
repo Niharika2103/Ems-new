@@ -3,17 +3,19 @@ import {
   getSystemSettings,
   updateBrandingSettings,
   updateWhiteLabelSettings,
+  getTenantBranding,
+  updateTenantBranding,
 } from "../controllers/Branding.controller.js";
 import { upload } from "../middlewares/upload.js";
 
 const router = express.Router();
 
-router.get("/", getSystemSettings);
-router.put("/branding", upload.single("logo"), updateBrandingSettings);
-router.put("/white-label", updateWhiteLabelSettings);
-router.get("/tenants/:tenantKey/branding", getTenantBranding);
+router.get("/system-settings", getSystemSettings);
+router.put("/system-settings/branding", upload.single("logo"), updateBrandingSettings);
+router.put("/system-settings/white-label", updateWhiteLabelSettings);
+router.get("/system-settings/tenants/:tenantKey/branding", getTenantBranding);
 router.put(
-  "/tenants/:tenantKey/branding",
+  "/system-settings/tenants/:tenantKey/branding",
   upload.single("logo"),
   updateTenantBranding
 );

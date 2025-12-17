@@ -28,9 +28,11 @@ import BrandingIdentityForm from '../Settings/BrandingIdentityForm.jsx';
 import BrandingUsageForm from '../Settings/BrandingUsageForm.jsx';
 import BrandingWhiteLabelForm from '../Settings/BrandingWhiteLabelForm.jsx';
 import BrandingWhiteLabelTenantForm from './BrandingWhiteLabelTenantForm.jsx';
-
+import {fetchSettings} from '../../api/authApi';
 import CloseIcon from '@mui/icons-material/Close';
 import { useNavigate } from 'react-router-dom';
+import { ToastContainer ,toast} from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('branding');
@@ -82,7 +84,13 @@ export default function SettingsPage() {
 function BrandingSection() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerKey, setDrawerKey] = useState(null); // 'identity' | 'usage' | 'whitelabel'
+const [activeTenant, setActiveTenant] = useState(null);
 
+useEffect(() => {
+  fetchSettings().then((res) => {
+    setActiveTenant(res.data?.whiteLabel?.activeTenant);
+  });
+}, []);
    const openDrawer = (key) => {
     setDrawerKey(key);      // 👈 always set fresh key
     setDrawerOpen(true);
@@ -165,8 +173,10 @@ function BrandingSection() {
   {drawerKey === 'usage' && <BrandingUsageForm onClose={closeDrawer} />}
   {drawerKey === 'whitelabel' && <BrandingWhiteLabelForm onClose={closeDrawer} />}
   {drawerKey === 'whitelabelform' && (
-    <BrandingWhiteLabelTenantForm onClose={closeDrawer} />
+    <BrandingWhiteLabelTenantForm tenantKey={activeTenant} onClose={closeDrawer} />
+    
   )}
+  <ToastContainer position="top-right" autoClose={3000} />
 </RightDrawer>
 
     </>

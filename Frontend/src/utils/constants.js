@@ -25,7 +25,7 @@ export const AUTH_API = {
   SALARYSTRUCTURE:`${API_BASES.SALARYSTRUCTURE}/salary`,
   FREELANCER: `${API_BASES.FREELANCER}/freelancer`,
   VENDOR: `${API_BASES.VENDOR}/vendor` ,
-  SETTINGS: `${API_BASES.SETTINGS}/api/system-settings`,
+  SETTINGS: `${API_BASES.SETTINGS}/api`,
 };
 
 export const ROLES = {
