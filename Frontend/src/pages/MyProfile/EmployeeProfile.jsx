@@ -56,11 +56,13 @@ const EmployeeProfile = () => {
     address: "",
     emergency_contact: "",
     department: "",
+    designation: "",
     permanent_address: "",
     profilePhoto: null,
     resume: null,
   });
 
+  const [resumeUploaded, setResumeUploaded] = useState(false);
   const [userId, setUserId] = useState(null);
 
   // Fetch employee profile
@@ -120,6 +122,7 @@ const EmployeeProfile = () => {
       .unwrap()
       .then((res) => {
         toast.success(res.message || "Profile updated successfully");
+         setResumeUploaded(true); 
         dispatch(fetchEmployeeProfile(profile.email));
       })
       .catch((err) => {
@@ -127,6 +130,14 @@ const EmployeeProfile = () => {
         console.error(err);
       });
   };
+const handleViewResume = () => {
+  if (formData.resume instanceof File) {
+    const url = URL.createObjectURL(formData.resume);
+    window.open(url, "_blank");
+  } else if (profile?.resume) {
+    window.open(profile.resume, "_blank");
+  }
+};
 
   return (
     <>
@@ -177,7 +188,7 @@ const EmployeeProfile = () => {
                 {formData.name || "Employee Name"}
               </Typography>
               <Typography variant="subtitle2" color="rgba(255,255,255,0.8)">
-                {formData.department || "Department"} • Employee
+                {formData.department || "Department"} 
               </Typography>
               <Typography variant="body2" color="rgba(255,255,255,0.8)" sx={{ mt: 0.5 }}>
                 {formData.email || "email@company.com"}
@@ -272,6 +283,22 @@ const EmployeeProfile = () => {
                     disabled
                   />
                 </Grid>
+                <Grid item xs={12} sm={6}>
+  <TextField
+    fullWidth
+    label="Designation"
+    name="designation"
+    value={formData.designation}
+    onChange={handleChange}
+    InputProps={{
+      startAdornment: (
+        <WorkIcon sx={{ color: "#2196f3", mr: 1 }} />
+      ),
+    }}
+    disabled
+  />
+</Grid>
+
 
                 <Grid item xs={12} sm={6}>
                   <TextField
@@ -404,48 +431,65 @@ const EmployeeProfile = () => {
                 </Grid>
 
                 {/* Resume Upload */}
-                <Grid item xs={12} sm={6}>
-                  <Box>
-                    <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>
-                      Resume
-                    </Typography>
-                    <Box display="flex" alignItems="center" gap={2}>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: "#666",
-                          flex: 1,
-                          fontStyle: formData.resume || profile?.resume ? "normal" : "italic"
-                        }}
-                      >
-                        {formData.resume instanceof File
-                          ? formData.resume.name
-                          : profile?.resume
-                            ? profile.resume.split("/").pop()
-                            : "No resume uploaded"}
-                      </Typography>
-                      <input
-                        type="file"
-                        name="resume"
-                        accept=".pdf,.doc,.docx"
-                        style={{ display: "none" }}
-                        id="resume-upload"
-                        onChange={handleChange}
-                      />
-                      <label htmlFor="resume-upload">
-                        <Button
-                          variant="outlined"
-                          component="span"
-                          size="small"
-                          startIcon={<UploadIcon />}
-                          sx={{ borderRadius: 2 }}
-                        >
-                          Upload Resume
-                        </Button>
-                      </label>
-                    </Box>
-                  </Box>
-                </Grid>
+               
+{/* Resume Upload */}
+<Grid item xs={12} sm={6}>
+  <Box>
+    <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>
+      Resume
+    </Typography>
+
+    <input
+      accept=".pdf,.doc,.docx"
+      style={{ display: "none" }}
+      id="resume-upload"
+      type="file"
+      name="resume"
+      onChange={handleChange}
+      disabled={resumeUploaded || !!profile?.resume}
+    />
+
+    <Box display="flex" alignItems="center" gap={2}>
+      {/* Upload Button – disabled after upload */}
+      {!resumeUploaded && !profile?.resume && (
+        <label htmlFor="resume-upload">
+          <Button
+            variant="outlined"
+            component="span"
+            size="small"
+            startIcon={<UploadIcon />}
+            sx={{ borderRadius: 2 }}
+          >
+            Upload Resume
+          </Button>
+        </label>
+      )}
+
+      {/* Resume uploaded text */}
+      {(resumeUploaded || profile?.resume) && (
+        <Typography
+          variant="body2"
+          sx={{ color: "green", fontWeight: 600 }}
+        >
+          Resume uploaded
+        </Typography>
+      )}
+
+      {/* View only enabled */}
+      {(resumeUploaded || profile?.resume) && (
+        <Button
+          size="small"
+          variant="text"
+          onClick={handleViewResume}
+          sx={{ textTransform: "none" }}
+        >
+          View
+        </Button>
+      )}
+    </Box>
+  </Box>
+</Grid>
+
               </Grid>
             </Paper>
 

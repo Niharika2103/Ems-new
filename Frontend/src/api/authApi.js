@@ -1,8 +1,6 @@
-import { superadminClient,employeeClient,adminClient,ProjectClient,AttendanceClient,SalaryStructureClient, freelancerClient ,vendorClient } from "./axiosClient";
+import { superadminClient,employeeClient,adminClient,ProjectClient,AttendanceClient,
+  SalaryStructureClient, freelancerClient ,vendorClient,settingsClient } from "./axiosClient";
 import { AUTH_API } from "../utils/constants";
-
-
-import { RestaurantMenuSharp } from "@mui/icons-material";
 
 
 // ================= SuperAdmin =================
@@ -736,6 +734,64 @@ export const fetchAllPerformanceReviewsApi = () =>
 export const fetchFinalRatingsApi = () =>
   adminClient.get(`/admin/performance/final-ratings`);
 
+//branding settings APIs
+
+export const fetchSettings = () => {
+  return settingsClient.get(`${AUTH_API.SETTINGS}/system-settings`);
+};
+
+export const updateBranding = (formData) => {
+  return settingsClient.put(
+    `${AUTH_API.SETTINGS}/system-settings/branding`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+};
+
+export const updateWhiteLabel = (data) =>{
+ return settingsClient.put(`${AUTH_API.SETTINGS}/system-settings/white-label`, data);
+}
+export const getTenantBrandingApi = (tenantKey) => {
+  return settingsClient.get(`${AUTH_API.SETTINGS}/system-settings/tenants/${tenantKey}/branding`);
+};
+
+export const updateTenantBrandingApi = (tenantKey, formData) => {
+  return settingsClient.put(`${AUTH_API.SETTINGS}/system-settings/tenants/${tenantKey}/branding`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
+
+//whatsapp template 
+export const getTemplatesApi = () =>{
+  return settingsClient.get(`${AUTH_API.SETTINGS}/whatsapp/template/fetch`);
+}
+
+export const createTemplateApi = (data) =>
+  {
+  return settingsClient.post(`${AUTH_API.SETTINGS}/whatsapp/template`, data);
+}
+
+
+export const updateTemplateApi = (id, data) =>
+   {
+  return settingsClient.put(`${AUTH_API.SETTINGS}/whatsapp/template/${id}`, data);
+}
+
+export const updateTemplateStatusApi = (id, status) =>
+   {
+  return settingsClient.patch(`${AUTH_API.SETTINGS}/whatsapp/template/${id}/status`, { status });
+
+}
+
+export const deleteTemplateApi = (id) =>{
+   return settingsClient.delete(`${AUTH_API.SETTINGS}/whatsapp/template/${id}`);
+}
 // ================= Leave Policy (Admin Settings) =================
 
 // Get all leave types
