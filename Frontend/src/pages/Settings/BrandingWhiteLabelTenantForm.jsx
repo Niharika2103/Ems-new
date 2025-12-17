@@ -30,7 +30,7 @@ export default function BrandingWhiteLabelTenantForm({
 
   const [previewUrl, setPreviewUrl] = useState("");
 
-  /* 🔹 LOAD TENANT BRANDING */
+  /*  LOAD TENANT BRANDING */
   useEffect(() => {
     if (!tenantKey) return;
 
@@ -48,7 +48,7 @@ export default function BrandingWhiteLabelTenantForm({
     });
   }, [tenantKey]);
 
-  /* 🔹 LOGO PREVIEW */
+  /*  LOGO PREVIEW */
   useEffect(() => {
     if (branding.logoFile) {
       const url = URL.createObjectURL(branding.logoFile);
@@ -85,7 +85,7 @@ export default function BrandingWhiteLabelTenantForm({
               Editing branding for
             </Typography>
             <Chip
-              label={tenantKey.toUpperCase()}
+              label={tenantKey ? tenantKey.toUpperCase() : "UNKNOWN"}
               color="primary"
               size="small"
             />

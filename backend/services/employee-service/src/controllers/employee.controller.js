@@ -9,6 +9,12 @@ import { sendEmail } from "../services/emailService.js";
 import fs from "fs";
 import speakeasy from "speakeasy";
 import dotenv from "dotenv";
+import axios from "axios";
+dotenv.config();
+
+const FREELANCER_URL = `${process.env.FREELANCER_PROTOCOL}://${process.env.FREELANCER_HOST}:${process.env.FREELANCER_PORT}`;
+console.log("FREELANCER_URL =", FREELANCER_URL);
+
 
 
 const USERS_TABLE = "user_employees_master";
@@ -748,21 +754,46 @@ export const bulkInsertEmployees = async (req, res) => {
 };
 
 // ================== Get All Employees ==================
-export const getEmployees = async (req, res) => {
-  const client = await pool.connect();
-  try {
+// export const getEmployees = async (req, res) => {
+//   const client = await pool.connect();
+//   try {
     // Fetch all users with role in ['admin', 'superadmin', 'employee']
     // const query = `
     //   SELECT *
     //   FROM ${USERS_TABLE}
     //   WHERE role IN ('admin', 'superadmin', 'employee');
     // `;
+//     const query = `
+//       SELECT *
+//       FROM ${USERS_TABLE}
+//       WHERE 
+//         role IN ('admin', 'superadmin')
+//         OR (role = 'employee' AND employment_type = 'fulltime');
+//     `;
+
+//     const { rows } = await client.query(query);
+
+//     return res.status(200).json(rows);
+//   } catch (err) {
+//     console.error("Get Employees Error:", err.message);
+//     return res.status(500).json({ message: err.message });
+//   } finally {
+//     client.release();
+//   }
+// };
+
+export const getEmployees = async (req, res) => {
+  const client = await pool.connect();
+  try {
     const query = `
       SELECT *
       FROM ${USERS_TABLE}
-      WHERE 
-        role IN ('admin', 'superadmin')
-        OR (role = 'employee' AND employment_type = 'fulltime');
+      WHERE employment_type = 'fulltime'
+      AND (
+            LOWER(role) = 'employee'
+         OR LOWER(role_1) = 'employee'
+         OR LOWER(role_2) = 'employee'
+      );
     `;
 
     const { rows } = await client.query(query);
@@ -775,6 +806,7 @@ export const getEmployees = async (req, res) => {
     client.release();
   }
 };
+
 
 // ================== Get Employee by ID ==================
 export const getEmployeeById = async (req, res) => {
@@ -1337,9 +1369,12 @@ export const applyParentalLeave = async (req, res) => {
         `;
 
         const { rows } = await client.query(query);
+        const FREELANCER_URL = process.env.FREELANCER_SERVICE_URL;
+        const BASE_URL = FREELANCER_URL; // same for file links
 
-        const BASE_URL =
-          process.env.FREELANCER_SERVICE_URL || "http://localhost:5005";
+        const response = await axios.get(`${FREELANCER_URL}/freelancer/list`);
+
+
 
         const freelancers = rows.map((emp) => {
           let doc = {};

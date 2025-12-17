@@ -762,12 +762,12 @@ export const getPayrollTrend12Api = () =>
 //branding settings APIs
 
 export const fetchSettings = () => {
-  return settingsClient.get(`${AUTH_API.SETTINGS}`);
+  return settingsClient.get(`${AUTH_API.SETTINGS}/system-settings`);
 };
 
 export const updateBranding = (formData) => {
   return settingsClient.put(
-    `${AUTH_API.SETTINGS}/branding`,
+    `${AUTH_API.SETTINGS}/system-settings/branding`,
     formData,
     {
       headers: {
@@ -778,16 +778,59 @@ export const updateBranding = (formData) => {
 };
 
 export const updateWhiteLabel = (data) =>{
- return settingsClient.put(`${AUTH_API.SETTINGS}/white-label`, data);
+ return settingsClient.put(`${AUTH_API.SETTINGS}/system-settings/white-label`, data);
 }
 export const getTenantBrandingApi = (tenantKey) => {
-  return settingsClient.get(`${AUTH_API.SETTINGS}/api/tenants/${tenantKey}/branding`);
+  return settingsClient.get(`${AUTH_API.SETTINGS}/system-settings/tenants/${tenantKey}/branding`);
 };
 
 export const updateTenantBrandingApi = (tenantKey, formData) => {
-  return settingsClient.put(`${AUTH_API.SETTINGS}/api/tenants/${tenantKey}/branding`, formData, {
+  return settingsClient.put(`${AUTH_API.SETTINGS}/system-settings/tenants/${tenantKey}/branding`, formData, {
     headers: {
       "Content-Type": "multipart/form-data",
     },
   });
 };
+
+//whatsapp template 
+export const getTemplatesApi = () =>{
+  return settingsClient.get(`${AUTH_API.SETTINGS}/whatsapp/template/fetch`);
+}
+
+export const createTemplateApi = (data) =>
+  {
+  return settingsClient.post(`${AUTH_API.SETTINGS}/whatsapp/template`, data);
+}
+
+
+export const updateTemplateApi = (id, data) =>
+   {
+  return settingsClient.put(`${AUTH_API.SETTINGS}/whatsapp/template/${id}`, data);
+}
+
+export const updateTemplateStatusApi = (id, status) =>
+   {
+  return settingsClient.patch(`${AUTH_API.SETTINGS}/whatsapp/template/${id}/status`, { status });
+
+}
+
+export const deleteTemplateApi = (id) =>{
+   return settingsClient.delete(`${AUTH_API.SETTINGS}/whatsapp/template/${id}`);
+}
+// ================= Leave Policy (Admin Settings) =================
+
+// Get all leave types
+export const getLeaveTypesApi = () =>
+  adminClient.get(`/admin/settings/getleave-types`);
+
+// Create leave type
+export const createLeaveTypeApi = (data) =>
+  adminClient.post(`/admin/settings/leave-types`, data);
+
+// Update leave type
+export const updateLeaveTypeApi = (id, data) =>
+  adminClient.put(`/admin/settings/leave-types/${id}`, data);
+
+// Enable / Disable leave type
+export const toggleLeaveTypeStatusApi = (id, isActive) =>
+  adminClient.patch(`/admin/settings/leave-types/${id}/status`, { isActive });

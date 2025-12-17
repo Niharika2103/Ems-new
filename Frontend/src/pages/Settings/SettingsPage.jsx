@@ -28,9 +28,16 @@ import BrandingIdentityForm from '../Settings/BrandingIdentityForm.jsx';
 import BrandingUsageForm from '../Settings/BrandingUsageForm.jsx';
 import BrandingWhiteLabelForm from '../Settings/BrandingWhiteLabelForm.jsx';
 import BrandingWhiteLabelTenantForm from './BrandingWhiteLabelTenantForm.jsx';
-
+import {fetchSettings} from '../../api/authApi';
 import CloseIcon from '@mui/icons-material/Close';
 import { useNavigate } from 'react-router-dom';
+import { ToastContainer ,toast} from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import {
+  getLeaveTypesApi,
+  createLeaveTypeApi,
+  updateLeaveTypeApi,
+} from "../../api/authApi";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('branding');
@@ -82,7 +89,13 @@ export default function SettingsPage() {
 function BrandingSection() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerKey, setDrawerKey] = useState(null); // 'identity' | 'usage' | 'whitelabel'
+const [activeTenant, setActiveTenant] = useState(null);
 
+useEffect(() => {
+  fetchSettings().then((res) => {
+    setActiveTenant(res.data?.whiteLabel?.activeTenant);
+  });
+}, []);
    const openDrawer = (key) => {
     setDrawerKey(key);      // 👈 always set fresh key
     setDrawerOpen(true);
@@ -165,8 +178,10 @@ function BrandingSection() {
   {drawerKey === 'usage' && <BrandingUsageForm onClose={closeDrawer} />}
   {drawerKey === 'whitelabel' && <BrandingWhiteLabelForm onClose={closeDrawer} />}
   {drawerKey === 'whitelabelform' && (
-    <BrandingWhiteLabelTenantForm onClose={closeDrawer} />
+    <BrandingWhiteLabelTenantForm tenantKey={activeTenant} onClose={closeDrawer} />
+    
   )}
+  <ToastContainer position="top-right" autoClose={3000} />
 </RightDrawer>
 
     </>
@@ -318,17 +333,27 @@ function SalaryForm({ initial, onClose }) {
 /* ---------- Leave Policy ---------- */
 
 function LeaveSection() {
+  const [leaves, setLeaves] = useState([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const navigate = useNavigate();
 
-  const leaves = [
-    { id: 1, name: 'Casual leave', code: 'CL', accrual: 'Monthly', carryForward: false },
-    { id: 2, name: 'Sick leave', code: 'SL', accrual: 'Yearly', carryForward: true },
-  ];
+  // 🔹 Fetch leave types from backend
+  const fetchLeaves = async () => {
+    try {
+      const res = await getLeaveTypesApi();
+      setLeaves(res.data);
+    } catch (err) {
+      console.error("Failed to fetch leave types", err);
+    }
+  };
 
-  const openDrawer = (lt) => {
-    setEditing(lt);
+  useEffect(() => {
+    fetchLeaves();
+  }, []);
+
+  const openDrawer = (leave) => {
+    setEditing(leave);
     setDrawerOpen(true);
   };
 
@@ -342,30 +367,31 @@ function LeaveSection() {
       <Grid container spacing={2}>
         {leaves.map((lt) => (
           <Grid key={lt.id} item xs={12} md={4}>
-            <Card sx={{ cursor: 'pointer' }} onClick={() => openDrawer(lt)}>
+            <Card sx={{ cursor: "pointer" }} onClick={() => openDrawer(lt)}>
               <CardContent>
                 <Typography variant="h6">{lt.name}</Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Accrual: {lt.accrual}
+                  Accrual: {lt.accrual_type}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Carry‑forward: {lt.carryForward ? 'Yes' : 'No'}
+                  Carry-forward: {lt.carry_forward ? "Yes" : "No"}
                 </Typography>
               </CardContent>
             </Card>
           </Grid>
         ))}
 
+        {/* Add Leave */}
         <Grid item xs={12} md={4}>
           <Card
             variant="outlined"
             sx={{
-              borderStyle: 'dashed',
-              height: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
+              borderStyle: "dashed",
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
             }}
             onClick={() => openDrawer(null)}
           >
@@ -373,26 +399,13 @@ function LeaveSection() {
           </Card>
         </Grid>
 
+        {/* Holiday (later) */}
         <Grid item xs={12} md={4}>
-          <Card
-            sx={{ cursor: 'pointer' }}
-            onClick={() => navigate('/dashboard/employee/holiday')}
-          >
+          <Card sx={{ cursor: "pointer" }} onClick={() => navigate("/dashboard/employee/holiday")}>
             <CardContent>
               <Typography variant="h6">Holiday calendar</Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                Manage holidays and mapping to locations/groups.
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6">Approval workflows</Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                Configure role‑based leave approval flows.
+              <Typography variant="body2" color="text.secondary">
+                Manage holidays and mapping.
               </Typography>
             </CardContent>
           </Card>
@@ -402,28 +415,34 @@ function LeaveSection() {
       <RightDrawer
         open={drawerOpen}
         onClose={closeDrawer}
-        title={editing ? 'Edit leave type' : 'Add leave type'}
+        title={editing ? "Edit leave type" : "Add leave type"}
       >
-        <LeaveForm initial={editing} onClose={closeDrawer} />
+        <LeaveForm
+          initial={editing}
+          onClose={closeDrawer}
+          onSaved={fetchLeaves}
+        />
       </RightDrawer>
     </>
   );
 }
-
-function LeaveForm({ initial, onClose }) {
-  const [name, setName] = useState(initial?.name || '');
-  const [code, setCode] = useState(initial?.code || '');
-  const [category, setCategory] = useState(initial?.category || 'Paid');
-  const [accrual, setAccrual] = useState(initial?.accrual || 'Monthly');
-  const [carryForward, setCarryForward] = useState(initial?.carryForward || false);
-  const [maxBalance, setMaxBalance] = useState(initial?.maxBalance || '');
+function LeaveForm({ initial, onClose, onSaved }) {
+  const [name, setName] = useState(initial?.name || "");
+  const [code, setCode] = useState(initial?.code || "");
+  const [category, setCategory] = useState(initial?.category || "Paid");
+  const [accrual, setAccrual] = useState(initial?.accrual_type || "Monthly");
+  const [carryForward, setCarryForward] = useState(initial?.carry_forward || false);
+  const [maxBalance, setMaxBalance] = useState(initial?.max_balance || "");
   const [requiresCertificate, setRequiresCertificate] = useState(
-    initial?.requiresCertificate || false
+    initial?.requires_certificate || false
   );
 
-  const handleSubmit = (e) => {
+  const isSick = name.toLowerCase().includes("sick");
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log({
+
+    const payload = {
       name,
       code,
       category,
@@ -431,11 +450,24 @@ function LeaveForm({ initial, onClose }) {
       carryForward,
       maxBalance,
       requiresCertificate,
-    });
-    onClose();
-  };
+    };
 
-  const isSick = name.toLowerCase().includes('sick');
+    try {
+      if (initial?.id) {
+        // 🔹 UPDATE
+        await updateLeaveTypeApi(initial.id, payload);
+      } else {
+        // 🔹 CREATE
+        await createLeaveTypeApi(payload);
+      }
+
+      onSaved();     // refresh cards
+      onClose();     // close drawer
+    } catch (err) {
+      console.error("Failed to save leave type", err);
+      alert("Failed to save leave type");
+    }
+  };
 
   return (
     <Box component="form" onSubmit={handleSubmit}>
@@ -447,34 +479,26 @@ function LeaveForm({ initial, onClose }) {
           fullWidth
           required
         />
+
         <TextField
           label="Code"
           value={code}
-          onChange={(e) => setCode(e.target.value)}
+          onChange={(e) => setCode(e.target.value.toUpperCase())}
           fullWidth
+          required
         />
 
         <FormControl fullWidth>
-          <InputLabel id="cat-label">Category</InputLabel>
-          <Select
-            labelId="cat-label"
-            label="Category"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-          >
+          <InputLabel>Category</InputLabel>
+          <Select value={category} onChange={(e) => setCategory(e.target.value)}>
             <MenuItem value="Paid">Paid</MenuItem>
             <MenuItem value="Unpaid">Unpaid</MenuItem>
           </Select>
         </FormControl>
 
         <FormControl fullWidth>
-          <InputLabel id="accrual-label">Accrual</InputLabel>
-          <Select
-            labelId="accrual-label"
-            label="Accrual"
-            value={accrual}
-            onChange={(e) => setAccrual(e.target.value)}
-          >
+          <InputLabel>Accrual</InputLabel>
+          <Select value={accrual} onChange={(e) => setAccrual(e.target.value)}>
             <MenuItem value="Monthly">Monthly</MenuItem>
             <MenuItem value="Yearly">Yearly</MenuItem>
             <MenuItem value="Tenure-based">Tenure-based</MenuItem>
@@ -497,7 +521,7 @@ function LeaveForm({ initial, onClose }) {
               onChange={(e) => setCarryForward(e.target.checked)}
             />
           }
-          label="Allow carry‑forward"
+          label="Allow carry-forward"
         />
 
         {isSick && (
@@ -508,11 +532,11 @@ function LeaveForm({ initial, onClose }) {
                 onChange={(e) => setRequiresCertificate(e.target.checked)}
               />
             }
-            label="Require medical certificate for long absences"
+            label="Require medical certificate"
           />
         )}
 
-        <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ mt: 1 }}>
+        <Stack direction="row" spacing={1} justifyContent="flex-end">
           <Button onClick={onClose}>Cancel</Button>
           <Button type="submit" variant="contained">
             Save

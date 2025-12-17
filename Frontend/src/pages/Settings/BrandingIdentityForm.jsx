@@ -6,6 +6,8 @@ import {
   Stack,
 } from '@mui/material';
 import { fetchSettings, updateBranding } from '../../api/authApi';
+import { ToastContainer ,toast} from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 
 export default function BrandingIdentityForm({ onClose }) {
@@ -19,21 +21,25 @@ export default function BrandingIdentityForm({ onClose }) {
 
   const [previewUrl, setPreviewUrl] = useState("");
 
+
   useEffect(() => {
-    fetchSettings().then((res) => {
-      const b = res.data?.branding;
-      if (!b) return;
+    fetchSettings()
+      .then((res) => {
+        const b = res.data?.branding;
+        if (!b) return;
 
-      setBranding({
-        companyName: b.companyName || "",
-        logoFile: null,
-        logoUrl: b.logoUrl || "",
-        primaryColor: b.primaryColor || "#1976d2",
-        secondaryColor: b.secondaryColor || "#2e7d32",
+        setBranding({
+          companyName: b.companyName || "",
+          logoFile: null,
+          logoUrl: b.logoUrl || "",
+          primaryColor: b.primaryColor || "#1976d2",
+          secondaryColor: b.secondaryColor || "#2e7d32",
+        });
+         setPreviewUrl("");
+      })
+      .catch(() => {
+        toast.error("Failed to load branding settings");
       });
-
-      setPreviewUrl("");
-    });
   }, []);
 
 
@@ -49,7 +55,7 @@ export default function BrandingIdentityForm({ onClose }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+const toastId = toast.loading("Updating branding...");
     const formData = new FormData();
     formData.append("companyName", branding.companyName);
     formData.append("primaryColor", branding.primaryColor);
@@ -67,7 +73,13 @@ export default function BrandingIdentityForm({ onClose }) {
       logoFile: null,
       logoUrl: res.data.branding.logoUrl,
     }));
-    alert("Branding updated successfully");
+      toast.update(toastId, {
+      render: "Branding updated successfully ✅",
+      type: "success",
+      isLoading: false,
+      autoClose: 2000,
+      onClose: onClose, // ✅ CLOSE DRAWER AFTER TOAST
+    });
     onClose();
   };
 
