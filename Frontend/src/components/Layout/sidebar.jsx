@@ -350,19 +350,30 @@ const Sidebar = ({ isOpen, handleClose }) => {
           {finalMenus.map((item) => (
             <li key={item.name}>
               <NavLink
-                to={item.path}
-                className={({ isActive }) =>
-                  `group flex items-center p-2 rounded-l-full cursor-pointer transition-all
-                   hover:bg-white hover:scale-105 ${
-                     isActive ? "bg-white text-[#51b4f2]" : "text-white"
-                   }`
-                }
-              >
-                <span className={`${isOpen ? "mr-3" : ""} group-hover:text-sky-600`}>
-                  {item.icon}
-                </span>
-                {isOpen && <span>{item.name}</span>}
-              </NavLink>
+  to={item.path}
+  className={({ isActive }) =>
+    `group flex items-center p-2 rounded-l-full cursor-pointer transition-all duration-300
+     ${
+       isActive
+         ? "bg-white text-[#51b4f2] font-semibold shadow-md"
+         : "text-white hover:bg-white hover:text-[#51b4f2]"
+     }`
+  }
+>
+  {({ isActive }) => (
+    <>
+      <span
+        className={`${isOpen ? "mr-3" : ""} transition-colors duration-300
+        ${isActive ? "text-[#51b4f2]" : "group-hover:text-[#51b4f2]"}`}
+      >
+        {item.icon}
+      </span>
+
+      {isOpen && <span>{item.name}</span>}
+    </>
+  )}
+</NavLink>
+
             </li>
           ))}
 

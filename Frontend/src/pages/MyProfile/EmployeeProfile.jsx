@@ -130,6 +130,14 @@ const EmployeeProfile = () => {
         console.error(err);
       });
   };
+const handleViewResume = () => {
+  if (formData.resume instanceof File) {
+    const url = URL.createObjectURL(formData.resume);
+    window.open(url, "_blank");
+  } else if (profile?.resume) {
+    window.open(profile.resume, "_blank");
+  }
+};
 
   return (
     <>
@@ -423,34 +431,60 @@ const EmployeeProfile = () => {
                 </Grid>
 
                 {/* Resume Upload */}
-                <Grid item xs={12} sm={6}>
+               
+{/* Resume Upload */}
+<Grid item xs={12} sm={6}>
   <Box>
     <Typography variant="body2" fontWeight={600} sx={{ mb: 1 }}>
       Resume
     </Typography>
 
-    <Box display="flex" alignItems="center" gap={2}>
-      {/* Resume name */}
-      <Typography
-        variant="body2"
-        sx={{
-          color: "green",
-          flex: 1,
-          fontWeight: 600,
-        }}
-      >
-        {formData.resume instanceof File
-          ? formData.resume.name
-          : profile?.resume
-          ? profile.resume.split("/").pop()
-          : "Resume uploaded"}
-      </Typography>
+    <input
+      accept=".pdf,.doc,.docx"
+      style={{ display: "none" }}
+      id="resume-upload"
+      type="file"
+      name="resume"
+      onChange={handleChange}
+      disabled={resumeUploaded || !!profile?.resume}
+    />
 
-      {/* ✅ GREEN TICK ONLY */}
+    <Box display="flex" alignItems="center" gap={2}>
+      {/* Upload Button – disabled after upload */}
+      {!resumeUploaded && !profile?.resume && (
+        <label htmlFor="resume-upload">
+          <Button
+            variant="outlined"
+            component="span"
+            size="small"
+            startIcon={<UploadIcon />}
+            sx={{ borderRadius: 2 }}
+          >
+            Upload Resume
+          </Button>
+        </label>
+      )}
+
+      {/* Resume uploaded text */}
       {(resumeUploaded || profile?.resume) && (
-        <IconButton disabled>
-          <UploadIcon sx={{ color: "green" }} />
-        </IconButton>
+        <Typography
+          variant="body2"
+          sx={{ color: "green", fontWeight: 600 }}
+        >
+          Resume uploaded
+        </Typography>
+      )}
+
+      {/* View only enabled */}
+      {(resumeUploaded || profile?.resume) && (
+        <Button
+          size="small"
+          variant="text"
+          onClick={handleViewResume}
+          sx={{ textTransform: "none" }}
+        >
+          View
+        </Button>
       )}
     </Box>
   </Box>
