@@ -100,6 +100,7 @@ import WhatsAppTemplateEditor from "../pages/Templates/WatsupTemplate/WatsupTemp
 import CommunicationInfoDashboard from "../pages/dashbaord/CommunicationInfoDashboard";
 import EventWebhooks from "../pages/Templates/Webhook/EventWebhooks";
 import FreelancerJobPostDashboard from "../pages/Freelancer/jobposting/FreelancerJobPostDashboard";
+import PanelistFeedback from "../pages/JobPosting/PanelistFeedback";
 
 function AppRoutes() {
   return (
@@ -653,10 +654,17 @@ function AppRoutes() {
        <Route path="/payout-management" element={<PayoutManagement />} />
        <Route path="/commision" element={<CommissionSystemDashboard />} />
        <Route path="/settings" element={<SettingsPage />} />
-       <Route path="/feedback-table"
+       <Route path="/interview-table"
         element={
           <ProtectedRoute allowedRoles={["admin"]}>
               <PanelFeedbackTable />
+            </ProtectedRoute>
+       } 
+       />
+       <Route path="/employee/feedback"
+        element={
+          <ProtectedRoute allowedRoles={["employee","admin"]}>
+              <PanelistFeedback />
             </ProtectedRoute>
        } 
        />

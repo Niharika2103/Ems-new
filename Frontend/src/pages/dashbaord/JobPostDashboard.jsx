@@ -7,6 +7,8 @@ import GroupIcon from "@mui/icons-material/Group";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import PersonIcon from "@mui/icons-material/Person";
 import AssignmentIcon from "@mui/icons-material/Assignment";
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+
 
 const JobPostDashboard = () => {
   const navigate = useNavigate();
@@ -51,7 +53,7 @@ const JobPostDashboard = () => {
       icon: BarChartIcon,
       iconBg: "bg-yellow-100",
       iconColor: "text-yellow-600",
-      onClick: () => navigate("/feedback-table"),
+      onClick: () => navigate("/employee/feedback"),
     },
   ];
 
@@ -76,6 +78,14 @@ const JobPostDashboard = () => {
         onClick: () => navigate("/job-create"),
       }
     );
+    stats.push({
+    title: "Interview List",
+    message: "View all scheduled interviews",
+    icon: CalendarTodayIcon,
+    iconBg: "bg-purple-100",
+    iconColor: "text-purple-600",
+    onClick: () => navigate("/interview-table"), // change path if needed
+  });
 
     stats.push({
       title: "Manage Offers",
