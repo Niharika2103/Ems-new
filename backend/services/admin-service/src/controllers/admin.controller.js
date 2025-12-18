@@ -4847,6 +4847,7 @@ export const getAllPayroll = async (req, res) => {
 
 export const getMonthlyPayrollSummary = async (req, res) => {
   const client = await pool.connect();
+
   try {
     const { month, year } = req.query;
 
@@ -4854,8 +4855,10 @@ export const getMonthlyPayrollSummary = async (req, res) => {
       return res.status(400).json({ error: "month and year are required" });
     }
 
-    const monthNum = String(Number(month));     
-    const monthZero = monthNum.padStart(2, "0");
+    // Normalize month
+    const monthInt = parseInt(month, 10);
+    const monthStr = String(monthInt);
+    const monthZero = monthStr.padStart(2, "0");
 
     const query = `
       SELECT 
@@ -4864,17 +4867,17 @@ export const getMonthlyPayrollSummary = async (req, res) => {
         total_deductions,
         total_net
       FROM payroll
-      WHERE (month = $1 OR month = $2 OR month = $3)
-        AND year = $4
+      WHERE month IN ($1, $2)
+        AND year = $3
         AND status = 'Completed'
+      ORDER BY run_date DESC
       LIMIT 1;
     `;
 
     const { rows } = await client.query(query, [
-      month,
-      monthNum,
+      monthStr,
       monthZero,
-      year,
+      year
     ]);
 
     if (rows.length === 0) {
@@ -4882,7 +4885,7 @@ export const getMonthlyPayrollSummary = async (req, res) => {
     }
 
     res.json({
-      month,
+      month: monthInt,
       year,
       totalEmployees: rows[0].total_employees,
       totalGross: rows[0].total_gross,
@@ -4898,18 +4901,16 @@ export const getMonthlyPayrollSummary = async (req, res) => {
   }
 };
 
+
 export const getPayrollTrend = async (req, res) => {
   const client = await pool.connect();
   try {
-    let limit = parseInt(req.query.limit) || 6; // default is 6 months
+    let limit = parseInt(req.query.limit) || 6;
 
-    // Prevent invalid values
-    if (limit < 1 || limit > 36) {
-      limit = 6;
-    }
+    if (limit < 1 || limit > 36) limit = 6;
 
     const query = `
-      SELECT
+      SELECT DISTINCT ON (year, month::int)
         month,
         year,
         total_gross,
@@ -4917,8 +4918,8 @@ export const getPayrollTrend = async (req, res) => {
         total_employees
       FROM payroll
       WHERE status = 'Completed'
-      ORDER BY year DESC, month::int DESC
-      LIMIT $1
+      ORDER BY year DESC, month::int DESC, run_date DESC
+      LIMIT $1;
     `;
 
     const { rows } = await client.query(query, [limit]);
@@ -4926,79 +4927,11 @@ export const getPayrollTrend = async (req, res) => {
     res.json({
       success: true,
       months_requested: limit,
-      trend: rows.reverse(), // oldest → latest
+      trend: rows.reverse() // oldest → latest
     });
 
   } catch (err) {
     console.error("PAYROLL TREND ERROR:", err);
-    res.status(500).json({ success: false, error: err.message });
-  } finally {
-    client.release();
-  }
-};
-
-export const getPayrollTrend3Months = async (req, res) => {
-  const client = await pool.connect();
-  try {
-    let limit = 3; // force 3 months
-
-    const query = `
-      SELECT
-        month,
-        year,
-        total_gross,
-        total_net,
-        total_employees
-      FROM payroll
-      WHERE status = 'Completed'
-      ORDER BY year DESC, month::int DESC
-      LIMIT $1
-    `;
-
-    const { rows } = await client.query(query, [limit]);
-
-    res.json({
-      success: true,
-      months_requested: limit,
-      trend: rows.reverse(),
-    });
-
-  } catch (err) {
-    console.error("PAYROLL TREND 3 MONTH ERROR:", err);
-    res.status(500).json({ success: false, error: err.message });
-  } finally {
-    client.release();
-  }
-};
-
-export const getPayrollTrend12Months = async (req, res) => {
-  const client = await pool.connect();
-  try {
-    let limit = 12; // force 12 months
-
-    const query = `
-      SELECT
-        month,
-        year,
-        total_gross,
-        total_net,
-        total_employees
-      FROM payroll
-      WHERE status = 'Completed'
-      ORDER BY year DESC, month::int DESC
-      LIMIT $1
-    `;
-
-    const { rows } = await client.query(query, [limit]);
-
-    res.json({
-      success: true,
-      months_requested: limit,
-      trend: rows.reverse(),
-    });
-
-  } catch (err) {
-    console.error("PAYROLL TREND 12 MONTH ERROR:", err);
     res.status(500).json({ success: false, error: err.message });
   } finally {
     client.release();
