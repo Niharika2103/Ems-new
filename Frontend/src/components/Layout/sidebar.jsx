@@ -241,26 +241,26 @@ const Sidebar = ({ isOpen, handleClose }) => {
     employeeMenus = [
       { name: "Dashboard", icon: <Home size={20} />, path: "/dashboard" },
       { name: "Attendance", icon: <Calendar size={20} />, path: "/freelancer/attendance" },
-      { name: "Tasks", icon: <CheckSquare size={20} />, path: "/freelancer/tasks" },
+      // { name: "Tasks", icon: <CheckSquare size={20} />, path: "/freelancer/tasks" },
       { name: "Payments", icon: <Users size={20} />, path: "/freelancer/payments" },
-      { name: "Reports", icon: <BarChart3 size={20} />, path: "/reports" },
+      // { name: "Reports", icon: <BarChart3 size={20} />, path: "/reports" },
     ];
   } else if (employment_type === "contract") {
     employeeMenus = [
       { name: "Dashboard", icon: <Home size={20} />, path: "/contract/dashboard" },
       { name: "Attendance", icon: <Calendar size={20} />, path: "/contract/attendance" },
-      { name: "HR", icon: <CheckSquare size={20} />, path: "/contract/hr" },
+      // { name: "HR", icon: <CheckSquare size={20} />, path: "/contract/hr" },
       { name: "Payslip", icon: <Users size={20} />, path: "/contract/payslip" },
-      { name: "Reports", icon: <BarChart3 size={20} />, path: "/reports" },
+      // { name: "Reports", icon: <BarChart3 size={20} />, path: "/reports" },
     ];
   } else {
     employeeMenus = [
       { name: "Dashboard", icon: <Home size={20} />, path: "/dashboard" },
       { name: "Job Posting", icon: <Briefcase size={20} />, path: "/dashboard/JobPostDashboard" },
       { name: "Attendance", icon: <Calendar size={20} />, path: "/dashboard/emp_attendance" },
-      { name: "HR", icon: <CheckSquare size={20} />, path: "/hr" },
+      // { name: "HR", icon: <CheckSquare size={20} />, path: "/hr" },
       { name: "Payslip", icon: <Users size={20} />, path: "/payslip" },
-      { name: "Reports", icon: <BarChart3 size={20} />, path: "/reports" },
+      // { name: "Reports", icon: <BarChart3 size={20} />, path: "/reports" },
     ];
   }
 
