@@ -23,6 +23,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import EmployeePreviewTable from "../../components/EmployeePreviewTable";
 
+
 export default function EmployeeRegisterForm() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -35,7 +36,6 @@ export default function EmployeeRegisterForm() {
   return `${year}-${month}-${day}`;
 };
 
-
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -47,7 +47,6 @@ export default function EmployeeRegisterForm() {
     department: "",
     designation: "",
     employmentType: "",
-
     // countryCode: "+91",
   });
   const [errors, setErrors] = useState({});
