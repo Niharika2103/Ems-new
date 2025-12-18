@@ -99,6 +99,8 @@ import EmailTemplateEditor from "../pages/Templates/EmailTemplate/EmailTemplateE
 import WhatsAppTemplateEditor from "../pages/Templates/WatsupTemplate/WatsupTemplateEditor";
 import CommunicationInfoDashboard from "../pages/dashbaord/CommunicationInfoDashboard";
 import EventWebhooks from "../pages/Templates/Webhook/EventWebhooks";
+import FreelancerJobPostDashboard from "../pages/Freelancer/jobposting/FreelancerJobPostDashboard";
+
 function AppRoutes() {
   return (
     <Routes>
@@ -207,7 +209,7 @@ function AppRoutes() {
         />
 
 
-        <Route path="/job-postings"
+        <Route path="/job-create"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <CreateJobList />
@@ -275,7 +277,7 @@ function AppRoutes() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile"
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["admin","superadmin"]}>
               <Profile />
             </ProtectedRoute>
           } />
@@ -374,6 +376,15 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+         <Route
+          path="/dashboard/freelancer/job-posting"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <FreelancerJobPostDashboard />
+            </ProtectedRoute>
+          }
+        />
+        
         <Route
           path="/dashboard/freelancer/freelancerattendance"
           element={
@@ -642,7 +653,13 @@ function AppRoutes() {
        <Route path="/payout-management" element={<PayoutManagement />} />
        <Route path="/commision" element={<CommissionSystemDashboard />} />
        <Route path="/settings" element={<SettingsPage />} />
-       <Route path="/feedback-table" element={<PanelFeedbackTable />} />
+       <Route path="/feedback-table"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+              <PanelFeedbackTable />
+            </ProtectedRoute>
+       } 
+       />
 
        <Route path="/audit-logs"
        element={
