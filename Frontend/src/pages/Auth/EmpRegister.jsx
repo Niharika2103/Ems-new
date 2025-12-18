@@ -22,23 +22,27 @@ import { validateEmployeeRegistration } from "../../utils/validation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import EmployeePreviewTable from "../../components/EmployeePreviewTable";
+import { useLocation } from "react-router-dom";
+
 
 export default function EmployeeRegisterForm() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+
   const { loading, preview } = useSelector((state) => state.employee);
   const getTodayDate = () => {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
 
-
+  const freelancerData = location.state || {};
   const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
+    fullName: freelancerData.name || "",
+    email: freelancerData.email || "",
     // employeeId: "",
     dateOfJoining: getTodayDate(),
     role: "employee",
@@ -93,7 +97,7 @@ export default function EmployeeRegisterForm() {
     if (!emp.designation || emp.designation.trim().length < 2) {
       errors.designation = "Designation is required";
     }
-    
+
 
     const validTypes = ["freelancer", "contract", "fulltime"];
     if (!emp.employmentType) {
@@ -127,6 +131,9 @@ export default function EmployeeRegisterForm() {
         .unwrap()
         .then((res) => {
           toast.success(res.message || "Registration successful!");
+
+          const type = formData.employmentType;
+
           setFormData({
             fullName: "",
             email: "",
@@ -140,7 +147,11 @@ export default function EmployeeRegisterForm() {
 
             // countryCode: "+91",
           });
-          navigate("/dashboard/emp_requestTable");
+          if (type === "freelancer") {
+            navigate("/dashboard/freelancer/info");
+          } else {
+            navigate("/dashboard/emp_requestTable");
+          }
         })
         .catch((err) => {
           toast.error(err.error || "Registration failed.");
