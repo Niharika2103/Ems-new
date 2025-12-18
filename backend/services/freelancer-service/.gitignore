@@ -1,9 +1,2 @@
 # Node
 node_modules/
-
-# Env & secrets
-.env
-google-credentials.json
-
-# Uploads
-uploads/
