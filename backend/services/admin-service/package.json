@@ -1,5 +1,6 @@
 {
   "name": "admin-service",
+  "type": "module",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -20,13 +21,15 @@
     "jsonwebtoken": "^9.0.2",
     "mammoth": "^1.11.0",
     "multer": "^2.0.2",
+    "node-cron": "^4.2.1",
     "openai": "^6.9.1",
     "pdf-parse": "^1.1.1",
     "pg": "^8.16.3",
     "puppeteer": "^24.30.0",
     "qrcode": "^1.5.4",
     "speakeasy": "^2.0.0",
-    "textract": "^2.5.0"
+    "textract": "^2.5.0",
+    "twilio": "^5.10.7"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

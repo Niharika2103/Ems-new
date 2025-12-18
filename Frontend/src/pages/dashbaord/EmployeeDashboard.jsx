@@ -29,14 +29,14 @@ const EmployeeDashboard = () => {
       onClick: () => navigate("/dashboard/emp_attendance"),
     },
 
-    {
-      title: "HR",
-      message: "View HR announcements",
-      icon: PeopleIcon,
-      iconBg: "bg-purple-100",
-      iconColor: "text-purple-600",
-      onClick: () => navigate("/hr"),
-    },
+    // {
+    //   title: "HR",
+    //   message: "View HR announcements",
+    //   icon: PeopleIcon,
+    //   iconBg: "bg-purple-100",
+    //   iconColor: "text-purple-600",
+    //   // onClick: () => navigate("/hr"),
+    // },
     {
       title: "Payslip",
       message: "Download your salary slips",

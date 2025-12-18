@@ -56,7 +56,7 @@ import {
   getAllContracts,
   getContractsByFreelancer,
   getContractById,
-createProbation,
+  createProbation,
   createInvoice,
   getAllInvoices,
   getInvoiceById,
@@ -65,9 +65,36 @@ createProbation,
   sendInvoiceReminder,
   deleteInvoice,
   getNewEmployees,
-  getProbationWithUser
+  getProbationWithUser,
+  getMonthlyFinalSummary,
+  validatePayroll,
+  runPayroll,
+  reversePayroll,
+  rerunPayroll,
+  getAllPayroll,
+  updateTLReview,
+  fetchAllReviews,
+  getFinalRatingsForEmployees,
+  getDepartmentWisePayroll,
+  getMonthlyPayrollSummary,
+  getPayrollTrend,
+  getPayrollTrend3Months,
+  getPayrollTrend12Months,
+  getFreelancerAnalytics
  
 } from "../controllers/admin.controller.js";
+
+
+import {
+  sendBulkEmailToAllEmployees,
+  getAllEmailTemplates,
+  getEmailTemplateById,
+  createEmailTemplate,
+  updateEmailTemplate,
+  deleteEmailTemplate,
+  toggleEmailTemplateStatus
+} from "../controllers/email.controller.js";
+
 
 // Job post imports
 import {
@@ -105,6 +132,11 @@ import {
 
 // ❗ Keep disk storage for actual job application resumes
 import { uploadResume, uploadResumeBuffer } from "../middleware/uploadResume.js";
+
+//freelancer and employee roi
+import { getFreelancerRoiReport } from "../controllers/freelancerRoi.controller.js";
+import { getEmployeeRoiReport } from "../controllers/employeeRoi.controller.js";
+
 
 const router = Router();
 
@@ -240,6 +272,9 @@ router.get("/applications/job/:jobId", getApplicationsByJob);
 router.put("/applications/status/:application_id", updateApplicationStatus);
 
 // router.get("/panel-members", getPanelMembers);
+//freelancerroireport
+router.get("/reports/freelancer-roi", getFreelancerRoiReport);
+router.get("/reports/employee-roi", getEmployeeRoiReport);
 
 /* -------------------------------------------------------------------------- */
 /*                       FREELANCER CONTRACT ROUTES                           */
@@ -279,4 +314,62 @@ router.get("/new-employees", getNewEmployees);
 router.post("/store-probation", createProbation);
 
 router.get("/probation/user", getProbationWithUser);
+
+router.get(
+  "/monthly-final-summary/:employeeId/:year/:month",
+  getMonthlyFinalSummary
+);
+
+router.post('/validate', validatePayroll);
+
+// POST /api/payroll/run
+router.post("/run", runPayroll);
+
+router.post("/reverse", reversePayroll);
+
+router.post("/rerun", rerunPayroll);
+
+router.get("/payroll", getAllPayroll);
+router.put("/performance/update/:id", updateTLReview);           
+router.get("/performance/all", fetchAllReviews);
+
+router.get("/performance/final-ratings", getFinalRatingsForEmployees);
+
+//payroll analytics
+router.get("/payroll/summary", getMonthlyPayrollSummary);
+
+router.get("/payroll/department-wise", getDepartmentWisePayroll);
+router.get("/payroll/trend", getPayrollTrend);
+router.get("/payroll/trend/3-months", getPayrollTrend3Months);
+router.get("/payroll/trend/12-months", getPayrollTrend12Months);
+
+router.get("/freelancers/analytics", getFreelancerAnalytics);
+
+/* ============================================================
+   ⭐ ADD NEW EMAIL TEMPLATE SEND ROUTE (ONLY THIS WAS ADDED)
+============================================================ */
+// Get all templates
+router.get("/email-templates", getAllEmailTemplates);
+
+// Create template
+router.post("/email-templates/create", createEmailTemplate);
+
+// Send email to all employees
+router.post("/email-templates/send-all", sendBulkEmailToAllEmployees);
+
+// 🔥 IMPORTANT — toggle BEFORE /:id routes
+router.patch("/email-templates/:id/toggle", toggleEmailTemplateStatus);
+
+// Get template by ID
+router.get("/email-templates/:id", getEmailTemplateById);
+
+// Update template
+router.put("/email-templates/:id", updateEmailTemplate);
+
+// Delete template
+router.delete("/email-templates/:id", deleteEmailTemplate);
+
+
+
+
 export default router;

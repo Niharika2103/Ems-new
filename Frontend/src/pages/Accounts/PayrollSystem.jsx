@@ -1,77 +1,27 @@
 import React, { useState, useEffect } from 'react';
+import {
+  validatePayrollApi,
+  runPayrollApi,
+  reversePayrollApi,
+  rerunPayrollApi,
+  getAllPayrollApi
+} from "../../api/authApi";
 
 const PayrollSystem = () => {
-  // State management
   const [activeTab, setActiveTab] = useState('new-run');
   const [step, setStep] = useState(1);
   const [payrollData, setPayrollData] = useState({
-    payPeriod: '',
-    periodType: 'monthly',
-    selectedEmployees: [],
-    validationResults: null,
-    payrollResults: null,
+    selectedMonth: null,
+    selectedYear: null,
     runName: ''
   });
   
-  const [validationStatus, setValidationStatus] = useState({
-    attendance: 'pending',
-    leaves: 'pending',
-    overtime: 'pending',
-    overall: 'pending'
-  });
-  
-  const [validationIssues, setValidationIssues] = useState([]);
+  const [validationStatus, setValidationStatus] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [selectedEmployeeDetails, setSelectedEmployeeDetails] = useState(null);
+  const [payrollHistory, setPayrollHistory] = useState([]);
+  const [error, setError] = useState('');
+  const [payrollResults, setPayrollResults] = useState(null); // ✅ Store payroll run result
 
-  // Mock data
-  const [payrollPeriods] = useState([
-    { id: 'jan-2024', name: 'January 2024', type: 'monthly', start: '2024-01-01', end: '2024-01-31' },
-    { id: 'feb-2024', name: 'February 2024', type: 'monthly', start: '2024-02-01', end: '2024-02-29' },
-    { id: 'week1-feb', name: 'Week 1, Feb 2024', type: 'weekly', start: '2024-02-05', end: '2024-02-11' },
-    { id: 'week2-feb', name: 'Week 2, Feb 2024', type: 'weekly', start: '2024-02-12', end: '2024-02-18' },
-  ]);
-
-  const [payrollHistory, setPayrollHistory] = useState([
-    {
-      id: 'PR-001',
-      period: 'January 2024',
-      type: 'monthly',
-      status: 'completed',
-      runDate: '2024-02-05',
-      totalEmployees: 150,
-      totalAmount: '$450,000',
-      canReverse: true
-    },
-    {
-      id: 'PR-002',
-      period: 'Week 1, Feb 2024',
-      type: 'weekly',
-      status: 'completed',
-      runDate: '2024-02-12',
-      totalEmployees: 150,
-      totalAmount: '$112,500',
-      canReverse: true
-    },
-    {
-      id: 'PR-003',
-      period: 'December 2023',
-      type: 'monthly',
-      status: 'reversed',
-      runDate: '2024-01-05',
-      totalEmployees: 145,
-      totalAmount: '$435,000',
-      canReverse: false
-    }
-  ]);
-
-  const [employees] = useState([
-    { id: 1, name: 'John Doe', department: 'Engineering', basicSalary: 5000, attendance: 22, leaves: 2, overtime: 8 },
-    { id: 2, name: 'Jane Smith', department: 'Marketing', basicSalary: 4500, attendance: 20, leaves: 4, overtime: 4 },
-    { id: 3, name: 'Bob Johnson', department: 'Sales', basicSalary: 4000, attendance: 23, leaves: 1, overtime: 12 },
-  ]);
-
-  // CSS Styles
   const styles = {
     container: {
       fontFamily: 'Arial, sans-serif',
@@ -122,6 +72,16 @@ const PayrollSystem = () => {
       fontSize: '14px',
       marginRight: '10px'
     },
+    warningButton: {
+      padding: '10px 20px',
+      background: '#FF9800',
+      color: 'white',
+      border: 'none',
+      borderRadius: '4px',
+      cursor: 'pointer',
+      fontSize: '14px',
+      marginLeft: '10px'
+    },
     dangerButton: {
       padding: '8px 16px',
       background: '#f44336',
@@ -169,26 +129,9 @@ const PayrollSystem = () => {
       background: '#2196F3',
       color: 'white'
     },
-    grid: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
-      gap: '15px',
-      margin: '20px 0'
-    },
-    card: {
-      padding: '15px',
-      border: '1px solid #ddd',
-      borderRadius: '6px',
-      cursor: 'pointer',
-      transition: 'all 0.3s'
-    },
-    selectedCard: {
-      borderColor: '#2196F3',
-      background: '#e3f2fd'
-    },
     validationGrid: {
       display: 'grid',
-      gridTemplateColumns: '1fr 1fr 1fr',
+      gridTemplateColumns: '1fr 1fr',
       gap: '20px',
       margin: '20px 0'
     },
@@ -197,18 +140,6 @@ const PayrollSystem = () => {
       border: '1px solid #ddd',
       borderRadius: '6px',
       textAlign: 'center'
-    },
-    successCard: {
-      borderColor: '#4CAF50',
-      background: '#f1f8e9'
-    },
-    warningCard: {
-      borderColor: '#FF9800',
-      background: '#fff3e0'
-    },
-    errorCard: {
-      borderColor: '#f44336',
-      background: '#ffebee'
     },
     table: {
       width: '100%',
@@ -239,57 +170,6 @@ const PayrollSystem = () => {
       background: '#f44336',
       color: 'white'
     },
-    modalOverlay: {
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: 'rgba(0,0,0,0.5)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      zIndex: 1000
-    },
-    modalContent: {
-      background: 'white',
-      borderRadius: '8px',
-      padding: '20px',
-      maxWidth: '600px',
-      width: '100%',
-      maxHeight: '80vh',
-      overflow: 'auto'
-    },
-    modalHeader: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: '20px'
-    },
-    salarySections: {
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
-      gap: '20px'
-    },
-    salarySection: {
-      padding: '15px',
-      border: '1px solid #e0e0e0',
-      borderRadius: '6px'
-    },
-    salaryRow: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      marginBottom: '10px',
-      paddingBottom: '10px',
-      borderBottom: '1px solid #f0f0f0'
-    },
-    netSalary: {
-      gridColumn: 'span 2',
-      textAlign: 'center',
-      padding: '20px',
-      background: '#e3f2fd',
-      borderRadius: '6px'
-    },
     loadingOverlay: {
       position: 'absolute',
       top: 0,
@@ -301,381 +181,299 @@ const PayrollSystem = () => {
       alignItems: 'center',
       justifyContent: 'center',
       borderRadius: '8px'
+    },
+    errorText: {
+      color: '#f44336',
+      marginTop: '10px'
     }
   };
 
-  // Component functions
-  const handleRunValidation = async () => {
-    setIsProcessing(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      const results = {
-        attendance: 'success',
-        leaves: 'warning',
-        overtime: 'success',
-        overall: 'ready'
-      };
-      
-      setValidationStatus(results);
-      setValidationIssues(['3 employees have pending leave approval', '1 employee has attendance discrepancy']);
-      setIsProcessing(false);
-      setPayrollData(prev => ({...prev, validationResults: results}));
-    }, 1500);
-  };
+  useEffect(() => {
+    if (activeTab === 'history') {
+      loadPayrollHistory();
+    }
+  }, [activeTab]);
 
-  const handleRunPayroll = async () => {
+  const loadPayrollHistory = async () => {
     setIsProcessing(true);
-    
-    // Simulate payroll processing
-    setTimeout(() => {
-      const results = {
-        success: true,
-        totalEmployees: employees.length,
-        totalGross: '$27,000',
-        totalNet: '$22,500',
-        details: employees.map(emp => ({
-          ...emp,
-          gross: emp.basicSalary + (emp.overtime * 25),
-          deductions: emp.basicSalary * 0.15,
-          net: (emp.basicSalary + (emp.overtime * 25)) * 0.85
-        }))
-      };
-      
-      setPayrollData(prev => ({...prev, payrollResults: results}));
+    try {
+      const response = await getAllPayrollApi();
+      setPayrollHistory(response.data.payroll || []);
+    } catch (err) {
+      setError('Failed to load payroll history');
+      console.error(err);
+    } finally {
       setIsProcessing(false);
-      setStep(4);
-      
-      // Add to history
-      const newRun = {
-        id: `PR-00${payrollHistory.length + 1}`,
-        period: payrollPeriods.find(p => p.id === payrollData.payPeriod)?.name || 'Custom Period',
-        type: payrollData.periodType,
-        status: 'completed',
-        runDate: new Date().toISOString().split('T')[0],
-        totalEmployees: employees.length,
-        totalAmount: results.totalNet,
-        canReverse: true
-      };
-      
-      setPayrollHistory(prev => [newRun, ...prev]);
-    }, 2000);
-  };
-
-  const handleReversePayroll = async (payrollId) => {
-    if (window.confirm('Are you sure you want to reverse this payroll? This action cannot be undone.')) {
-      setIsProcessing(true);
-      
-      setTimeout(() => {
-        setPayrollHistory(prev => 
-          prev.map(run => 
-            run.id === payrollId 
-              ? {...run, status: 'reversed', canReverse: false}
-              : run
-          )
-        );
-        setIsProcessing(false);
-        alert(`Payroll ${payrollId} has been reversed successfully.`);
-      }, 1000);
     }
   };
 
-  const handleRerunPayroll = async (payrollId) => {
-    setIsProcessing(true);
-    
-    setTimeout(() => {
-      const originalRun = payrollHistory.find(run => run.id === payrollId);
-      const newRun = {
-        ...originalRun,
-        id: `PR-00${payrollHistory.length + 1}`,
-        runDate: new Date().toISOString().split('T')[0],
-        status: 'completed'
-      };
-      
-      setPayrollHistory(prev => [newRun, ...prev]);
-      setIsProcessing(false);
-      alert(`Payroll ${payrollId} has been re-run successfully.`);
-    }, 1500);
-  };
+  // ✅ STEP 1: YEAR + MONTH DROPDOWNS (with full year range)
+  const PeriodSelection = () => {
+    const currentYear = new Date().getFullYear();
+    const startYear = 2000; // Earliest supported year
+    const endYear = currentYear + 10; // Allow future planning
+    const years = Array.from(
+      { length: endYear - startYear + 1 },
+      (_, i) => startYear + i
+    ).reverse(); // Most recent years first
 
-  const handleEmployeeSelect = (employeeId) => {
-    setSelectedEmployeeDetails(employees.find(emp => emp.id === employeeId));
-  };
+    const months = [
+      { value: 1, name: 'January' },
+      { value: 2, name: 'February' },
+      { value: 3, name: 'March' },
+      { value: 4, name: 'April' },
+      { value: 5, name: 'May' },
+      { value: 6, name: 'June' },
+      { value: 7, name: 'July' },
+      { value: 8, name: 'August' },
+      { value: 9, name: 'September' },
+      { value: 10, name: 'October' },
+      { value: 11, name: 'November' },
+      { value: 12, name: 'December' },
+    ];
 
-  const calculateSalary = (employee) => {
-    const overtimeRate = 25; // $ per hour
-    const deductionRate = 0.15; // 15%
-    
-    const overtimePay = employee.overtime * overtimeRate;
-    const gross = employee.basicSalary + overtimePay;
-    const deductions = gross * deductionRate;
-    const net = gross - deductions;
-    
-    return { gross, deductions, net };
-  };
-
-  // Sub-components
-  const PeriodSelection = () => (
-    <div>
-      <h3>Step 1: Select Pay Period</h3>
-      
-      <div style={{margin: '20px 0'}}>
-        <label style={{marginRight: '20px'}}>
-          <input 
-            type="radio" 
-            name="periodType" 
-            value="monthly"
-            checked={payrollData.periodType === 'monthly'}
-            onChange={(e) => setPayrollData({...payrollData, periodType: e.target.value, payPeriod: ''})}
-            style={{marginRight: '5px'}}
-          />
-          Monthly
-        </label>
-        <label>
-          <input 
-            type="radio" 
-            name="periodType" 
-            value="weekly"
-            checked={payrollData.periodType === 'weekly'}
-            onChange={(e) => setPayrollData({...payrollData, periodType: e.target.value, payPeriod: ''})}
-            style={{marginRight: '5px'}}
-          />
-          Weekly
-        </label>
-      </div>
-
-      <div style={styles.grid}>
-        {payrollPeriods
-          .filter(p => p.type === payrollData.periodType)
-          .map(period => (
-            <div 
-              key={period.id}
-              style={{
-                ...styles.card,
-                ...(payrollData.payPeriod === period.id ? styles.selectedCard : {})
-              }}
-              onClick={() => setPayrollData({...payrollData, payPeriod: period.id})}
-            >
-              <h4 style={{margin: '0 0 10px 0'}}>{period.name}</h4>
-              <p style={{margin: '0', color: '#666', fontSize: '14px'}}>
-                {period.start} to {period.end}
-              </p>
-            </div>
-          ))}
-      </div>
-
-      <div style={{marginTop: '20px'}}>
-        <input
-          type="text"
-          placeholder="Payroll Run Name (Optional)"
-          value={payrollData.runName}
-          onChange={(e) => setPayrollData({...payrollData, runName: e.target.value})}
-          style={{padding: '10px', width: '300px', marginRight: '10px'}}
-        />
-      </div>
-
-      <div style={{marginTop: '30px'}}>
-        <button 
-          style={styles.primaryButton}
-          disabled={!payrollData.payPeriod}
-          onClick={() => setStep(2)}
-        >
-          Next: Validate Data
-        </button>
-      </div>
-    </div>
-  );
-
-  const DataValidation = () => (
-    <div>
-      <h3>Step 2: Pre-Payroll Validation</h3>
-      <p style={{color: '#666', marginBottom: '20px'}}>
-        Validate attendance, leave, and overtime data before processing payroll.
-      </p>
-
-      <div style={styles.validationGrid}>
-        <div style={{
-          ...styles.validationCard,
-          ...(validationStatus.attendance === 'success' ? styles.successCard : 
-               validationStatus.attendance === 'warning' ? styles.warningCard : 
-               validationStatus.attendance === 'error' ? styles.errorCard : {})
-        }}>
-          <h4>Attendance</h4>
-          <p>{validationStatus.attendance === 'pending' ? 'Not validated' : 
-              validationStatus.attendance === 'success' ? '✓ All records valid' :
-              validationStatus.attendance === 'warning' ? '⚠ Needs review' : '✗ Issues found'}</p>
-        </div>
-        
-        <div style={{
-          ...styles.validationCard,
-          ...(validationStatus.leaves === 'success' ? styles.successCard : 
-               validationStatus.leaves === 'warning' ? styles.warningCard : 
-               validationStatus.leaves === 'error' ? styles.errorCard : {})
-        }}>
-          <h4>Leave Applications</h4>
-          <p>{validationStatus.leaves === 'pending' ? 'Not validated' : 
-              validationStatus.leaves === 'success' ? '✓ All approved' :
-              validationStatus.leaves === 'warning' ? '⚠ Pending approvals' : '✗ Issues found'}</p>
-        </div>
-        
-        <div style={{
-          ...styles.validationCard,
-          ...(validationStatus.overtime === 'success' ? styles.successCard : 
-               validationStatus.overtime === 'warning' ? styles.warningCard : 
-               validationStatus.overtime === 'error' ? styles.errorCard : {})
-        }}>
-          <h4>Overtime</h4>
-          <p>{validationStatus.overtime === 'pending' ? 'Not validated' : 
-              validationStatus.overtime === 'success' ? '✓ Calculations valid' :
-              validationStatus.overtime === 'warning' ? '⚠ Needs review' : '✗ Issues found'}</p>
-        </div>
-      </div>
-
-      {validationIssues.length > 0 && (
-        <div style={{background: '#fff3e0', padding: '15px', borderRadius: '6px', margin: '20px 0'}}>
-          <h4 style={{margin: '0 0 10px 0', color: '#FF9800'}}>⚠️ Validation Issues:</h4>
-          <ul style={{margin: '0', paddingLeft: '20px'}}>
-            {validationIssues.map((issue, index) => (
-              <li key={index} style={{marginBottom: '5px'}}>{issue}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      <div style={{marginTop: '30px'}}>
-        <button style={styles.secondaryButton} onClick={() => setStep(1)}>
-          Back
-        </button>
-        <button 
-          style={styles.primaryButton}
-          onClick={handleRunValidation}
-          disabled={isProcessing}
-        >
-          {isProcessing ? 'Validating...' : 'Run All Validations'}
-        </button>
-        {validationStatus.overall === 'ready' && (
-          <button 
-            style={{...styles.primaryButton, marginLeft: '10px'}}
-            onClick={() => setStep(3)}
-          >
-            Next: Review & Run
-          </button>
-        )}
-      </div>
-    </div>
-  );
-
-  const PayrollReview = () => {
-    const period = payrollPeriods.find(p => p.id === payrollData.payPeriod);
-    
     return (
       <div>
-        <h3>Step 3: Review & Run Payroll</h3>
+        <h3>Step 1: Select Pay Period</h3>
         
-        <div style={{background: '#f5f5f5', padding: '20px', borderRadius: '6px', marginBottom: '20px'}}>
-          <h4 style={{margin: '0 0 10px 0'}}>Payroll Summary</h4>
-          <p><strong>Period:</strong> {period?.name || 'N/A'}</p>
-          <p><strong>Type:</strong> {payrollData.periodType}</p>
-          <p><strong>Date Range:</strong> {period?.start} to {period?.end}</p>
-          <p><strong>Employees:</strong> {employees.length} employees</p>
+        <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', marginBottom: '20px' }}>
+          <div>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              Year
+            </label>
+            <select
+              value={payrollData.selectedYear || ''}
+              onChange={(e) => setPayrollData({ ...payrollData, selectedYear: Number(e.target.value) })}
+              style={{
+                padding: '8px 12px',
+                borderRadius: '4px',
+                border: '1px solid #ccc',
+                minWidth: '120px',
+                fontSize: '14px'
+              }}
+            >
+              <option value="">-- Select Year --</option>
+              {years.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              Month
+            </label>
+            <select
+              value={payrollData.selectedMonth || ''}
+              onChange={(e) => setPayrollData({ ...payrollData, selectedMonth: Number(e.target.value) })}
+              style={{
+                padding: '8px 12px',
+                borderRadius: '4px',
+                border: '1px solid #ccc',
+                minWidth: '150px',
+                fontSize: '14px'
+              }}
+              disabled={!payrollData.selectedYear}
+            >
+              <option value="">-- Select Month --</option>
+              {months.map((month) => (
+                <option key={month.value} value={month.value}>
+                  {month.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        <h4>Employee List</h4>
-        <table style={styles.table}>
-          <thead>
-            <tr>
-              <th style={styles.th}>Name</th>
-              <th style={styles.th}>Department</th>
-              <th style={styles.th}>Attendance</th>
-              <th style={styles.th}>Leaves</th>
-              <th style={styles.th}>Overtime (hrs)</th>
-              <th style={styles.th}>Estimated Net</th>
-              <th style={styles.th}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {employees.map(employee => {
-              const salary = calculateSalary(employee);
-              return (
-                <tr key={employee.id}>
-                  <td style={styles.td}>{employee.name}</td>
-                  <td style={styles.td}>{employee.department}</td>
-                  <td style={styles.td}>{employee.attendance} days</td>
-                  <td style={styles.td}>{employee.leaves} days</td>
-                  <td style={styles.td}>{employee.overtime}</td>
-                  <td style={styles.td}>${salary.net.toFixed(2)}</td>
-                  <td style={styles.td}>
-                    <button 
-                      style={{...styles.secondaryButton, padding: '5px 10px', fontSize: '12px'}}
-                      onClick={() => handleEmployeeSelect(employee.id)}
-                    >
-                      Details
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+        <div style={{ marginTop: '20px' }}>
+          <input
+            type="text"
+            placeholder="Payroll Run Name (Optional)"
+            value={payrollData.runName}
+            onChange={(e) => setPayrollData({ ...payrollData, runName: e.target.value })}
+            style={{ padding: '10px', width: '300px', marginRight: '10px' }}
+          />
+        </div>
 
-        <div style={{marginTop: '30px'}}>
-          <button style={styles.secondaryButton} onClick={() => setStep(2)}>
-            Back
-          </button>
+        {error && <p style={styles.errorText}>{error}</p>}
+        
+        <div style={{ marginTop: '30px' }}>
           <button 
             style={styles.primaryButton}
-            onClick={handleRunPayroll}
-            disabled={isProcessing}
+            disabled={!payrollData.selectedMonth || !payrollData.selectedYear}
+            onClick={() => setStep(2)}
           >
-            {isProcessing ? 'Processing Payroll...' : 'Run Payroll'}
+            Next: Validate Data
           </button>
         </div>
       </div>
     );
   };
 
+  // ✅ STEP 2: VALIDATION + "Continue Anyway"
+  const DataValidation = () => (
+    <div>
+      <h3>Step 2: Pre-Payroll Validation</h3>
+      <p style={{ color: '#666', marginBottom: '20px' }}>
+        Validate attendance and salary structure before processing payroll.
+      </p>
+
+      {validationStatus && (
+        <div style={styles.validationGrid}>
+          <div style={styles.validationCard}>
+            <h4>Attendance Summary</h4>
+            <p>Approved: {validationStatus.attendance_summary?.approved || 0}</p>
+            <p style={{ 
+              color: validationStatus.attendance_summary?.pending_approval > 0 ? '#FF9800' : 'inherit',
+              fontWeight: validationStatus.attendance_summary?.pending_approval > 0 ? 'bold' : 'normal'
+            }}>
+              Pending: {validationStatus.attendance_summary?.pending_approval || 0}
+            </p>
+          </div>
+          
+          <div style={styles.validationCard}>
+            <h4>Employees</h4>
+            <p>Total: {validationStatus.total_employees || 0}</p>
+            <p style={{ 
+              color: validationStatus.issues?.length > 0 ? '#FF9800' : 'inherit',
+              fontWeight: validationStatus.issues?.length > 0 ? 'bold' : 'normal'
+            }}>
+              With Issues: {validationStatus.issues?.length || 0}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {error && <p style={styles.errorText}>{error}</p>}
+      
+      <div style={{ marginTop: '30px' }}>
+        <button style={styles.secondaryButton} onClick={() => setStep(1)}>
+          Back
+        </button>
+        
+        <button 
+          style={styles.primaryButton}
+          onClick={async () => {
+            if (!payrollData.selectedMonth || !payrollData.selectedYear) {
+              setError('Please select a valid period');
+              return;
+            }
+            setIsProcessing(true);
+            setError('');
+            try {
+              const response = await validatePayrollApi({
+                month: payrollData.selectedMonth,
+                year: payrollData.selectedYear
+              });
+              setValidationStatus(response.data);
+            } catch (err) {
+              setError(err.response?.data?.error || 'Validation failed');
+              console.error(err);
+            } finally {
+              setIsProcessing(false);
+            }
+          }}
+          disabled={isProcessing}
+        >
+          {isProcessing ? 'Validating...' : 'Run Validation'}
+        </button>
+
+        <button 
+          style={styles.warningButton}
+          onClick={() => setStep(3)}
+        >
+          Continue Anyway
+        </button>
+      </div>
+    </div>
+  );
+
+  // ✅ STEP 3: REVIEW (no restrictions)
+  const PayrollReview = () => (
+    <div>
+      <h3>Step 3: Review & Run Payroll</h3>
+      
+      <div style={{ background: '#f5f5f5', padding: '20px', borderRadius: '6px', marginBottom: '20px' }}>
+        <h4 style={{ margin: '0 0 10px 0' }}>Payroll Summary</h4>
+        <p><strong>Period:</strong> {payrollData.selectedMonth}/{payrollData.selectedYear}</p>
+        {validationStatus && (
+          <>
+            <p><strong>Employees:</strong> {validationStatus.total_employees}</p>
+            <p><strong>Approved Attendance:</strong> {validationStatus.attendance_summary?.approved || 0}</p>
+            <p><strong>Pending Approval:</strong> {validationStatus.attendance_summary?.pending_approval || 0}</p>
+          </>
+        )}
+      </div>
+
+      {error && <p style={styles.errorText}>{error}</p>}
+      
+      <div style={{ marginTop: '30px' }}>
+        <button style={styles.secondaryButton} onClick={() => setStep(2)}>
+          Back
+        </button>
+        <button 
+          style={styles.primaryButton}
+          onClick={async () => {
+            setIsProcessing(true);
+            setError('');
+            try {
+              const response = await runPayrollApi({
+                month: payrollData.selectedMonth,
+                year: payrollData.selectedYear
+              });
+              setPayrollResults(response.data); // ✅ Save full result
+              await loadPayrollHistory();
+              setStep(4);
+            } catch (err) {
+              setError(err.response?.data?.error || 'Payroll run failed');
+              console.error(err);
+            } finally {
+              setIsProcessing(false);
+            }
+          }}
+          disabled={isProcessing}
+        >
+          {isProcessing ? 'Processing Payroll...' : 'Run Payroll'}
+        </button>
+      </div>
+    </div>
+  );
+
+  // ✅ STEP 4: RESULTS — NOW SHOWING ALL TOTALS
   const PayrollResults = () => (
     <div>
       <h3>Step 4: Payroll Results</h3>
       
-      {payrollData.payrollResults && (
-        <div style={{background: '#e8f5e9', padding: '20px', borderRadius: '6px', marginBottom: '20px'}}>
-          <h4 style={{color: '#4CAF50', margin: '0 0 10px 0'}}>✓ Payroll Completed Successfully</h4>
-          <p><strong>Payroll ID:</strong> {payrollHistory[0]?.id}</p>
-          <p><strong>Total Employees:</strong> {payrollData.payrollResults.totalEmployees}</p>
-          <p><strong>Total Gross Amount:</strong> {payrollData.payrollResults.totalGross}</p>
-          <p><strong>Total Net Amount:</strong> {payrollData.payrollResults.totalNet}</p>
-          <p><strong>Processed On:</strong> {new Date().toLocaleString()}</p>
-        </div>
-      )}
+      <div style={{ background: '#e8f5e9', padding: '20px', borderRadius: '6px', marginBottom: '20px' }}>
+        <h4 style={{ color: '#4CAF50', margin: '0 0 10px 0' }}>✓ Payroll Completed Successfully</h4>
+        <p><strong>Period:</strong> {payrollData.selectedMonth}/{payrollData.selectedYear}</p>
+        <p><strong>Processed On:</strong> {payrollResults?.runDate ? new Date(payrollResults.runDate).toLocaleString() : 'N/A'}</p>
+        <p><strong>Total Gross:</strong> ${parseFloat(payrollResults?.totalGross || 0).toFixed(2)}</p>
+        <p><strong>Total Deductions:</strong> ${parseFloat(payrollResults?.totalDeductions || 0).toFixed(2)}</p>
+        <p><strong>Total Net:</strong> ${parseFloat(payrollResults?.totalNet || 0).toFixed(2)}</p>
+      </div>
 
-      <div style={{marginTop: '30px'}}>
+      <div style={{ marginTop: '30px' }}>
         <button 
           style={styles.primaryButton}
           onClick={() => {
             setStep(1);
-            setPayrollData({
-              payPeriod: '',
-              periodType: 'monthly',
-              selectedEmployees: [],
-              validationResults: null,
-              payrollResults: null,
-              runName: ''
-            });
-            setValidationStatus({
-              attendance: 'pending',
-              leaves: 'pending',
-              overtime: 'pending',
-              overall: 'pending'
-            });
-            setValidationIssues([]);
+            setPayrollData({ selectedMonth: null, selectedYear: null, runName: '' });
+            setValidationStatus(null);
+            setPayrollResults(null);
+            setError('');
           }}
         >
           Run Another Payroll
         </button>
         <button 
-          style={{...styles.secondaryButton, marginLeft: '10px'}}
-          onClick={() => setActiveTab('history')}
+          style={{ ...styles.secondaryButton, marginLeft: '10px' }}
+          onClick={() => {
+            setActiveTab('history');
+            loadPayrollHistory();
+          }}
         >
           View Payroll History
         </button>
@@ -683,66 +481,93 @@ const PayrollSystem = () => {
     </div>
   );
 
+  // ✅ HISTORY TAB
   const PayrollHistoryView = () => (
     <div>
       <h3>Payroll History</h3>
+      
+      {isProcessing && <p>Loading payroll history...</p>}
+      {error && <p style={styles.errorText}>{error}</p>}
       
       <table style={styles.table}>
         <thead>
           <tr>
             <th style={styles.th}>Payroll ID</th>
             <th style={styles.th}>Period</th>
-            <th style={styles.th}>Type</th>
             <th style={styles.th}>Status</th>
             <th style={styles.th}>Run Date</th>
             <th style={styles.th}>Employees</th>
-            <th style={styles.th}>Total Amount</th>
+            <th style={styles.th}>Total Gross</th>
+            <th style={styles.th}>Total Net</th>
             <th style={styles.th}>Actions</th>
           </tr>
         </thead>
         <tbody>
           {payrollHistory.map(run => (
             <tr key={run.id}>
-              <td style={styles.td}>{run.id}</td>
-              <td style={styles.td}>{run.period}</td>
-              <td style={styles.td}>{run.type}</td>
+              <td style={styles.td}>{run.payroll_id}</td>
+              <td style={styles.td}>{run.month}/{run.year}</td>
               <td style={styles.td}>
                 <span style={{
                   ...styles.badge,
-                  ...(run.status === 'completed' ? styles.completedBadge : 
-                       run.status === 'reversed' ? styles.reversedBadge : 
-                       {background: '#FF9800', color: 'white'})
+                  ...(run.status === 'Completed' ? styles.completedBadge : 
+                       run.status === 'Reversed' ? styles.reversedBadge : 
+                       { background: '#FF9800', color: 'white' })
                 }}>
                   {run.status}
                 </span>
               </td>
-              <td style={styles.td}>{run.runDate}</td>
-              <td style={styles.td}>{run.totalEmployees}</td>
-              <td style={styles.td}>{run.totalAmount}</td>
+              <td style={styles.td}>{new Date(run.run_date).toLocaleDateString()}</td>
+              <td style={styles.td}>{run.total_employees}</td>
+              <td style={styles.td}>${parseFloat(run.total_gross).toFixed(2)}</td>
+              <td style={styles.td}>${parseFloat(run.total_net).toFixed(2)}</td>
               <td style={styles.td}>
-                <button 
-                  style={{...styles.secondaryButton, padding: '5px 10px', fontSize: '12px'}}
-                  onClick={() => {/* View details */}}
-                >
-                  View
-                </button>
-                {run.canReverse && (
-                  <>
-                    <button 
-                      style={styles.dangerButton}
-                      onClick={() => handleReversePayroll(run.id)}
-                      disabled={isProcessing}
-                    >
-                      Reverse
-                    </button>
-                    <button 
-                      style={{...styles.secondaryButton, padding: '5px 10px', fontSize: '12px', marginLeft: '5px'}}
-                      onClick={() => handleRerunPayroll(run.id)}
-                      disabled={isProcessing}
-                    >
-                      Re-run
-                    </button>
-                  </>
+                {(run.status === 'Completed' || run.status === 'Reversed') && (
+                  <button 
+                    style={{ ...styles.secondaryButton, padding: '5px 10px', fontSize: '12px' }}
+                    onClick={() => {
+                      if (window.confirm(`Re-run payroll for ${run.month}/${run.year}?`)) {
+                        (async () => {
+                          setIsProcessing(true);
+                          try {
+                            await rerunPayrollApi({ month: run.month, year: run.year });
+                            await loadPayrollHistory();
+                          } catch (err) {
+                            setError(err.response?.data?.error || 'Failed to re-run');
+                          } finally {
+                            setIsProcessing(false);
+                          }
+                        })();
+                      }
+                    }}
+                    disabled={isProcessing}
+                  >
+                    Re-run
+                  </button>
+                )}
+
+                {run.status === 'Completed' && (
+                  <button 
+                    style={styles.dangerButton}
+                    onClick={() => {
+                      if (window.confirm('Reverse this payroll? This cannot be undone.')) {
+                        (async () => {
+                          setIsProcessing(true);
+                          try {
+                            await reversePayrollApi({ id: run.id });
+                            await loadPayrollHistory();
+                          } catch (err) {
+                            setError(err.response?.data?.error || 'Failed to reverse');
+                          } finally {
+                            setIsProcessing(false);
+                          }
+                        })();
+                      }
+                    }}
+                    disabled={isProcessing}
+                  >
+                    Reverse
+                  </button>
                 )}
               </td>
             </tr>
@@ -752,103 +577,27 @@ const PayrollSystem = () => {
     </div>
   );
 
-  const EmployeeSalaryModal = () => {
-    if (!selectedEmployeeDetails) return null;
-    
-    const salary = calculateSalary(selectedEmployeeDetails);
-    const deductions = [
-      { name: 'Tax', amount: salary.gross * 0.10 },
-      { name: 'Insurance', amount: salary.gross * 0.03 },
-      { name: 'Retirement', amount: salary.gross * 0.02 }
-    ];
-    const totalDeductions = deductions.reduce((sum, d) => sum + d.amount, 0);
-
-    return (
-      <div style={styles.modalOverlay} onClick={() => setSelectedEmployeeDetails(null)}>
-        <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-          <div style={styles.modalHeader}>
-            <h3 style={{margin: 0}}>{selectedEmployeeDetails.name} - Salary Breakdown</h3>
-            <button 
-              onClick={() => setSelectedEmployeeDetails(null)}
-              style={{background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer'}}
-            >
-              ×
-            </button>
-          </div>
-          
-          <div style={styles.salarySections}>
-            <div style={styles.salarySection}>
-              <h4>Earnings</h4>
-              <div style={styles.salaryRow}>
-                <span>Basic Salary</span>
-                <span>${selectedEmployeeDetails.basicSalary.toFixed(2)}</span>
-              </div>
-              <div style={styles.salaryRow}>
-                <span>Overtime ({selectedEmployeeDetails.overtime} hrs × $25)</span>
-                <span>${(selectedEmployeeDetails.overtime * 25).toFixed(2)}</span>
-              </div>
-              <div style={{...styles.salaryRow, borderBottom: '2px solid #333', fontWeight: 'bold'}}>
-                <span>Gross Salary</span>
-                <span>${salary.gross.toFixed(2)}</span>
-              </div>
-            </div>
-            
-            <div style={styles.salarySection}>
-              <h4>Deductions</h4>
-              {deductions.map(d => (
-                <div key={d.name} style={styles.salaryRow}>
-                  <span>{d.name}</span>
-                  <span>${d.amount.toFixed(2)}</span>
-                </div>
-              ))}
-              <div style={{...styles.salaryRow, borderBottom: '2px solid #333', fontWeight: 'bold'}}>
-                <span>Total Deductions</span>
-                <span>${totalDeductions.toFixed(2)}</span>
-              </div>
-            </div>
-            
-            <div style={styles.netSalary}>
-              <h4>Net Salary</h4>
-              <div style={{fontSize: '32px', fontWeight: 'bold', color: '#2196F3'}}>
-                ${salary.net.toFixed(2)}
-              </div>
-              <p style={{color: '#666', fontSize: '14px'}}>
-                After {selectedEmployeeDetails.attendance} days attendance, {selectedEmployeeDetails.leaves} days leave
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h1 style={{margin: 0}}>Payroll Management System</h1>
-        <div>
-          
-        </div>
+        <h1 style={{ margin: 0 }}>Payroll Management System</h1>
       </div>
 
       <div style={styles.tabs}>
         <button 
-          style={{...styles.tabButton, ...(activeTab === 'new-run' ? styles.activeTab : {})}}
+          style={{ ...styles.tabButton, ...(activeTab === 'new-run' ? styles.activeTab : {}) }}
           onClick={() => setActiveTab('new-run')}
         >
           New Payroll Run
         </button>
         <button 
-          style={{...styles.tabButton, ...(activeTab === 'history' ? styles.activeTab : {})}}
-          onClick={() => setActiveTab('history')}
+          style={{ ...styles.tabButton, ...(activeTab === 'history' ? styles.activeTab : {}) }}
+          onClick={() => {
+            setActiveTab('history');
+            loadPayrollHistory();
+          }}
         >
           Payroll History
-        </button>
-        <button 
-          style={{...styles.tabButton, ...(activeTab === 'reports' ? styles.activeTab : {})}}
-          onClick={() => setActiveTab('reports')}
-        >
-          Reports
         </button>
       </div>
 
@@ -881,8 +630,8 @@ const PayrollSystem = () => {
 
           {isProcessing && (
             <div style={styles.loadingOverlay}>
-              <div style={{textAlign: 'center'}}>
-                <div style={{fontSize: '24px', marginBottom: '10px'}}>⏳</div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '24px', marginBottom: '10px' }}>⏳</div>
                 <p>Processing...</p>
               </div>
             </div>
@@ -896,15 +645,6 @@ const PayrollSystem = () => {
       )}
 
       {activeTab === 'history' && <PayrollHistoryView />}
-      
-      {activeTab === 'reports' && (
-        <div style={styles.wizard}>
-          <h3>Payroll Reports</h3>
-          <p>Reports feature coming soon...</p>
-        </div>
-      )}
-
-      {selectedEmployeeDetails && <EmployeeSalaryModal />}
     </div>
   );
 };

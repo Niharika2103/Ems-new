@@ -16,6 +16,8 @@ import {
   TablePagination,
   IconButton,
   Chip,
+  Alert,
+  CircularProgress,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -25,72 +27,17 @@ import {
 
 import VisibilityIcon from "@mui/icons-material/Visibility";
 
-// ------------------ HELPER TO GET TODAY'S DATE -------------------
-const getToday = () => {
-  const today = new Date();
-  return today.toISOString().split("T")[0]; // YYYY-MM-DD
-};
+import { getAllSuperAdminAuditLogsApi } from "../../api/authApi"; // <-- API for superadmin logs
 
-// ------------------ DUMMY AUDIT LOG DATA -------------------
-const dummyAuditLogs = [
-  {
-    audit_id: 1,
-    user_id: 501,
-    user_name: "Super Admin",
-    user_email: "superadmin@matrix.com",
-    login_time: "2025-01-06T09:30:00",
-    logout_time: "2025-01-06T11:20:00",
-  },
-  {
-    audit_id: 2,
-    user_id: 502,
-    user_name: "System Admin",
-    user_email: "sysadmin@matrix.com",
-    login_time: "2025-01-06T10:00:00",
-    logout_time: "2025-01-06T12:00:00",
-  },
-  {
-    audit_id: 3,
-    user_id: 503,
-    user_name: "Niharika",
-    user_email: "niharika@matrix.com",
-    login_time: "2025-01-05T14:10:00",
-    logout_time: null,
-  },
-  {
-    audit_id: 4,
-    user_id: 504,
-    user_name: "HR Manager",
-    user_email: "hrmanager@matrix.com",
-    login_time: "2025-01-05T08:00:00",
-    logout_time: "2025-01-05T15:30:00",
-  },
-];
-
-// ------------------ HELPER FUNCTION -------------------
-const calculateDuration = (loginTime, logoutTime) => {
-  if (!logoutTime) return "In Progress";
-
-  const start = new Date(loginTime);
-  const end = new Date(logoutTime);
-
-  const diffMs = end - start;
-  const hours = Math.floor(diffMs / (1000 * 60 * 60));
-  const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-
-  return `${hours}h ${mins}m`;
-};
-
-// ------------------ MAIN COMPONENT -------------------
 const SuperAdminAuditLogs = () => {
   const [logs, setLogs] = useState([]);
   const [filteredLogs, setFilteredLogs] = useState([]);
-
-  // Default both dates = today's date
-  const [dateFrom, setDateFrom] = useState(getToday());
-  const [dateTo, setDateTo] = useState(getToday());
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [search, setSearch] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -98,35 +45,67 @@ const SuperAdminAuditLogs = () => {
   const [openModal, setOpenModal] = useState(false);
   const [selectedLog, setSelectedLog] = useState(null);
 
-  // Format dummy logs
+  // Calculate session duration
+  const calculateDuration = (loginTime, logoutTime) => {
+    if (!logoutTime) return "In Progress";
+    const start = new Date(loginTime);
+    const end = new Date(logoutTime);
+    const diffMs = end - start;
+
+    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+    const mins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+    return `${hours}h ${mins}m`;
+  };
+
+  // Fetch logs
   useEffect(() => {
-    const formatted = dummyAuditLogs.map((log) => {
-      const login = log.login_time ? new Date(log.login_time) : null;
-      const logout = log.logout_time ? new Date(log.logout_time) : null;
+    const fetchLogs = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-      return {
-        id: log.audit_id,
-        user: log.user_id,
-        name: log.user_name,
-        email: log.user_email,
-        login: login ? login.toLocaleString() : "N/A",
-        logout: logout ? logout.toLocaleString() : "—",
-        loginRaw: log.login_time,
-        logoutRaw: log.logout_time,
-        level: "INFO",
-        timestamp: login ? login.toLocaleString() : "N/A",
-        ipAddress: "192.168.1.10",
-        device: "Chrome (Windows)",
-        sessionDuration: calculateDuration(log.login_time, log.logout_time),
-        details: "User session recorded successfully",
-      };
-    });
+        const response = await getAllSuperAdminAuditLogsApi();
+        const data = response.data?.audits || [];
 
-    setLogs(formatted);
-    setFilteredLogs(formatted);
+        const mapped = data.map((log) => {
+          const loginDate = log.login_time ? new Date(log.login_time) : null;
+          const logoutDate = log.logout_time ? new Date(log.logout_time) : null;
+
+          return {
+            id: log.audit_id,
+            user: log.user_id,
+            name: log.user_name || "N/A",
+            email: log.user_email || "N/A",
+            login: loginDate ? loginDate.toLocaleString() : "N/A",
+            logout: logoutDate ? logoutDate.toLocaleString() : "—",
+            loginRaw: log.login_time,
+            logoutRaw: log.logout_time,
+            level: "INFO",
+            timestamp: loginDate ? loginDate.toLocaleString() : "N/A",
+            ipAddress: "—",
+            device: "—",
+            sessionDuration:
+              logoutDate && loginDate
+                ? calculateDuration(log.login_time, log.logout_time)
+                : "In Progress",
+            details: "SuperAdmin session activity log",
+          };
+        });
+
+        setLogs(mapped);
+        setFilteredLogs(mapped);
+      } catch (err) {
+        console.error("SuperAdmin Audit Logs Error:", err);
+        setError("Failed to load audit logs. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLogs();
   }, []);
 
-  // ------------------ FILTER LOGIC -------------------
+  // Filtering
   useEffect(() => {
     let filtered = logs;
 
@@ -149,7 +128,6 @@ const SuperAdminAuditLogs = () => {
     if (dateTo) {
       const end = new Date(dateTo);
       end.setHours(23, 59, 59, 999);
-
       filtered = filtered.filter(
         (log) => new Date(log.loginRaw) <= end
       );
@@ -158,11 +136,6 @@ const SuperAdminAuditLogs = () => {
     setFilteredLogs(filtered);
     setPage(0);
   }, [search, dateFrom, dateTo, logs]);
-
-  const handleView = (log) => {
-    setSelectedLog(log);
-    setOpenModal(true);
-  };
 
   const getLevelColor = (level) => {
     switch (level) {
@@ -177,23 +150,44 @@ const SuperAdminAuditLogs = () => {
     }
   };
 
+  const handleView = (log) => {
+    setSelectedLog(log);
+    setOpenModal(true);
+  };
+
+  // Loading UI
+  if (loading)
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
+        <CircularProgress />
+      </Box>
+    );
+
+  // Error UI
+  if (error)
+    return (
+      <Box p={3}>
+        <Alert severity="error">{error}</Alert>
+      </Box>
+    );
+
   return (
     <Box p={3}>
       <Typography variant="h5" fontWeight="bold" gutterBottom>
-        Super Admin — Audit Logs
+        SuperAdmin Audit Logs
       </Typography>
 
-      {/* ------------------ FILTERS CARD ------------------ */}
+      {/* Filters */}
       <Card sx={{ mb: 3 }}>
         <CardContent>
           <Grid container spacing={2}>
             <Grid item xs={12} md={3}>
               <TextField
-                label="Search User"
-                placeholder="Search by name, email, ID"
-                fullWidth
+                label="Search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search name, email, ID..."
+                fullWidth
               />
             </Grid>
 
@@ -201,8 +195,8 @@ const SuperAdminAuditLogs = () => {
               <TextField
                 label="From Date"
                 type="date"
-                fullWidth
                 InputLabelProps={{ shrink: true }}
+                fullWidth
                 value={dateFrom}
                 onChange={(e) => setDateFrom(e.target.value)}
               />
@@ -212,8 +206,8 @@ const SuperAdminAuditLogs = () => {
               <TextField
                 label="To Date"
                 type="date"
-                fullWidth
                 InputLabelProps={{ shrink: true }}
+                fullWidth
                 value={dateTo}
                 onChange={(e) => setDateTo(e.target.value)}
               />
@@ -222,7 +216,7 @@ const SuperAdminAuditLogs = () => {
         </CardContent>
       </Card>
 
-      {/* ------------------ TABLE ------------------ */}
+      {/* Table */}
       <TableContainer component={Paper}>
         <Table>
           <TableHead sx={{ background: "#f4f4f4" }}>
@@ -241,13 +235,14 @@ const SuperAdminAuditLogs = () => {
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((log) => (
                 <TableRow key={log.id} hover>
-                  <TableCell><b>{log.user}</b></TableCell>
+                  <TableCell>
+                    <Typography fontWeight="bold">{log.user}</Typography>
+                  </TableCell>
                   <TableCell>{log.name}</TableCell>
                   <TableCell>{log.email}</TableCell>
                   <TableCell>{log.login}</TableCell>
                   <TableCell>{log.logout}</TableCell>
 
-                  {/* View Button */}
                   <TableCell align="center">
                     <IconButton color="primary" onClick={() => handleView(log)}>
                       <VisibilityIcon />
@@ -259,14 +254,13 @@ const SuperAdminAuditLogs = () => {
             {filteredLogs.length === 0 && (
               <TableRow>
                 <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
-                  <Typography>No logs found</Typography>
+                  No logs found.
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
 
-        {/* Pagination */}
         <TablePagination
           component="div"
           count={filteredLogs.length}
@@ -281,50 +275,101 @@ const SuperAdminAuditLogs = () => {
         />
       </TableContainer>
 
-      {/* ------------------ MODAL ------------------ */}
+      {/* Modal */}
       {selectedLog && (
-        <Dialog open={openModal} onClose={() => setOpenModal(false)} fullWidth maxWidth="md">
-          <DialogTitle><b>Audit Log Details</b></DialogTitle>
+        <Dialog open={openModal} onClose={() => setOpenModal(false)} maxWidth="md" fullWidth>
+          <DialogTitle>
+            <Typography variant="h6" fontWeight="bold">
+              Audit Log Details
+            </Typography>
+          </DialogTitle>
 
           <DialogContent dividers>
             <Grid container spacing={2}>
-              
+              {/* User Info */}
               <Grid item xs={12}>
-                <Typography variant="subtitle1" fontWeight="bold" color="primary">User Info</Typography>
-              </Grid>
-              
-              <Grid item xs={4}><b>User ID</b><div>{selectedLog.user}</div></Grid>
-              <Grid item xs={4}><b>Name</b><div>{selectedLog.name}</div></Grid>
-              <Grid item xs={4}><b>Email</b><div>{selectedLog.email}</div></Grid>
-
-              <Grid item xs={12} mt={2}>
-                <Typography variant="subtitle1" fontWeight="bold" color="primary">Session</Typography>
+                <Typography variant="subtitle1" fontWeight="bold" color="primary">
+                  User Information
+                </Typography>
               </Grid>
 
-              <Grid item xs={4}><b>Login</b><div>{selectedLog.login}</div></Grid>
-              <Grid item xs={4}><b>Logout</b><div>{selectedLog.logout}</div></Grid>
-              <Grid item xs={4}><b>Duration</b><div>{selectedLog.sessionDuration}</div></Grid>
-
-              <Grid item xs={12} mt={2}>
-                <Typography variant="subtitle1" fontWeight="bold" color="primary">Activity</Typography>
+              <Grid item xs={12} md={4}>
+                <b>User ID</b>
+                <div>{selectedLog.user}</div>
               </Grid>
 
-              <Grid item xs={4}><b>Level</b><Chip label={selectedLog.level} color={getLevelColor(selectedLog.level)} size="small" /></Grid>
-              <Grid item xs={4}><b>Timestamp</b><div>{selectedLog.timestamp}</div></Grid>
-              <Grid item xs={4}><b>IP Address</b><div>{selectedLog.ipAddress}</div></Grid>
+              <Grid item xs={12} md={4}>
+                <b>Name</b>
+                <div>{selectedLog.name}</div>
+              </Grid>
+
+              <Grid item xs={12} md={4}>
+                <b>Email</b>
+                <div>{selectedLog.email}</div>
+              </Grid>
+
+              {/* Session */}
+              <Grid item xs={12} mt={2}>
+                <Typography variant="subtitle1" fontWeight="bold" color="primary">
+                  Session Details
+                </Typography>
+              </Grid>
+
+              <Grid item xs={12} md={4}>
+                <b>Login Time</b>
+                <div>{selectedLog.login}</div>
+              </Grid>
+
+              <Grid item xs={12} md={4}>
+                <b>Logout Time</b>
+                <div>{selectedLog.logout}</div>
+              </Grid>
+
+              <Grid item xs={12} md={4}>
+                <b>Duration</b>
+                <div>{selectedLog.sessionDuration}</div>
+              </Grid>
+
+              {/* Activity */}
+              <Grid item xs={12} mt={2}>
+                <Typography variant="subtitle1" fontWeight="bold" color="primary">
+                  Activity Details
+                </Typography>
+              </Grid>
+
+              <Grid item xs={12} md={4}>
+                <b>Level</b>
+                <Chip label={selectedLog.level} color={getLevelColor(selectedLog.level)} size="small" />
+              </Grid>
+
+              <Grid item xs={12} md={4}>
+                <b>Timestamp</b>
+                <div>{selectedLog.timestamp}</div>
+              </Grid>
+
+              <Grid item xs={12} md={4}>
+                <b>IP Address</b>
+                <div>{selectedLog.ipAddress}</div>
+              </Grid>
+
+              <Grid item xs={12} md={4}>
+                <b>Device</b>
+                <div>{selectedLog.device}</div>
+              </Grid>
 
               <Grid item xs={12} mt={2}>
-                <b>Details:</b>
-                <Paper variant="outlined" sx={{ p: 2, mt: 1 }}>
+                <b>Details</b>
+                <Paper variant="outlined" sx={{ p: 2, bgcolor: "grey.50" }}>
                   {selectedLog.details}
                 </Paper>
               </Grid>
-
             </Grid>
           </DialogContent>
 
           <DialogActions>
-            <Button onClick={() => setOpenModal(false)} variant="contained">Close</Button>
+            <Button variant="contained" onClick={() => setOpenModal(false)}>
+              Close
+            </Button>
           </DialogActions>
         </Dialog>
       )}

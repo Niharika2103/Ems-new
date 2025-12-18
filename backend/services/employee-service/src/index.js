@@ -22,5 +22,5 @@ app.get("/test-email", async (req, res) => {
 });
 app.use("/employee", employeeRoutes);
 
-const PORT = process.env.PORT || 5204;
+const PORT = process.env.PORT || 5009;
 app.listen(PORT, () => console.log(`✅ Employee service running on port ${PORT}`));

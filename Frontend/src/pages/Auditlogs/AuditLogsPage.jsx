@@ -35,8 +35,11 @@ const AuditLogsPage = () => {
   const [error, setError] = useState(null);
 
   const [search, setSearch] = useState("");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const today = new Date().toISOString().split("T")[0];
+
+const [dateFrom, setDateFrom] = useState(today);
+const [dateTo, setDateTo] = useState(today);
+
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -218,7 +221,7 @@ const AuditLogsPage = () => {
         <Table>
           <TableHead sx={{ background: "#f4f4f4" }}>
             <TableRow>
-              <TableCell>User ID</TableCell>
+              
               <TableCell>Name</TableCell>
               <TableCell>Email</TableCell>
               <TableCell>Login Time</TableCell>
@@ -232,11 +235,7 @@ const AuditLogsPage = () => {
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((log) => (
                 <TableRow key={log.id} hover>
-                  <TableCell>
-                    <Typography variant="body2" fontWeight="bold">
-                      {log.user}
-                    </Typography>
-                  </TableCell>
+                  
                   <TableCell>{log.name}</TableCell>
                   <TableCell>{log.email}</TableCell>
                   <TableCell>{log.login}</TableCell>

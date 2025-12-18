@@ -23,12 +23,13 @@ import {
   FormControlLabel,
   FormLabel,
   MenuItem,
+  FormControl, InputLabel, Select,
 } from "@mui/material";
 
 import { fetchAllFreelancer } from "../../features/freelancer/freelancerSlice";
 import { decodeToken } from "../../api/decodeToekn";
 import { validateEmployeeEdit } from "../../utils/validation";
-import { createFreelancerContractApi,createInvoiceApi, fetchFreelancerContractsApi } from "../../api/authApi";
+import { createFreelancerContractApi, createInvoiceApi, fetchFreelancerContractsApi } from "../../api/authApi";
 const { Search } = Input;
 
 export default function FreelancerTable() {
@@ -60,7 +61,7 @@ export default function FreelancerTable() {
     invoice_date: moment(),
     due_date: moment().add(7, 'days'),
   });
-const [selectedFreelancerContracts, setSelectedFreelancerContracts] = useState([]);
+  const [selectedFreelancerContracts, setSelectedFreelancerContracts] = useState([]);
   const freelancers = useSelector(
     (state) => state.freelancerInfo.freelancerlist
   );
@@ -83,22 +84,34 @@ const [selectedFreelancerContracts, setSelectedFreelancerContracts] = useState([
     );
   });
 
+  const getCurrentDate = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    date_of_joining: "",
+    date_of_joining: getCurrentDate(),
     phone: "",
     address: "",
     permanent_address: "",
-    dob: "",
+    dob: getCurrentDate(),
     department: "",
+    designation: "",
     gender: "",
     emergency_contact: "",
+    employment_type: "",
   });
 
   // Edit Record
   const handleEdit = (record) => {
     setEditingRecord(record);
+
+    const data = record.data;
 
     const formatDate = (isoString) => {
       if (!isoString) return "";
@@ -113,7 +126,9 @@ const [selectedFreelancerContracts, setSelectedFreelancerContracts] = useState([
       address: record.address || "",
       permanent_address: record.permanent_address || "",
       department: record.department || "",
+      designation: record.designation || "",
       gender: record.gender || "",
+      employment_type: record.employment_type || "",
       emergency_contact: record.emergency_contact || "",
       dob: formatDate(record.dob),
     });
@@ -224,22 +239,22 @@ const [selectedFreelancerContracts, setSelectedFreelancerContracts] = useState([
   };
 
   // Invoice Handlers
- const handleCreateInvoice = async (record) => {
-  setSelectedFreelancerForInvoice(record);
+  const handleCreateInvoice = async (record) => {
+    setSelectedFreelancerForInvoice(record);
 
-  // Fetch contracts for that freelancer
-  const res = await fetchFreelancerContractsApi(record.id);
-  setSelectedFreelancerContracts(res.data);
+    // Fetch contracts for that freelancer
+    const res = await fetchFreelancerContractsApi(record.id);
+    setSelectedFreelancerContracts(res.data);
 
-  setInvoiceForm({
-    amount: "",
-    contract_id: "",
-    invoice_date: moment(),
-    due_date: moment().add(7, "days"),
-  });
+    setInvoiceForm({
+      amount: "",
+      contract_id: "",
+      invoice_date: moment(),
+      due_date: moment().add(7, "days"),
+    });
 
-  setIsInvoiceModalOpen(true);
-};
+    setIsInvoiceModalOpen(true);
+  };
 
 
   const handleInvoiceChange = (name, value) => {
@@ -255,40 +270,40 @@ const [selectedFreelancerContracts, setSelectedFreelancerContracts] = useState([
       [name]: date
     }));
   };
-const handleInvoiceSubmit = async (e) => {
-  e.preventDefault();
+  const handleInvoiceSubmit = async (e) => {
+    e.preventDefault();
 
-  const invoiceDateStr = invoiceForm.invoice_date?.format("YYYY-MM-DD");
-  const dueDateStr = invoiceForm.due_date?.format("YYYY-MM-DD");
+    const invoiceDateStr = invoiceForm.invoice_date?.format("YYYY-MM-DD");
+    const dueDateStr = invoiceForm.due_date?.format("YYYY-MM-DD");
 
-  if (!invoiceForm.amount || !invoiceDateStr || !dueDateStr) {
-    toast.error("Please fill all required fields");
-    return;
-  }
+    if (!invoiceForm.amount || !invoiceDateStr || !dueDateStr) {
+      toast.error("Please fill all required fields");
+      return;
+    }
 
-  setLoading(true);
+    setLoading(true);
 
-  try {
-    const payload = {
-      freelancer_id: selectedFreelancerForInvoice.id,
-      contract_id: invoiceForm.contract_id || null,
-      amount: Number(invoiceForm.amount),
-      invoice_date: invoiceDateStr,
-      due_date: dueDateStr,
-      created_by: "ADMIN",
-    };
+    try {
+      const payload = {
+        freelancer_id: selectedFreelancerForInvoice.id,
+        contract_id: invoiceForm.contract_id || null,
+        amount: Number(invoiceForm.amount),
+        invoice_date: invoiceDateStr,
+        due_date: dueDateStr,
+        created_by: "ADMIN",
+      };
 
-    await createInvoiceApi(payload);
+      await createInvoiceApi(payload);
 
-    toast.success("Invoice created successfully!");
-    setIsInvoiceModalOpen(false);
-    navigate("/invoices");
-  } catch (error) {
-    toast.error(error?.response?.data?.error || "Failed to create invoice");
-  } finally {
-    setLoading(false);
-  }
-};
+      toast.success("Invoice created successfully!");
+      setIsInvoiceModalOpen(false);
+      navigate("/invoices");
+    } catch (error) {
+      toast.error(error?.response?.data?.error || "Failed to create invoice");
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
   // Table Columns
@@ -329,8 +344,8 @@ const handleInvoiceSubmit = async (e) => {
 
           {/* Create Contract Button */}
           {record.is_active && (
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               onClick={() => handleCreateContract(record)}
               style={{ background: "#52c41a", borderColor: "#52c41a" }}
             >
@@ -340,8 +355,8 @@ const handleInvoiceSubmit = async (e) => {
 
           {/* Create Invoice Button */}
           {record.is_active && (
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               onClick={() => handleCreateInvoice(record)}
               style={{ background: "#1890ff", borderColor: "#1890ff" }}
             >
@@ -382,7 +397,7 @@ const handleInvoiceSubmit = async (e) => {
 
       <h1 className="text-xl font-bold mb-4">Freelancer List</h1>
 
-      {/* 🔍 SEARCH BAR */}
+      {/* SEARCH BAR */}
       <Search
         placeholder="Search by name, email, department..."
         allowClear
@@ -468,6 +483,7 @@ const handleInvoiceSubmit = async (e) => {
                   fullWidth
                   size="small"
                   InputLabelProps={{ shrink: true }}
+                  inputProps={{ max: getCurrentDate() }}
                 />
               </Grid>
 
@@ -482,6 +498,7 @@ const handleInvoiceSubmit = async (e) => {
                   fullWidth
                   size="small"
                   InputLabelProps={{ shrink: true }}
+                  inputProps={{ max: getCurrentDate() }}
                 />
               </Grid>
 
@@ -534,22 +551,38 @@ const handleInvoiceSubmit = async (e) => {
               </Grid>
 
               {/* Department */}
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  select
-                  label="Department"
+              <FormControl fullWidth>
+                <InputLabel
+                  shrink
+                  sx={{ fontSize: "1.125rem", fontWeight: "600" }}
+                >
+                  Department *
+                </InputLabel>
+
+                <Select
                   name="department"
                   value={formData.department}
                   onChange={handleChange}
-                  fullWidth
-                  size="small"
+                  displayEmpty
+                  sx={{
+                    fontSize: "1.05rem",
+                    minHeight: "56px",
+                    borderRadius: "10px",
+                    background: "#fafafa",
+                    "& .MuiSelect-select": {
+                      paddingTop: "14px",
+                      paddingBottom: "14px",
+                    },
+                  }}
                 >
+                  <MenuItem value="" disabled><em>Select Department</em></MenuItem>
                   <MenuItem value="HR">HR</MenuItem>
                   <MenuItem value="Finance">Finance</MenuItem>
                   <MenuItem value="IT">IT</MenuItem>
                   <MenuItem value="Sales">Sales</MenuItem>
-                </TextField>
-              </Grid>
+                </Select>
+              </FormControl>
+
 
               {/* Designation */}
               <Grid item xs={12} sm={6}>
@@ -564,21 +597,37 @@ const handleInvoiceSubmit = async (e) => {
               </Grid>
 
               {/* Job Type */}
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  select
-                  label="Employment Type"
+              <FormControl fullWidth>
+                <InputLabel
+                  shrink
+                  sx={{ fontSize: "1.125rem", fontWeight: "600" }}
+                >
+                  Employment Type *
+                </InputLabel>
+
+                <Select
                   name="employment_type"
                   value={formData.employment_type}
                   onChange={handleChange}
-                  fullWidth
-                  size="small"
+                  displayEmpty
+                  sx={{
+                    fontSize: "1.05rem",
+                    minHeight: "56px",
+                    borderRadius: "10px",
+                    background: "#fafafa",
+                    "& .MuiSelect-select": {
+                      paddingTop: "14px",
+                      paddingBottom: "14px",
+                    },
+                  }}
                 >
+                  <MenuItem value="" disabled><em>Select type</em></MenuItem>
                   <MenuItem value="fulltime">Full Time</MenuItem>
                   <MenuItem value="contract">Contract</MenuItem>
                   <MenuItem value="freelancer">Freelancer</MenuItem>
-                </TextField>
-              </Grid>
+                </Select>
+              </FormControl>
+
 
               {/* Submit */}
               <Grid item xs={12}>
@@ -610,118 +659,200 @@ const handleInvoiceSubmit = async (e) => {
             onSubmit={handleContractSubmit}
             sx={{ background: "white", padding: "24px", borderRadius: "12px" }}
           >
-            <Grid container spacing={2}>
-              {/* Contract Title */}
-              <Grid item xs={12}>
-                <TextField
-                  label="Contract Title *"
-                  name="contract_title"
-                  value={contractForm.contract_title}
-                  onChange={(e) => handleContractChange("contract_title", e.target.value)}
-                  fullWidth
-                  size="small"
-                  required
-                />
-              </Grid>
+            <Grid container spacing={3}>
 
-              {/* Start Date */}
-              <Grid item xs={12} sm={6}>
-                <FormLabel component="legend">Start Date *</FormLabel>
-                <DatePicker
-                  style={{ width: "100%" }}
-                  value={contractForm.start_date}
-                  onChange={(date) => handleDateChange("start_date", date)}
-                  format="YYYY-MM-DD"
-                />
-              </Grid>
+  {/* Contract Title */}
+  <Grid item xs={12}>
+    <TextField
+      label="Contract Title *"
+      value={contractForm.contract_title}
+      onChange={(e) =>
+        handleContractChange("contract_title", e.target.value)
+      }
+      fullWidth
+      size="medium"
+      sx={{
+        background: "#fafafa",
+        borderRadius: "10px",
+      }}
+    />
+  </Grid>
 
-              {/* End Date */}
-              <Grid item xs={12} sm={6}>
-                <FormLabel component="legend">End Date *</FormLabel>
-                <DatePicker
-                  style={{ width: "100%" }}
-                  value={contractForm.end_date}
-                  onChange={(date) => handleDateChange("end_date", date)}
-                  format="YYYY-MM-DD"
-                />
-              </Grid>
+  {/* Start Date */}
+  <Grid item xs={12} sm={6}>
+    <TextField
+      type="date"
+      label="Start Date *"
+      InputLabelProps={{ shrink: true }}
+      value={contractForm.start_date?.format("YYYY-MM-DD")}
+      onChange={(e) =>
+        handleContractChange("start_date", moment(e.target.value))
+      }
+      fullWidth
+      sx={{
+        background: "#fafafa",
+        borderRadius: "10px",
+      }}
+    />
+  </Grid>
 
-              {/* Payment Type */}
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  select
-                  label="Payment Type *"
-                  name="payment_type"
-                  value={contractForm.payment_type}
-                  onChange={(e) => handleContractChange("payment_type", e.target.value)}
-                  fullWidth
-                  size="small"
-                >
-                  <MenuItem value="Hourly">Hourly</MenuItem>
-                  <MenuItem value="Monthly">Monthly</MenuItem>
-                  <MenuItem value="Fixed">Fixed</MenuItem>
-                </TextField>
-              </Grid>
+  {/* End Date */}
+  <Grid item xs={12} sm={6}>
+    <TextField
+      type="date"
+      label="End Date *"
+      InputLabelProps={{ shrink: true }}
+      value={contractForm.end_date?.format("YYYY-MM-DD")}
+      onChange={(e) =>
+        handleContractChange("end_date", moment(e.target.value))
+      }
+      fullWidth
+      sx={{
+        background: "#fafafa",
+        borderRadius: "10px",
+      }}
+    />
+  </Grid>
 
-              {/* Payment Amount */}
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Payment Amount *"
-                  name="payment_amount"
-                  type="number"
-                  value={contractForm.payment_amount}
-                  onChange={(e) => handleContractChange("payment_amount", e.target.value)}
-                  fullWidth
-                  size="small"
-                />
-              </Grid>
+  {/* Payment Type */}
+  <Grid item xs={12} sm={6}>
+    <FormControl fullWidth>
+      <InputLabel
+        shrink
+        sx={{
+          fontSize: "1.125rem",
+          fontWeight: "600",
+          color: "rgba(0,0,0,0.87)",
+        }}
+      >
+        Payment Type *
+      </InputLabel>
 
-              {/* Payment Terms */}
-              <Grid item xs={12}>
-                <TextField
-                  select
-                  label="Payment Terms"
-                  name="payment_terms"
-                  value={contractForm.payment_terms}
-                  onChange={(e) => handleContractChange("payment_terms", e.target.value)}
-                  fullWidth
-                  size="small"
-                >
-                  <MenuItem value="Net 7">Net 7</MenuItem>
-                  <MenuItem value="Net 15">Net 15</MenuItem>
-                  <MenuItem value="Net 30">Net 30</MenuItem>
-                  <MenuItem value="Milestone Based">Milestone Based</MenuItem>
-                </TextField>
-              </Grid>
+      <Select
+        value={contractForm.payment_type}
+        onChange={(e) =>
+          handleContractChange("payment_type", e.target.value)
+        }
+        displayEmpty
+        sx={{
+          fontSize: "1.05rem",
+          minHeight: "56px",
+          borderRadius: "10px",
+          background: "#fafafa",
+          "& .MuiSelect-select": {
+            paddingTop: "14px",
+            paddingBottom: "14px",
+          },
+        }}
+      >
+        <MenuItem value="" disabled>
+          <em>Select payment type</em>
+        </MenuItem>
+        <MenuItem value="Hourly">Hourly</MenuItem>
+        <MenuItem value="Monthly">Monthly</MenuItem>
+        <MenuItem value="Fixed">Fixed</MenuItem>
+      </Select>
+    </FormControl>
+  </Grid>
 
-              {/* Scope of Work */}
-              <Grid item xs={12}>
-                <TextField
-                  label="Scope of Work"
-                  name="scope_of_work"
-                  multiline
-                  rows={4}
-                  value={contractForm.scope_of_work}
-                  onChange={(e) => handleContractChange("scope_of_work", e.target.value)}
-                  fullWidth
-                  size="small"
-                  placeholder="Describe the scope of work..."
-                />
-              </Grid>
+  {/* Payment Amount */}
+  <Grid item xs={12} sm={6}>
+    <TextField
+      label="Payment Amount *"
+      type="number"
+      value={contractForm.payment_amount}
+      onChange={(e) =>
+        handleContractChange("payment_amount", e.target.value)
+      }
+      fullWidth
+      sx={{
+        background: "#fafafa",
+        borderRadius: "10px",
+      }}
+    />
+  </Grid>
 
-              {/* Submit Button */}
-              <Grid item xs={12}>
-                <Button
-                  htmlType="submit"
-                  type="primary"
-                  block
-                  loading={loading}
-                  style={{ marginTop: "10px" }}
-                >
-                  Create Contract
-                </Button>
-              </Grid>
-            </Grid>
+  {/* Payment Terms */}
+  <Grid item xs={12}>
+    <FormControl fullWidth>
+      <InputLabel
+        shrink
+        sx={{
+          fontSize: "1.125rem",
+          fontWeight: "600",
+          color: "rgba(0,0,0,0.87)",
+        }}
+      >
+        Payment Terms
+      </InputLabel>
+
+      <Select
+        value={contractForm.payment_terms}
+        onChange={(e) =>
+          handleContractChange("payment_terms", e.target.value)
+        }
+        displayEmpty
+        sx={{
+          fontSize: "1.05rem",
+          minHeight: "56px",
+          borderRadius: "10px",
+          background: "#fafafa",
+          "& .MuiSelect-select": {
+            paddingTop: "14px",
+            paddingBottom: "14px",
+          },
+        }}
+      >
+        <MenuItem value="" disabled>
+          <em>Select terms</em>
+        </MenuItem>
+        <MenuItem value="Net 7">Net 7</MenuItem>
+        <MenuItem value="Net 15">Net 15</MenuItem>
+        <MenuItem value="Net 30">Net 30</MenuItem>
+        <MenuItem value="Milestone Based">Milestone Based</MenuItem>
+      </Select>
+    </FormControl>
+  </Grid>
+
+  {/* Scope of Work */}
+  <Grid item xs={12}>
+    <TextField
+      label="Scope of Work"
+      multiline
+      rows={4}
+      value={contractForm.scope_of_work}
+      onChange={(e) =>
+        handleContractChange("scope_of_work", e.target.value)
+      }
+      fullWidth
+      sx={{
+        background: "#fafafa",
+        borderRadius: "10px",
+      }}
+      placeholder="Describe scope of work"
+    />
+  </Grid>
+
+  {/* Submit Button */}
+  <Grid item xs={12}>
+    <Button
+      type="primary"
+      htmlType="submit"
+      block
+      loading={loading}
+      size="large"
+      sx={{
+        height: "48px",
+        borderRadius: "10px",
+        marginTop: "8px",
+      }}
+    >
+      Create Contract
+    </Button>
+  </Grid>
+
+</Grid>
+
           </Box>
         </Box>
       </ReusableModal>
@@ -741,22 +872,22 @@ const handleInvoiceSubmit = async (e) => {
           >
 
             <Grid item xs={12}>
-  <TextField
-    select
-    label="Select Contract"
-    fullWidth
-    size="small"
-    value={invoiceForm.contract_id}
-    onChange={(e) => handleInvoiceChange("contract_id", e.target.value)}
-    required
-  >
-    {selectedFreelancerContracts.map((contract) => (
-      <MenuItem key={contract.id} value={contract.id}>
-        {contract.contract_title} – ₹{contract.payment_amount}
-      </MenuItem>
-    ))}
-  </TextField>
-</Grid>
+              <TextField
+                select
+                label="Select Contract"
+                fullWidth
+                size="small"
+                value={invoiceForm.contract_id}
+                onChange={(e) => handleInvoiceChange("contract_id", e.target.value)}
+                required
+              >
+                {selectedFreelancerContracts.map((contract) => (
+                  <MenuItem key={contract.id} value={contract.id}>
+                    {contract.contract_title} – ₹{contract.payment_amount}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
 
             <Grid container spacing={2}>
               {/* Invoice Amount */}

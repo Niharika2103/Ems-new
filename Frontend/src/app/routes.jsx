@@ -46,7 +46,6 @@ import FreelancerAttendance from "../pages/Freelancer/FreelancerAttendance";
 import FreelancerHolidayList from "../pages/Freelancer/FreelancerHolidayList";
 import FreelancerProjectTable from "../pages/Freelancer/FreelancerProjectTable";
 import FreelancerDocuments from "../pages/Freelancer/FreelancerDocuments";
-import EmployeeList from '../pages/Freelancer/Documents/EmployeeList';
 import FreelancerAssignProjectpage from "../pages/Freelancer/FreelancerAssignProjectpage";
 import TimesheetApprovalList from '../pages/Freelancer/Attendance/TimesheetApprovalList';
 import ReferCandidatePage from "../pages/Referral/ReferCandidatePage";
@@ -85,9 +84,22 @@ import SettingsPage from "../pages/Settings/SettingsPage";
 import PanelFeedbackTable from "../pages/JobPosting/PanelFeedbackTable";
 import SuperAdminAuditLogs from "../pages/Auditlogs/SuperAdminAuditLogs";
 import FreelancerApprovalTable from "../pages/Freelancer/FreelancerApprovalTable";
+import AdminVerificationTabs from "../pages/Freelancer/FreelancerDocumentVerify";
 import PerformanceReview from "../pages/Reports/PerformanceReview";
 import AdminPerformanceReview from "../pages/Reports/AdminPerformanceReview";
 import AdminPerformanceTable from "../pages/Reports/AdminPerformanceTable";
+import FreelancerReports from "../pages/Freelancer/Reports/FreelancerReports";
+import FreelancerHRAnalytics from "../pages/Freelancer/Reports/HRAnalytics/FreelancerHRAnalytics";
+import FreelanceROI from "../pages/Freelancer/Reports/ROI/FreelanceROI";
+import EmployeeRoi from "../pages/Freelancer/Reports/ROI/EmployeeRoi";
+import FreelancerPayrollAnalytics from "../pages/Freelancer/Reports/PayrollAnalytics/FreelamcerPayrollAnalytics";
+import FreelancerComplianceReports from "../pages/Freelancer/Reports/ComplianceReports/FreelancerComplianceReports";
+import FreelancerCustomReports from "../pages/Freelancer/Reports/CustomReports/FreelancerCustomReports";
+import EmailTemplateEditor from "../pages/Templates/EmailTemplate/EmailTemplateEditor";
+import WhatsAppTemplateEditor from "../pages/Templates/WatsupTemplate/WatsupTemplateEditor";
+import CommunicationInfoDashboard from "../pages/dashbaord/CommunicationInfoDashboard";
+import EventWebhooks from "../pages/Templates/Webhook/EventWebhooks";
+import FreelancerJobPostDashboard from "../pages/Freelancer/jobposting/FreelancerJobPostDashboard";
 
 function AppRoutes() {
   return (
@@ -152,9 +164,12 @@ function AppRoutes() {
             <EmpPayslip />
           </ProtectedRoute>
         } />
-
-
-
+       <Route path="/admin/freelancer-documents" element={
+       <ProtectedRoute allowedRoles={["admin"]}>
+        <AdminVerificationTabs/>
+       </ProtectedRoute>
+       }
+       />
         <Route path="dashboard/employee/leave" element={
           <ProtectedRoute allowedRoles={["employee"]}>
             <EmployeeLeave />
@@ -177,14 +192,6 @@ function AppRoutes() {
           }
         />
 
-        <Route path="/admin/freelancer-documents"
-          element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <EmployeeList />
-            </ProtectedRoute>
-          }
-        />
-
         <Route
           path="/accounts/salary-structure"
           element={
@@ -202,7 +209,7 @@ function AppRoutes() {
         />
 
 
-        <Route path="/job-postings"
+        <Route path="/job-create"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <CreateJobList />
@@ -270,7 +277,7 @@ function AppRoutes() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile"
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["admin","superadmin"]}>
               <Profile />
             </ProtectedRoute>
           } />
@@ -353,6 +360,31 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/dashboard/employee/employeeroi"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <EmployeeRoi />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/freelancer/freelancerreports"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <FreelancerReports />
+            </ProtectedRoute>
+          }
+        />
+         <Route
+          path="/dashboard/freelancer/job-posting"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <FreelancerJobPostDashboard />
+            </ProtectedRoute>
+          }
+        />
+        
         <Route
           path="/dashboard/freelancer/freelancerattendance"
           element={
@@ -621,7 +653,13 @@ function AppRoutes() {
        <Route path="/payout-management" element={<PayoutManagement />} />
        <Route path="/commision" element={<CommissionSystemDashboard />} />
        <Route path="/settings" element={<SettingsPage />} />
-       <Route path="/feedback-table" element={<PanelFeedbackTable />} />
+       <Route path="/feedback-table"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+              <PanelFeedbackTable />
+            </ProtectedRoute>
+       } 
+       />
 
        <Route path="/audit-logs"
        element={
@@ -662,6 +700,54 @@ function AppRoutes() {
         element={
           <ProtectedRoute allowedRoles={["admin"]}>
               <  AdminPerformanceTable/>
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/freelancer/hr"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              < FreelancerHRAnalytics />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/freelancer/roi"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              < FreelanceROI/>
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/freelancer/payroll"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              < FreelancerPayrollAnalytics/>
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/freelancer/compliance"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              < FreelancerComplianceReports/>
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/freelancer/custom"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              < FreelancerCustomReports/>
+            </ProtectedRoute>
+          }
+        />
+
+         <Route path="/email-template" element={<EmailTemplateEditor />} />
+         <Route path="/watsup-template" element={<WhatsAppTemplateEditor />} />
+         <Route path="/webhook" element={<EventWebhooks />} />
+
+         <Route
+          path="/communication-info"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <CommunicationInfoDashboard />
             </ProtectedRoute>
           }
         />

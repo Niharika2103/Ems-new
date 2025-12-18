@@ -32,7 +32,7 @@ export default function SuperAadminTable() {
     }
 
     try {
-      await promoteAdminToSuperadminApi(admin.id);
+      await promoteAdminToSuperadminApi(admin.user_id || admin.id);
       toast.success(`${admin.name} has been promoted to SuperAdmin!`);
       dispatch(fetchallAdmin()); // Refresh the list
     } catch (err) {
@@ -129,7 +129,7 @@ export default function SuperAadminTable() {
             <Popconfirm
               title={`Are you sure to ${record.is_active ? "deactivate" : "activate"} this admin?`}
               onConfirm={() =>
-                dispatch(deleteAdmin({ id: record.id, status: !record.is_active }))
+                dispatch(deleteAdmin({ id: record.user_id || record.id, status: !record.is_active }))
                   .unwrap()
                   .then((res) => {
                     toast.success(res.message);
