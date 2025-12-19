@@ -188,6 +188,13 @@ export const generateLetterApi = (payload) =>
 export const getEmployeeLettersApi = (employeeId) =>
   adminClient.get(`${AUTH_API.ADMIN}/letters/${employeeId}`);
 
+// ⬇️ Download employee letter PDF
+export const downloadEmployeeLetterApi = (employeeId, fileName) =>
+  employeeClient.get(`${AUTH_API.ADMIN}/letters/download/${employeeId}/${fileName}`,
+    { responseType: "blob" }
+  );
+
+
 // Delete letter API
 export const deleteLetterApi = (employeeId, filename) =>
   adminClient.delete(`${AUTH_API.ADMIN}/letters/${employeeId}/${filename}`);
@@ -198,9 +205,11 @@ export const sendLetterEmailApi = (employeeId, fileName) =>
 
 // ================= Employee Auth =================
 
-export const getEmployeeLettersEmployeeApi = (employeeId) =>
-  employeeClient.get(`/employee/letters/${employeeId}`);
-
+// export const getEmployeeLettersEmployeeApi = (employeeId) =>
+//   employeeClient.get(`/letters/${employeeId}`);
+export const getEmployeeLettersEmployeeApi = (employeeId) => {
+  return employeeClient.get(`/employee/letters/${employeeId}`);
+};
 
 export const employeeRegisterApi = (data) =>
   employeeClient.post(`${AUTH_API.EMPLOYEE}/register`, data);
@@ -852,3 +861,4 @@ export const updateLeaveTypeApi = (id, data) =>
 // Enable / Disable leave type
 export const toggleLeaveTypeStatusApi = (id, isActive) =>
   adminClient.patch(`/admin/settings/leave-types/${id}/status`, { isActive });
+
