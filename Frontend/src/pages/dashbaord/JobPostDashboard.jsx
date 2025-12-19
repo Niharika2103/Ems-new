@@ -23,7 +23,7 @@ const JobPostDashboard = () => {
     useSelector((state) => state.employeeSlice?.role);
 
   const isAdmin = role === "admin";
-
+  const isemployee = role === "employee"
   /* ---------- PATH LOGIC ---------- */
 
   const getJobInfoPath = () => {

@@ -1,10 +1,15 @@
-import React, { useState, useEffect } from "react";
-import { getEmployeeLettersEmployeeApi } from "../../api/authApi";
- 
+import React, { useEffect, useState } from "react";
+import {
+  getEmployeeLettersEmployeeApi,
+  downloadEmployeeLetterApi
+} from "../../api/authApi";
+import { decodeToken } from "../../api/decodeToekn";
+
 const LettersDownload = () => {
   const [letters, setLetters] = useState([]);
-  const [loading, setLoading] = useState(false);
- 
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
   const iconMap = {
     Offer: "💼",
     Appointment: "📄",
@@ -14,52 +19,80 @@ const LettersDownload = () => {
     Promotion: "📈",
     Salary: "💰",
     Increment: "💰",
-    Warning: "⚠️"
+    Warning: "⚠️",
   };
- 
+
+  // ================= FETCH LETTERS =================
   const fetchLetters = async () => {
-    setLoading(true);
- 
-    const storedDetails = JSON.parse(localStorage.getItem("ProjectDetails"));
-    const employeeId = storedDetails?.employeeId;
- 
-    console.log("Logged-In Employee Details =>", storedDetails);
-    console.log("Detected employeeId =>", employeeId);
- 
-    if (!employeeId) {
-      console.error("❌ Employee ID not found");
-      setLoading(false);
-      return;
-    }
- 
     try {
-      const res = await getEmployeeLettersEmployeeApi(employeeId);
-      setLetters(res.data.files || []);
-    } catch (error) {
-      console.error("Error fetching letters:", error);
+      setLoading(true);
+      setError("");
+
+      const decoded = decodeToken();
+      if (!decoded?.id) {
+        setError("Session expired. Please login again.");
+        return;
+      }
+
+      const res = await getEmployeeLettersEmployeeApi(decoded.id);
+      setLetters(res.data?.files || []);
+    } catch (err) {
+      console.error("❌ Fetch letters failed:", err);
+      setError("Failed to fetch letters");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
- 
-  const handleDownload = (url) => {
-    window.open(url, "_blank");
-  };
- 
+
   useEffect(() => {
     fetchLetters();
   }, []);
- 
+
+  // ================= DOWNLOAD LETTER =================
+  const handleDownload = async (fileName) => {
+    try {
+      const decoded = decodeToken();
+      const employeeId = decoded?.id;
+
+      if (!employeeId) {
+        alert("Session expired. Please login again.");
+        return;
+      }
+
+      const res = await downloadEmployeeLetterApi(employeeId, fileName);
+
+      const blob = new Blob([res.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("❌ Download failed:", err);
+      alert("Failed to download letter");
+    }
+  };
+
   return (
     <div style={styles.container}>
       <h1 style={styles.title}>📄 Employment Letters</h1>
       <p style={styles.subtitle}>Download your issued HR letters anytime</p>
- 
-      {loading && <div style={styles.loader}>⏳ Fetching letters...</div>}
- 
-      {!loading && letters.length === 0 && (
+
+      {loading && <p style={styles.loader}>⏳ Fetching letters...</p>}
+
+      {!loading && error && (
+        <p style={{ ...styles.empty, color: "red" }}>{error}</p>
+      )}
+
+      {!loading && !error && letters.length === 0 && (
         <p style={styles.empty}>No letters generated yet</p>
       )}
- 
+
       <div style={styles.grid}>
         {letters.map((file, index) => {
           const namePart = file.name.replace(".pdf", "");
@@ -69,14 +102,14 @@ const LettersDownload = () => {
                 namePart.toLowerCase().includes(key.toLowerCase())
               )
             ] || "📄";
- 
+
           return (
             <div key={index} style={styles.card}>
               <div style={styles.icon}>{displayIcon}</div>
               <h3 style={styles.cardTitle}>{namePart}</h3>
               <button
                 style={styles.button}
-                onClick={() => handleDownload(file.url)}
+                onClick={() => handleDownload(file.name)}
               >
                 Download PDF
               </button>
@@ -87,8 +120,8 @@ const LettersDownload = () => {
     </div>
   );
 };
- 
-// Styles
+
+// ================= STYLES =================
 const styles = {
   container: {
     padding: "30px",
@@ -126,13 +159,11 @@ const styles = {
     marginTop: "20px",
   },
   card: {
-    background: "rgba(255,255,255,0.8)",
+    background: "rgba(255,255,255,0.9)",
     borderRadius: "15px",
     padding: "20px",
     textAlign: "center",
-    backdropFilter: "blur(8px)",
     boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-    transition: "transform 0.2s ease-in-out",
   },
   icon: {
     fontSize: "40px",
@@ -155,5 +186,5 @@ const styles = {
     fontSize: "13px",
   },
 };
-// d
+
 export default LettersDownload;
