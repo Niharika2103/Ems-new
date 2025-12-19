@@ -23,6 +23,9 @@ import {
   Radio,
   MenuItem,
   IconButton,
+   FormControl,
+  InputLabel,
+  Select,
 } from "@mui/material";
 import {
   Email as EmailIcon,
@@ -41,7 +44,7 @@ const Profile = () => {
 
   const [formData, setFormData] = useState({
     name: "",
-    dob: "",
+    dob: new Date().toISOString().split("T")[0],
     gender: "",
     email: "",
     phone: "",
@@ -221,12 +224,48 @@ const Profile = () => {
                   </RadioGroup>
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <TextField select fullWidth label="Department" name="department" value={formData.department} onChange={handleChange}>
-                    <MenuItem value="HR">HR</MenuItem>
-                    <MenuItem value="IT">IT</MenuItem>
-                    <MenuItem value="Finance">Finance</MenuItem>
-                    <MenuItem value="Sales">Sales</MenuItem>
-                  </TextField>
+                  <FormControl fullWidth>
+  <InputLabel
+    shrink
+    sx={{
+      fontSize: "1.125rem",
+      fontWeight: "600",
+      color: "rgba(0, 0, 0, 0.87)",
+    }}
+  >
+    Department *
+  </InputLabel>
+
+  <Select
+    name="department"
+    value={formData.department}
+    onChange={handleChange}
+    displayEmpty
+    label="Department *"
+    sx={{
+      fontSize: "1.05rem",
+      minHeight: "56px",
+      borderRadius: "10px",
+      background: "#fafafa",
+      "& .MuiSelect-select": {
+        paddingTop: "14px",
+        paddingBottom: "14px",
+        fontSize: "1.05rem",
+      },
+    }}
+  >
+    {/* Placeholder */}
+    <MenuItem value="" disabled>
+      <em>Select Department</em>
+    </MenuItem>
+
+    <MenuItem value="HR">HR</MenuItem>
+    <MenuItem value="Finance">Finance</MenuItem>
+    <MenuItem value="IT">IT</MenuItem>
+    <MenuItem value="Sales">Sales</MenuItem>
+  </Select>
+</FormControl>
+
                 </Grid>
               </Grid>
             </Paper>
