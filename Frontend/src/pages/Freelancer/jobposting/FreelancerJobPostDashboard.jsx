@@ -23,7 +23,7 @@ const FreelancerJobPostDashboard = () => {
       icon: PersonIcon,
       iconBg: "bg-purple-100",
       iconColor: "text-purple-600",
-    //   onClick: () => navigate("/freelancer/jobs/applications"),
+      onClick: () => navigate("/freelancer/jobs/applications"),
     },
     // {
     //   title: "Offers",

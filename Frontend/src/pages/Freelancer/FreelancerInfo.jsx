@@ -41,7 +41,7 @@ const FreelancerDashboard = () => {
       icon: MailOutlineIcon,
       iconBg: "bg-pink-100",
       iconColor: "text-pink-600",
-    //   onClick: () => navigate("/payslip"),
+      onClick: () => navigate("/freelancer/letters"),
     },
     // {
     //   title: "Probation",
