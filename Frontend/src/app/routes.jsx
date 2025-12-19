@@ -99,9 +99,7 @@ import EmailTemplateEditor from "../pages/Templates/EmailTemplate/EmailTemplateE
 import WhatsAppTemplateEditor from "../pages/Templates/WatsupTemplate/WatsupTemplateEditor";
 import CommunicationInfoDashboard from "../pages/dashbaord/CommunicationInfoDashboard";
 import EventWebhooks from "../pages/Templates/Webhook/EventWebhooks";
-import FreelancerJobPostDashboard from "../pages/Freelancer/jobposting/FreelancerJobPostDashboard";
 import PanelistFeedback from "../pages/JobPosting/PanelistFeedback";
-import FreelancerApplicationsTable from "../pages/Freelancer/jobposting/FreelancerApplicationsTable";
 import FreelancerLetterGenerator from "../pages/Freelancer/FreelancerLetterGenerator";
 
 function AppRoutes() {
@@ -187,13 +185,7 @@ function AppRoutes() {
        </ProtectedRoute>
        }
        />
-        <Route path="/freelancer/applications"
-         element={
-       <ProtectedRoute allowedRoles={["admin"]}>
-        <FreelancerApplicationsTable/>
-       </ProtectedRoute>
-       }
-       />
+       
         <Route path="dashboard/employee/leave" element={
           <ProtectedRoute allowedRoles={["employee"]}>
             <EmployeeLeave />
@@ -278,13 +270,7 @@ function AppRoutes() {
               <JobApplicationTracking />
             </ProtectedRoute>}
         />
-        <Route
-          path="/freelancer/application"
-          element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <FreelancerApplicationsTable />
-            </ProtectedRoute>}
-        />
+        
         <Route
           path="/offers/status"
           element={<ProtectedRoute allowedRoles={["admin"]}>
@@ -364,7 +350,7 @@ function AppRoutes() {
 
         {/* Admin routes */}
         <Route
-          path="/emp_requestTable"
+          path="/dashboard/emp_requestTable"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <AdminTable />
@@ -407,14 +393,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-         <Route
-          path="/dashboard/freelancer/job-posting"
-          element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <FreelancerJobPostDashboard />
-            </ProtectedRoute>
-          }
-        />
+        
         
         <Route
           path="/dashboard/freelancer/freelancerattendance"
