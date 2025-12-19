@@ -137,7 +137,7 @@ const PanelFeedbackTable = () => {
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
         <Box>
           <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 600 }}>
-            Interview Panel Feedback
+            Interview Panel List
           </Typography>
           <Typography variant="body1" color="text.secondary">
             Track and manage all interview records with round, panel, and candidate details
