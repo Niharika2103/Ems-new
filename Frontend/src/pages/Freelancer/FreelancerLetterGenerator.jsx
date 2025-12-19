@@ -590,11 +590,11 @@ Global Freelance Network`;
     { id: 'Experience Letter', name: 'Experience Letter', icon: '⭐', color: '#ffc107' },
     { id: 'Relieving Letter', name: 'Relieving Letter', icon: '👋', color: '#6f42c1' },
     { id: 'Confirmation Letter', name: 'Confirmation Letter', icon: '✅', color: '#17a2b8' },
-    { id: 'Promotion Letter', name: 'Promotion Letter', icon: '📈', color: '#fd7e14' },
-    { id: 'Salary Increment Letter', name: 'Salary Increment Letter', icon: '💰', color: '#20c997' },
-    { id: 'Warning Letter', name: 'Warning Letter', icon: '⚠️', color: '#dc3545' },
-    { id: 'Form16', name: 'Form 16', icon: '📑', color: '#343a40' },
-    { id: 'Form16A', name: 'Form 16A', icon: '📊', color: '#6c757d' },
+    // { id: 'Promotion Letter', name: 'Promotion Letter', icon: '📈', color: '#fd7e14' },
+    // { id: 'Salary Increment Letter', name: 'Salary Increment Letter', icon: '💰', color: '#20c997' },
+    // { id: 'Warning Letter', name: 'Warning Letter', icon: '⚠️', color: '#dc3545' },
+    // { id: 'Form16', name: 'Form 16', icon: '📑', color: '#343a40' },
+    // { id: 'Form16A', name: 'Form 16A', icon: '📊', color: '#6c757d' },
   ];
 
   // Load data from localStorage on component mount
