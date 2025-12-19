@@ -3922,31 +3922,54 @@ export const getAllInterviewsWithDetails = async (req, res) => {
     const query = `
       SELECT 
         i.interview_id,
-        i.referral_id,
         i.interview_date,
         i.interview_type AS round_name,
         i.location,
         i.status,
         i.created_at,
 
-        -- Candidate Details
-        r.candidate_name,
-        r.candidate_email,
-        r.phone_number,
-        r.position,
+        CASE 
+          WHEN i.referral_id IS NOT NULL THEN 'referral'
+          WHEN i.application_id IS NOT NULL THEN 'job_application'
+        END AS source,
 
-        -- Panel Members (Interviewer Names + Emails)
+        COALESCE(r.candidate_name, a.candidate_name) AS candidate_name,
+        COALESCE(r.candidate_email, a.email) AS candidate_email,
+        COALESCE(r.phone_number, a.phone) AS phone_number,
+        COALESCE(r.position, jp.job_title) AS position,
+
+        i.referral_id,
+        i.application_id,
+
+        -- ✅ PANEL MEMBERS (FIXED FOR BOTH FLOWS)
         (
-            SELECT json_agg(json_build_object(
+          SELECT COALESCE(
+            json_agg(
+              json_build_object(
                 'id', u.id,
                 'name', u.name,
                 'email', u.email
-            ))
-            FROM user_employees_master u
-            WHERE u.name = ANY(i.interviewer)
+              )
+            ),
+            '[]'::json
+          )
+          FROM user_employees_master u
+          WHERE EXISTS (
+            SELECT 1
+            FROM unnest(i.interviewer) AS iv(val)
+            WHERE
+              -- Referral flow (names)
+              u.name = iv.val
+              OR
+              -- Job-post flow (comma-separated emails inside array)
+              u.email = ANY(string_to_array(iv.val, ','))
+          )
         ) AS panel_members
+
       FROM interviews i
       LEFT JOIN referrals r ON r.id = i.referral_id
+      LEFT JOIN applications a ON a.application_id = i.application_id
+      LEFT JOIN job_posts jp ON jp.job_id = a.job_id
       ORDER BY i.interview_date DESC;
     `;
 
@@ -3964,6 +3987,8 @@ export const getAllInterviewsWithDetails = async (req, res) => {
     client.release();
   }
 };
+
+
 
 export const getMyInterviews = async (req, res) => {
   const client = await pool.connect();
