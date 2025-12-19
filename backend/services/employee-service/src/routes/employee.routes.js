@@ -23,7 +23,7 @@ import {
   getEmployeeSalary,
   getFullTimeEmployees,
   //getFreelancerAssignments
-  submitSelfReview
+  submitSelfReview,
 
 
 } from "../controllers/employee.controller.js";
@@ -78,9 +78,8 @@ router.put(
 router.post("/attendance/apply-parental", applyParentalLeave);
 
 router.get("/freelancers", getFreelancers);
+
 import { getEmployeeLetters } from "../../../admin-service/src/controllers/admin.controller.js";
-
-
 router.get("/letters/:employeeId", getEmployeeLetters);
 
 router.post(
@@ -98,5 +97,8 @@ router.get("/salary/:employeeId", getEmployeeSalary);
 
 router.get("/employees/fulltime", getFullTimeEmployees);
 router.post("/performance/submit", submitSelfReview); 
+
+
+
 export default router;
 
