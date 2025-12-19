@@ -179,7 +179,7 @@ function AppRoutes() {
        </ProtectedRoute>
        }
        />
-        <Route path="/freelancer/jobs/applications"
+        <Route path="/freelancer/applications"
          element={
        <ProtectedRoute allowedRoles={["admin"]}>
         <FreelancerApplicationsTable/>
@@ -200,7 +200,7 @@ function AppRoutes() {
           }
         />
         <Route
-          path="/freelancer"
+          path="/dashboard/freelancer"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <FreelancerDashboard />
@@ -233,7 +233,7 @@ function AppRoutes() {
           }
         />
 
-        <Route path="/JobPostDashboard"
+        <Route path="/dashboard/JobPostDashboard"
           element={
             <ProtectedRoute allowedRoles={["employee", "admin"]}>
               <JobPostDashboard />
@@ -307,7 +307,7 @@ function AppRoutes() {
           } />
 
         <Route
-          path="/emp_attendance"
+          path="/dashboard/emp_attendance"
           element={
             <ProtectedRoute allowedRoles={["employee", "admin"]}>
               <EmpAttendanceDashboard />
@@ -349,7 +349,7 @@ function AppRoutes() {
 
         {/* Admin routes */}
         <Route
-          path="/emp_requestTable"
+          path="/dashboard/emp_requestTable"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <AdminTable />
@@ -500,7 +500,7 @@ function AppRoutes() {
           }
         />
         <Route
-          path="/attendance"
+          path="/dashboard/attendance"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <ProjectDashboard />
@@ -508,7 +508,7 @@ function AppRoutes() {
           }
         />
         <Route
-          path="/accounts"
+          path="/dashboard/accounts"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <AccountsDashboard />
@@ -588,7 +588,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-        <Route path="/reports"
+        <Route path="/dashboard/reports"
           element={
             <ProtectedRoute allowedRoles={["admin", "employee"]}>
               < ReportsDashboard />

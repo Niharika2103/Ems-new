@@ -21,11 +21,11 @@ const JobPostDashboard = () => {
     useSelector((state) => state.employeeSlice?.role);
 
   const isAdmin = role === "admin";
-
+  const isemployee = role === "employee"
   /* ---------- PATH LOGIC ---------- */
 
   const getJobInfoPath = () => {
-    if (storedUser?.employment_type === "fulltime") {
+    if (storedUser?.employment_type === "fulltime" || storedUser?.employment_type === "freelancer") {
       return "/job-posts";
     }
     if (isAdmin) {
