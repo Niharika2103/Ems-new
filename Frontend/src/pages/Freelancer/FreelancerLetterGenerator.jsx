@@ -325,262 +325,262 @@ Engagement Manager
 Pro Solutions Group`;
     },
 
-    'Promotion Letter': (freelancer) => {
-      const today = new Date().toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      });
-      const newRate = parseInt(freelancer.rate.replace(/[^0-9]/g, '')) * 1.2;
+//     'Promotion Letter': (freelancer) => {
+//       const today = new Date().toLocaleDateString('en-US', { 
+//         year: 'numeric', 
+//         month: 'long', 
+//         day: 'numeric' 
+//       });
+//       const newRate = parseInt(freelancer.rate.replace(/[^0-9]/g, '')) * 1.2;
       
-      return `PROMOTION LETTER
-────────────────
+//       return `PROMOTION LETTER
+// ────────────────
 
-To,
-${freelancer.name}
-${freelancer.address}
+// To,
+// ${freelancer.name}
+// ${freelancer.address}
 
-Date: ${today}
+// Date: ${today}
 
-Ref: PROM/${freelancer.freelancer_id}
+// Ref: PROM/${freelancer.freelancer_id}
 
-Dear ${freelancer.name},
+// Dear ${freelancer.name},
 
-We are delighted to inform you of your promotion to Senior Freelance ${freelancer.services}, effective immediately.
+// We are delighted to inform you of your promotion to Senior Freelance ${freelancer.services}, effective immediately.
 
-This promotion recognizes your exceptional performance, leadership qualities, and significant contributions to our projects over the past period.
+// This promotion recognizes your exceptional performance, leadership qualities, and significant contributions to our projects over the past period.
 
-Your dedication, expertise, and commitment to excellence have not gone unnoticed. You have consistently exceeded expectations and demonstrated the qualities we value in our senior freelancers.
+// Your dedication, expertise, and commitment to excellence have not gone unnoticed. You have consistently exceeded expectations and demonstrated the qualities we value in our senior freelancers.
 
-NEW POSITION DETAILS:
-───────────────────
-• New Designation: Senior Freelance ${freelancer.services}
-• Previous Rate: ${freelancer.rate}
-• New Rate: $${newRate}/hr (20% increase)
-• Effective Date: ${today}
-• Additional Responsibilities: Mentoring, quality review
+// NEW POSITION DETAILS:
+// ───────────────────
+// • New Designation: Senior Freelance ${freelancer.services}
+// • Previous Rate: ${freelancer.rate}
+// • New Rate: $${newRate}/hr (20% increase)
+// • Effective Date: ${today}
+// • Additional Responsibilities: Mentoring, quality review
 
-ADDITIONAL RESPONSIBILITIES:
-──────────────────────────
-1. Guide junior freelancers on projects
-2. Conduct quality assurance reviews
-3. Participate in project planning sessions
-4. Provide technical guidance and best practices
+// ADDITIONAL RESPONSIBILITIES:
+// ──────────────────────────
+// 1. Guide junior freelancers on projects
+// 2. Conduct quality assurance reviews
+// 3. Participate in project planning sessions
+// 4. Provide technical guidance and best practices
 
-This promotion comes with increased responsibility, and we are confident that you will continue to excel in your new role.
+// This promotion comes with increased responsibility, and we are confident that you will continue to excel in your new role.
 
-Please join us in celebrating this achievement. Your hard work and dedication have truly paid off.
+// Please join us in celebrating this achievement. Your hard work and dedication have truly paid off.
 
-Congratulations!
+// Congratulations!
 
-Warm regards,
+// Warm regards,
 
-Amanda Scott
-Director of Operations
-Innovation Hub Inc.`;
-    },
+// Amanda Scott
+// Director of Operations
+// Innovation Hub Inc.`;
+//     },
 
-    'Salary Increment Letter': (freelancer) => {
-      const today = new Date().toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      });
-      const newRate = parseInt(freelancer.rate.replace(/[^0-9]/g, '')) * 1.15;
+//     'Salary Increment Letter': (freelancer) => {
+//       const today = new Date().toLocaleDateString('en-US', { 
+//         year: 'numeric', 
+//         month: 'long', 
+//         day: 'numeric' 
+//       });
+//       const newRate = parseInt(freelancer.rate.replace(/[^0-9]/g, '')) * 1.15;
       
-      return `SALARY INCREMENT LETTER
-───────────────────────
+//       return `SALARY INCREMENT LETTER
+// ───────────────────────
 
-To,
-${freelancer.name}
-${freelancer.address}
+// To,
+// ${freelancer.name}
+// ${freelancer.address}
 
-Date: ${today}
+// Date: ${today}
 
-Ref: INC/${freelancer.freelancer_id}
+// Ref: INC/${freelancer.freelancer_id}
 
-Dear ${freelancer.name},
+// Dear ${freelancer.name},
 
-We are pleased to inform you about the increment in your freelance rate, in recognition of your valuable contributions and performance.
+// We are pleased to inform you about the increment in your freelance rate, in recognition of your valuable contributions and performance.
 
-Your consistent delivery of high-quality work, professionalism, and dedication to our projects have been exemplary.
+// Your consistent delivery of high-quality work, professionalism, and dedication to our projects have been exemplary.
 
-INCREMENT DETAILS:
-────────────────
-• Current Rate: ${freelancer.rate}
-• New Rate: $${newRate}/hr (15% increase)
-• Effective Date: ${today}
-• Applicable From: Next billing cycle
+// INCREMENT DETAILS:
+// ────────────────
+// • Current Rate: ${freelancer.rate}
+// • New Rate: $${newRate}/hr (15% increase)
+// • Effective Date: ${today}
+// • Applicable From: Next billing cycle
 
-PERFORMANCE METRICS:
-───────────────────
-• Project completion rate: 100%
-• Client satisfaction: Excellent
-• Quality score: 95%
-• Timeliness: Always on schedule
+// PERFORMANCE METRICS:
+// ───────────────────
+// • Project completion rate: 100%
+// • Client satisfaction: Excellent
+// • Quality score: 95%
+// • Timeliness: Always on schedule
 
-This increment reflects our appreciation for your hard work and commitment. We value our association with you and look forward to your continued contributions.
+// This increment reflects our appreciation for your hard work and commitment. We value our association with you and look forward to your continued contributions.
 
-Please continue to maintain the high standards that have earned you this recognition.
+// Please continue to maintain the high standards that have earned you this recognition.
 
-Best regards,
+// Best regards,
 
-Brian Wilson
-Finance Director
-Global Solutions Corp.`;
-    },
+// Brian Wilson
+// Finance Director
+// Global Solutions Corp.`;
+//     },
 
-    'Warning Letter': (freelancer) => {
-      const today = new Date().toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      });
+//     'Warning Letter': (freelancer) => {
+//       const today = new Date().toLocaleDateString('en-US', { 
+//         year: 'numeric', 
+//         month: 'long', 
+//         day: 'numeric' 
+//       });
       
-      return `WARNING LETTER
-───────────────
+//       return `WARNING LETTER
+// ───────────────
 
-To,
-${freelancer.name}
-${freelancer.address}
+// To,
+// ${freelancer.name}
+// ${freelancer.address}
 
-Date: ${today}
+// Date: ${today}
 
-Ref: WARN/${freelancer.freelancer_id}
+// Ref: WARN/${freelancer.freelancer_id}
 
-Dear ${freelancer.name},
+// Dear ${freelancer.name},
 
-This letter serves as a formal warning regarding recent performance concerns that require immediate attention.
+// This letter serves as a formal warning regarding recent performance concerns that require immediate attention.
 
-ISSUE DETAILS:
-─────────────
-We have observed deviations from expected standards in recent project deliverables, including missed deadlines and quality issues.
+// ISSUE DETAILS:
+// ─────────────
+// We have observed deviations from expected standards in recent project deliverables, including missed deadlines and quality issues.
 
-SPECIFIC CONCERNS:
-────────────────
-1. Timeliness of deliverables
-2. Quality standards not being met
-3. Communication gaps
+// SPECIFIC CONCERNS:
+// ────────────────
+// 1. Timeliness of deliverables
+// 2. Quality standards not being met
+// 3. Communication gaps
 
-EXPECTED IMPROVEMENTS:
-────────────────────
-1. Immediate improvement in project delivery timelines
-2. Adherence to quality guidelines
-3. Regular progress updates
-4. Proactive communication of challenges
+// EXPECTED IMPROVEMENTS:
+// ────────────────────
+// 1. Immediate improvement in project delivery timelines
+// 2. Adherence to quality guidelines
+// 3. Regular progress updates
+// 4. Proactive communication of challenges
 
-We value your association with us and want to help you succeed. However, failure to address these concerns within the next 30 days may result in termination of our agreement.
+// We value your association with us and want to help you succeed. However, failure to address these concerns within the next 30 days may result in termination of our agreement.
 
-Please schedule a meeting with your project manager to discuss an improvement plan.
+// Please schedule a meeting with your project manager to discuss an improvement plan.
 
-Sincerely,
+// Sincerely,
 
-Rachel Adams
-Quality Assurance Manager
-Prime Solutions Ltd.`;
-    },
+// Rachel Adams
+// Quality Assurance Manager
+// Prime Solutions Ltd.`;
+//     },
 
-    'Form16': (freelancer) => {
-      const financialYear = `${new Date().getFullYear() - 1}-${new Date().getFullYear().toString().slice(-2)}`;
+//     'Form16': (freelancer) => {
+//       const financialYear = `${new Date().getFullYear() - 1}-${new Date().getFullYear().toString().slice(-2)}`;
       
-      return `FORM 16
-────────
-Certificate under Section 203 of the Income-tax Act, 1961
-For Tax Deducted at Source
+//       return `FORM 16
+// ────────
+// Certificate under Section 203 of the Income-tax Act, 1961
+// For Tax Deducted at Source
 
-FINANCIAL YEAR: ${financialYear}
+// FINANCIAL YEAR: ${financialYear}
 
-PART A
-─────
-Deductor's Details:
-• Name: Tech Solutions Inc.
-• TAN: TECH12345F
-• Address: 789 Corporate Blvd, Business City
+// PART A
+// ─────
+// Deductor's Details:
+// • Name: Tech Solutions Inc.
+// • TAN: TECH12345F
+// • Address: 789 Corporate Blvd, Business City
 
-Deductee's Details:
-• Name: ${freelancer.name}
-• PAN: [To be provided by freelancer]
-• Address: ${freelancer.address}
-• Status: Freelance Professional
+// Deductee's Details:
+// • Name: ${freelancer.name}
+// • PAN: [To be provided by freelancer]
+// • Address: ${freelancer.address}
+// • Status: Freelance Professional
 
-PART B
-─────
-Annexure - Details of Tax Deducted at Source
+// PART B
+// ─────
+// Annexure - Details of Tax Deducted at Source
 
-SUMMARY OF TAX DEDUCTED:
-────────────────────────
-Quarter  Amount Paid  TDS Rate  TDS Deducted  Date of Deduction
-──────────────────────────────────────────────────────────────
-Q1       $15,000      10%       $1,500        ${new Date(new Date().getFullYear(), 0, 31).toLocaleDateString()}
-Q2       $18,000      10%       $1,800        ${new Date(new Date().getFullYear(), 3, 30).toLocaleDateString()}
-Q3       $20,000      10%       $2,000        ${new Date(new Date().getFullYear(), 6, 31).toLocaleDateString()}
-Q4       $22,000      10%       $2,200        ${new Date(new Date().getFullYear(), 9, 31).toLocaleDateString()}
-──────────────────────────────────────────────────────────────
-Total    $75,000                $7,500
+// SUMMARY OF TAX DEDUCTED:
+// ────────────────────────
+// Quarter  Amount Paid  TDS Rate  TDS Deducted  Date of Deduction
+// ──────────────────────────────────────────────────────────────
+// Q1       $15,000      10%       $1,500        ${new Date(new Date().getFullYear(), 0, 31).toLocaleDateString()}
+// Q2       $18,000      10%       $1,800        ${new Date(new Date().getFullYear(), 3, 30).toLocaleDateString()}
+// Q3       $20,000      10%       $2,000        ${new Date(new Date().getFullYear(), 6, 31).toLocaleDateString()}
+// Q4       $22,000      10%       $2,200        ${new Date(new Date().getFullYear(), 9, 31).toLocaleDateString()}
+// ──────────────────────────────────────────────────────────────
+// Total    $75,000                $7,500
 
-CERTIFICATE:
-───────────
-This is to certify that tax has been deducted at source as per the provisions of Chapter XVII-B of the Income-tax Act, 1961.
+// CERTIFICATE:
+// ───────────
+// This is to certify that tax has been deducted at source as per the provisions of Chapter XVII-B of the Income-tax Act, 1961.
 
-Date: ${new Date().toLocaleDateString()}
+// Date: ${new Date().toLocaleDateString()}
 
-Authorized Signatory
-Accounts Department
-Tech Solutions Inc.`;
-    },
+// Authorized Signatory
+// Accounts Department
+// Tech Solutions Inc.`;
+//     },
 
-    'Form16A': (freelancer) => {
-      const quarter = Math.floor((new Date().getMonth() / 3)) + 1;
-      const quarterDates = {
-        1: 'Apr 1 - Jun 30',
-        2: 'Jul 1 - Sep 30',
-        3: 'Oct 1 - Dec 31',
-        4: 'Jan 1 - Mar 31'
-      };
+//     'Form16A': (freelancer) => {
+//       const quarter = Math.floor((new Date().getMonth() / 3)) + 1;
+//       const quarterDates = {
+//         1: 'Apr 1 - Jun 30',
+//         2: 'Jul 1 - Sep 30',
+//         3: 'Oct 1 - Dec 31',
+//         4: 'Jan 1 - Mar 31'
+//       };
       
-      return `FORM 16A
-─────────
-Certificate of Tax Deducted at Source
-[Under Section 203(3) of the Income-tax Act, 1961]
+//       return `FORM 16A
+// ─────────
+// Certificate of Tax Deducted at Source
+// [Under Section 203(3) of the Income-tax Act, 1961]
 
-FINANCIAL YEAR: ${new Date().getFullYear() - 1}-${new Date().getFullYear().toString().slice(-2)}
-QUARTER: ${quarter} (${quarterDates[quarter]})
+// FINANCIAL YEAR: ${new Date().getFullYear() - 1}-${new Date().getFullYear().toString().slice(-2)}
+// QUARTER: ${quarter} (${quarterDates[quarter]})
 
-DEDUCTOR DETAILS:
-────────────────
-• Name: Global Freelance Network
-• TAN: GFN67890D
-• Address: 456 Finance Street, Tax City
+// DEDUCTOR DETAILS:
+// ────────────────
+// • Name: Global Freelance Network
+// • TAN: GFN67890D
+// • Address: 456 Finance Street, Tax City
 
-DEDUCTEE DETAILS:
-────────────────
-• Name: ${freelancer.name}
-• PAN: [To be provided]
-• Address: ${freelancer.address}
-• Nature of Payment: Professional Fees
+// DEDUCTEE DETAILS:
+// ────────────────
+// • Name: ${freelancer.name}
+// • PAN: [To be provided]
+// • Address: ${freelancer.address}
+// • Nature of Payment: Professional Fees
 
-DETAILS OF TAX DEDUCTED:
-───────────────────────
-Payment Details for Quarter ${quarter}:
-• Total Amount Credited: $${(parseInt(freelancer.rate.replace(/[^0-9]/g, '')) * 160).toLocaleString()}
-• Date of Credit: ${new Date().toLocaleDateString()}
-• TDS Section: 194J
-• TDS Rate: 10%
-• TDS Amount: $${(parseInt(freelancer.rate.replace(/[^0-9]/g, '')) * 160 * 0.1).toLocaleString()}
-• Date of Deposit: ${new Date(new Date().setDate(new Date().getDate() + 7)).toLocaleDateString()}
+// DETAILS OF TAX DEDUCTED:
+// ───────────────────────
+// Payment Details for Quarter ${quarter}:
+// • Total Amount Credited: $${(parseInt(freelancer.rate.replace(/[^0-9]/g, '')) * 160).toLocaleString()}
+// • Date of Credit: ${new Date().toLocaleDateString()}
+// • TDS Section: 194J
+// • TDS Rate: 10%
+// • TDS Amount: $${(parseInt(freelancer.rate.replace(/[^0-9]/g, '')) * 160 * 0.1).toLocaleString()}
+// • Date of Deposit: ${new Date(new Date().setDate(new Date().getDate() + 7)).toLocaleDateString()}
 
-CERTIFICATE:
-───────────
-Certified that tax of $${(parseInt(freelancer.rate.replace(/[^0-9]/g, '')) * 160 * 0.1).toLocaleString()} has been deducted at source from the payment made to ${freelancer.name} and deposited to the credit of the Central Government.
+// CERTIFICATE:
+// ───────────
+// Certified that tax of $${(parseInt(freelancer.rate.replace(/[^0-9]/g, '')) * 160 * 0.1).toLocaleString()} has been deducted at source from the payment made to ${freelancer.name} and deposited to the credit of the Central Government.
 
-This certificate is issued for the purpose of filing Income Tax Returns.
+// This certificate is issued for the purpose of filing Income Tax Returns.
 
-Date: ${new Date().toLocaleDateString()}
+// Date: ${new Date().toLocaleDateString()}
 
-Authorized Signatory
-Finance Department
-Global Freelance Network`;
-    }
+// Authorized Signatory
+// Finance Department
+// Global Freelance Network`;
+//     }
   };
 
   // Supported letter types
@@ -590,11 +590,11 @@ Global Freelance Network`;
     { id: 'Experience Letter', name: 'Experience Letter', icon: '⭐', color: '#ffc107' },
     { id: 'Relieving Letter', name: 'Relieving Letter', icon: '👋', color: '#6f42c1' },
     { id: 'Confirmation Letter', name: 'Confirmation Letter', icon: '✅', color: '#17a2b8' },
-    { id: 'Promotion Letter', name: 'Promotion Letter', icon: '📈', color: '#fd7e14' },
-    { id: 'Salary Increment Letter', name: 'Salary Increment Letter', icon: '💰', color: '#20c997' },
-    { id: 'Warning Letter', name: 'Warning Letter', icon: '⚠️', color: '#dc3545' },
-    { id: 'Form16', name: 'Form 16', icon: '📑', color: '#343a40' },
-    { id: 'Form16A', name: 'Form 16A', icon: '📊', color: '#6c757d' },
+    // { id: 'Promotion Letter', name: 'Promotion Letter', icon: '📈', color: '#fd7e14' },
+    // { id: 'Salary Increment Letter', name: 'Salary Increment Letter', icon: '💰', color: '#20c997' },
+    // { id: 'Warning Letter', name: 'Warning Letter', icon: '⚠️', color: '#dc3545' },
+    // { id: 'Form16', name: 'Form 16', icon: '📑', color: '#343a40' },
+    // { id: 'Form16A', name: 'Form 16A', icon: '📊', color: '#6c757d' },
   ];
 
   // Load data from localStorage on component mount
