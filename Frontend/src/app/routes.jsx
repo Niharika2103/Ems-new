@@ -101,6 +101,7 @@ import CommunicationInfoDashboard from "../pages/dashbaord/CommunicationInfoDash
 import EventWebhooks from "../pages/Templates/Webhook/EventWebhooks";
 import FreelancerJobPostDashboard from "../pages/Freelancer/jobposting/FreelancerJobPostDashboard";
 import PanelistFeedback from "../pages/JobPosting/PanelistFeedback";
+import FreelancerApplicationsTable from "../pages/Freelancer/jobposting/FreelancerApplicationsTable";
 
 function AppRoutes() {
   return (
@@ -253,6 +254,13 @@ function AppRoutes() {
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <JobApplicationTracking />
+            </ProtectedRoute>}
+        />
+        <Route
+          path="/freelancer/application"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <FreelancerApplicationsTable />
             </ProtectedRoute>}
         />
         <Route
