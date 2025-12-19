@@ -100,7 +100,10 @@ import WhatsAppTemplateEditor from "../pages/Templates/WatsupTemplate/WatsupTemp
 import CommunicationInfoDashboard from "../pages/dashbaord/CommunicationInfoDashboard";
 import EventWebhooks from "../pages/Templates/Webhook/EventWebhooks";
 import FreelancerJobPostDashboard from "../pages/Freelancer/jobposting/FreelancerJobPostDashboard";
+<<<<<<< HEAD
 import PanelistFeedback from "../pages/JobPosting/PanelistFeedback";
+=======
+>>>>>>> af5dceaf2a4a9433ede06fe09c905382eefcfa3d
 import FreelancerApplicationsTable from "../pages/Freelancer/jobposting/FreelancerApplicationsTable";
 import FreelancerLetterGenerator from "../pages/Freelancer/FreelancerLetterGenerator";
 
@@ -177,6 +180,20 @@ function AppRoutes() {
        <Route path="/admin/freelancer-documents" element={
        <ProtectedRoute allowedRoles={["admin"]}>
         <AdminVerificationTabs/>
+       </ProtectedRoute>
+       }
+       />
+        <Route path="/freelancer/letters" 
+        element={
+       <ProtectedRoute allowedRoles={["admin"]}>
+        <FreelancerLetterGenerator/>
+       </ProtectedRoute>
+       }
+       />
+        <Route path="/freelancer/jobs/applications"
+         element={
+       <ProtectedRoute allowedRoles={["admin"]}>
+        <FreelancerApplicationsTable/>
        </ProtectedRoute>
        }
        />
