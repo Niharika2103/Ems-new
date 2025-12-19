@@ -3965,6 +3965,64 @@ export const getAllInterviewsWithDetails = async (req, res) => {
   }
 };
 
+export const getMyInterviews = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    // 1️⃣ Decode JWT (you already have helper)
+    const user = getUserFromToken(req);
+    const interviewerId = user.id;
+
+    // 2️⃣ Get interviewer name
+    const { rows: empRows } = await client.query(
+      `SELECT name FROM user_employees_master WHERE id = $1`,
+      [interviewerId]
+    );
+
+    if (empRows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const interviewerName = empRows[0].name;
+
+    // 3️⃣ Fetch only interviews THIS interviewer attended
+    const query = `
+      SELECT
+        i.interview_id,
+        i.interview_date,
+        i.interview_type AS round_name,
+        i.location,
+        i.status,
+        r.candidate_name,
+        r.position,
+        EXISTS (
+          SELECT 1
+          FROM panel_feedback pf
+          WHERE pf.interview_id = i.interview_id
+          AND pf.panel_member = $2
+        ) AS feedback_submitted
+      FROM interviews i
+      JOIN referrals r ON r.id = i.referral_id
+      WHERE $1 = ANY(i.interviewer)
+      ORDER BY i.interview_date DESC;
+    `;
+
+    const { rows } = await client.query(query, [
+      interviewerName,
+      interviewerId
+    ]);
+
+    return res.status(200).json(rows);
+
+  } catch (err) {
+    console.error("getMyInterviews error:", err);
+    return res.status(500).json({ error: "Failed to fetch interviews" });
+  } finally {
+    client.release();
+  }
+};
+
+
 
 export const addPanelFeedback = async (req, res) => {
   const client = await pool.connect();

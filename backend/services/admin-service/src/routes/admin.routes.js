@@ -41,6 +41,7 @@ import {
   scheduleInterviewReferral,
   rescheduleInterviewReferral,
   getAllInterviewsWithDetails,
+  getMyInterviews,
   addPanelFeedback,
   getPanelFeedback,
   // === EXTRA AUDIT LOG CONTROLLERS ===
@@ -231,6 +232,7 @@ router.get(
   "/interviews/all",
   getAllInterviewsWithDetails
 );
+router.get("/my-interviews", getMyInterviews);
 
 router.post(
   "/interviews/:interview_id/feedback",
