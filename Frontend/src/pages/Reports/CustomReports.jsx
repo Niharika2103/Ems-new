@@ -1,295 +1,328 @@
-// src/components/reports/CustomReports.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from "react";
 import {
   Box,
-  Typography,
+  Grid,
   Card,
   CardContent,
-  Button,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Chip,
+  Typography,
   TextField,
-  Menu,
+  Button,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Chip,
+  Divider,
+  Checkbox,
+  FormControlLabel,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  FormGroup,
-  FormControlLabel,
-  Checkbox,
-} from '@mui/material';
+} from "@mui/material";
 import {
-  Refresh as RefreshIcon,
-  Download as DownloadIcon,
-  Search as SearchIcon,
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-} from '@mui/icons-material';
+  Search,
+  Download,
+  Add,
+  Save,
+} from "@mui/icons-material";
 
-const getToday = () => new Date().toISOString().split('T')[0];
+/* =========================================================
+   1️⃣ DUMMY MASTER DATA (SIMULATES BACKEND RESPONSE)
+========================================================= */
 
-const CustomReports = () => {
-  const [templates, setTemplates] = useState([]);
-  const [filteredTemplates, setFilteredTemplates] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [startDate, setStartDate] = useState(getToday());
-  const [endDate, setEndDate] = useState(getToday());
-  const [anchorEl, setAnchorEl] = useState(null);
-  const [openModal, setOpenModal] = useState(false);
-  const [currentTemplate, setCurrentTemplate] = useState(null);
+const REPORTS_LIST = [
+  { id: 1, name: "Employee Attendance", department: "HR" },
+  { id: 2, name: "Payroll Summary", department: "Finance" },
+  { id: 3, name: "Freelancer Cost Report", department: "Operations" },
+];
 
-  // Available fields for custom reports
-  const availableFields = [
-    'Employee Name', 'Department', 'Performance', 'Salary', 'Hire Date',
-    'Project', 'Freelancer', 'ROI', 'Compliance Status'
-  ];
+const DUMMY_EMPLOYEES = [
+  {
+    name: "Ravi Kumar",
+    department: "HR",
+    salary: "₹40,000",
+    attendance: "95%",
+    doj: "2023-01-15",
+  },
+  {
+    name: "Anjali Sharma",
+    department: "Finance",
+    salary: "₹55,000",
+    attendance: "92%",
+    doj: "2022-11-10",
+  },
+];
 
-  useEffect(() => {
-    const dummyTemplates = [
-      {
-        id: 1,
-        name: 'High Performers in Engineering',
-        fields: ['Employee Name', 'Department', 'Performance'],
-        lastRun: '2025-12-01',
-        createdBy: 'Alex Johnson',
-      },
-      {
-        id: 2,
-        name: 'Freelancer ROI > 75%',
-        fields: ['Project', 'Freelancer', 'ROI', 'Value Generated'],
-        lastRun: '2025-11-25',
-        createdBy: 'Maria Garcia',
-      },
-      {
-        id: 3,
-        name: 'Pending Compliance Items',
-        fields: ['Report Title', 'Category', 'Status', 'Due Date'],
-        lastRun: '2025-12-05',
-        createdBy: 'James Wilson',
-      },
-    ];
-    setTemplates(dummyTemplates);
-    setFilteredTemplates(dummyTemplates);
-  }, []);
+const AVAILABLE_FIELDS = [
+  "Employee Name",
+  "Department",
+  "Salary",
+  "Attendance",
+  "Date of Joining",
+];
 
-  useEffect(() => {
-    let result = templates;
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      result = result.filter(t => t.name.toLowerCase().includes(term));
-    }
+const FIELD_MAP = {
+  "Employee Name": "name",
+  "Department": "department",
+  "Salary": "salary",
+  "Attendance": "attendance",
+  "Date of Joining": "doj",
+};
 
-    // Date filtering by lastRun
-    if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      end.setDate(end.getDate() + 1);
+/* =========================================================
+   2️⃣ MAIN COMPONENT
+========================================================= */
 
-      result = result.filter(t => {
-        const run = new Date(t.lastRun);
-        return run >= start && run < end;
-      });
-    }
+export default function CustomReports() {
+  /* ---------- UI STATES ---------- */
+  const [search, setSearch] = useState("");
+  const [department, setDepartment] = useState("");
+  const [openGenerate, setOpenGenerate] = useState(false);
 
-    setFilteredTemplates(result);
-  }, [searchTerm, startDate, endDate, templates]);
+  /* ---------- REPORT STATES ---------- */
+  const [selectedFields, setSelectedFields] = useState([]);
+  const [generatedReport, setGeneratedReport] = useState(null);
 
-  const handleExport = (format) => {
-    console.log(`[AUDIT] Custom report exported in ${format}`);
-    alert(`Exporting Custom report as ${format}...`);
-    setAnchorEl(null);
+  /* =========================================================
+     3️⃣ FILTER LOGIC (SEARCH + DEPARTMENT)
+  ========================================================= */
+
+  const filteredReports = REPORTS_LIST.filter(
+    (r) =>
+      r.name.toLowerCase().includes(search.toLowerCase()) &&
+      (department ? r.department === department : true)
+  );
+
+  /* =========================================================
+     4️⃣ FIELD SELECTION LOGIC
+  ========================================================= */
+
+  const toggleField = (field) => {
+    setSelectedFields((prev) =>
+      prev.includes(field)
+        ? prev.filter((f) => f !== field)
+        : [...prev, field]
+    );
   };
 
-  const handleSaveTemplate = () => {
-    if (currentTemplate.id) {
-      // Update
-      setTemplates(templates.map(t => t.id === currentTemplate.id ? currentTemplate : t));
-    } else {
-      // Create
-      const newTemplate = {
-        ...currentTemplate,
-        id: Date.now(),
-        lastRun: getToday(),
-        createdBy: 'Current User',
-      };
-      setTemplates([...templates, newTemplate]);
-    }
-    setOpenModal(false);
-    setCurrentTemplate(null);
-  };
+  /* =========================================================
+     5️⃣ GENERATE REPORT (CORE LOGIC)
+  ========================================================= */
 
-  const handleDelete = (id) => {
-    if (window.confirm('Are you sure you want to delete this template?')) {
-      setTemplates(templates.filter(t => t.id !== id));
-    }
-  };
+  const handleGenerateReport = () => {
+    if (!selectedFields.length) return;
 
-  const openTemplateForm = (template = null) => {
-    setCurrentTemplate(template || {
-      name: '',
-      fields: [],
-      lastRun: getToday(),
-      createdBy: 'Current User',
+    setGeneratedReport({
+      fields: selectedFields,
+      data: DUMMY_EMPLOYEES,
     });
-    setOpenModal(true);
+
+    setSelectedFields([]);
+    setOpenGenerate(false);
   };
 
   return (
-    <Box sx={{ p: 2 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" fontWeight="medium">
+    <Box sx={{ p: 4, backgroundColor: "#f4f6f8", minHeight: "100vh" }}>
+      {/* =====================================================
+          PAGE HEADER
+      ====================================================== */}
+      <Box mb={3}>
+        <Typography fontSize="26px" fontWeight={700}>
           Custom Reports
         </Typography>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button variant="outlined" startIcon={<RefreshIcon />} onClick={() => window.location.reload()}>
-            Refresh
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<DownloadIcon />}
-            onClick={(e) => setAnchorEl(e.currentTarget)}
-          >
-            Export
-          </Button>
-          <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
-            <MenuItem onClick={() => handleExport('PDF')}>PDF</MenuItem>
-            <MenuItem onClick={() => handleExport('Excel')}>Excel (.xlsx)</MenuItem>
-            <MenuItem onClick={() => handleExport('CSV')}>CSV</MenuItem>
-          </Menu>
-        
-        </Box>
+        <Typography color="text.secondary">
+          Generate, filter and preview enterprise reports
+        </Typography>
       </Box>
 
-      <Box sx={{ mb: 3, display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'flex-end' }}>
-        <TextField
-          size="small"
-          placeholder="Search template name..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          InputProps={{ startAdornment: <SearchIcon sx={{ color: 'action.active', mr: 0.5 }} /> }}
-          sx={{ minWidth: 240 }}
-        />
-
-        <TextField
-          label="Start Date"
-          type="date"
-          size=" small"
-          InputLabelProps={{ shrink: true }}
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-          sx={{ minWidth: 140 }}
-        />
-
-        <TextField
-          label="End Date"
-          type="date"
-          size="small"
-          InputLabelProps={{ shrink: true }}
-          value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
-          sx={{ minWidth: 140 }}
-        />
-      </Box>
-
-      <Card variant="outlined">
+      {/* =====================================================
+          FILTER BAR
+      ====================================================== */}
+      <Card sx={{ mb: 3, borderRadius: 3 }}>
         <CardContent>
-          <Typography variant="h6" fontWeight="medium" gutterBottom>
-            Saved Report Templates
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {filteredTemplates.length} template(s) found
-          </Typography>
+          <Grid container spacing={2} alignItems="center">
+            {/* SEARCH */}
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                placeholder="Search report by name"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                InputProps={{ startAdornment: <Search sx={{ mr: 1 }} /> }}
+              />
+            </Grid>
 
-          <TableContainer component={Paper} sx={{ maxHeight: 500, overflow: 'auto' }}>
-            <Table size="small" stickyHeader>
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Template Name</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Fields Included</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }} align="right">Last Run</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }} align="right">Created By</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }} align="center">Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredTemplates.length > 0 ? (
-                  filteredTemplates.map((t) => (
-                    <TableRow key={t.id} hover>
-                      <TableCell>{t.name}</TableCell>
-                      <TableCell>
-                        <Chip label={`${t.fields.length} fields`} size="small" color="primary" />
-                      </TableCell>
-                      <TableCell align="right">{t.lastRun}</TableCell>
-                      <TableCell align="right">{t.createdBy}</TableCell>
-                      <TableCell align="center">
-                        <Button size="small" startIcon={<EditIcon />} onClick={() => openTemplateForm(t)} />
-                        <Button size="small" startIcon={<DeleteIcon />} onClick={() => handleDelete(t.id)} color="error" />
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={5} align="center" sx={{ py: 3 }}>
-                      <Typography color="text.secondary">No custom report templates found.</Typography>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
+            {/* DEPARTMENT DROPDOWN */}
+            <Grid item xs={12} md={3}>
+              <FormControl fullWidth>
+                <InputLabel
+                  shrink
+                  sx={{
+                    fontSize: "16px",
+                    fontWeight: 600,
+                    transform: "translate(14px, -9px)",
+                  }}
+                >
+                  Department
+                </InputLabel>
+                <Select
+                  value={department}
+                  onChange={(e) => setDepartment(e.target.value)}
+                  displayEmpty
+                  sx={{
+                    mt: 1,
+                    borderRadius: 2,
+                    backgroundColor: "#fafafa",
+                    minHeight: 52,
+                  }}
+                >
+                  <MenuItem value="">
+                    <em>All Departments</em>
+                  </MenuItem>
+                  <MenuItem value="HR">HR</MenuItem>
+                  <MenuItem value="Finance">Finance</MenuItem>
+                  <MenuItem value="Operations">Operations</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+
+            {/* DOWNLOAD BUTTONS (UI ONLY) */}
+            <Grid item xs={12} md={5} textAlign="right">
+              <Button variant="outlined" startIcon={<Download />} sx={{ mr: 1 }}>
+                PDF
+              </Button>
+              <Button variant="outlined" startIcon={<Download />} sx={{ mr: 1 }}>
+                Excel
+              </Button>
+              <Button variant="outlined" startIcon={<Download />}>
+                CSV
+              </Button>
+            </Grid>
+          </Grid>
         </CardContent>
       </Card>
 
-      {/* Template Form Modal */}
-      <Dialog open={openModal} onClose={() => setOpenModal(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          {currentTemplate?.id ? 'Edit Template' : 'Create New Template'}
-        </DialogTitle>
+      {/* =====================================================
+          REPORT LIST
+      ====================================================== */}
+      <Grid container spacing={3}>
+        {filteredReports.map((report) => (
+          <Grid item xs={12} md={4} key={report.id}>
+            <Card sx={{ borderRadius: 3 }}>
+              <CardContent>
+                <Typography fontWeight={600}>{report.name}</Typography>
+                <Divider sx={{ my: 1 }} />
+                <Chip label={report.department} />
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+
+      {/* =====================================================
+          GENERATE BUTTON
+      ====================================================== */}
+      <Box mt={4}>
+        <Button
+          variant="contained"
+          startIcon={<Add />}
+          onClick={() => setOpenGenerate(true)}
+        >
+          Generate Custom Report
+        </Button>
+      </Box>
+
+      {/* =====================================================
+          GENERATED REPORT PREVIEW
+      ====================================================== */}
+      {generatedReport && (
+        <Box mt={5}>
+          <Typography fontWeight={600} mb={2}>
+            Generated Report Preview
+          </Typography>
+
+          <Card>
+            <CardContent>
+              <table width="100%" style={{ borderCollapse: "collapse" }}>
+                <thead>
+                  <tr>
+                    {generatedReport.fields.map((field) => (
+                      <th
+                        key={field}
+                        style={{
+                          textAlign: "left",
+                          padding: "10px",
+                          background: "#f1f5f9",
+                        }}
+                      >
+                        {field}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {generatedReport.data.map((row, index) => (
+                    <tr key={index}>
+                      {generatedReport.fields.map((field) => (
+                        <td
+                          key={field}
+                          style={{
+                            padding: "10px",
+                            borderTop: "1px solid #e5e7eb",
+                          }}
+                        >
+                          {row[FIELD_MAP[field]]}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </CardContent>
+          </Card>
+        </Box>
+      )}
+
+      {/* =====================================================
+          GENERATE MODAL
+      ====================================================== */}
+      <Dialog
+        open={openGenerate}
+        onClose={() => setOpenGenerate(false)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>Generate Custom Report</DialogTitle>
         <DialogContent>
-          <TextField
-            label="Template Name"
-            fullWidth
-            value={currentTemplate?.name || ''}
-            onChange={(e) => setCurrentTemplate({ ...currentTemplate, name: e.target.value })}
-            sx={{ mb: 2 }}
-          />
-          <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-            <InputLabel>Select Fields</InputLabel>
-            <Select
-              multiple
-              value={currentTemplate?.fields || []}
-              onChange={(e) => setCurrentTemplate({ ...currentTemplate, fields: e.target.value })}
-              renderValue={(selected) => `${selected.length} field(s) selected`}
-            >
-              {availableFields.map((field) => (
-                <MenuItem key={field} value={field}>
-                  <Checkbox checked={(currentTemplate?.fields || []).includes(field)} />
-                  {field}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+          <Typography color="text.secondary" mb={2}>
+            Select fields to include in the report
+          </Typography>
+
+          {AVAILABLE_FIELDS.map((field) => (
+            <FormControlLabel
+              key={field}
+              control={
+                <Checkbox
+                  checked={selectedFields.includes(field)}
+                  onChange={() => toggleField(field)}
+                />
+              }
+              label={field}
+            />
+          ))}
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenModal(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleSaveTemplate}>
-            {currentTemplate?.id ? 'Update' : 'Save'}
+          <Button onClick={() => setOpenGenerate(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            startIcon={<Save />}
+            onClick={handleGenerateReport}
+          >
+            Generate
           </Button>
         </DialogActions>
       </Dialog>
     </Box>
   );
-};
-
-export default CustomReports;
+}

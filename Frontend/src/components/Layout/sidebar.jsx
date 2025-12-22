@@ -58,7 +58,7 @@ const Sidebar = ({ isOpen, handleClose }) => {
   if (employment_type === "freelancer") {
     employeeMenus = [
       { name: "Dashboard", icon: <Home size={20} />, path: "/dashboard" },
-      { name: "Job Posting", icon: <Briefcase size={20} />, path: "/dashboard/JobPostDashboard" },
+      { name: "Job Posting", icon: <Briefcase size={20} />, path: "/JobPostDashboard" },
       { name: "Attendance", icon: <Calendar size={20} />, path: "/dashboard/emp_attendance" },
       // { name: "Tasks", icon: <CheckSquare size={20} />, path: "/freelancer/tasks" },
       { name: "Payments", icon: <Users size={20} />, path: "/freelancer/payments" },
@@ -76,7 +76,7 @@ const Sidebar = ({ isOpen, handleClose }) => {
     employeeMenus = [
       { name: "Dashboard", icon: <Home size={20} />, path: "/dashboard" },
       { name: "Job Posting", icon: <Briefcase size={20} />, path: "/JobPostDashboard" },
-      { name: "Attendance", icon: <Calendar size={20} />, path: "/emp_attendance" },
+      { name: "Attendance", icon: <Calendar size={20} />, path: "/dashboard/emp_attendance" },
       // { name: "HR", icon: <CheckSquare size={20} />, path: "/hr" },
       { name: "Payslip", icon: <Users size={20} />, path: "/payslip" },
       // { name: "Reports", icon: <BarChart3 size={20} />, path: "/reports" },
@@ -88,10 +88,10 @@ const Sidebar = ({ isOpen, handleClose }) => {
     admin: [
       { name: "Dashboard", icon: <Home size={20} />, path: "/dashboard" },
       { name: "Job Posting", icon: <Briefcase size={20} />, path: "/JobPostDashboard" },
-      { name: "Manage Employees", icon: <Users size={20} />, path: "/emp_requestTable" },
-      { name: "Attendance", icon: <Calendar size={20} />, path: "/attendance" },
-      { name: "Freelancer", icon: <CheckSquare size={20} />, path: "/freelancer" },
-      { name: "Accounts", icon: <Calendar size={20} />, path: "/accounts" },
+      { name: "Manage Employees", icon: <Users size={20} />, path: "/dashboard/emp_requestTable" },
+      { name: "Attendance", icon: <Calendar size={20} />, path: "/dashboard/attendance" },
+      { name: "Freelancer", icon: <CheckSquare size={20} />, path: "/dashboard/freelancer" },
+      { name: "Accounts", icon: <Calendar size={20} />, path: "/dashboard/accounts" },
       { name: "Reports", icon: <BarChart3 size={20} />, path: "/reports" },
       { name: "Settings", icon: <Settings size={20} />, path: "/settings" },
     ],

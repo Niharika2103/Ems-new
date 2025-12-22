@@ -22,7 +22,6 @@ import {
   WorkOutline,
   BusinessCenter,
   LocationOn,
-  AttachMoney,
   CalendarToday,
   Code,
   Description,
@@ -422,70 +421,66 @@ const handleSubmit = async (e) => {
                   <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1, color: "#374151" }}>
                     Minimum Salary (LPA) *
                   </Typography>
-                  <TextField
-                    fullWidth
-                    name="salaryMin"
-                    type="number"
-                    value={form.salaryMin}
-                    onChange={handleChange}
-                    required
-                    placeholder="0"
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <AttachMoney sx={{ color: "#6b7280", fontSize: 20 }} />
-                        </InputAdornment>
-                      ),
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <Typography variant="body2" color="#6b7280">
-                            LPA
-                          </Typography>
-                        </InputAdornment>
-                      ),
-                    }}
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: "8px",
-                        backgroundColor: "#ffffff",
-                      },
-                    }}
-                  />
+                 <TextField
+  fullWidth
+  name="salaryMin"
+  type="number"
+   autoComplete="off" 
+  value={form.salaryMin}
+  onChange={handleChange}
+  required
+  placeholder="Enter minimum salary"
+  inputProps={{
+    min: 1,        // ❌ no 0
+    step: 1,       // ❌ no decimals
+  }}
+  onKeyDown={(e) => {
+    if (e.key === "-" || e.key === "e") e.preventDefault();
+  }}
+  InputProps={{
+    endAdornment: (
+      <InputAdornment position="end">
+        <Typography variant="body2" color="#6b7280">
+          LPA
+        </Typography>
+      </InputAdornment>
+    ),
+  }}
+/>
+
                 </Grid>
 
                 <Grid item xs={12} md={6}>
                   <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1, color: "#374151" }}>
                     Maximum Salary (LPA) *
                   </Typography>
-                  <TextField
-                    fullWidth
-                    name="salaryMax"
-                    type="number"
-                    value={form.salaryMax}
-                    onChange={handleChange}
-                    required
-                    placeholder="0"
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <AttachMoney sx={{ color: "#6b7280", fontSize: 20 }} />
-                        </InputAdornment>
-                      ),
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <Typography variant="body2" color="#6b7280">
-                            LPA
-                          </Typography>
-                        </InputAdornment>
-                      ),
-                    }}
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: "8px",
-                        backgroundColor: "#ffffff",
-                      },
-                    }}
-                  />
+                 <TextField
+  fullWidth
+  name="salaryMax"
+  type="number"
+   autoComplete="off" 
+  value={form.salaryMax}
+  onChange={handleChange}
+  required
+  placeholder="Enter maximum salary"
+  inputProps={{
+    min: form.salaryMin || 1, // ✅ max starts from min
+    step: 1,
+  }}
+  onKeyDown={(e) => {
+    if (e.key === "-" || e.key === "e") e.preventDefault();
+  }}
+  InputProps={{
+    endAdornment: (
+      <InputAdornment position="end">
+        <Typography variant="body2" color="#6b7280">
+          LPA
+        </Typography>
+      </InputAdornment>
+    ),
+  }}
+/>
+
                 </Grid>
 
                 {/* Posted Date */}
@@ -494,39 +489,31 @@ const handleSubmit = async (e) => {
                     Posted Date *
                   </Typography>
                   <TextField
-                    fullWidth
-                    type="date"
-                    name="postedOn"
-                    InputLabelProps={{ shrink: true }}
-                    value={form.postedOn}
-                    onChange={handleChange}
-                    required
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <CalendarToday sx={{ color: "#5d6b87ff", fontSize: 20 }} />
-                        </InputAdornment>
-                      ),
-                    }}
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: "8px",
-                        backgroundColor: "#ffffff",
-                      },
-                    }}
-                  />
+  fullWidth
+  type="date"
+  name="postedOn"
+  InputLabelProps={{ shrink: true }}
+  value={form.postedOn}
+  onChange={handleChange}
+  required
+  inputProps={{
+    min: getCurrentDate(), // ✅ today & future allowed
+  }}
+/>
+
                 </Grid>
 
                 {/* Skills */}
                 <Grid item xs={12} md={6}>
                   <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1, color: "#374151" }}>
-                    Required Skills
+                    Required Skills  <span style={{ color: "black" }}>*</span>
                   </Typography>
-                  <TextField
-                    fullWidth
-                    name="skills"
-                    value={form.skills}
-                    onChange={handleChange}
+                 <TextField
+                 fullWidth
+                 name="skills"
+                value={form.skills}
+                   required
+                   onChange={handleChange}
                     placeholder="React, Node.js, MongoDB, AWS"
                     InputProps={{
                       startAdornment: (
