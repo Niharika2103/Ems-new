@@ -23,7 +23,8 @@ export const AUTH_API = {
   ATTENDANCE:`${API_BASES.ATTENDANCE}`,
   SALARYSTRUCTURE:`${API_BASES.SALARYSTRUCTURE}/salary`,
   FREELANCER: `${API_BASES.FREELANCER}/freelancer`,
-  VENDOR: `${API_BASES.VENDOR}/vendor` 
+  VENDOR: `${API_BASES.VENDOR}/vendor` ,
+  SETTINGS: `${API_BASES.SETTINGS}/api`,
 };
 
 export const ROLES = {
@@ -35,6 +36,7 @@ export const ROLES = {
   SALARYSTRUCTURE:"salarystructure",
   FREELANCER: "freelancer",
   VENDOR: "vendor",
+  SETTINGS: "settings",
 };
 
 export const OTP_LENGTH = 6;

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import {getTemplatesApi,createTemplateApi,updateTemplateApi,updateTemplateStatusApi,deleteTemplateApi} from '../../../api/authApi';
 
 const WhatsAppTemplateEditor = () => {
   const [templates, setTemplates] = useState([]);
@@ -9,73 +10,118 @@ const WhatsAppTemplateEditor = () => {
   const [showDetails, setShowDetails] = useState(null);
 
   // Initial data
-  const initialTemplates = [
-    {
-      id: 1,
-      name: 'Leave Approved',
-      category: 'leave_updates',
-      description: 'Notify employees when leave is approved',
-      templateId: 'leave_approved_v1',
-      message: '✅ *Leave Approved*\n\nDear {employee_name},\nYour leave from *{start_date}* to *{end_date}* has been approved.\n\nLeave ID: {leave_id}\nApproved by: {approver_name}',
-      status: 'active',
-      approval: 'approved',
-      consentRequired: true,
-      lastUsed: '2024-01-15',
-      usage: { total: 150, delivered: 148, read: 140 }
-    },
-    {
-      id: 2,
-      name: 'Shift Reminder',
-      category: 'shift_reminders',
-      description: 'Remind employees about upcoming shifts',
-      templateId: 'shift_reminder_v1',
-      message: '⏰ *Shift Reminder*\n\nHello {employee_name},\nYour shift starts at *{shift_time}*\nLocation: {location}\nManager: {manager_name}',
-      status: 'active',
-      approval: 'approved',
-      consentRequired: true,
-      lastUsed: '2024-01-14',
-      usage: { total: 300, delivered: 295, read: 280 }
-    },
-    {
-      id: 3,
-      name: 'Attendance Alert',
-      category: 'attendance_alerts',
-      description: 'Alert employees about attendance status',
-      templateId: 'attendance_alert_v1',
-      message: '📋 *Attendance Alert*\n\nDear {employee_name},\nDate: {date}\nStatus: *{attendance_status}*\nReason: {reason}',
-      status: 'inactive',
-      approval: 'pending',
-      consentRequired: true,
+  // const initialTemplates = [
+  //   {
+  //     id: 1,
+  //     name: 'Leave Approved',
+  //     category: 'leave_updates',
+  //     description: 'Notify employees when leave is approved',
+  //     templateId: 'leave_approved_v1',
+  //     message: '✅ *Leave Approved*\n\nDear {employee_name},\nYour leave from *{start_date}* to *{end_date}* has been approved.\n\nLeave ID: {leave_id}\nApproved by: {approver_name}',
+  //     status: 'active',
+  //     approval: 'approved',
+  //     consentRequired: true,
+  //     lastUsed: '2024-01-15',
+  //     usage: { total: 150, delivered: 148, read: 140 }
+  //   },
+  //   {
+  //     id: 2,
+  //     name: 'Shift Reminder',
+  //     category: 'shift_reminders',
+  //     description: 'Remind employees about upcoming shifts',
+  //     templateId: 'shift_reminder_v1',
+  //     message: '⏰ *Shift Reminder*\n\nHello {employee_name},\nYour shift starts at *{shift_time}*\nLocation: {location}\nManager: {manager_name}',
+  //     status: 'active',
+  //     approval: 'approved',
+  //     consentRequired: true,
+  //     lastUsed: '2024-01-14',
+  //     usage: { total: 300, delivered: 295, read: 280 }
+  //   },
+  //   {
+  //     id: 3,
+  //     name: 'Attendance Alert',
+  //     category: 'attendance_alerts',
+  //     description: 'Alert employees about attendance status',
+  //     templateId: 'attendance_alert_v1',
+  //     message: '📋 *Attendance Alert*\n\nDear {employee_name},\nDate: {date}\nStatus: *{attendance_status}*\nReason: {reason}',
+  //     status: 'inactive',
+  //     approval: 'pending',
+  //     consentRequired: true,
+  //     lastUsed: null,
+  //     usage: { total: 0, delivered: 0, read: 0 }
+  //   },
+  //   {
+  //     id: 4,
+  //     name: 'Salary Credited',
+  //     category: 'payroll_alerts',
+  //     description: 'Notify employees about salary deposit',
+  //     templateId: 'salary_credited_v1',
+  //     message: '💰 *Salary Credited*\n\nHello {employee_name},\nSalary for {month} {year} has been credited.\nAmount: {amount}',
+  //     status: 'active',
+  //     approval: 'approved',
+  //     consentRequired: true,
+  //     lastUsed: '2024-01-10',
+  //     usage: { total: 200, delivered: 198, read: 185 }
+  //   }
+  // ];
+
+ useEffect(() => {
+  fetchTemplates();
+}, []);
+
+const fetchTemplates = async () => {
+  const res = await getTemplatesApi();
+
+  setTemplates(
+    res.data.map(t => ({
+      id: t.id,
+      name: t.name,
+      category: t.category,
+      description: t.description,
+      templateId: t.template_id,
+      message: t.message,
+      status: t.status,
+      approval: t.approval,
+      consentRequired: t.consent_required,
       lastUsed: null,
       usage: { total: 0, delivered: 0, read: 0 }
-    },
-    {
-      id: 4,
-      name: 'Salary Credited',
-      category: 'payroll_alerts',
-      description: 'Notify employees about salary deposit',
-      templateId: 'salary_credited_v1',
-      message: '💰 *Salary Credited*\n\nHello {employee_name},\nSalary for {month} {year} has been credited.\nAmount: {amount}',
-      status: 'active',
-      approval: 'approved',
-      consentRequired: true,
-      lastUsed: '2024-01-10',
-      usage: { total: 200, delivered: 198, read: 185 }
-    }
-  ];
+    }))
+  );
+};
+const categories = [
+  {
+    id: 'all',
+    name: 'All Templates',
+    count: templates.length
+  },
+  {
+    id: 'leave_updates',
+    name: 'Leave Updates',
+    count: templates.filter(t => t.category === 'leave_updates').length
+  },
+  {
+    id: 'shift_reminders',
+    name: 'Shift Reminders',
+    count: templates.filter(t => t.category === 'shift_reminders').length
+  },
+  {
+    id: 'attendance_alerts',
+    name: 'Attendance Alerts',
+    count: templates.filter(t => t.category === 'attendance_alerts').length
+  },
+  {
+    id: 'payroll_alerts',
+    name: 'Payroll Alerts',
+    count: templates.filter(t => t.category === 'payroll_alerts').length
+  }
+];
 
-  useEffect(() => {
-    setTemplates(initialTemplates);
-  }, []);
+const filteredTemplates = templates.filter(template => {
+    if (selectedCategory === 'all') return true;
+    return template.category === selectedCategory;
+  });
 
-  const categories = [
-    { id: 'all', name: 'All Templates', count: initialTemplates.length },
-    { id: 'leave_updates', name: 'Leave Updates', count: initialTemplates.filter(t => t.category === 'leave_updates').length },
-    { id: 'shift_reminders', name: 'Shift Reminders', count: initialTemplates.filter(t => t.category === 'shift_reminders').length },
-    { id: 'attendance_alerts', name: 'Attendance Alerts', count: initialTemplates.filter(t => t.category === 'attendance_alerts').length },
-    { id: 'payroll_alerts', name: 'Payroll Alerts', count: initialTemplates.filter(t => t.category === 'payroll_alerts').length }
-  ];
-
+  
   const [formData, setFormData] = useState({
     name: '',
     category: 'leave_updates',
@@ -87,10 +133,6 @@ const WhatsAppTemplateEditor = () => {
     consentRequired: true
   });
 
-  const filteredTemplates = templates.filter(template => {
-    if (selectedCategory === 'all') return true;
-    return template.category === selectedCategory;
-  });
 
   // Template operations
   const handleCreateTemplate = () => {
@@ -123,43 +165,48 @@ const WhatsAppTemplateEditor = () => {
     setShowDialog(true);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    if (editTemplate) {
-      // Update template
-      const updatedTemplates = templates.map(t => 
-        t.id === editTemplate.id ? { ...editTemplate, ...formData } : t
-      );
-      setTemplates(updatedTemplates);
-    } else {
-      // Create new template
-      const newTemplate = {
-        id: templates.length + 1,
-        ...formData,
-        lastUsed: null,
-        usage: { total: 0, delivered: 0, read: 0 }
-      };
-      setTemplates([...templates, newTemplate]);
-    }
-    
-    setShowDialog(false);
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  const payload = {
+    name: formData.name,
+    category: formData.category,
+    description: formData.description,
+    templateId: formData.templateId,
+    message: formData.message,
+    status: formData.status,
+    approval: formData.approval,
+    consentRequired: formData.consentRequired
   };
 
-  const handleToggleStatus = (id) => {
-    setTemplates(templates.map(t => 
-      t.id === id ? { 
-        ...t, 
-        status: t.status === 'active' ? 'inactive' : 'active' 
-      } : t
-    ));
-  };
+  if (editTemplate) {
+    await updateTemplateApi(editTemplate.id, payload);
+  } else {
+    await createTemplateApi(payload);
+  }
 
-  const handleDeleteTemplate = (id) => {
-    if (window.confirm('Are you sure you want to delete this template?')) {
-      setTemplates(templates.filter(t => t.id !== id));
-    }
-  };
+  await fetchTemplates();
+  setShowDialog(false);
+};
+
+
+
+ const handleToggleStatus = async (id) => {
+  const template = templates.find(t => t.id === id);
+  const newStatus = template.status === "active" ? "active" : "inactive";
+
+  await updateTemplateStatusApi(id, newStatus);
+  await fetchTemplates();
+};
+
+
+  const handleDeleteTemplate = async (id) => {
+  if (!window.confirm("Are you sure you want to delete this template?")) return;
+
+  await deleteTemplateApi(id);
+  setTemplates(prev => prev.filter(t => t.id !== id));
+};
+
 
   // Helper functions for styling
   const getStatusColor = (status) => {
@@ -630,7 +677,7 @@ const WhatsAppTemplateEditor = () => {
               handleToggleStatus(template.id);
             }}
           >
-            {template.status === 'active' ? 'Deactivate' : 'Activate'}
+            {template.status === 'active' ? 'Activate':'Deactivate' }
           </button>
           <button 
             style={styles.buttonDanger}

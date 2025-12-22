@@ -337,6 +337,16 @@ export default function AdminTable() {
           >
             Grant
           </Button>
+ 
+          <Button
+  type="dashed"
+  danger
+  size="small"
+  onClick={() => handleRevoke(record.email)}
+  style={{ fontSize: "12px", minWidth: "80px" }}
+>
+  Revoke
+</Button>
 
           {/* Promote Button */}
           <Button

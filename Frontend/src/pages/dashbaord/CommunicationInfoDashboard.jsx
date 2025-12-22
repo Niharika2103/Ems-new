@@ -38,7 +38,7 @@ const CommunicationInfoDashboard = () => {
       icon: HubIcon,
       iconBg: "bg-purple-100",
       iconColor: "text-purple-600",
-      onClick: () => navigate("/communication/webhooks"),
+      onClick: () => navigate("/webhook"),
     },
   ];
 

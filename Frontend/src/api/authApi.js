@@ -1,8 +1,6 @@
-import { superadminClient,employeeClient,adminClient,ProjectClient,AttendanceClient,SalaryStructureClient, freelancerClient ,vendorClient } from "./axiosClient";
+import { superadminClient,employeeClient,adminClient,ProjectClient,AttendanceClient,
+  SalaryStructureClient, freelancerClient ,vendorClient,settingsClient } from "./axiosClient";
 import { AUTH_API } from "../utils/constants";
-
-
-import { RestaurantMenuSharp } from "@mui/icons-material";
 
 
 // ================= SuperAdmin =================
@@ -190,6 +188,13 @@ export const generateLetterApi = (payload) =>
 export const getEmployeeLettersApi = (employeeId) =>
   adminClient.get(`${AUTH_API.ADMIN}/letters/${employeeId}`);
 
+// ⬇️ Download employee letter PDF
+export const downloadEmployeeLetterApi = (employeeId, fileName) =>
+  employeeClient.get(`${AUTH_API.ADMIN}/letters/download/${employeeId}/${fileName}`,
+    { responseType: "blob" }
+  );
+
+
 // Delete letter API
 export const deleteLetterApi = (employeeId, filename) =>
   adminClient.delete(`${AUTH_API.ADMIN}/letters/${employeeId}/${filename}`);
@@ -200,9 +205,11 @@ export const sendLetterEmailApi = (employeeId, fileName) =>
 
 // ================= Employee Auth =================
 
-export const getEmployeeLettersEmployeeApi = (employeeId) =>
-  employeeClient.get(`/employee/letters/${employeeId}`);
-
+// export const getEmployeeLettersEmployeeApi = (employeeId) =>
+//   employeeClient.get(`/letters/${employeeId}`);
+export const getEmployeeLettersEmployeeApi = (employeeId) => {
+  return employeeClient.get(`/employee/letters/${employeeId}`);
+};
 
 export const employeeRegisterApi = (data) =>
   employeeClient.post(`${AUTH_API.EMPLOYEE}/register`, data);
@@ -591,6 +598,9 @@ export const rescheduleInterviewReferralApi = (referral_id, interviewData) =>
 export const getAllInterviewsWithDetailsApi = () =>
   adminClient.get(`${AUTH_API.ADMIN}/interviews/all`);
 
+export const getMyInterviewsApi = () =>
+  adminClient.get(`${AUTH_API.ADMIN}/my-interviews`);
+
 // ================= Feedback APIs =================
 export const addPanelFeedbackApi = (interview_id, feedbackData) =>
   adminClient.post(`${AUTH_API.ADMIN}/interviews/${interview_id}/feedback`, feedbackData);
@@ -600,38 +610,48 @@ export const getPanelFeedbackApi = (interview_id) =>
 
 
 export const createFreelancerContractApi = (data) => {
-  return freelancerClient.post(`${AUTH_API.FREELANCER}/admin/freelancer-contract/create`, data);
+  return adminClient.post(`/admin/freelancer-contract/create`, data);
 };
 
+
 export const updateFreelancerContractApi = (contractId, data) => {
-  return freelancerClient.put(`${AUTH_API.FREELANCER}/admin/freelancer-contract/update/${contractId}`, data);
+  return adminClient.put(`/admin/freelancer-contract/update/${contractId}`, data);
 };
 
 export const cancelFreelancerContractApi = (contractId) => {
-  return freelancerClient.patch(`${AUTH_API.FREELANCER}/admin/freelancer-contract/cancel/${contractId}`);
+  return adminClient.patch(`/admin/freelancer-contract/cancel/${contractId}`);
 };
+
 
 export const updateFreelancerContractStatusApi = (contractId, status) => {
-  return freelancerClient.patch(`${AUTH_API.FREELANCER}/admin/freelancer-contract/status/${contractId}`, { status });
+  return adminClient.patch(`/admin/freelancer-contract/status/${contractId}`, { status });
 };
 
+
 export const renewFreelancerContractApi = (contractId, newEndDate) => {
-  return freelancerClient.patch(`${AUTH_API.FREELANCER}/admin/freelancer-contract/renew/${contractId}`, {
+  return adminClient.patch(`/admin/freelancer-contract/renew/${contractId}`, {
     new_end_date: newEndDate
   });
 };
 
+
 export const fetchFreelancerContractsApi = (freelancerId) => {
-  return freelancerClient.get(`${AUTH_API.FREELANCER}/admin/freelancer-contract/freelancer/${freelancerId}`);
+  return adminClient.get(`/admin/freelancer-contract/freelancer/${freelancerId}`);
 };
+
 
 export const fetchAllFreelancerContractsApi = () => {
-  return freelancerClient.get(`${AUTH_API.FREELANCER}/admin/freelancer-contract/all`);
+  return adminClient.get(`/admin/freelancer-contract/all`);
 };
 
+
 export const fetchFreelancerContractByIdApi = (contractId) => {
-  return freelancerClient.get(`${AUTH_API.FREELANCER}/admin/freelancer-contract/${contractId}`);
+  return adminClient.get(`/admin/freelancer-contract/${contractId}`);
 };
+
+// ================= Freelancer HR Analytics =================
+export const getFreelancerHRAnalyticsApi = () =>
+  adminClient.get(`/admin/freelancers/analytics`);
 
 //Auditlogs
 
@@ -714,6 +734,24 @@ export const getMonthlyFinalSummaryApi = (employeeId, year, month) =>
     `${AUTH_API.ADMIN}/monthly-final-summary/${employeeId}/${year}/${month}`
   );
 
+export const validatePayrollApi = (data) =>
+  adminClient.post(`${AUTH_API.ADMIN}/validate`, data);
+
+// 2️⃣ Run Payroll
+export const runPayrollApi = (data) =>
+  adminClient.post(`${AUTH_API.ADMIN}/run`, data);
+
+// 3️⃣ Reverse Payroll
+export const reversePayrollApi = (data) =>
+  adminClient.post(`${AUTH_API.ADMIN}/reverse`, data);
+
+// 4️⃣ Rerun Payroll
+export const rerunPayrollApi = (data) =>
+  adminClient.post(`${AUTH_API.ADMIN}/rerun`, data);
+
+// 5️⃣ Get all Payroll Records
+export const getAllPayrollApi = () =>
+  adminClient.get(`${AUTH_API.ADMIN}/payroll`);
 
 // Performance Review APIs
 // export const submitSelfReviewApi = (data) =>
@@ -731,3 +769,116 @@ export const fetchAllPerformanceReviewsApi = () =>
 
 export const fetchFinalRatingsApi = () =>
   adminClient.get(`/admin/performance/final-ratings`);
+
+
+//payroll analytics
+// export const getMonthlyPayrollSummaryApi = (month, year) =>
+//   adminClient.get(`${AUTH_API.ADMIN}/payroll/summary?month=${month}&year=${year}`);
+
+// PAYROLL SUMMARY
+// PAYROLL SUMMARY
+export const getMonthlyPayrollSummaryApi = (month, year) =>
+  adminClient.get(`/admin/payroll/summary?month=${month}&year=${year}`);
+
+// DEPT PAYROLL
+export const getDepartmentWisePayrollApi = (month, year) =>
+  adminClient.get(`/admin/payroll/department-wise?month=${month}&year=${year}`);
+
+// TREND
+export const getPayrollTrendApi = (limit = 6) =>
+  adminClient.get(`/admin/payroll/trend?limit=${limit}`);
+
+// TREND 3 MONTHS
+export const getPayrollTrend3Api = () =>
+  adminClient.get(`/admin/payroll/trend/3-months`);
+
+// TREND 12 MONTHS
+export const getPayrollTrend12Api = () =>
+  adminClient.get(`/admin/payroll/trend/12-months`);
+//branding settings APIs
+
+export const fetchSettings = () => {
+  return settingsClient.get(`${AUTH_API.SETTINGS}/system-settings`);
+};
+
+export const updateBranding = (formData) => {
+  return settingsClient.put(
+    `${AUTH_API.SETTINGS}/system-settings/branding`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+};
+
+export const updateWhiteLabel = (data) =>{
+ return settingsClient.put(`${AUTH_API.SETTINGS}/system-settings/white-label`, data);
+}
+export const getTenantBrandingApi = (tenantKey) => {
+  return settingsClient.get(`${AUTH_API.SETTINGS}/system-settings/tenants/${tenantKey}/branding`);
+};
+
+export const updateTenantBrandingApi = (tenantKey, formData) => {
+  return settingsClient.put(`${AUTH_API.SETTINGS}/system-settings/tenants/${tenantKey}/branding`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
+
+//whatsapp template 
+export const getTemplatesApi = () =>{
+  return settingsClient.get(`${AUTH_API.SETTINGS}/whatsapp/template/fetch`);
+}
+
+export const createTemplateApi = (data) =>
+  {
+  return settingsClient.post(`${AUTH_API.SETTINGS}/whatsapp/template`, data);
+}
+
+
+export const updateTemplateApi = (id, data) =>
+   {
+  return settingsClient.put(`${AUTH_API.SETTINGS}/whatsapp/template/${id}`, data);
+}
+
+export const updateTemplateStatusApi = (id, status) =>
+   {
+  return settingsClient.patch(`${AUTH_API.SETTINGS}/whatsapp/template/${id}/status`, { status });
+
+}
+
+export const deleteTemplateApi = (id) =>{
+   return settingsClient.delete(`${AUTH_API.SETTINGS}/whatsapp/template/${id}`);
+}
+// ================= Leave Policy (Admin Settings) =================
+
+// Get all leave types
+export const getLeaveTypesApi = () =>
+  adminClient.get(`/admin/settings/getleave-types`);
+
+// Create leave type
+export const createLeaveTypeApi = (data) =>
+  adminClient.post(`/admin/settings/leave-types`, data);
+
+// Update leave type
+export const updateLeaveTypeApi = (id, data) =>
+  adminClient.put(`/admin/settings/leave-types/${id}`, data);
+
+// Enable / Disable leave type
+export const toggleLeaveTypeStatusApi = (id, isActive) =>
+  adminClient.patch(`/admin/settings/leave-types/${id}/status`, { isActive });
+
+export const createAuthSettingsApi = (data) => {
+  return settingsClient.post(`${AUTH_API.SETTINGS}/settings/create`, data);
+};
+
+export const getAuthSettingsApi = () => {
+  return settingsClient.get(`${AUTH_API.SETTINGS}/settings/get`);
+};
+
+export const updateAuthSettingsApi = (data) => {
+  return settingsClient.post(`${AUTH_API.SETTINGS}/settings/update`, data);
+};
