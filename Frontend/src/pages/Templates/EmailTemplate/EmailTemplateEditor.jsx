@@ -43,6 +43,7 @@ const EmailTemplateEditor = () => {
     "payslip",
     "wishes",
     "announcement",
+    "remainder",
     "other",
   ];
 
@@ -65,6 +66,8 @@ const EmailTemplateEditor = () => {
     { key: "occasion", label: "Occasion" },
     { key: "month", label: "Month" },
     { key: "year", label: "Year" },
+    { key: "probation_start_date", label: "Probation Start Date" },
+    { key: "probation_end_date", label: "Probation End Date" },
   ];
 
   /* ------------------------------

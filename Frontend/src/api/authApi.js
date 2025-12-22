@@ -598,6 +598,9 @@ export const rescheduleInterviewReferralApi = (referral_id, interviewData) =>
 export const getAllInterviewsWithDetailsApi = () =>
   adminClient.get(`${AUTH_API.ADMIN}/interviews/all`);
 
+export const getMyInterviewsApi = () =>
+  adminClient.get(`${AUTH_API.ADMIN}/my-interviews`);
+
 // ================= Feedback APIs =================
 export const addPanelFeedbackApi = (interview_id, feedbackData) =>
   adminClient.post(`${AUTH_API.ADMIN}/interviews/${interview_id}/feedback`, feedbackData);
@@ -868,3 +871,14 @@ export const updateLeaveTypeApi = (id, data) =>
 export const toggleLeaveTypeStatusApi = (id, isActive) =>
   adminClient.patch(`/admin/settings/leave-types/${id}/status`, { isActive });
 
+export const createAuthSettingsApi = (data) => {
+  return settingsClient.post(`${AUTH_API.SETTINGS}/settings/create`, data);
+};
+
+export const getAuthSettingsApi = () => {
+  return settingsClient.get(`${AUTH_API.SETTINGS}/settings/get`);
+};
+
+export const updateAuthSettingsApi = (data) => {
+  return settingsClient.post(`${AUTH_API.SETTINGS}/settings/update`, data);
+};
