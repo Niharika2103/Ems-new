@@ -871,7 +871,6 @@ export const updateLeaveTypeApi = (id, data) =>
 export const toggleLeaveTypeStatusApi = (id, isActive) =>
   adminClient.patch(`/admin/settings/leave-types/${id}/status`, { isActive });
 
-<<<<<<< HEAD
 export const createAuthSettingsApi = (data) => {
   return settingsClient.post(`${AUTH_API.SETTINGS}/settings/create`, data);
 };
@@ -883,5 +882,3 @@ export const getAuthSettingsApi = () => {
 export const updateAuthSettingsApi = (data) => {
   return settingsClient.post(`${AUTH_API.SETTINGS}/settings/update`, data);
 };
-=======
->>>>>>> 365f0c7eee5bcc4a0bc63a4452e4dbe3b8ad5ab6
