@@ -27,7 +27,7 @@ const JobPostDashboard = () => {
   /* ---------- PATH LOGIC ---------- */
 
   const getJobInfoPath = () => {
-    if (storedUser?.employment_type === "fulltime") {
+    if (storedUser?.employment_type === "fulltime" || storedUser?.employment_type === "freelancer") {
       return "/job-posts";
     }
     if (isAdmin) {
