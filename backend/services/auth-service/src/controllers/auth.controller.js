@@ -6,6 +6,7 @@ import qrcode from "qrcode";
 import { UserModel } from "../models/user.model.js";
 import { validateInput } from "../utils/validateInput.js";
 import { sendEmail } from "../services/emailservicesuperadmin.js";
+import axios from "axios";
 
 import dotenv from "dotenv";
 const USERS_TABLE = "user_employees_master";
@@ -672,4 +673,11 @@ export const getAllSuperAdminAuditLogs = async (req, res) => {
   } finally {
     client.release();
   }
+};
+
+export const fetchAuthSettings = async () => {
+  const { data } = await axios.get(
+    `${process.env.SETTINGS_SERVICE_URL}/api/settings/get`
+  );
+  return data;
 };

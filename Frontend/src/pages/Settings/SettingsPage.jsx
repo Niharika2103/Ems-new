@@ -1,5 +1,5 @@
 // SettingsPage.jsx
-import React, { useEffect,useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -23,26 +23,28 @@ import {
   FormControlLabel,
   Stack,
   Divider,
+  CircularProgress,
 } from '@mui/material';
 import BrandingIdentityForm from '../Settings/BrandingIdentityForm.jsx';
 import BrandingUsageForm from '../Settings/BrandingUsageForm.jsx';
 import BrandingWhiteLabelForm from '../Settings/BrandingWhiteLabelForm.jsx';
 import BrandingWhiteLabelTenantForm from './BrandingWhiteLabelTenantForm.jsx';
-import {fetchSettings} from '../../api/authApi';
+import { fetchSettings } from '../../api/authApi';
 import CloseIcon from '@mui/icons-material/Close';
 import { useNavigate } from 'react-router-dom';
-import { ToastContainer ,toast} from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {
   getLeaveTypesApi,
   createLeaveTypeApi,
   updateLeaveTypeApi,
+  getAuthSettingsApi,
+  updateAuthSettingsApi,
+  createAuthSettingsApi,
 } from "../../api/authApi";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('branding');
- 
-
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
@@ -80,6 +82,7 @@ export default function SettingsPage() {
         {activeTab === 'integrations' && <IntegrationsSection />}
         {activeTab === 'security' && <SecuritySection />}
       </Box>
+      <ToastContainer position="top-right" autoClose={3000} />
     </Box>
   );
 }
@@ -88,22 +91,22 @@ export default function SettingsPage() {
 
 function BrandingSection() {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [drawerKey, setDrawerKey] = useState(null); // 'identity' | 'usage' | 'whitelabel'
-const [activeTenant, setActiveTenant] = useState(null);
+  const [drawerKey, setDrawerKey] = useState(null);
+  const [activeTenant, setActiveTenant] = useState(null);
 
-useEffect(() => {
-  fetchSettings().then((res) => {
-    setActiveTenant(res.data?.whiteLabel?.activeTenant);
-  });
-}, []);
-   const openDrawer = (key) => {
-    setDrawerKey(key);      // 👈 always set fresh key
+  useEffect(() => {
+    fetchSettings().then((res) => {
+      setActiveTenant(res.data?.whiteLabel?.activeTenant);
+    });
+  }, []);
+  const openDrawer = (key) => {
+    setDrawerKey(key);
     setDrawerOpen(true);
   };
 
   const closeDrawer = () => {
     setDrawerOpen(false);
-    setDrawerKey('');       // 👈 reset properly
+    setDrawerKey('');
   };
 
   return (
@@ -157,7 +160,7 @@ useEffect(() => {
           </Card>
         </Grid>
 
-         <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={4}>
           <Card sx={{ height: '100%' }}>
             <CardContent>
               <Typography variant="h6">White‑label Tanent Form</Typography>
@@ -166,29 +169,24 @@ useEffect(() => {
               </Typography>
             </CardContent>
             <CardActions sx={{ px: 2, pb: 2 }}>
-              <Button variant="outlined" size="small"  onClick={() => openDrawer('whitelabelform')}>
+              <Button variant="outlined" size="small" onClick={() => openDrawer('whitelabelform')}>
                 Edit
               </Button>
             </CardActions>
           </Card>
         </Grid>
       </Grid>
-<RightDrawer open={drawerOpen} onClose={closeDrawer} title="Branding">
-  {drawerKey === 'identity' && <BrandingIdentityForm onClose={closeDrawer} />}
-  {drawerKey === 'usage' && <BrandingUsageForm onClose={closeDrawer} />}
-  {drawerKey === 'whitelabel' && <BrandingWhiteLabelForm onClose={closeDrawer} />}
-  {drawerKey === 'whitelabelform' && (
-    <BrandingWhiteLabelTenantForm tenantKey={activeTenant} onClose={closeDrawer} />
-    
-  )}
-  <ToastContainer position="top-right" autoClose={3000} />
-</RightDrawer>
-
+      <RightDrawer open={drawerOpen} onClose={closeDrawer} title="Branding">
+        {drawerKey === 'identity' && <BrandingIdentityForm onClose={closeDrawer} />}
+        {drawerKey === 'usage' && <BrandingUsageForm onClose={closeDrawer} />}
+        {drawerKey === 'whitelabel' && <BrandingWhiteLabelForm onClose={closeDrawer} />}
+        {drawerKey === 'whitelabelform' && (
+          <BrandingWhiteLabelTenantForm tenantKey={activeTenant} onClose={closeDrawer} />
+        )}
+      </RightDrawer>
     </>
   );
 }
-
-
 
 /* ---------- Salary Cycle ---------- */
 
@@ -338,7 +336,6 @@ function LeaveSection() {
   const [editing, setEditing] = useState(null);
   const navigate = useNavigate();
 
-  // 🔹 Fetch leave types from backend
   const fetchLeaves = async () => {
     try {
       const res = await getLeaveTypesApi();
@@ -381,7 +378,6 @@ function LeaveSection() {
           </Grid>
         ))}
 
-        {/* Add Leave */}
         <Grid item xs={12} md={4}>
           <Card
             variant="outlined"
@@ -399,7 +395,6 @@ function LeaveSection() {
           </Card>
         </Grid>
 
-        {/* Holiday (later) */}
         <Grid item xs={12} md={4}>
           <Card sx={{ cursor: "pointer" }} onClick={() => navigate("/dashboard/employee/holiday")}>
             <CardContent>
@@ -426,6 +421,7 @@ function LeaveSection() {
     </>
   );
 }
+
 function LeaveForm({ initial, onClose, onSaved }) {
   const [name, setName] = useState(initial?.name || "");
   const [code, setCode] = useState(initial?.code || "");
@@ -454,18 +450,16 @@ function LeaveForm({ initial, onClose, onSaved }) {
 
     try {
       if (initial?.id) {
-        // 🔹 UPDATE
         await updateLeaveTypeApi(initial.id, payload);
       } else {
-        // 🔹 CREATE
         await createLeaveTypeApi(payload);
       }
-
-      onSaved();     // refresh cards
-      onClose();     // close drawer
+      onSaved();
+      onClose();
+      toast.success("Leave type saved successfully");
     } catch (err) {
       console.error("Failed to save leave type", err);
-      alert("Failed to save leave type");
+      toast.error("Failed to save leave type");
     }
   };
 
@@ -550,7 +544,7 @@ function LeaveForm({ initial, onClose, onSaved }) {
 /* ---------- Integrations ---------- */
 
 function IntegrationsSection() {
-  const [drawerKey, setDrawerKey] = useState(null); // 'api' | 'sso' | 'device' | 'erp'
+  const [drawerKey, setDrawerKey] = useState(null);
 
   const closeDrawer = () => setDrawerKey(null);
 
@@ -895,9 +889,79 @@ function ErpForm({ onClose }) {
 /* ---------- Security ---------- */
 
 function SecuritySection() {
-  const [drawerKey, setDrawerKey] = useState(null); // 'roles' | 'auth' | 'network'
+  const [drawerKey, setDrawerKey] = useState(null);
+  const [authSettings, setAuthSettings] = useState(null); // null = not exists or not loaded
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAuthSettings = async () => {
+      try {
+        const res = await getAuthSettingsApi();
+        const data = res.data;
+
+        // Debug log
+        console.log("Auth settings API response:", data);
+
+        // Check if we got a real record with an id
+        if (data && typeof data === 'object' && data.id !== undefined) {
+          setAuthSettings(data);
+        } else {
+          setAuthSettings(null);
+        }
+      } catch (err) {
+        console.error("Failed to fetch auth settings:", err);
+        setAuthSettings(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAuthSettings();
+  }, []);
 
   const closeDrawer = () => setDrawerKey(null);
+
+  const saveAuthSettings = async (partialData) => {
+    try {
+      let result;
+      if (authSettings && authSettings.id !== undefined) {
+        // ✅ UPDATE
+        console.log("Updating auth settings with ID:", authSettings.id);
+        result = await updateAuthSettingsApi(partialData);
+        setAuthSettings(result.data.settings);
+      } else {
+        // ✅ CREATE
+        console.log("Creating new auth settings");
+        const fullPayload = {
+          min_password_length: 8,
+          require_uppercase: true,
+          require_lowercase: true,
+          require_number: true,
+          require_special: false,
+          otp_expiry_minutes: 10,
+          ip_restriction_enabled: false,
+          allowed_ips: [],
+          ...partialData,
+        };
+        result = await createAuthSettingsApi(fullPayload);
+        setAuthSettings(result.data.settings);
+      }
+      toast.success("Security settings saved successfully");
+      return true;
+    } catch (err) {
+      const errorMsg = err.response?.data?.error || "Failed to save security settings";
+      toast.error(errorMsg);
+      console.error("Save error:", err);
+      return false;
+    }
+  };
+
+  if (loading) {
+    return (
+      <Box sx={{ p: 3, display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <>
@@ -923,7 +987,7 @@ function SecuritySection() {
             <CardContent>
               <Typography variant="h6">Authentication</Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                MFA and password policy configuration.
+                Password policy and OTP configuration.
               </Typography>
             </CardContent>
             <CardActions sx={{ px: 2, pb: 2 }}>
@@ -939,7 +1003,7 @@ function SecuritySection() {
             <CardContent>
               <Typography variant="h6">Network & audit</Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                IP restrictions and audit logs.
+                IP restrictions.
               </Typography>
             </CardContent>
             <CardActions sx={{ px: 2, pb: 2 }}>
@@ -965,8 +1029,20 @@ function SecuritySection() {
         }
       >
         {drawerKey === 'roles' && <SecurityRolesForm onClose={closeDrawer} />}
-        {drawerKey === 'auth' && <SecurityAuthForm onClose={closeDrawer} />}
-        {drawerKey === 'network' && <SecurityNetworkForm onClose={closeDrawer} />}
+        {drawerKey === 'auth' && (
+          <SecurityAuthForm
+            current={authSettings}
+            onSave={saveAuthSettings}
+            onClose={closeDrawer}
+          />
+        )}
+        {drawerKey === 'network' && (
+          <SecurityNetworkForm
+            current={authSettings}
+            onSave={saveAuthSettings}
+            onClose={closeDrawer}
+          />
+        )}
       </RightDrawer>
     </>
   );
@@ -1009,44 +1085,104 @@ function SecurityRolesForm({ onClose }) {
   );
 }
 
-function SecurityAuthForm({ onClose }) {
-  const [mfaEnabled, setMfaEnabled] = useState(true);
-  const [expiryDays, setExpiryDays] = useState(90);
-  const [minLength, setMinLength] = useState(8);
+function SecurityAuthForm({ current, onSave, onClose }) {
+  const [minLength, setMinLength] = useState(current?.min_password_length ?? 8);
+  const [requireUppercase, setRequireUppercase] = useState(current?.require_uppercase ?? true);
+  const [requireLowercase, setRequireLowercase] = useState(current?.require_lowercase ?? true);
+  const [requireNumber, setRequireNumber] = useState(current?.require_number ?? true);
+  const [requireSpecial, setRequireSpecial] = useState(current?.require_special ?? false);
+  const [otpExpiryMinutes, setOtpExpiryMinutes] = useState(current?.otp_expiry_minutes ?? 10);
+  const [saving, setSaving] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log({ mfaEnabled, expiryDays, minLength });
-    onClose();
+    setSaving(true);
+
+    const payload = {
+      min_password_length: minLength,
+      require_uppercase: requireUppercase,
+      require_lowercase: requireLowercase,
+      require_number: requireNumber,
+      require_special: requireSpecial,
+      otp_expiry_minutes: otpExpiryMinutes,
+    };
+
+    const success = await onSave(payload);
+    setSaving(false);
+    if (success) {
+      onClose();
+    }
   };
 
   return (
     <Box component="form" onSubmit={handleSubmit}>
       <Stack spacing={2}>
+        <TextField
+          label="Minimum password length"
+          type="number"
+          inputProps={{ min: 6, max: 32 }}
+          value={minLength}
+          onChange={(e) => setMinLength(Math.min(32, Math.max(6, Number(e.target.value) || 6)))}
+          fullWidth
+          required
+        />
+
         <FormControlLabel
           control={
-            <Checkbox checked={mfaEnabled} onChange={(e) => setMfaEnabled(e.target.checked)} />
+            <Checkbox
+              checked={requireUppercase}
+              onChange={(e) => setRequireUppercase(e.target.checked)}
+            />
           }
-          label="Enable Multi‑Factor Authentication (MFA)"
+          label="Require uppercase letter (A–Z)"
         />
+
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={requireLowercase}
+              onChange={(e) => setRequireLowercase(e.target.checked)}
+            />
+          }
+          label="Require lowercase letter (a–z)"
+        />
+
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={requireNumber}
+              onChange={(e) => setRequireNumber(e.target.checked)}
+            />
+          }
+          label="Require number (0–9)"
+        />
+
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={requireSpecial}
+              onChange={(e) => setRequireSpecial(e.target.checked)}
+            />
+          }
+          label="Require special character (!@#$%^&*)"
+        />
+
         <TextField
-          label="Password expiry (days)"
+          label="OTP expiry (minutes)"
           type="number"
-          value={expiryDays}
-          onChange={(e) => setExpiryDays(Number(e.target.value))}
+          inputProps={{ min: 1, max: 30 }}
+          value={otpExpiryMinutes}
+          onChange={(e) =>
+            setOtpExpiryMinutes(Math.min(30, Math.max(1, Number(e.target.value) || 1)))
+          }
           fullWidth
+          required
         />
-        <TextField
-          label="Password minimum length"
-          type="number"
-          value={minLength}
-          onChange={(e) => setMinLength(Number(e.target.value))}
-          fullWidth
-        />
-        <Stack direction="row" spacing={1} justifyContent="flex-end">
+
+        <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ mt: 1 }}>
           <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="contained">
-            Save
+          <Button type="submit" variant="contained" disabled={saving}>
+            {saving ? <CircularProgress size={24} /> : 'Save'}
           </Button>
         </Stack>
       </Stack>
@@ -1054,15 +1190,34 @@ function SecurityAuthForm({ onClose }) {
   );
 }
 
-function SecurityNetworkForm({ onClose }) {
-  const [ipRestrictionEnabled, setIpRestrictionEnabled] = useState(false);
-  const [allowedIps, setAllowedIps] = useState('');
-  const [auditEnabled, setAuditEnabled] = useState(true);
+function SecurityNetworkForm({ current, onSave, onClose }) {
+  const [ipRestrictionEnabled, setIpRestrictionEnabled] = useState(
+    current?.ip_restriction_enabled ?? false
+  );
+  const [allowedIps, setAllowedIps] = useState(
+    Array.isArray(current?.allowed_ips) ? current.allowed_ips.join(', ') : ''
+  );
+  const [saving, setSaving] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log({ ipRestrictionEnabled, allowedIps, auditEnabled });
-    onClose();
+    setSaving(true);
+
+    const ipList = allowedIps
+      .split(',')
+      .map(ip => ip.trim())
+      .filter(ip => ip);
+
+    const payload = {
+      ip_restriction_enabled: ipRestrictionEnabled,
+      allowed_ips: ipList,
+    };
+
+    const success = await onSave(payload);
+    setSaving(false);
+    if (success) {
+      onClose();
+    }
   };
 
   return (
@@ -1075,11 +1230,13 @@ function SecurityNetworkForm({ onClose }) {
               onChange={(e) => setIpRestrictionEnabled(e.target.checked)}
             />
           }
-          label="Enable IP restrictions"
+          label="Enable IP address restrictions"
         />
+
         {ipRestrictionEnabled && (
           <TextField
-            label="Allowed IPs (comma separated)"
+            label="Allowed IP addresses"
+            helperText="Enter IPs separated by commas (e.g., 192.168.1.1, 203.0.113.0/24)"
             multiline
             minRows={3}
             value={allowedIps}
@@ -1087,19 +1244,11 @@ function SecurityNetworkForm({ onClose }) {
             fullWidth
           />
         )}
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={auditEnabled}
-              onChange={(e) => setAuditEnabled(e.target.checked)}
-            />
-          }
-          label="Enable detailed audit logs"
-        />
-        <Stack direction="row" spacing={1} justifyContent="flex-end">
+
+        <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ mt: 1 }}>
           <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="contained">
-            Save
+          <Button type="submit" variant="contained" disabled={saving}>
+            {saving ? <CircularProgress size={24} /> : 'Save'}
           </Button>
         </Stack>
       </Stack>

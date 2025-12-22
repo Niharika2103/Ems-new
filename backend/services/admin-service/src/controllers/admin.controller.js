@@ -5054,3 +5054,10 @@ export const getFreelancerAnalytics = async (req, res) => {
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
+export const fetchAuthSettings = async () => {
+  const { data } = await axios.get(
+    `${process.env.SETTINGS_SERVICE_URL}/api/settings/get`
+  );
+  return data;
+};

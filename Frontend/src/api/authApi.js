@@ -855,3 +855,15 @@ export const updateLeaveTypeApi = (id, data) =>
 // Enable / Disable leave type
 export const toggleLeaveTypeStatusApi = (id, isActive) =>
   adminClient.patch(`/admin/settings/leave-types/${id}/status`, { isActive });
+
+export const createAuthSettingsApi = (data) => {
+  return settingsClient.post(`${AUTH_API.SETTINGS}/settings/create`, data);
+};
+
+export const getAuthSettingsApi = () => {
+  return settingsClient.get(`${AUTH_API.SETTINGS}/settings/get`);
+};
+
+export const updateAuthSettingsApi = (data) => {
+  return settingsClient.post(`${AUTH_API.SETTINGS}/settings/update`, data);
+};
