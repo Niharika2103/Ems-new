@@ -42,15 +42,22 @@ const EmpInfoDashboard = () => {
     return "/";
   };
 
-  const getLetterPath = () => {
-    if (storedUser?.employment_type === "fulltime") {
-      return "/employee/letters";
-    }
-    if (role === "admin") {
-      return "/documents/admin/letters";
-    }
-    return "/";
-  };
+const getLetterPath = () => {
+  if (role === "admin") {
+    return "/documents/admin/letters";
+  }
+
+  if (role === "freelancer" || storedUser?.employment_type === "freelancer") {
+    return "/freelancer/letters";
+  }
+
+  if (role === "employee" || storedUser?.employment_type === "fulltime") {
+    return "/employee/letters";
+  }
+
+  return "/";
+};
+
 
   const getReferralspath = () => {
     if (storedUser?.employment_type === "fulltime") {

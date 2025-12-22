@@ -824,6 +824,7 @@ export default function ApplicationTrackingTable() {
             <option value="SCREENING">Screening</option>
             <option value="INTERVIEW">Interview</option>
             <option value="DECISION">Decision</option>
+              <option value="HIRED">Hired</option> 
           </select>
 
           <input
