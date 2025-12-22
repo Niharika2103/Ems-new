@@ -180,6 +180,20 @@ function AppRoutes() {
        </ProtectedRoute>
        }
        />
+        <Route path="/freelancer/letters" 
+        element={
+       <ProtectedRoute allowedRoles={["admin"]}>
+        <FreelancerLetterGenerator/>
+       </ProtectedRoute>
+       }
+       />
+        <Route path="/freelancer/applications"
+         element={
+       <ProtectedRoute allowedRoles={["admin"]}>
+        <FreelancerApplicationsTable/>
+       </ProtectedRoute>
+       }
+       />
         <Route path="dashboard/employee/leave" element={
           <ProtectedRoute allowedRoles={["employee"]}>
             <EmployeeLeave />
