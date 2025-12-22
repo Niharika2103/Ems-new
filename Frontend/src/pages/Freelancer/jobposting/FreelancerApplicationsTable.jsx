@@ -120,33 +120,18 @@ const generateMockData = () => {
   const statuses = ["APPLIED", "SCREENING", "INTERVIEW", "DECISION", "HIRED", "REJECTED"];
   
   const applications = [];
-<<<<<<< HEAD
   const startDate = new Date(2024, 0, 1);
   
   for (let i = 1; i <= 25; i++) {
     const status = statuses[Math.floor(Math.random() * statuses.length)];
     const appliedDate = new Date(startDate);
     appliedDate.setDate(startDate.getDate() + Math.floor(Math.random() * 180));
-=======
-  
-  for (let i = 1; i <= 25; i++) {
-    const status = statuses[Math.floor(Math.random() * statuses.length)];
-    
-    // FIXED: Generate dates within last 30 days (current period dates)
-    const today = new Date();
-    const appliedDate = new Date(today);
-    appliedDate.setDate(today.getDate() - Math.floor(Math.random() * 30)); // Only past dates
->>>>>>> af5dceaf2a4a9433ede06fe09c905382eefcfa3d
     
     applications.push({
       id: i,
       appId: `APP${1000 + i}`,
       candidateName: freelancerNames[Math.floor(Math.random() * freelancerNames.length)],
       jobTitle: jobTitles[Math.floor(Math.random() * jobTitles.length)],
-<<<<<<< HEAD
-=======
-      // This will give dates from today to 30 days ago
->>>>>>> af5dceaf2a4a9433ede06fe09c905382eefcfa3d
       appliedOn: formatDateTime(appliedDate),
       status: status,
       skills: skills[Math.floor(Math.random() * skills.length)],
@@ -267,22 +252,15 @@ const RescheduleInterviewDialog = ({
             </Typography>
           </Grid>
 
-<<<<<<< HEAD
-          {/* Interview date */}
-=======
           {/* Interview date - WITH RESTRICTIONS */}
->>>>>>> af5dceaf2a4a9433ede06fe09c905382eefcfa3d
           <Grid item xs={12} md={4}>
             <LocalizationProvider dateAdapter={AdapterDateFns}>
               <DatePicker
                 label="Interview Date *"
                 value={interviewDate}
                 onChange={(newValue) => setInterviewDate(newValue)}
-<<<<<<< HEAD
-=======
                 minDate={new Date()}
                 maxDate={new Date(new Date().setDate(new Date().getDate() + 30))} // Max 30 days in future
->>>>>>> af5dceaf2a4a9433ede06fe09c905382eefcfa3d
                 slotProps={{ textField: { fullWidth: true, required: true } }}
               />
             </LocalizationProvider>
@@ -409,12 +387,9 @@ export default function FreelancerApplicationsTable() {
       jobTitle: app.jobTitle,
       appliedOn: app.appliedOn,
       status: app.status,
-<<<<<<< HEAD
-=======
       skills: app.skills,
       experience: app.experience,
       location: app.location,
->>>>>>> af5dceaf2a4a9433ede06fe09c905382eefcfa3d
     }));
 
     setApplications(rows);
@@ -422,8 +397,6 @@ export default function FreelancerApplicationsTable() {
     
     const allMembers = mockPanels.flatMap((panel) => panel.members);
     setInterviewers(allMembers);
-<<<<<<< HEAD
-=======
     
     // Set default filter dates to current month
     const today = new Date();
@@ -435,7 +408,6 @@ export default function FreelancerApplicationsTable() {
       startDate: firstDay.toISOString().split('T')[0],
       endDate: lastDay.toISOString().split('T')[0]
     }));
->>>>>>> af5dceaf2a4a9433ede06fe09c905382eefcfa3d
   }, []);
 
   // ----------------- APPLY FILTERS -----------------
@@ -986,10 +958,7 @@ export default function FreelancerApplicationsTable() {
                     value={interviewDate}
                     onChange={setInterviewDate}
                     minDate={new Date()}
-<<<<<<< HEAD
-=======
                     maxDate={new Date(new Date().setDate(new Date().getDate() + 30))} // Max 30 days in future
->>>>>>> af5dceaf2a4a9433ede06fe09c905382eefcfa3d
                     renderInput={(params) => <TextField {...params} fullWidth />}
                     PopperProps={{
                       style: { zIndex: 99999 },
