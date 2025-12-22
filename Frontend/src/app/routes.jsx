@@ -515,7 +515,7 @@ function AppRoutes() {
           }
         />
         <Route
-          path="/attendance"
+          path="/dashboard/attendance"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <ProjectDashboard />
@@ -523,7 +523,7 @@ function AppRoutes() {
           }
         />
         <Route
-          path="/accounts"
+          path="/dashboard/accounts"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <AccountsDashboard />
