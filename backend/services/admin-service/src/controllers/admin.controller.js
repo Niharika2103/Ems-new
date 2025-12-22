@@ -1983,43 +1983,180 @@ export const generateLetter = async (req, res) => {
   }
 };
 
+
+// export const getEmployeeLetters = async (req, res) => {
+//   const client = await pool.connect();
+
+//   try {
+//     const { employeeId } = req.params;
+
+//     const result = await client.query(
+//       `SELECT document_url FROM user_employees_master WHERE id = $1`,
+//       [employeeId]
+//     );
+
+//     // ✅ Safely extract and normalize document_url
+//     let docs = result.rows[0]?.document_url;
+
+//     // If docs is not an array, treat as empty
+//     if (!Array.isArray(docs)) {
+//       docs = [];
+//     }
+
+//     const BASE_URL = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5002}`;
+
+//     const files = docs.map((file) => ({
+//       name: file,
+//       url: `${BASE_URL}/uploads/letters/${file}`,
+//     }));
+
+//     res.json({
+//       message: "Employee letters retrieved successfully",
+//       files,
+//     });
+//   } catch (err) {
+//     console.error("Get Employee Letters Error:", err);
+//     res.status(500).json({ error: err.message });
+//   } finally {
+//     client.release();
+//   }
+// };
+
 export const getEmployeeLetters = async (req, res) => {
   const client = await pool.connect();
 
   try {
     const { employeeId } = req.params;
 
+    // 1️⃣ Validate input
+    if (!employeeId) {
+      return res.status(400).json({
+        error: "Employee ID is required"
+      });
+    }
+
+    // 2️⃣ Fetch employee record
     const result = await client.query(
-      `SELECT document_url FROM user_employees_master WHERE id = $1`,
+      `SELECT document_url
+       FROM user_employees_master
+       WHERE id = $1`,
       [employeeId]
     );
 
-    // ✅ Safely extract and normalize document_url
-    let docs = result.rows[0]?.document_url;
-
-    // If docs is not an array, treat as empty
-    if (!Array.isArray(docs)) {
-      docs = [];
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        error: "Employee not found"
+      });
     }
 
-    const BASE_URL = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5002}`;
+    let docs = result.rows[0].document_url;
 
-    const files = docs.map((file) => ({
+    // 3️⃣ Normalize document_url safely
+    let letterFiles = [];
+
+    if (Array.isArray(docs)) {
+      // letters stored as array
+      letterFiles = docs;
+    } 
+    else if (docs && typeof docs === "object") {
+      // ignore non-letter documents
+      letterFiles = [];
+    }
+
+    // 4️⃣ Build URLs
+    const BASE_URL =
+      process.env.BASE_URL ||
+      `http://localhost:${process.env.PORT || 5002}`;
+
+    const files = letterFiles.map(file => ({
       name: file,
-      url: `${BASE_URL}/uploads/letters/${file}`,
+      url: `${BASE_URL}/uploads/letters/${file}`
     }));
 
-    res.json({
-      message: "Employee letters retrieved successfully",
-      files,
+    // 5️⃣ Success response
+    return res.status(200).json({
+      success: true,
+      total: files.length,
+      files
     });
+
   } catch (err) {
     console.error("Get Employee Letters Error:", err);
-    res.status(500).json({ error: err.message });
+    return res.status(500).json({
+      error: "Failed to fetch employee letters"
+    });
   } finally {
     client.release();
   }
 };
+
+
+export const downloadEmployeeLetter = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { employeeId, fileName } = req.params;
+
+    if (!employeeId || !fileName) {
+      return res.status(400).json({
+        error: "Employee ID and file name are required"
+      });
+    }
+
+    // 1️⃣ Verify employee + letter ownership
+    const result = await client.query(
+      `SELECT document_url
+       FROM user_employees_master
+       WHERE id = $1`,
+      [employeeId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        error: "Employee not found"
+      });
+    }
+
+    const docs = result.rows[0].document_url || [];
+
+    if (!Array.isArray(docs) || !docs.includes(fileName)) {
+      return res.status(403).json({
+        error: "You are not authorized to access this file"
+      });
+    }
+
+    // 2️⃣ File path
+    const filePath = path.join(
+      process.cwd(),
+      "src/uploads/letters",
+      fileName
+    );
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({
+        error: "File not found on server"
+      });
+    }
+
+    // 3️⃣ Send file for download
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${fileName}"`
+    );
+    res.setHeader("Content-Type", "application/pdf");
+
+    return res.sendFile(filePath);
+
+  } catch (err) {
+    console.error("Download Letter Error:", err);
+    return res.status(500).json({
+      error: "Failed to download letter"
+    });
+  } finally {
+    client.release();
+  }
+};
+
 
 export const documentUpload = upload.fields([
   { name: "passbook", maxCount: 1 },

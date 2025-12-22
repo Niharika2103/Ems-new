@@ -37,11 +37,11 @@ const FreelancerDashboard = () => {
     },
     {
       title: "Letters",
-      message: "Download your salary slips",
+      message: "Download your letters here",
       icon: MailOutlineIcon,
       iconBg: "bg-pink-100",
       iconColor: "text-pink-600",
-    //   onClick: () => navigate("/payslip"),
+      onClick: () => navigate("/freelancer/letters"),
     },
     // {
     //   title: "Probation",
