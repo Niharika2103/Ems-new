@@ -64,14 +64,7 @@ const FreelancerDashboard = () => {
     iconColor: "text-green-600",
     onClick: () => navigate("/dashboard/freelancer/freelancerreports"),
   },
-  {
-  title: " Freelancer JobPosting",
-  message: "Create and manage freelancer job postings",
-  icon: WorkIcon,
-  iconBg: "bg-purple-100",
-  iconColor: "text-purple-600",
-  onClick: () => navigate("/dashboard/freelancer/job-posting"),
-},
+ 
 
 ];
 
