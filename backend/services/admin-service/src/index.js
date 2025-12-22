@@ -26,6 +26,7 @@ app.use("/admin", adminRoutes);
 app.use("/admin", leavePolicyRoutes);
 // Test PostgreSQL connection on startup
 (async () => {
+  
   try {
     await pool.query("SELECT NOW()");
     console.log("✅ Connected to PostgreSQL successfully");

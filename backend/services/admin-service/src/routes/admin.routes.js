@@ -1,4 +1,6 @@
 import { Router } from "express";
+import webhookRoutes from "./webhook.routes.js";
+
 import {
   adminRegister,
   adminLogin,
@@ -27,6 +29,7 @@ import {
   getAuditLogs,
   generateLetter,
   getEmployeeLetters,
+  downloadEmployeeLetter,
   documentUpload,
   uploadEmployeeDocuments,
   getAllEmployeesWithDocs,
@@ -139,6 +142,8 @@ import { getEmployeeRoiReport } from "../controllers/employeeRoi.controller.js";
 
 
 const router = Router();
+router.use("/webhooks", webhookRoutes);
+
 
 /* ================= Admin Register/Login ================= */
 router.post("/register", adminRegister);
@@ -195,6 +200,9 @@ router.get("/attendance/pending-parental", getPendingParentalLeaves);
 /* ========== Letters ========== */
 router.post("/letters/generate", generateLetter);
 router.get("/letters/:employeeId", getEmployeeLetters);
+
+
+router.get("/letters/download/:employeeId/:fileName",downloadEmployeeLetter);
 router.delete("/letters/:employeeId/:filename", deleteLetter);
 router.post("/letters/send-email", sendLetterEmail);
 
