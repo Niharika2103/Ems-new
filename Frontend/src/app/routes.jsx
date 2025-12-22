@@ -101,6 +101,7 @@ import CommunicationInfoDashboard from "../pages/dashbaord/CommunicationInfoDash
 import EventWebhooks from "../pages/Templates/Webhook/EventWebhooks";
 import PanelistFeedback from "../pages/JobPosting/PanelistFeedback";
 import FreelancerLetterGenerator from "../pages/Freelancer/FreelancerLetterGenerator";
+import PayrollVendorManagementSystem from "../pages/Vendor/PayrollVendorManagementSystem";
 
 function AppRoutes() {
   return (
@@ -125,6 +126,7 @@ function AppRoutes() {
       <Route path="/attendance/timesheet" element={<Timesheet />} />
       <Route path="/vendor" element={<VendorFormSystem />} />
       <Route path="/moutemplate" element={<MoUGenerationSystem />} />
+      <Route path="/vendor/payroll" element={<PayrollVendorManagementSystem />} />
 
       <Route path='/dashboard/timesheet/monthly'
         element={
@@ -200,7 +202,7 @@ function AppRoutes() {
           }
         />
         <Route
-          path="/freelancer"
+          path="/dashboard/freelancer"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <FreelancerDashboard />
@@ -308,7 +310,7 @@ function AppRoutes() {
           } />
 
         <Route
-          path="/emp_attendance"
+          path="/dashboard/emp_attendance"
           element={
             <ProtectedRoute allowedRoles={["employee", "admin"]}>
               <EmpAttendanceDashboard />
@@ -494,7 +496,7 @@ function AppRoutes() {
           }
         />
         <Route
-          path="/attendance"
+          path="/dashboard/attendance"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <ProjectDashboard />
@@ -502,7 +504,7 @@ function AppRoutes() {
           }
         />
         <Route
-          path="/accounts"
+          path="/dashboard/accounts"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <AccountsDashboard />
