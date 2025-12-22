@@ -8,7 +8,6 @@ dotenv.config();
 const app = express();
 app.use(cors({
   origin: "*" // your Vercel frontend domain
-  
 }));
 app.use('/uploads', express.static(path.resolve('./src/uploads')));
 app.use(express.json());
