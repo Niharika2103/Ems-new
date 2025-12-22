@@ -1,4 +1,6 @@
 import { Router } from "express";
+import webhookRoutes from "./webhook.routes.js";
+
 import {
   adminRegister,
   adminLogin,
@@ -27,6 +29,7 @@ import {
   getAuditLogs,
   generateLetter,
   getEmployeeLetters,
+  downloadEmployeeLetter,
   documentUpload,
   uploadEmployeeDocuments,
   getAllEmployeesWithDocs,
@@ -41,6 +44,7 @@ import {
   scheduleInterviewReferral,
   rescheduleInterviewReferral,
   getAllInterviewsWithDetails,
+  getMyInterviews,
   addPanelFeedback,
   getPanelFeedback,
   // === EXTRA AUDIT LOG CONTROLLERS ===
@@ -78,8 +82,6 @@ import {
   getDepartmentWisePayroll,
   getMonthlyPayrollSummary,
   getPayrollTrend,
-  getPayrollTrend3Months,
-  getPayrollTrend12Months,
   getFreelancerAnalytics
  
 } from "../controllers/admin.controller.js";
@@ -139,6 +141,8 @@ import { getEmployeeRoiReport } from "../controllers/employeeRoi.controller.js";
 
 
 const router = Router();
+router.use("/webhooks", webhookRoutes);
+
 
 /* ================= Admin Register/Login ================= */
 router.post("/register", adminRegister);
@@ -195,6 +199,9 @@ router.get("/attendance/pending-parental", getPendingParentalLeaves);
 /* ========== Letters ========== */
 router.post("/letters/generate", generateLetter);
 router.get("/letters/:employeeId", getEmployeeLetters);
+
+
+router.get("/letters/download/:employeeId/:fileName",downloadEmployeeLetter);
 router.delete("/letters/:employeeId/:filename", deleteLetter);
 router.post("/letters/send-email", sendLetterEmail);
 
@@ -233,6 +240,7 @@ router.get(
   "/interviews/all",
   getAllInterviewsWithDetails
 );
+router.get("/my-interviews", getMyInterviews);
 
 router.post(
   "/interviews/:interview_id/feedback",
@@ -335,13 +343,13 @@ router.get("/performance/all", fetchAllReviews);
 
 router.get("/performance/final-ratings", getFinalRatingsForEmployees);
 
-//payroll analytics
+//payroll analytic
 router.get("/payroll/summary", getMonthlyPayrollSummary);
 
 router.get("/payroll/department-wise", getDepartmentWisePayroll);
 router.get("/payroll/trend", getPayrollTrend);
-router.get("/payroll/trend/3-months", getPayrollTrend3Months);
-router.get("/payroll/trend/12-months", getPayrollTrend12Months);
+
+
 
 router.get("/freelancers/analytics", getFreelancerAnalytics);
 

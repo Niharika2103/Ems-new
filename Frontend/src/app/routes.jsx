@@ -102,6 +102,7 @@ import EventWebhooks from "../pages/Templates/Webhook/EventWebhooks";
 import FreelancerJobPostDashboard from "../pages/Freelancer/jobposting/FreelancerJobPostDashboard";
 import PanelistFeedback from "../pages/JobPosting/PanelistFeedback";
 import FreelancerApplicationsTable from "../pages/Freelancer/jobposting/FreelancerApplicationsTable";
+import FreelancerLetterGenerator from "../pages/Freelancer/FreelancerLetterGenerator";
 
 function AppRoutes() {
   return (
@@ -159,7 +160,14 @@ function AppRoutes() {
               <EmpTypeFreelancerDashboard />
             </ProtectedRoute>
           }
-
+        />
+         <Route
+          path="/freelancer/letters"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <FreelancerLetterGenerator />
+            </ProtectedRoute>
+          }
         />
         <Route path="/payslip" element={
           <ProtectedRoute allowedRoles={["employee"]}>
@@ -169,6 +177,20 @@ function AppRoutes() {
        <Route path="/admin/freelancer-documents" element={
        <ProtectedRoute allowedRoles={["admin"]}>
         <AdminVerificationTabs/>
+       </ProtectedRoute>
+       }
+       />
+        <Route path="/freelancer/letters" 
+        element={
+       <ProtectedRoute allowedRoles={["admin"]}>
+        <FreelancerLetterGenerator/>
+       </ProtectedRoute>
+       }
+       />
+        <Route path="/freelancer/applications"
+         element={
+       <ProtectedRoute allowedRoles={["admin"]}>
+        <FreelancerApplicationsTable/>
        </ProtectedRoute>
        }
        />
