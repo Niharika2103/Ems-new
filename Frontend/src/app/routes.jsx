@@ -178,13 +178,13 @@ function AppRoutes() {
        </ProtectedRoute>
        }
        />
-        <Route path="/freelancer/letters" 
+        {/* <Route path="/freelancer/letters" 
         element={
-       <ProtectedRoute allowedRoles={["admin"]}>
+       <ProtectedRoute allowedRoles={["employee"]}>
         <FreelancerLetterGenerator/>
        </ProtectedRoute>
        }
-       />
+       /> */}
        
         <Route path="dashboard/employee/leave" element={
           <ProtectedRoute allowedRoles={["employee"]}>

@@ -1765,3 +1765,9 @@ export const submitSelfReview = async (req, res) => {
   }
 };
 
+export const fetchAuthSettings = async () => {
+  const { data } = await axios.get(
+    `${process.env.SETTINGS_SERVICE_URL}/api/settings/get`
+  );
+  return data;
+};

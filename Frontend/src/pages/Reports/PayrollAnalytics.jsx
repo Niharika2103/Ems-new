@@ -17,8 +17,7 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Chip,
-  TablePagination,
+  Alert,
   CircularProgress,
 } from "@mui/material";
 
@@ -26,15 +25,11 @@ import {
   Refresh as RefreshIcon,
   Download as DownloadIcon,
   FilterAlt as FilterIcon,
-  TrendingUp as TrendingUpIcon,
 } from "@mui/icons-material";
 
 import {
   getMonthlyPayrollSummaryApi,
-  getDepartmentWisePayrollApi,
   getPayrollTrendApi,
-  getPayrollTrend3Api,
-  getPayrollTrend12Api,
 } from "../../api/authApi";
 
 const monthMap = {
@@ -52,92 +47,70 @@ const monthMap = {
   December: "12",
 };
 
-const toTitle = (str = "") =>
-  str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+const monthNames = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
+
+const formatMonthYear = (month, year) => {
+  const name = monthNames[parseInt(month, 10) - 1] || `Month ${month}`;
+  return `${name} ${year}`;
+};
 
 const PayrollAnalytics = () => {
   const [period, setPeriod] = useState("current");
   const [year, setYear] = useState("2025");
-  const [month, setMonth] = useState("January");
-  const [department, setDepartment] = useState("All");
+  const [month, setMonth] = useState("December");
 
-  const [metrics, setMetrics] = useState([]);
-  const [payrollData, setPayrollData] = useState([]);
-
+  const [currentMetrics, setCurrentMetrics] = useState(null);
+  const [hasCurrentPayroll, setHasCurrentPayroll] = useState(true);
   const [trendData, setTrendData] = useState([]);
-  const [trend3Months, setTrend3Months] = useState([]);
-  const [trend12Months, setTrend12Months] = useState([]);
-
   const [loading, setLoading] = useState(false);
 
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
-
-  const handlePeriodChange = (value) => {
-    setPeriod(value);
-
-    if (value === "current") {
-      setMonth("January");
-    }
-    if (value === "year") {
-      setMonth("January");
-    }
-    if (value === "last") {
-      setMonth("December");
-    }
+  const getTrendLimit = () => {
+    if (period === "quarter") return 3;
+    if (period === "year") return 12;
+    return 6;
   };
 
   const loadData = async () => {
     try {
       setLoading(true);
 
-      // FIX: Use raw "03" instead of converting to 3
-      const monthNumber = monthMap[month];
+      // ✅ Only load current month payroll if period is "current"
+      if (period === "current") {
+        const monthNumber = monthMap[month];
+        if (!monthNumber) {
+          throw new Error("Invalid month");
+        }
 
-      // Summary
-      const summary = await getMonthlyPayrollSummaryApi(monthNumber, year);
-      const s = summary.data;
+        let currentData = null;
+        let payrollExists = true;
 
-      setMetrics([
-        { label: "Total Monthly Payroll", value: `$${s.totalGross}`, change: "+2.1%" },
-        {
-          label: "Avg Salary",
-          value:
-            s.totalEmployees > 0
-              ? `$${Math.round(s.totalNet / s.totalEmployees)}`
-              : "$0",
-          change: "+1.8%",
-        },
-        { label: "Overtime Cost", value: `$${s.totalDeductions}`, change: "-5.2%" },
-        { label: "Tax Compliance", value: "100%", change: "0%" },
-      ]);
+        try {
+          const summaryRes = await getMonthlyPayrollSummaryApi(monthNumber, year);
+          currentData = summaryRes.data;
+        } catch (summaryErr) {
+          if (summaryErr.response?.status === 404) {
+            payrollExists = false;
+            currentData = null;
+          } else {
+            throw summaryErr;
+          }
+        }
 
-      // Department Wise Payroll
-      const deptRes = await getDepartmentWisePayrollApi(monthNumber, year);
-      const deptData = deptRes.data.departmentPayroll || [];
+        setCurrentMetrics(currentData);
+        setHasCurrentPayroll(payrollExists);
+      } else {
+        // ✅ In trend mode: reset current metrics
+        setCurrentMetrics(null);
+        setHasCurrentPayroll(true); // not used, but clean
+      }
 
-      const formatted = deptData.map((d) => {
-        const deptName = d.department ? d.department.trim() : "Unknown"; // FIX
-        return {
-          departmentKey: deptName.toLowerCase(),
-          department: toTitle(deptName),
-          payroll: `$${d.total_gross}`,
-          variance: "+0%",
-          headcount: d.total_employees,
-        };
-      });
-
-      setPayrollData(formatted);
-
-      // Trend APIs
-      const trendRes = await getPayrollTrendApi(6);
-      setTrendData(trendRes.data.trend);
-
-      const t3 = await getPayrollTrend3Api();
-      setTrend3Months(t3.data.trend);
-
-      const t12 = await getPayrollTrend12Api();
-      setTrend12Months(t12.data.trend);
+      // ✅ Always load trend data
+      const limit = getTrendLimit();
+      const trendRes = await getPayrollTrendApi(limit);
+      setTrendData(trendRes.data.trend || []);
 
       setLoading(false);
     } catch (err) {
@@ -148,31 +121,30 @@ const PayrollAnalytics = () => {
 
   useEffect(() => {
     loadData();
-  }, [month, year]);
+  }, [month, year, period]);
 
-  const filteredData =
-    department === "All"
-      ? payrollData
-      : payrollData.filter(
-          (d) => d.departmentKey === department.trim().toLowerCase()
-        );
+  const handlePeriodChange = (value) => {
+    setPeriod(value);
+  };
 
-  const paginatedData = filteredData.slice(
-    page * rowsPerPage,
-    page * rowsPerPage + rowsPerPage
-  );
+  const avgSalary = currentMetrics?.totalEmployees > 0
+    ? Math.round(currentMetrics.totalNet / currentMetrics.totalEmployees)
+    : 0;
 
   return (
     <Box>
       {/* HEADER */}
       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
         <Typography variant="h4">Payroll Analytics</Typography>
-
         <Box sx={{ display: "flex", gap: 1 }}>
           <Button variant="outlined" startIcon={<FilterIcon />}>
             Filter
           </Button>
-          <Button variant="outlined" startIcon={<RefreshIcon />} onClick={loadData}>
+          <Button
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={loadData}
+          >
             Refresh
           </Button>
           <Button variant="contained" startIcon={<DownloadIcon />}>
@@ -187,35 +159,65 @@ const PayrollAnalytics = () => {
         </Box>
       ) : (
         <>
-          {/* METRICS */}
-          <Grid container spacing={3} sx={{ mb: 3 }}>
-            {metrics.map((metric, i) => (
-              <Grid item xs={12} sm={6} md={3} key={i}>
-                <Card>
-                  <CardContent>
-                    <Typography color="text.secondary">{metric.label}</Typography>
-                    <Typography variant="h5">{metric.value}</Typography>
-                    <Box sx={{ display: "flex", alignItems: "center", mt: 1 }}>
-                      <TrendingUpIcon sx={{ color: "success.main", mr: 0.5 }} />
-                      <Typography variant="body2" color="success.main">
-                        {metric.change} from last month
-                      </Typography>
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
+          {/* === METRICS SECTION: ONLY FOR "current" period === */}
+          {period === "current" && (
+            <>
+              {!hasCurrentPayroll ? (
+                <Alert severity="info" sx={{ mb: 4 }}>
+                  Payroll has not been generated yet for <strong>{month} {year}</strong>. 
+                  It will be available after the month ends and payroll processing is complete.
+                </Alert>
+              ) : currentMetrics ? (
+                <Grid container spacing={3} sx={{ mb: 4 }}>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Card>
+                      <CardContent>
+                        <Typography color="text.secondary">Total Gross</Typography>
+                        <Typography variant="h5">${currentMetrics.totalGross.toLocaleString()}</Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Card>
+                      <CardContent>
+                        <Typography color="text.secondary">Total Net</Typography>
+                        <Typography variant="h5">${currentMetrics.totalNet.toLocaleString()}</Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Card>
+                      <CardContent>
+                        <Typography color="text.secondary">Avg Salary</Typography>
+                        <Typography variant="h5">${avgSalary.toLocaleString()}</Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Card>
+                      <CardContent>
+                        <Typography color="text.secondary">Employees</Typography>
+                        <Typography variant="h5">{currentMetrics.totalEmployees}</Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                </Grid>
+              ) : (
+                <Alert severity="error" sx={{ mb: 4 }}>
+                  Failed to load payroll data for {month} {year}.
+                </Alert>
+              )}
+            </>
+          )}
 
           {/* FILTERS */}
-          <Box sx={{ display: "flex", gap: 2, mb: 3, flexWrap: "wrap" }}>
+          <Box sx={{ display: "flex", gap: 2, mb: 4, flexWrap: "wrap" }}>
             <FormControl size="small" sx={{ minWidth: 160 }}>
               <InputLabel>Period</InputLabel>
               <Select value={period} onChange={(e) => handlePeriodChange(e.target.value)}>
                 <MenuItem value="current">Current Month</MenuItem>
-                <MenuItem value="last">Last Month</MenuItem>
-                <MenuItem value="quarter">This Quarter</MenuItem>
-                <MenuItem value="year">This Year</MenuItem>
+                <MenuItem value="quarter">Last 3 Months</MenuItem>
+                <MenuItem value="year">Last 12 Months</MenuItem>
               </Select>
             </FormControl>
 
@@ -230,7 +232,12 @@ const PayrollAnalytics = () => {
 
             <FormControl size="small" sx={{ minWidth: 140 }}>
               <InputLabel>Month</InputLabel>
-              <Select value={month} onChange={(e) => setMonth(e.target.value)}>
+              <Select
+                value={month}
+                onChange={(e) => setMonth(e.target.value)}
+                // Optional: disable month selection in trend mode
+                // disabled={period !== "current"}
+              >
                 {Object.keys(monthMap).map((m) => (
                   <MenuItem key={m} value={m}>
                     {m}
@@ -238,73 +245,47 @@ const PayrollAnalytics = () => {
                 ))}
               </Select>
             </FormControl>
-
-            <FormControl size="small" sx={{ minWidth: 180 }}>
-              <InputLabel>Department</InputLabel>
-              <Select
-                value={department}
-                onChange={(e) => setDepartment(e.target.value)}
-              >
-                <MenuItem value="All">All</MenuItem>
-
-                {payrollData.map((d) => (
-                  <MenuItem key={d.departmentKey} value={d.departmentKey}>
-                    {d.department}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
           </Box>
 
-          {/* TABLE */}
+          {/* TREND TABLE — always shown */}
           <Card>
             <CardContent>
               <Typography variant="h6" gutterBottom>
-                Payroll by Department
+                Payroll Trend ({trendData.length} Months)
               </Typography>
 
-              <TableContainer component={Paper}>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Department</TableCell>
-                      <TableCell align="right">Payroll</TableCell>
-                      <TableCell align="right">Variance</TableCell>
-                      <TableCell align="right">Headcount</TableCell>
-                    </TableRow>
-                  </TableHead>
-
-                  <TableBody>
-                    {paginatedData.map((row, i) => (
-                      <TableRow key={i}>
-                        <TableCell>{row.department}</TableCell>
-                        <TableCell align="right">{row.payroll}</TableCell>
-                        <TableCell align="right">
-                          <Chip
-                            label={row.variance}
-                            color={row.variance.startsWith("+") ? "success" : "error"}
-                            size="small"
-                          />
-                        </TableCell>
-                        <TableCell align="right">{row.headcount}</TableCell>
+              {trendData.length === 0 ? (
+                <Typography color="text.secondary">
+                  No completed payroll records found.
+                </Typography>
+              ) : (
+                <TableContainer component={Paper} sx={{ mt: 2 }}>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: "bold" }}>Period</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: "bold" }}>Employees</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: "bold" }}>Gross Payroll</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: "bold" }}>Net Payroll</TableCell>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </TableContainer>
-
-              <TablePagination
-                component="div"
-                count={filteredData.length}
-                page={page}
-                onPageChange={(e, newPage) => setPage(newPage)}
-                rowsPerPage={rowsPerPage}
-                onRowsPerPageChange={(e) => {
-                  setRowsPerPage(parseInt(e.target.value, 10));
-                  setPage(0);
-                }}
-                rowsPerPageOptions={[5, 10, 20]}
-              />
+                    </TableHead>
+                    <TableBody>
+                      {trendData.map((row, index) => (
+                        <TableRow key={index} sx={{ '& td': { py: 1.5 } }}>
+                          <TableCell>{formatMonthYear(row.month, row.year)}</TableCell>
+                          <TableCell align="right">{row.total_employees}</TableCell>
+                          <TableCell align="right">
+                            ${Number(row.total_gross).toLocaleString()}
+                          </TableCell>
+                          <TableCell align="right">
+                            ${Number(row.total_net).toLocaleString()}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
             </CardContent>
           </Card>
         </>

@@ -4,12 +4,15 @@ import dotenv from "dotenv";
 import path from "path";
 import systemSettingsRoutes from "./routes/branding.routes.js";
 import whatsappTemplateRoutes from "./routes/whatsappTemplate.route.js";
+import authSettingsRoutes from "./routes/authSettings.routes.js";
 dotenv.config();
 
 const app = express();
 
 app.use(cors({ origin: "*" }));
 app.use(express.json());
+
+app.use("/api", authSettingsRoutes);
 
 app.use("/api", systemSettingsRoutes);
 app.use("/api/whatsapp",whatsappTemplateRoutes)
