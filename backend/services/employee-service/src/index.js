@@ -8,7 +8,6 @@ dotenv.config();
 const app = express();
 app.use(cors({
   origin: "*" // your Vercel frontend domain
-  
 }));
 app.use('/uploads', express.static(path.resolve('./src/uploads')));
 app.use(express.json());
@@ -22,5 +21,5 @@ app.get("/test-email", async (req, res) => {
 });
 app.use("/employee", employeeRoutes);
 
-const PORT = process.env.PORT || 5009;
+const PORT = process.env.PORT || 5004;
 app.listen(PORT, () => console.log(`✅ Employee service running on port ${PORT}`));

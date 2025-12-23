@@ -102,7 +102,7 @@ const Sidebar = ({ isOpen, handleClose }) => {
       { name: "Manage Admins", icon: <Users size={20} />, path: "/manage-admins" },
       { name: "System Config", icon: <Settings size={20} />, path: "/system-config" },
       { name: "Audit Logs", icon: <CheckSquare size={20} />, path: "/audit-logs" },
-      { name: "Accounts", icon: <Calendar size={20} />, path: "/accounts" },
+      { name: "Accounts", icon: <Calendar size={20} />, path: "/dashboard/accounts" },
       { name: "Reports", icon: <BarChart3 size={20} />, path: "/reports" },
       { name: "Settings", icon: <Settings size={20} />, path: "/settings" },
     ],
