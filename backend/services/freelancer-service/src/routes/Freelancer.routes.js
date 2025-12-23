@@ -9,6 +9,7 @@ import {
   approveFreelancer,
   rejectFreelancer,
   // getFreelancerDocs,
+  
 } from "../controllers/Freelancer.controller.js";
 import { getFreelancerLetters } from "../../../admin-service/src/controllers/admin.controller.js";
 const router = express.Router();
@@ -45,4 +46,6 @@ router.get("/letters/:employeeId", getFreelancerLetters);
 
 
 
+import { getFreelancerLetters } from "../../../admin-service/src/controllers/admin.controller.js";
+router.get("/letters/:employeeId", getFreelancerLetters);
 export default router;
