@@ -9,7 +9,7 @@ import path from "path";
 import fs from "fs";
 
 import axios from "axios";
-
+import { getBrandingForContext } from "../utils/brandingHelper.js";
 import { loadTemplate } from "../utils/templateLoader.js";
 // import pdf from "html-pdf";
 
@@ -777,77 +777,148 @@ export const updateAdminProfile = async (req, res) => {
  * POST /api/admin/grant-temp
  * Body: { email, durationHours }
  */
+// export const grantTempAdminAccess = async (req, res) => {
+//   const client = await pool.connect();
+//   try {
+//     const { email, durationHours = 24 } = req.body;
+
+//     if (!email) {
+//       return res.status(400).json({ error: "Employee email is required" });
+//     }
+
+//     // ✅ Find employee
+//     const userQuery = `
+//       SELECT * FROM ${USER_MASTER_TABLE}
+//       WHERE email = $1 AND role = 'employee'
+//     `;
+//     const userResult = await client.query(userQuery, [email]);
+//     if (userResult.rows.length === 0) {
+//       return res.status(404).json({ error: "Employee not found" });
+//     }
+//     const user = userResult.rows[0];
+
+//     // ✅ Get registration record
+//     const regQuery = `
+//       SELECT is_temp_admin, temp_admin_expiry 
+//       FROM ${REGISTRATIONS_TABLE} 
+//       WHERE user_id = $1
+//     `;
+//     const regResult = await client.query(regQuery, [user.id]);
+//     const reg = regResult.rows[0];
+
+//     // ✅ Already active temporary admin check
+//     if (reg?.is_temp_admin && new Date(reg.temp_admin_expiry) > new Date()) {
+//       return res.status(400).json({
+//         error: `Employee already has temporary admin access until ${new Date(
+//           reg.temp_admin_expiry
+//         ).toLocaleString()}.`,
+//       });
+//     }
+
+//     const expiry = new Date(Date.now() + durationHours * 60 * 60 * 1000);
+
+//     // ✅ Update registration record
+//     const updateQuery = `
+//       UPDATE ${REGISTRATIONS_TABLE}
+//       SET is_temp_admin = true, is_approved = true, temp_admin_expiry = $1
+//       WHERE user_id = $2
+//     `;
+//     await client.query(updateQuery, [expiry, user.id]);
+
+//     // ✅ Send email notification
+//     try {
+//       await sendEmail(
+//         user.email,
+//         "Temporary Admin Access Granted",
+//         `
+//           <p>Hello ${user.name},</p>
+//           <p>You have been granted temporary admin access until ${expiry.toLocaleString()}.</p>
+//           <p>Please use this privilege responsibly.</p>
+//         `
+//       );
+//     } catch (emailErr) {
+//       console.warn("Failed to send email notification:", emailErr.message);
+//     }
+
+//     res.status(200).json({
+//       message: `Temporary admin access granted to ${user.name} until ${expiry.toLocaleString()}.`,
+//       employee: {
+//         id: user.id,
+//         name: user.name,
+//         email: user.email,
+//         temp_admin_expiry: expiry,
+//       },
+//     });
+//   } catch (err) {
+//     console.error("Grant Temp Admin Error:", err.message);
+//     res.status(500).json({ error: err.message });
+//   } finally {
+//     client.release();
+//   }
+// };
+
+
 export const grantTempAdminAccess = async (req, res) => {
   const client = await pool.connect();
   try {
     const { email, durationHours = 24 } = req.body;
-
     if (!email) {
       return res.status(400).json({ error: "Employee email is required" });
     }
 
-    // ✅ Find employee
-    const userQuery = `
-      SELECT * FROM ${USER_MASTER_TABLE}
-      WHERE email = $1 AND role = 'employee'
-    `;
-    const userResult = await client.query(userQuery, [email]);
+    const userResult = await client.query(
+      `SELECT * FROM ${USER_MASTER_TABLE} WHERE email = $1 AND role = 'employee'`,
+      [email]
+    );
     if (userResult.rows.length === 0) {
       return res.status(404).json({ error: "Employee not found" });
     }
     const user = userResult.rows[0];
 
-    // ✅ Get registration record
-    const regQuery = `
-      SELECT is_temp_admin, temp_admin_expiry 
-      FROM ${REGISTRATIONS_TABLE} 
-      WHERE user_id = $1
-    `;
-    const regResult = await client.query(regQuery, [user.id]);
+    const regResult = await client.query(
+      `SELECT is_temp_admin, temp_admin_expiry FROM ${REGISTRATIONS_TABLE} WHERE user_id = $1`,
+      [user.id]
+    );
     const reg = regResult.rows[0];
 
-    // ✅ Already active temporary admin check
     if (reg?.is_temp_admin && new Date(reg.temp_admin_expiry) > new Date()) {
       return res.status(400).json({
-        error: `Employee already has temporary admin access until ${new Date(
-          reg.temp_admin_expiry
-        ).toLocaleString()}.`,
+        error: `Employee already has temporary admin access until ${new Date(reg.temp_admin_expiry).toLocaleString()}.`,
       });
     }
 
     const expiry = new Date(Date.now() + durationHours * 60 * 60 * 1000);
+    await client.query(
+      `UPDATE ${REGISTRATIONS_TABLE} SET is_temp_admin = true, is_approved = true, temp_admin_expiry = $1 WHERE user_id = $2`,
+      [expiry, user.id]
+    );
 
-    // ✅ Update registration record
-    const updateQuery = `
-      UPDATE ${REGISTRATIONS_TABLE}
-      SET is_temp_admin = true, is_approved = true, temp_admin_expiry = $1
-      WHERE user_id = $2
-    `;
-    await client.query(updateQuery, [expiry, user.id]);
+    // ✅ Get branding for EMAIL
+    const branding = await getBrandingForContext("email");
 
-    // ✅ Send email notification
+    let emailBody = `<p>Hello ${user.name},</p>
+      <p>You have been granted temporary admin access until ${expiry.toLocaleString()}.</p>
+      <p>Please use this privilege responsibly.</p>`;
+
+    if (branding) {
+      emailBody = `
+        <div style="text-align:center; margin-bottom:20px;">
+          ${branding.logoUrl ? `<img src="${branding.logoUrl}" style="max-height:60px;">` : ''}
+          <p style="color:${branding.primaryColor}; margin-top:8px;">${branding.companyName}</p>
+        </div>
+        ${emailBody}
+      `;
+    }
+
     try {
-      await sendEmail(
-        user.email,
-        "Temporary Admin Access Granted",
-        `
-          <p>Hello ${user.name},</p>
-          <p>You have been granted temporary admin access until ${expiry.toLocaleString()}.</p>
-          <p>Please use this privilege responsibly.</p>
-        `
-      );
+      await sendEmail(user.email, "Temporary Admin Access Granted", emailBody);
     } catch (emailErr) {
       console.warn("Failed to send email notification:", emailErr.message);
     }
 
     res.status(200).json({
       message: `Temporary admin access granted to ${user.name} until ${expiry.toLocaleString()}.`,
-      employee: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        temp_admin_expiry: expiry,
-      },
+      employee: { id: user.id, name: user.name, email: user.email, temp_admin_expiry: expiry },
     });
   } catch (err) {
     console.error("Grant Temp Admin Error:", err.message);
@@ -1758,10 +1829,7 @@ export const getAuditLogs = async (req, res) => {
     client.release();
   }
 };
-
-
-
-// Template mapping
+// Template mapping (already exists in your file)
 const templateFileMap = {
   "Offer Letter": "offerLetter.html",
   "Appointment Letter": "appointmentLetter.html",
@@ -1771,9 +1839,8 @@ const templateFileMap = {
   "Promotion Letter": "promotionLetter.html",
   "Salary Increment Letter": "salaryIncrementLetter.html",
   "Warning Letter": "warningLetter.html",
-  "freelancer contract":"freelancerContract.html" ,
-  "invoice Template":"invoiceTemplate.html",
-
+  "freelancer contract": "freelancerContract.html",
+  "invoice Template": "invoiceTemplate.html",
 };
 
 // Replace {{placeholders}}
@@ -1787,57 +1854,359 @@ async function generatePDF(htmlContent, outputPath) {
     headless: "new",
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
-
   const page = await browser.newPage();
   await page.setContent(htmlContent, { waitUntil: "networkidle0" });
-
-  await page.pdf({
-    path: outputPath,
-    format: "A4",
-    printBackground: true,
-  });
-
+  await page.pdf({ path: outputPath, format: "A4", printBackground: true });
   await browser.close();
 }
 
-// MAIN API
+// ✅ FULLY UPDATED generateLetter
 export const generateLetter = async (req, res) => {
   const client = await pool.connect();
-
   try {
     const { employeeId, letterType } = req.body;
-
     if (!employeeId || !letterType) {
       return res.status(400).json({ error: "employeeId and letterType are required" });
     }
-
-    // Fetch employee
     const empResult = await client.query(
       `SELECT * FROM user_employees_master WHERE id = $1`,
       [employeeId]
     );
     const emp = empResult.rows[0];
-
     if (!emp) return res.status(404).json({ error: "Employee not found" });
-
-    // Fetch latest salary record
     const salResult = await client.query(
       `SELECT * FROM salary_structure WHERE employee_id = $1 ORDER BY created_at DESC LIMIT 1`,
       [employeeId]
     );
     const sal = salResult.rows[0] || {};
 
-    // Select template file
+    // ✅ GET BRANDING (this was missing!)
+    const branding = await getBrandingForContext("letters");
+
     const selectedTemplate = templateFileMap[letterType];
     if (!selectedTemplate)
       return res.status(400).json({ error: "Invalid letter type selected" });
-
     const templateContent = loadTemplate(selectedTemplate);
     if (!templateContent) {
       return res.status(500).json({ error: "Template file missing" });
     }
 
-    // Prepare placeholder data
+    // ✅ Inject company_name from branding or fallback
+    const data = {
+      name: emp.name,
+      designation: emp.designation,
+      department: emp.department,
+      employee_code: emp.employee_id,
+      address: emp.address,
+      permanent_address: emp.permanent_address,
+      date_of_joining: emp.date_of_joining,
+      effective_from: sal.effective_from,
+      effective_to: sal.effective_to,
+      location: sal.location,
+      basic_pay: sal.basic_pay,
+      hra: sal.hra,
+      special_allowance: sal.special_allowance,
+      other_allowances: sal.other_allowances,
+      gross_salary: sal.gross_salary,
+      net_salary: sal.net_salary,
+      pan_number: sal.pan_number,
+      bank_name: sal.bank_name,
+      ifsc_code: sal.ifsc_code,
+      account_number: sal.account_number,
+      company_name: branding?.companyName || "Zigma People Private Limited (An AI India Venture)",
+      ctc: sal.gross_salary,
+    };
+
+    let filledHTML = fillTemplate(templateContent, data);
+
+    // ✅ INJECT LOGO + HEADER (this was missing!)
+    if (branding) {
+      const logoHtml = branding.logoUrl
+        ? `<img src="${branding.logoUrl}" style="max-height:60px; margin-bottom:10px;" />`
+        : "";
+      const headerHtml = `
+        <div style="text-align:center; margin-bottom:20px;">
+          ${logoHtml}
+          <h2 style="color:${branding.primaryColor || '#000'}; text-decoration:underline;">
+            ${letterType.toUpperCase()}
+          </h2>
+        </div>
+      `;
+      filledHTML = filledHTML.replace('<h2>LETTER_HEADER_PLACEHOLDER</h2>', headerHtml);
+    } else {
+      // Fallback if branding is disabled
+      filledHTML = filledHTML.replace(
+        '<h2>LETTER_HEADER_PLACEHOLDER</h2>',
+        `<h2 style="text-align:center; text-decoration:underline;">${letterType.toUpperCase()}</h2>`
+      );
+    }
+
+    // Generate PDF
+    const lettersDir = path.join(process.cwd(), "src/uploads/letters");
+    if (!fs.existsSync(lettersDir)) fs.mkdirSync(lettersDir, { recursive: true });
+    const fileName = `${letterType.replace(/ /g, "_")}_${Date.now()}.pdf`;
+    const filePath = path.join(lettersDir, fileName);
+    await generatePDF(filledHTML, filePath);
+
+    // Save to DB
+    const docResult = await client.query(
+      `SELECT document_url FROM user_employees_master WHERE id=$1`,
+      [employeeId]
+    );
+    let existingDocs = docResult.rows[0]?.document_url || [];
+    if (!Array.isArray(existingDocs)) existingDocs = [];
+    existingDocs.push(fileName);
+    await client.query(
+      `UPDATE user_employees_master
+         SET document_url = $1::jsonb,
+             updated_at = NOW()
+         WHERE id = $2`,
+      [JSON.stringify(existingDocs), employeeId]
+    );
+
+    return res.json({
+      message: "Letter generated successfully",
+      pdf_url: `/uploads/letters/${fileName}`,
+      file_name: fileName,
+      documents: existingDocs
+    });
+  } catch (err) {
+    console.error("Generate Letter Error:", err.message);
+    return res.status(500).json({ error: "Failed to generate letter" });
+  } finally {
+    client.release();
+  }
+};
+// export const getEmployeeLetters = async (req, res) => {
+//   const client = await pool.connect();
+
+//   try {
+//     const { employeeId } = req.params;
+
+//     const result = await client.query(
+//       `SELECT document_url FROM user_employees_master WHERE id = $1`,
+//       [employeeId]
+//     );
+
+//     // ✅ Safely extract and normalize document_url
+//     let docs = result.rows[0]?.document_url;
+
+//     // If docs is not an array, treat as empty
+//     if (!Array.isArray(docs)) {
+//       docs = [];
+//     }
+
+//     const BASE_URL = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5002}`;
+
+//     const files = docs.map((file) => ({
+//       name: file,
+//       url: `${BASE_URL}/uploads/letters/${file}`,
+//     }));
+
+//     res.json({
+//       message: "Employee letters retrieved successfully",
+//       files,
+//     });
+//   } catch (err) {
+//     console.error("Get Employee Letters Error:", err);
+//     res.status(500).json({ error: err.message });
+//   } finally {
+//     client.release();
+//   }
+// };
+
+export const getEmployeeLetters = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { employeeId } = req.params;
+
+    // 1️⃣ Validate input
+    if (!employeeId) {
+      return res.status(400).json({
+        error: "Employee ID is required"
+      });
+    }
+
+    // 2️⃣ Fetch employee record
+    const result = await client.query(
+      `SELECT document_url
+       FROM user_employees_master
+       WHERE id = $1`,
+      [employeeId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        error: "Employee not found"
+      });
+    }
+
+    let docs = result.rows[0].document_url;
+
+    // 3️⃣ Normalize document_url safely
+    let letterFiles = [];
+
+    if (Array.isArray(docs)) {
+      // letters stored as array
+      letterFiles = docs;
+    } 
+    else if (docs && typeof docs === "object") {
+      // ignore non-letter documents
+      letterFiles = [];
+    }
+
+    // 4️⃣ Build URLs
+    const BASE_URL =
+      process.env.BASE_URL ||
+      `http://localhost:${process.env.PORT || 5002}`;
+
+    const files = letterFiles.map(file => ({
+      name: file,
+      url: `${BASE_URL}/uploads/letters/${file}`
+    }));
+
+    // 5️⃣ Success response
+    return res.status(200).json({
+      success: true,
+      total: files.length,
+      files
+    });
+
+  } catch (err) {
+    console.error("Get Employee Letters Error:", err);
+    return res.status(500).json({
+      error: "Failed to fetch employee letters"
+    });
+  } finally {
+    client.release();
+  }
+};
+
+
+export const downloadEmployeeLetter = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { employeeId, fileName } = req.params;
+
+    if (!employeeId || !fileName) {
+      return res.status(400).json({
+        error: "Employee ID and file name are required"
+      });
+    }
+
+    // 1️⃣ Verify employee + letter ownership
+    const result = await client.query(
+      `SELECT document_url
+       FROM user_employees_master
+       WHERE id = $1`,
+      [employeeId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        error: "Employee not found"
+      });
+    }
+
+    const docs = result.rows[0].document_url || [];
+
+    if (!Array.isArray(docs) || !docs.includes(fileName)) {
+      return res.status(403).json({
+        error: "You are not authorized to access this file"
+      });
+    }
+
+    // 2️⃣ File path
+    const filePath = path.join(
+      process.cwd(),
+      "src/uploads/letters",
+      fileName
+    );
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({
+        error: "File not found on server"
+      });
+    }
+
+    // 3️⃣ Send file for download
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${fileName}"`
+    );
+    res.setHeader("Content-Type", "application/pdf");
+
+    return res.sendFile(filePath);
+
+  } catch (err) {
+    console.error("Download Letter Error:", err);
+    return res.status(500).json({
+      error: "Failed to download letter"
+    });
+  } finally {
+    client.release();
+  }
+};
+
+export const generateFreelancerLetter = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { freelancerId, letterType } = req.body;
+
+    if (!freelancerId || !letterType) {
+      return res.status(400).json({
+        error: "freelancerId and letterType are required"
+      });
+    }
+
+    // Fetch freelancer (SAME AS EMPLOYEE)
+    const empResult = await client.query(
+      `SELECT *
+       FROM user_employees_master
+       WHERE id = $1 AND employment_type = 'freelancer'`,
+      [freelancerId]
+    );
+
+    const emp = empResult.rows[0];
+
+    if (!emp) {
+      return res.status(404).json({
+        error: "Freelancer not found"
+      });
+    }
+
+    // Fetch latest salary record (KEPT SAME)
+    const salResult = await client.query(
+      `SELECT *
+       FROM salary_structure
+       WHERE employee_id = $1
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [freelancerId]
+    );
+
+    const sal = salResult.rows[0] || {};
+
+    // Select template file (USE FREELANCER MAP)
+    const selectedTemplate = templateFileMap[letterType];
+
+    if (!selectedTemplate) {
+      return res.status(400).json({
+        error: "Invalid letter type selected"
+      });
+    }
+
+    const templateContent = loadTemplate(selectedTemplate);
+    if (!templateContent) {
+      return res.status(500).json({
+        error: "Template file missing"
+      });
+    }
+
+    // Prepare placeholder data (UNCHANGED)
     const data = {
       name: emp.name,
       designation: emp.designation,
@@ -1864,93 +2233,314 @@ export const generateLetter = async (req, res) => {
     // Fill HTML
     const filledHTML = fillTemplate(templateContent, data);
 
-    //  Generate PDF file
+    // Generate PDF file (UNCHANGED)
     const lettersDir = path.join(process.cwd(), "src/uploads/letters");
-    if (!fs.existsSync(lettersDir)) fs.mkdirSync(lettersDir, { recursive: true });
+    if (!fs.existsSync(lettersDir)) {
+      fs.mkdirSync(lettersDir, { recursive: true });
+    }
 
     const fileName = `${letterType.replace(/ /g, "_")}_${Date.now()}.pdf`;
     const filePath = path.join(lettersDir, fileName);
 
     await generatePDF(filledHTML, filePath);
 
-    // ---------------------- SAVE MULTIPLE PDF FILES IN JSONB ----------------------
-
-    // Fetch existing document list
+    // Save MULTIPLE PDF files in JSONB (UNCHANGED)
     const docResult = await client.query(
-      `SELECT document_url FROM user_employees_master WHERE id=$1`,
-      [employeeId]
+      `SELECT document_url
+       FROM user_employees_master
+       WHERE id = $1`,
+      [freelancerId]
     );
 
     let existingDocs = docResult.rows[0]?.document_url || [];
-
     if (!Array.isArray(existingDocs)) existingDocs = [];
 
-    // Add new PDF filename
     existingDocs.push(fileName);
 
-    // Update DB
     await client.query(
       `UPDATE user_employees_master
-         SET document_url = $1::jsonb,
-             updated_at = NOW()
-         WHERE id = $2`,
-      [JSON.stringify(existingDocs), employeeId]
+       SET document_url = $1::jsonb,
+           updated_at = NOW()
+       WHERE id = $2`,
+      [JSON.stringify(existingDocs), freelancerId]
     );
 
     // Success Response
     return res.json({
-      message: "Letter generated successfully",
+      message: "Freelancer letter generated successfully",
       pdf_url: `/uploads/letters/${fileName}`,
       file_name: fileName,
       documents: existingDocs
     });
 
   } catch (err) {
-    console.error("Generate Letter Error:", err.message);
-    return res.status(500).json({ error: "Failed to generate letter" });
+    console.error("Generate Freelancer Letter Error:", err.message);
+    return res.status(500).json({
+      error: "Failed to generate freelancer letter"
+    });
   } finally {
     client.release();
   }
 };
-
-
-export const getEmployeeLetters = async (req, res) => {
+export const getFreelancerLetters = async (req, res) => {
   const client = await pool.connect();
 
   try {
-    const { employeeId } = req.params;
+    const { freelancerId } = req.params;
 
     const result = await client.query(
-      `SELECT document_url FROM user_employees_master WHERE id = $1`,
-      [employeeId]
+      `SELECT document_url
+       FROM user_employees_master
+       WHERE id = $1 AND employment_type = 'freelancer'`,
+      [freelancerId]
     );
 
-    // ✅ Safely extract and normalize document_url
-    let docs = result.rows[0]?.document_url;
-
-    // If docs is not an array, treat as empty
-    if (!Array.isArray(docs)) {
-      docs = [];
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        error: "Freelancer not found"
+      });
     }
 
-    const BASE_URL = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5002}`;
+    const docs = result.rows[0].document_url || [];
+    const BASE_URL =
+      process.env.BASE_URL ||
+      `http://localhost:${process.env.PORT || 5002}`;
 
-    const files = docs.map((file) => ({
-      name: file,
-      url: `${BASE_URL}/uploads/letters/${file}`,
-    }));
+    const files = Array.isArray(docs)
+      ? docs.map(file => ({
+          name: file,
+          url: `${BASE_URL}/uploads/letters/${file}`
+        }))
+      : [];
 
-    res.json({
-      message: "Employee letters retrieved successfully",
-      files,
+    return res.json({
+      success: true,
+      total: files.length,
+      files
     });
+
   } catch (err) {
-    console.error("Get Employee Letters Error:", err);
-    res.status(500).json({ error: err.message });
+    console.error("Get Freelancer Letters Error:", err);
+    return res.status(500).json({
+      error: "Failed to fetch freelancer letters"
+    });
   } finally {
     client.release();
   }
 };
+export const downloadFreelancerLetter = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { freelancerId, fileName } = req.params;
+
+    // ✅ Validate input
+    if (!freelancerId || !fileName) {
+      return res.status(400).json({
+        error: "Freelancer ID and file name are required"
+      });
+    }
+
+    // 1️⃣ Verify freelancer + letter ownership
+    const result = await client.query(
+      `SELECT document_url
+       FROM user_employees_master
+       WHERE id = $1 AND employment_type = 'freelancer'`,
+      [freelancerId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        error: "Freelancer not found"
+      });
+    }
+
+    const docs = result.rows[0].document_url || [];
+
+    if (!Array.isArray(docs) || !docs.includes(fileName)) {
+      return res.status(403).json({
+        error: "You are not authorized to access this file"
+      });
+    }
+
+    // 2️⃣ File path
+    const filePath = path.join(
+      process.cwd(),
+      "src/uploads/letters",
+      fileName
+    );
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({
+        error: "File not found on server"
+      });
+    }
+
+    // 3️⃣ Send file for download
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${fileName}"`
+    );
+    res.setHeader("Content-Type", "application/pdf");
+
+    return res.sendFile(filePath);
+
+  } catch (err) {
+    console.error("Download Freelancer Letter Error:", err);
+    return res.status(500).json({
+      error: "Failed to download freelancer letter"
+    });
+  } finally {
+    client.release();
+  }
+};
+export const deleteFreelancerLetter = async (req, res) => {
+  const client = await pool.connect();
+  const { freelancerId, filename } = req.params;
+
+  try {
+    // 1️⃣ Validate input
+    if (!freelancerId || !filename) {
+      return res.status(400).json({
+        error: "freelancerId and filename are required"
+      });
+    }
+
+    // 2️⃣ Fetch freelancer (only freelancer)
+    const docResult = await client.query(
+      `SELECT document_url
+       FROM user_employees_master
+       WHERE id = $1 AND employment_type = 'freelancer'`,
+      [freelancerId]
+    );
+
+    if (docResult.rows.length === 0) {
+      return res.status(404).json({
+        error: "Freelancer not found"
+      });
+    }
+
+    const existingDocs = docResult.rows[0].document_url || [];
+
+    if (!Array.isArray(existingDocs) || !existingDocs.includes(filename)) {
+      return res.status(404).json({
+        error: "Letter not found"
+      });
+    }
+
+    // 3️⃣ Remove file from JSONB
+    const updatedDocs = existingDocs.filter(file => file !== filename);
+
+    await client.query(
+      `UPDATE user_employees_master
+       SET document_url = $1::jsonb,
+           updated_at = NOW()
+       WHERE id = $2`,
+      [JSON.stringify(updatedDocs), freelancerId]
+    );
+
+    // 4️⃣ Delete file from filesystem
+    const filePath = path.join(
+      process.cwd(),
+      "src/uploads/letters",
+      filename
+    );
+
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    return res.json({
+      message: "Freelancer letter deleted successfully",
+      documents: updatedDocs
+    });
+
+  } catch (err) {
+    console.error("Delete Freelancer Letter Error:", err);
+    return res.status(500).json({
+      error: "Failed to delete freelancer letter"
+    });
+  } finally {
+    client.release();
+  }
+};
+export const sendFreelancerLetterEmail = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { freelancerId, fileName } = req.body;
+
+    if (!freelancerId || !fileName) {
+      return res.status(400).json({
+        error: "freelancerId and fileName are required"
+      });
+    }
+
+    // 1️⃣ Fetch freelancer info
+    const empResult = await client.query(
+      `SELECT name, email
+       FROM user_employees_master
+       WHERE id = $1 AND employment_type = 'freelancer'`,
+      [freelancerId]
+    );
+
+    const freelancer = empResult.rows[0];
+
+    if (!freelancer) {
+      return res.status(404).json({
+        error: "Freelancer not found"
+      });
+    }
+
+    // 2️⃣ Verify file exists
+    const filePath = path.join(
+      process.cwd(),
+      "src/uploads/letters",
+      fileName
+    );
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({
+        error: "File not found on server"
+      });
+    }
+
+    // 3️⃣ Send email
+    await sendEmail(
+      freelancer.email,
+      `Your ${fileName.split("_")[0]} Document`,
+      `<p>Hello ${freelancer.name},</p>
+       <p>Please find your <strong>${fileName.split("_")[0]}</strong> attached.</p>
+       <p>Regards,<br/>HR Team</p>`,
+      filePath,
+      fileName
+    );
+
+    return res.json({
+      message: "📧 Freelancer email sent successfully",
+      sent_to: freelancer.email,
+      file: fileName
+    });
+
+  } catch (err) {
+    console.error("Send Freelancer Letter Email Error:", err);
+    return res.status(500).json({
+      error: "Failed to send freelancer email"
+    });
+  } finally {
+    client.release();
+  }
+};
+export const getAllFreelancers = async (req, res) => {
+  const result = await pool.query(
+    `SELECT *
+     FROM user_employees_master
+     WHERE employment_type = 'freelancer'`
+  );
+  res.json(result.rows);
+};
+
+
 
 export const documentUpload = upload.fields([
   { name: "passbook", maxCount: 1 },
@@ -2166,51 +2756,54 @@ export const deleteLetter = async (req, res) => {
     client.release();
   }
 };
+
+
 export const sendLetterEmail = async (req, res) => {
   const client = await pool.connect();
-
   try {
     const { employeeId, fileName } = req.body;
-
     if (!employeeId || !fileName) {
       return res.status(400).json({ error: "employeeId and fileName are required" });
     }
 
-    // Fetch employee info
     const empResult = await client.query(
       `SELECT name, email FROM user_employees_master WHERE id=$1`,
       [employeeId]
     );
     const emp = empResult.rows[0];
+    if (!emp) return res.status(404).json({ error: "Employee not found" });
 
-    if (!emp) {
-      return res.status(404).json({ error: "Employee not found" });
-    }
-
-    // File path
     const filePath = path.join(process.cwd(), "src/uploads/letters", fileName);
-
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({ error: "File not found on server" });
     }
 
-    // Send email with attachment
-    await sendEmail(
-      emp.email,
-      `Your ${fileName.split("_")[0]} Letter`,
-      `<p>Hello ${emp.name},</p>
-       <p>Please find your <strong>${fileName.split("_")[0]}</strong> attached.</p>
-       <p>Regards,<br/>HR Team</p>`,
-      filePath,
-      fileName
-    );
+    // ✅ Get branding for EMAIL
+    const branding = await getBrandingForContext("email");
+
+    let emailBody = `<p>Hello ${emp.name},</p>
+      <p>Please find your <strong>${fileName.split("_")[0]}</strong> attached.</p>`;
+
+    // ✅ Inject logo + company name if branding is active
+    if (branding) {
+      emailBody = `
+        <div style="text-align:center; margin-bottom:20px;">
+          ${branding.logoUrl ? `<img src="${branding.logoUrl}" style="max-height:60px;">` : ''}
+          <p style="color:${branding.primaryColor}; margin-top:8px;">${branding.companyName}</p>
+        </div>
+        ${emailBody}
+      `;
+    }
+
+    emailBody += `<p>Regards,<br/>HR Team</p>`;
+
+    await sendEmail(emp.email, `Your ${fileName.split("_")[0]} Letter`, emailBody, filePath, fileName);
 
     return res.json({
       message: "📧 Email sent successfully with attachment",
       sent_to: emp.email,
       file: fileName
     });
-
   } catch (err) {
     console.error("Send Letter Email Error:", err);
     return res.status(500).json({ error: "Failed to send email with attachment" });
@@ -2218,7 +2811,6 @@ export const sendLetterEmail = async (req, res) => {
     client.release();
   }
 };
-
 export const getAllReferralsAdmin = async (req, res) => {
   const client = await pool.connect();
 
@@ -2449,31 +3041,8 @@ export const updateReferralStatusAdmin = async (req, res) => {
 
 
 
-
-// function fillTemplate(template, data) {
-//   return template.replace(/{{(.*?)}}/g, (_, key) => data[key.trim()] || "");
-// }
-
-// async function generatePDF(htmlContent, outputPath) {
-//   const browser = await puppeteer.launch({
-//     headless: "new",
-//     args: ["--no-sandbox", "--disable-setuid-sandbox"],
-//   });
-
-//   const page = await browser.newPage();
-//   await page.setContent(htmlContent, { waitUntil: "networkidle0" });
-
-//   await page.pdf({
-//     path: outputPath,
-//     format: "A4",
-//     printBackground: true,
-//   });
-
-//   await browser.close();
-// }
 export const createFreelancerContract = async (req, res) => {
   const client = await pool.connect();
-
   try {
     const {
       freelancer_id,
@@ -2486,32 +3055,16 @@ export const createFreelancerContract = async (req, res) => {
       scope_of_work
     } = req.body;
 
-    // Validate freelancer
-    const freelancerResult = await client.query(
-      `SELECT * FROM user_employees_master WHERE id=$1`,
-      [freelancer_id]
-    );
-
-    if (freelancerResult.rowCount === 0) {
-      return res.status(404).json({ error: "Freelancer not found" });
-    }
-
+    const freelancerResult = await client.query(`SELECT * FROM user_employees_master WHERE id=$1`, [freelancer_id]);
+    if (freelancerResult.rowCount === 0) return res.status(404).json({ error: "Freelancer not found" });
     const freelancer = freelancerResult.rows[0];
+    if (freelancer.employment_type !== "freelancer") return res.status(400).json({ error: "User is not a freelancer" });
 
-    if (freelancer.employment_type !== "freelancer") {
-      return res.status(400).json({ error: "User is not a freelancer" });
-    }
-
-    // Get salary details
-    const salaryRes = await client.query(
-      `SELECT * FROM salary_structure WHERE employee_id=$1 ORDER BY created_at DESC LIMIT 1`,
-      [freelancer_id]
-    );
-
+    const salaryRes = await client.query(`SELECT * FROM salary_structure WHERE employee_id=$1 ORDER BY created_at DESC LIMIT 1`, [freelancer_id]);
     const salary = salaryRes.rows[0] || {};
 
-    // Template
-    const htmlTemplate = loadTemplate("freelancerContract.html");
+    // ✅ Get branding for LETTERS (to inject company name in contract)
+    const branding = await getBrandingForContext("letters");
 
     const data = {
       name: freelancer.name,
@@ -2522,7 +3075,6 @@ export const createFreelancerContract = async (req, res) => {
       address: freelancer.address,
       permanent_address: freelancer.permanent_address,
       date_of_joining: freelancer.date_of_joining,
-
       payment_method: salary.payment_method,
       bank_name: salary.bank_name,
       account_number: salary.account_number,
@@ -2531,68 +3083,69 @@ export const createFreelancerContract = async (req, res) => {
       location: salary.location,
       gross_salary: salary.gross_salary,
       net_salary: salary.net_salary,
-
       contract_title,
       contract_start_date,
       contract_end_date,
       payment_type,
       payment_amount,
       payment_terms,
-      scope_of_work
+      scope_of_work,
+      company_name: branding?.companyName || "Your Company Pvt Ltd", // ← Inject company name
     };
 
-    const filledHTML = fillTemplate(htmlTemplate, data);
+    let htmlTemplate = loadTemplate("freelancerContract.html");
+    let filledHTML = fillTemplate(htmlTemplate, data);
 
-    // PDF path
+    // ✅ Inject logo + header if branding is active (for "letters")
+    if (branding?.logoUrl || branding?.primaryColor) {
+      const logoHtml = branding.logoUrl
+        ? `<img src="${branding.logoUrl}" style="max-height:60px; margin-bottom:10px;">`
+        : "";
+      const headerHtml = `
+        <div style="text-align:center; margin-bottom:20px;">
+          ${logoHtml}
+          <h1 style="color:${branding.primaryColor || '#000'};">FREELANCER CONTRACT AGREEMENT</h1>
+          <h3 style="color:${branding.primaryColor || '#000'};">${contract_title}</h3>
+          <hr />
+        </div>
+      `;
+      filledHTML = filledHTML.replace(/<h1>FREELANCER CONTRACT AGREEMENT<\/h1>\s*<h3>.*?<\/h3>\s*<hr \/>/, headerHtml);
+    }
+
     const dir = path.join(process.cwd(), "src/uploads/contracts");
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-
     const fileName = `Contract_${freelancer_id}_${Date.now()}.pdf`;
     const filePath = path.join(dir, fileName);
-
     await generatePDF(filledHTML, filePath);
 
-    // Insert record
     await client.query(
-      `
-        INSERT INTO freelancer_contracts (
-          freelancer_id, contract_title, contract_start_date, contract_end_date,
-          payment_type, payment_amount, payment_terms, scope_of_work,
-          pdf_file, version
-        )
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,1)
-      `,
-      [
-        freelancer_id,
-        contract_title,
-        contract_start_date,
-        contract_end_date,
-        payment_type,
-        payment_amount,
-        payment_terms,
-        scope_of_work,
-        fileName
-      ]
+      `INSERT INTO freelancer_contracts (freelancer_id, contract_title, contract_start_date, contract_end_date, payment_type, payment_amount, payment_terms, scope_of_work, pdf_file, version)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,1)`,
+      [freelancer_id, contract_title, contract_start_date, contract_end_date, payment_type, payment_amount, payment_terms, scope_of_work, fileName]
     );
 
-    // ✅ Send email with attachment (using your existing sendEmail)
-    await sendEmail(
-      freelancer.email,
-      `Your Contract - ${contract_title}`,
-      `
-        <p>Hello <strong>${freelancer.name}</strong>,</p>
-        <p>Your freelancer contract has been created successfully.</p>
-        <p>Please find the attached PDF for your reference.</p>
-      `,
-      filePath,   // attachment path
-      fileName    // attachment filename
-    );
+    // ✅ Send branded email
+    const emailBranding = await getBrandingForContext("email");
+    let emailBody = `<p>Hello <strong>${freelancer.name}</strong>,</p>
+      <p>Your freelancer contract has been created successfully.</p>
+      <p>Please find the attached PDF for your reference.</p>`;
+
+    if (emailBranding) {
+      emailBody = `
+        <div style="text-align:center; margin-bottom:20px;">
+          ${emailBranding.logoUrl ? `<img src="${emailBranding.logoUrl}" style="max-height:60px;">` : ''}
+          <p style="color:${emailBranding.primaryColor}; margin-top:8px;">${emailBranding.companyName}</p>
+        </div>
+        ${emailBody}
+      `;
+    }
+
+    await sendEmail(freelancer.email, `Your Contract - ${contract_title}`, emailBody, filePath, fileName);
 
     res.json({
       message: "Contract created successfully and email sent.",
       pdf_url: `/uploads/contracts/${fileName}`
     });
-
   } catch (err) {
     console.error("Contract Create Error:", err);
     res.status(500).json({ error: "Failed to create contract" });
@@ -2600,7 +3153,6 @@ export const createFreelancerContract = async (req, res) => {
     client.release();
   }
 };
-
 export const updateContract = async (req, res) => {
   const client = await pool.connect();
 
@@ -2954,7 +3506,6 @@ export const createInvoice = async (req, res) => {
 
     const GST_PERCENT = 18;
     const TDS_PERCENT = 10;
-
     const tax_amount = (amount * GST_PERCENT) / 100;
     const tds_amount = (amount * TDS_PERCENT) / 100;
     const net_payable = amount + tax_amount - tds_amount;
@@ -2964,14 +3515,12 @@ export const createInvoice = async (req, res) => {
     ----------------------------------------------------- */
     const dateObj = new Date(invoice_date);
     const ym = `${dateObj.getFullYear()}${String(dateObj.getMonth() + 1).padStart(2, "0")}`;
-
     const seqQuery = await pool.query(
       `SELECT COUNT(*) + 1 AS seq 
        FROM invoices 
        WHERE to_char(invoice_date, 'YYYYMM') = $1`,
       [ym]
     );
-
     const seq = seqQuery.rows[0].seq;
     const invoice_number = `INV-${ym}-${String(seq).padStart(4, "0")}`;
 
@@ -2987,7 +3536,6 @@ export const createInvoice = async (req, res) => {
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'pending',$10)
       RETURNING *
     `;
-
     const result = await pool.query(insertQuery, [
       freelancer_id,
       contract_id,
@@ -3000,50 +3548,52 @@ export const createInvoice = async (req, res) => {
       due_date,
       created_by,
     ]);
-
     const localInvoice = result.rows[0];
 
-
     /* -----------------------------------------------------
-       C. Create Invoice in Zoho Using DEFAULT Customer ID
+       C. Create Invoice in Zoho (if configured)
     ----------------------------------------------------- */
     const ZOHO_CUSTOMER_ID = process.env.DEFAULT_ZOHO_CUSTOMER_ID;
-
-    const zohoInvoicePayload = {
-      customer_id: ZOHO_CUSTOMER_ID,
-      date: invoice_date,
-      due_date: due_date,
-      reference_number: invoice_number,
-      line_items: [
-        {
-          item_name: "Freelancer Payment",
-          rate: amount,
-          quantity: 1
-        }
-      ]
-    };
-
     let zohoInvoiceId = null, zohoInvoiceNumber = null, zohoInvoiceUrl = null;
 
-    try {
-      const zohoResp = await createZohoInvoice(zohoInvoicePayload);
-
-      zohoInvoiceId = zohoResp.invoice?.invoice_id || null;
-      zohoInvoiceNumber = zohoResp.invoice?.invoice_number || null;
-      zohoInvoiceUrl = zohoResp.invoice?.invoice_url || null;
-
-    } catch (err) {
-      console.error("Zoho Invoice ERROR:", err.response?.data || err);
+    if (ZOHO_CUSTOMER_ID) {
+      const zohoInvoicePayload = {
+        customer_id: ZOHO_CUSTOMER_ID,
+        date: invoice_date,
+        due_date: due_date,
+        reference_number: invoice_number,
+        line_items: [
+          {
+            item_name: "Freelancer Payment",
+            rate: amount,
+            quantity: 1
+          }
+        ]
+      };
+      try {
+        const zohoResp = await createZohoInvoice(zohoInvoicePayload);
+        zohoInvoiceId = zohoResp.invoice?.invoice_id || null;
+        zohoInvoiceNumber = zohoResp.invoice?.invoice_number || null;
+        zohoInvoiceUrl = zohoResp.invoice?.invoice_url || null;
+      } catch (err) {
+        console.error("Zoho Invoice ERROR:", err.response?.data || err);
+      }
     }
 
-
     /* -----------------------------------------------------
-       D. Generate EMS PDF Automatically
+       D. Generate Branded PDF
     ----------------------------------------------------- */
+    // ✅ Get branding for "letters" context (used in PDF)
+    const branding = await getBrandingForContext("letters");
+
     const templatePath = path.join(process.cwd(), "src/templates/invoiceTemplate.html");
     let html = fs.readFileSync(templatePath, "utf-8");
 
+    // Replace placeholders
     html = html
+      .replace(/{{company_name}}/g, branding?.companyName || "Your Company Pvt Ltd")
+      .replace(/{{company_address}}/g, "Hyderabad, Telangana, India") // ⚠️ Consider making dynamic if needed
+      .replace(/{{company_email}}/g, "contact@company.com")
       .replace(/{{invoice_number}}/g, invoice_number)
       .replace(/{{invoice_date}}/g, invoice_date)
       .replace(/{{due_date}}/g, due_date)
@@ -3054,9 +3604,22 @@ export const createInvoice = async (req, res) => {
       .replace(/{{tds_amount}}/g, tds_amount)
       .replace(/{{net_payable}}/g, net_payable);
 
+    // ✅ Inject logo and style if branding is active
+    if (branding?.logoUrl || branding?.primaryColor) {
+      const logoHtml = branding.logoUrl
+        ? `<img src="${branding.logoUrl}" style="max-height:50px; margin-bottom:10px;" />`
+        : "";
+      const headerHtml = `
+        <div style="text-align:center; margin-bottom:15px;">
+          ${logoHtml}
+          <h2 style="color:${branding.primaryColor || '#000'};">Invoice</h2>
+        </div>
+      `;
+      html = html.replace(/<h2>Invoice<\/h2>/, headerHtml);
+    }
+
     const pdfDir = "uploads/invoices";
     if (!fs.existsSync(pdfDir)) fs.mkdirSync(pdfDir, { recursive: true });
-
     const fileName = `Invoice_${invoice_number}.pdf`;
     const filePath = path.join(pdfDir, fileName);
 
@@ -3064,12 +3627,9 @@ export const createInvoice = async (req, res) => {
       headless: "new",
       args: ["--no-sandbox"],
     });
-
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: "networkidle0" });
-
     await page.pdf({ path: filePath, format: "A4", printBackground: true });
-
     await browser.close();
 
     await pool.query(
@@ -3078,7 +3638,7 @@ export const createInvoice = async (req, res) => {
     );
 
     /* -----------------------------------------------------
-       E. Save Zoho Invoice Info
+       E. Save Zoho Info (if applicable)
     ----------------------------------------------------- */
     await pool.query(
       `UPDATE invoices
@@ -3090,11 +3650,44 @@ export const createInvoice = async (req, res) => {
     );
 
     /* -----------------------------------------------------
-       F. Send Final Response
+       F. Send Branded Email with Attachment
+    ----------------------------------------------------- */
+    const emailBranding = await getBrandingForContext("email");
+    let emailBody = `
+      <p>Hello <strong>${freelancer_name}</strong>,</p>
+      <p>Your invoice <strong>${invoice_number}</strong> has been generated.</p>
+      <p><strong>Net Payable:</strong> ₹${net_payable}</p>
+      <p>Please find the attached PDF for your records.</p>
+    `;
+
+    if (emailBranding) {
+      emailBody = `
+        <div style="text-align:center; margin-bottom:20px;">
+          ${emailBranding.logoUrl ? `<img src="${emailBranding.logoUrl}" style="max-height:60px;">` : ''}
+          <p style="color:${emailBranding.primaryColor}; margin-top:8px;">${emailBranding.companyName}</p>
+        </div>
+        ${emailBody}
+      `;
+    }
+
+    try {
+      await sendEmail(
+        freelancer_email,
+        `Invoice ${invoice_number}`,
+        emailBody,
+        filePath,
+        fileName
+      );
+    } catch (emailErr) {
+      console.warn("Failed to send invoice email:", emailErr.message);
+    }
+
+    /* -----------------------------------------------------
+       G. Final Response
     ----------------------------------------------------- */
     res.json({
       success: true,
-      message: "Invoice created in EMS + Zoho + PDF generated",
+      message: "Invoice created in EMS + Zoho + PDF generated + Email sent",
       invoice: {
         ...localInvoice,
         pdf_file: fileName,
@@ -3110,7 +3703,6 @@ export const createInvoice = async (req, res) => {
     res.status(500).json({ error: "Failed to create invoice" });
   }
 };
-
 
 /* -----------------------------------------------------
    2. GET ALL INVOICES
@@ -3922,31 +4514,54 @@ export const getAllInterviewsWithDetails = async (req, res) => {
     const query = `
       SELECT 
         i.interview_id,
-        i.referral_id,
         i.interview_date,
         i.interview_type AS round_name,
         i.location,
         i.status,
         i.created_at,
 
-        -- Candidate Details
-        r.candidate_name,
-        r.candidate_email,
-        r.phone_number,
-        r.position,
+        CASE 
+          WHEN i.referral_id IS NOT NULL THEN 'referral'
+          WHEN i.application_id IS NOT NULL THEN 'job_application'
+        END AS source,
 
-        -- Panel Members (Interviewer Names + Emails)
+        COALESCE(r.candidate_name, a.candidate_name) AS candidate_name,
+        COALESCE(r.candidate_email, a.email) AS candidate_email,
+        COALESCE(r.phone_number, a.phone) AS phone_number,
+        COALESCE(r.position, jp.job_title) AS position,
+
+        i.referral_id,
+        i.application_id,
+
+        -- ✅ PANEL MEMBERS (FIXED FOR BOTH FLOWS)
         (
-            SELECT json_agg(json_build_object(
+          SELECT COALESCE(
+            json_agg(
+              json_build_object(
                 'id', u.id,
                 'name', u.name,
                 'email', u.email
-            ))
-            FROM user_employees_master u
-            WHERE u.name = ANY(i.interviewer)
+              )
+            ),
+            '[]'::json
+          )
+          FROM user_employees_master u
+          WHERE EXISTS (
+            SELECT 1
+            FROM unnest(i.interviewer) AS iv(val)
+            WHERE
+              -- Referral flow (names)
+              u.name = iv.val
+              OR
+              -- Job-post flow (comma-separated emails inside array)
+              u.email = ANY(string_to_array(iv.val, ','))
+          )
         ) AS panel_members
+
       FROM interviews i
       LEFT JOIN referrals r ON r.id = i.referral_id
+      LEFT JOIN applications a ON a.application_id = i.application_id
+      LEFT JOIN job_posts jp ON jp.job_id = a.job_id
       ORDER BY i.interview_date DESC;
     `;
 
@@ -3964,6 +4579,66 @@ export const getAllInterviewsWithDetails = async (req, res) => {
     client.release();
   }
 };
+
+
+
+export const getMyInterviews = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    // 1️⃣ Decode JWT (you already have helper)
+    const user = getUserFromToken(req);
+    const interviewerId = user.id;
+
+    // 2️⃣ Get interviewer name
+    const { rows: empRows } = await client.query(
+      `SELECT name FROM user_employees_master WHERE id = $1`,
+      [interviewerId]
+    );
+
+    if (empRows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const interviewerName = empRows[0].name;
+
+    // 3️⃣ Fetch only interviews THIS interviewer attended
+    const query = `
+      SELECT
+        i.interview_id,
+        i.interview_date,
+        i.interview_type AS round_name,
+        i.location,
+        i.status,
+        r.candidate_name,
+        r.position,
+        EXISTS (
+          SELECT 1
+          FROM panel_feedback pf
+          WHERE pf.interview_id = i.interview_id
+          AND pf.panel_member = $2
+        ) AS feedback_submitted
+      FROM interviews i
+      JOIN referrals r ON r.id = i.referral_id
+      WHERE $1 = ANY(i.interviewer)
+      ORDER BY i.interview_date DESC;
+    `;
+
+    const { rows } = await client.query(query, [
+      interviewerName,
+      interviewerId
+    ]);
+
+    return res.status(200).json(rows);
+
+  } catch (err) {
+    console.error("getMyInterviews error:", err);
+    return res.status(500).json({ error: "Failed to fetch interviews" });
+  } finally {
+    client.release();
+  }
+};
+
 
 
 export const addPanelFeedback = async (req, res) => {
@@ -4260,4 +4935,721 @@ export const getFinalRatingsForEmployees = async (req, res) => {
   } finally {
     client.release();
   }
+};
+
+// export const validatePayroll = async (req, res) => {
+//   const client = await pool.connect();
+
+//   try {
+//     const { startDate, endDate, month, year } = req.body;
+
+//     // 1️⃣ Validate input
+//     if ((!startDate || !endDate) && (!month || !year)) {
+//       return res.status(400).json({ error: "Provide startDate/endDate or month+year" });
+//     }
+
+//     // 2️⃣ Build date range
+//     let fromDate, toDate;
+//     if (startDate && endDate) {
+//       fromDate = startDate;
+//       toDate = endDate;
+//     } else {
+//       const m = Number(month);
+//       const y = Number(year);
+//       fromDate = `${y}-${String(m).padStart(2, '0')}-01`;
+//       const lastDay = new Date(y, m, 0).getDate();
+//       toDate = `${y}-${String(m).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+//     }
+
+//     // 3️⃣ Fetch all active employees + their active salary structure
+//     const { rows: employees } = await client.query(`
+//       SELECT u.id AS employee_id, u.name AS name,
+//              s.status AS salary_status, s.basic_pay
+//       FROM user_employees_master u
+//       LEFT JOIN salary_structure s
+//         ON s.employee_id = u.id AND s.status = 'Active'
+//       WHERE u.is_active = true
+//     `);
+
+//     // 4️⃣ Fetch monthly_status from attendance
+//     const { rows: attendanceRows } = await client.query(`
+//       SELECT employee_id,
+//              MIN(monthly_status) AS monthly_status
+//       FROM attendance
+//       WHERE date BETWEEN $1 AND $2
+//       GROUP BY employee_id
+//     `, [fromDate, toDate]);
+
+//     // 5️⃣ Create map of attendance per employee
+//     const attendanceMap = {};
+//     attendanceRows.forEach(r => {
+//       attendanceMap[r.employee_id] = r.monthly_status || "Pending_approval";
+//     });
+
+//     // 6️⃣ Validate each employee
+//     const issues = [];
+//     let approvedCount = 0;
+//     let pendingCount = 0;
+
+//     employees.forEach(emp => {
+
+//       if (!attendanceMap[emp.employee_id]) {
+//     return;
+//   }
+//       // Check salary structure
+//       if (!emp.basic_pay || emp.salary_status !== 'Active') {
+//         issues.push(`${emp.name} does not have an active salary structure`);
+//       }
+
+//       // Check attendance status
+//       const status = (attendanceMap[emp.employee_id] || "Pending_approval").toLowerCase();
+//       if (status === "approved") {
+//         approvedCount++;
+//       } else {
+//         pendingCount++;
+//         issues.push(`${emp.name} attendance is Pending_approval`);
+//       }
+//     });
+
+//     // 7️⃣ Return response
+//     return res.json({
+//       status: pendingCount === 0 && issues.length === 0 ? "ready" : "warning",
+//       attendance_summary: {
+//         approved: approvedCount,
+//         pending_approval: pendingCount
+//       },
+//       total_employees: employees.length,
+//       issues
+//     });
+
+//   } catch (err) {
+//     console.error("VALIDATE PAYROLL ERROR", err);
+//payroll analytics
+
+// ===============================
+// ⭐ PAYROLL ANALYTICS (READ-ONLY, GET REQUEST)
+// ===============================
+// export const getPayrollAnalytics = async (req, res) => {
+//   const client = await pool.connect();
+
+//   try {
+//     // Auto detect current month & year
+//     const month = new Date().getMonth() + 1;
+//     const year = new Date().getFullYear();
+
+//     const query = `
+//       SELECT 
+//         u.department,
+//         SUM(s.gross_salary) AS total_payroll,
+//         COUNT(s.employee_id) AS headcount
+//       FROM salary_structure s
+//       JOIN user_employees_master u 
+//           ON u.id = s.employee_id
+//       WHERE EXTRACT(MONTH FROM s.created_at) = $1
+//         AND EXTRACT(YEAR FROM s.created_at) = $2
+//       GROUP BY u.department;
+//     `;
+
+//     const { rows } = await client.query(query, [month, year]);
+
+//     const formatted = rows.map((row) => ({
+//       department: row.department,
+//       total_payroll: Number(row.total_payroll),
+//       headcount: Number(row.headcount)
+//     }));
+
+//     return res.status(200).json({
+//       success: true,
+//       month,
+//       year,
+//       total_departments: formatted.length,
+//       departments: formatted
+//     });
+
+//   } catch (err) {
+//     console.error("Payroll Analytics Error:", err);
+//     return res.status(500).json({ error: err.message });
+//   } finally {
+//     client.release();
+//   }
+// };
+
+export const validatePayroll = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { startDate, endDate, month, year } = req.body;
+
+    // 1️⃣ Validate input
+    if ((!startDate || !endDate) && (!month || !year)) {
+      return res.status(400).json({ error: "Provide startDate/endDate or month+year" });
+    }
+
+    // 2️⃣ Build date range
+    let fromDate, toDate;
+    if (startDate && endDate) {
+      fromDate = startDate;
+      toDate = endDate;
+    } else {
+      const m = Number(month);
+      const y = Number(year);
+      fromDate = `${y}-${String(m).padStart(2, '0')}-01`;
+      const lastDay = new Date(y, m, 0).getDate();
+      toDate = `${y}-${String(m).padStart(2, '0')}-${lastDay}`;
+    }
+
+    // 3️⃣ Fetch all ACTIVE employees and their salary structure
+    const { rows: employees } = await client.query(`
+      SELECT u.id AS employee_id, u.name AS name,
+             s.status AS salary_status, s.basic_pay
+      FROM user_employees_master u
+      LEFT JOIN salary_structure s
+        ON s.employee_id = u.id AND s.status = 'Active'
+      WHERE u.is_active = true
+    `);
+
+    // 4️⃣ Get direct APPROVED count from DB
+    const { rows: approvedRows } = await client.query(`
+      SELECT COUNT(DISTINCT employee_id) AS approved
+      FROM attendance
+      WHERE date BETWEEN $1 AND $2
+        AND LOWER(monthly_status) = 'approved'
+    `, [fromDate, toDate]);
+
+    // 5️⃣ Get direct PENDING count from DB
+    const { rows: pendingRows } = await client.query(`
+      SELECT COUNT(DISTINCT employee_id) AS pending
+      FROM attendance
+      WHERE date BETWEEN $1 AND $2
+        AND LOWER(monthly_status) = 'pending_approval'
+    `, [fromDate, toDate]);
+
+    const approvedCount = Number(approvedRows[0].approved);
+    const pendingCount = Number(pendingRows[0].pending);
+
+    // 6️⃣ Collect issues per employee
+    const issues = [];
+
+    employees.forEach(emp => {
+      // Salary validation
+      if (!emp.basic_pay || emp.salary_status !== "Active") {
+        issues.push(`${emp.name} does not have an active salary structure`);
+      }
+    });
+
+    // 7️⃣ Response
+    const canGenerate = pendingCount === 0 && issues.length === 0;
+
+    return res.json({
+      status: canGenerate ? "ready" : "warning",
+      can_generate: canGenerate,
+      attendance_summary: {
+        approved: approvedCount,
+        pending_approval: pendingCount
+      },
+      total_employees: employees.length,
+      issues
+    });
+
+  } catch (err) {
+    console.error("VALIDATE PAYROLL ERROR", err);
+    return res.status(500).json({ error: err.message });
+    } finally {
+    client.release();
+  }
+};
+export const getDepartmentWisePayroll = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { month, year } = req.query;
+
+    if (!month || !year) {
+      return res.status(400).json({ success: false, message: "month and year are required" });
+    }
+
+    // Convert month names (e.g., "MARCH") to month numbers
+    const monthLower = String(month).trim().toLowerCase();
+
+    const monthNames = {
+      january: "1",
+      february: "2",
+      march: "3",
+      april: "4",
+      may: "5",
+      june: "6",
+      july: "7",
+      august: "8",
+      september: "9",
+      october: "10",
+      november: "11",
+      december: "12",
+    };
+
+    let monthNum = monthNames[monthLower] || monthLower; // if "3" keep "3", if "march" → "3"
+
+    const m1 = String(monthNum);             // "3"
+    const m2 = m1.padStart(2, "0");          // "03"
+
+    const query = `
+      SELECT 
+        u.department,
+        COUNT(s.employee_id) AS total_employees,
+        SUM(s.gross_salary) AS total_gross,
+        SUM(s.total_deductions) AS total_deductions,
+        SUM(s.net_salary) AS total_net
+      FROM salary_structure s
+      JOIN user_employees_master u 
+        ON u.id = s.employee_id
+      WHERE (
+        LOWER(s.month) = LOWER($1) OR 
+        LOWER(s.month) = LOWER($2) OR 
+        s.month = $3 OR 
+        s.month = $4
+      )
+      AND s.year = $5
+      GROUP BY u.department
+      ORDER BY total_gross DESC;
+    `;
+
+    const { rows } = await client.query(query, [
+      monthLower,    // "march"
+      monthNum,      // "3"
+      m1,            // "3"
+      m2,            // "03"
+      Number(year),
+    ]);
+
+    return res.json({
+      success: true,
+      departmentPayroll: rows,
+    });
+
+  } catch (err) {
+    console.error("DEPT PAYROLL ERROR:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  } finally {
+    client.release();
+  }
+};
+
+async function generatePayrollId(client) {
+  // Fetch all existing payroll IDs
+  const { rows } = await client.query(
+    `SELECT payroll_id FROM payroll WHERE payroll_id IS NOT NULL`
+  );
+
+  const nums = rows
+    .map(r => r.payroll_id)
+    .filter(Boolean)
+    .map(id => {
+      const m = id.match(/PR0*([0-9]+)$/i); // match PR001, PR012, etc.
+      return m ? parseInt(m[1], 10) : NaN;
+    })
+    .filter(n => !isNaN(n))
+    .sort((a, b) => a - b);
+
+  // Find first missing number in sequence
+  let next = 1;
+  for (const n of nums) {
+    if (n === next) next++;
+    else if (n > next) break;
+  }
+
+  return `PR${next.toString().padStart(3, "0")}`;
+}
+
+
+export const runPayroll = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { month, year } = req.body;
+
+    if (!month || !year) {
+      return res.status(400).json({ error: "month and year are required" });
+    }
+
+    const monthNames = [
+      "JANUARY", "FEBRUARY", "MARCH", "APRIL",
+      "MAY", "JUNE", "JULY", "AUGUST",
+      "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"
+    ];
+
+    let normalizedMonth;
+
+    // If frontend sends number → convert to month name
+    if (/^\d+$/.test(month)) {
+      const m = parseInt(month);
+      if (m < 1 || m > 12) {
+        return res.status(400).json({ error: "Invalid month number" });
+      }
+      normalizedMonth = monthNames[m - 1]; // Convert to JANUARY
+    } else {
+      normalizedMonth = month.toUpperCase();
+    }
+
+    const payrollId = await generatePayrollId(client);
+
+    // 2️⃣ Fetch active salary structure rows
+    const { rows: employees } = await client.query(
+      `
+      SELECT 
+        id,
+        employee_id,
+        basic_pay,
+        gross_salary,
+        total_deductions,
+        net_salary
+      FROM salary_structure
+      WHERE status = 'Active'
+        AND month ILIKE $1
+        AND year = $2
+      ORDER BY created_at DESC;
+      `,
+      [normalizedMonth, year]
+    );
+
+    if (employees.length === 0) {
+      return res.status(400).json({ error: "No active employees found in salary structure" });
+    }
+
+    let totalGross = 0;
+    let totalNet = 0;
+    let totalDeductions = 0;
+
+    const processed = employees.map(emp => {
+      if (emp.gross_salary == null || emp.total_deductions == null || emp.net_salary == null) {
+        throw new Error(`Missing salary fields for employee_id=${emp.employee_id}`);
+      }
+
+      const gross = Number(emp.gross_salary) || 0;
+      const net = Number(emp.net_salary) || 0;
+      const deduct = Number(emp.total_deductions) || 0;
+
+      totalGross += gross;
+      totalNet += net;
+      totalDeductions += deduct;
+
+      return {
+        employee_id: emp.employee_id,
+        gross_salary: gross,
+        total_deductions: deduct,
+        net_salary: net
+      };
+    });
+
+    // 3️⃣ Insert into payroll table
+    const history = await client.query(
+      `
+      INSERT INTO payroll
+        (payroll_id, year, month, total_employees, total_gross, total_deductions, total_net, status, run_date)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, 'Completed', NOW())
+      RETURNING *;
+      `,
+      [payrollId, year, month, processed.length, totalGross, totalDeductions, totalNet]
+    );
+
+    return res.json({
+      message: "Payroll run completed successfully",
+      payrollId,
+      status: "Completed",
+      runDate: history.rows[0].run_date,
+      totalEmployees: processed.length,
+      totalGross,
+      totalDeductions,
+      totalNet,
+      history: history.rows[0]
+    });
+
+  } catch (err) {
+    console.error("RUN PAYROLL ERROR:", err);
+    return res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+};
+
+
+export const reversePayroll = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { id } = req.body;
+
+    if (!id) {
+      return res.status(400).json({ error: "id is required" });
+    }
+
+    // 1️⃣ Check if payroll exists
+    const { rows } = await client.query(
+      `SELECT * FROM payroll WHERE id = $1`,
+      [id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Payroll ID not found" });
+    }
+
+    const payroll = rows[0];
+
+    if (payroll.status === "Reversed") {
+      return res.status(400).json({ error: "Payroll is already reversed" });
+    }
+
+    // 2️⃣ Update status to Reversed
+    await client.query(
+      `UPDATE payroll SET status = 'Reversed', run_date = NOW()  WHERE id = $1`,
+      [id]
+    );
+
+    return res.json({
+      message: `Payroll ${id} has been reversed successfully`,
+      payrollId: id
+    });
+
+  } catch (err) {
+    console.error("REVERSE PAYROLL ERROR:", err);
+    return res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+};
+
+
+export const rerunPayroll = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { month, year } = req.body;
+
+    if (!month || !year) {
+      return res.status(400).json({ error: "month and year are required" });
+    }
+
+    // 1️⃣ Reverse any previous payroll for this month/year (optional)
+    await client.query(
+      `UPDATE payroll SET status = 'Reversed', run_date = NOW()
+       WHERE month = $1 AND year = $2 AND status = 'Completed'`,
+      [month, year]
+    );
+
+    
+
+    const payrollId = await generatePayrollId(client);
+
+    // 3️⃣ Fetch active salary structure
+    const { rows: employees } = await client.query(`
+      SELECT
+        employee_id, gross_salary, total_deductions, net_salary
+      FROM salary_structure
+      WHERE status = 'Active'
+    `);
+
+    if (employees.length === 0) {
+      return res.status(400).json({ error: "No active employees found in salary structure" });
+    }
+
+    let totalGross = 0, totalNet = 0, totalDeductions = 0;
+
+    employees.forEach(emp => {
+      totalGross += Number(emp.gross_salary) || 0;
+      totalNet += Number(emp.net_salary) || 0;
+      totalDeductions += Number(emp.total_deductions) || 0;
+    });
+
+    // 4️⃣ Insert new payroll
+    const history = await client.query(
+      `INSERT INTO payroll
+        (payroll_id, year, month, total_employees, total_gross, total_deductions, total_net, status, run_date)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,'Completed',NOW())
+       RETURNING *`,
+      [payrollId, year, month, employees.length, totalGross, totalDeductions, totalNet]
+    );
+
+    return res.json({
+      message: `Payroll rerun completed successfully with ID ${payrollId}`,
+      payrollId,
+      totalEmployees: employees.length,
+      totalGross,
+      totalDeductions,
+      totalNet,
+      status: "Completed",
+      history: history.rows[0]
+    });
+
+  } catch (err) {
+    console.error("RERUN PAYROLL ERROR:", err);
+    return res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+};
+
+
+export const getAllPayroll = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { rows } = await client.query(`
+      SELECT 
+        id,
+        payroll_id,
+        year,
+        month,
+        total_employees,
+        total_gross,
+        total_deductions,
+        total_net,
+        status,
+        run_date
+        
+      FROM payroll
+      ORDER BY run_date DESC;
+    `);
+
+    return res.json({
+      count: rows.length,
+      payroll: rows
+    });
+
+  } catch (err) {
+    console.error("GET ALL PAYROLL ERROR:", err);
+    return res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+};
+
+export const getMonthlyPayrollSummary = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { month, year } = req.query;
+
+    if (!month || !year) {
+      return res.status(400).json({ error: "month and year are required" });
+    }
+
+    // Normalize month
+    const monthInt = parseInt(month, 10);
+    const monthStr = String(monthInt);
+    const monthZero = monthStr.padStart(2, "0");
+
+    const query = `
+      SELECT 
+        total_employees,
+        total_gross,
+        total_deductions,
+        total_net
+      FROM payroll
+      WHERE month IN ($1, $2)
+        AND year = $3
+        AND status = 'Completed'
+      ORDER BY run_date DESC
+      LIMIT 1;
+    `;
+
+    const { rows } = await client.query(query, [
+      monthStr,
+      monthZero,
+      year
+    ]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "No payroll found for this month/year" });
+    }
+
+    res.json({
+      month: monthInt,
+      year,
+      totalEmployees: rows[0].total_employees,
+      totalGross: rows[0].total_gross,
+      totalDeductions: rows[0].total_deductions,
+      totalNet: rows[0].total_net,
+    });
+
+  } catch (err) {
+    console.error("MONTHLY PAYROLL SUMMARY ERROR:", err);
+    res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
+};
+
+
+export const getPayrollTrend = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    let limit = parseInt(req.query.limit) || 6;
+
+    if (limit < 1 || limit > 36) limit = 6;
+
+    const query = `
+      SELECT DISTINCT ON (year, month::int)
+        month,
+        year,
+        total_gross,
+        total_net,
+        total_employees
+      FROM payroll
+      WHERE status = 'Completed'
+      ORDER BY year DESC, month::int DESC, run_date DESC
+      LIMIT $1;
+    `;
+
+    const { rows } = await client.query(query, [limit]);
+
+    res.json({
+      success: true,
+      months_requested: limit,
+      trend: rows.reverse() // oldest → latest
+    });
+
+  } catch (err) {
+    console.error("PAYROLL TREND ERROR:", err);
+    res.status(500).json({ success: false, error: err.message });
+  } finally {
+    client.release();
+  }
+};
+
+
+export const getFreelancerAnalytics = async (req, res) => {
+  try {
+    const query = `
+      SELECT
+        u.id,
+        u.name,
+        u.email,
+        u.department,
+ 
+        c.contract_title,
+        c.contract_start_date,
+        c.contract_end_date,
+        c.version,
+        c.contract_status,
+ 
+        r.project_cost
+ 
+      FROM user_employees_master u
+      LEFT JOIN freelancer_contracts c ON u.id = c.freelancer_id
+      LEFT JOIN freelancer_responses r ON u.email = r.email  -- matching based on email
+      WHERE u.employment_type = 'freelancer'
+      ORDER BY u.created_at DESC;
+    `;
+ 
+    const result = await pool.query(query);
+    return res.json(result.rows);
+ 
+  } catch (error) {
+    console.error("Error fetching freelancer analytics:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const fetchAuthSettings = async () => {
+  const { data } = await axios.get(
+    `${process.env.SETTINGS_SERVICE_URL}/api/settings/get`
+  );
+  return data;
 };

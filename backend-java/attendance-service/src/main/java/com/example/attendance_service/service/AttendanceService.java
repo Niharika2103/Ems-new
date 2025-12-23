@@ -18,9 +18,11 @@ import java.time.temporal.TemporalAdjusters;
 import org.springframework.stereotype.Service;
 
 import com.example.attendance_service.model.AttendanceEntity;
+import com.example.attendance_service.model.LeaveTypeEntity;
 import com.example.attendance_service.model.ProjectEntity;
 import com.example.attendance_service.model.UserEmployeeMasterEntity;
 import com.example.attendance_service.repository.AttendanceRepository;
+import com.example.attendance_service.repository.LeaveTypeRepository;
 import com.example.attendance_service.repository.ProbationRepository;
 import com.example.attendance_service.repository.ProjectRepository;
 import com.example.attendance_service.repository.UserEmployeeMasterRepository;
@@ -38,15 +40,22 @@ public class AttendanceService {
 	private final UserEmployeeMasterRepository userRepository;
 	private final ProbationRepository probationRepository;
 
-	public AttendanceService(AttendanceRepository attendanceRepository,
-            ProjectRepository projectRepository,
-            UserEmployeeMasterRepository userRepository,
-            ProbationRepository probationRepository) {
-this.attendanceRepository = attendanceRepository;
-this.projectRepository = projectRepository;
-this.userRepository = userRepository;
-this.probationRepository = probationRepository; // ✅ IMPORTANT
-}
+	private final LeaveTypeRepository leaveTypeRepository;
+
+	public AttendanceService(
+	        AttendanceRepository attendanceRepository,
+	        ProjectRepository projectRepository,
+	        UserEmployeeMasterRepository userRepository,
+	        ProbationRepository probationRepository,
+	        LeaveTypeRepository leaveTypeRepository
+	) {
+	    this.attendanceRepository = attendanceRepository;
+	    this.projectRepository = projectRepository;
+	    this.userRepository = userRepository;
+	    this.probationRepository = probationRepository;
+	    this.leaveTypeRepository = leaveTypeRepository;
+	}
+
 
 
 	public boolean isInProbation(UUID employeeId, LocalDate date) {
@@ -364,27 +373,40 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 	            Comparator.nullsLast(String::compareToIgnoreCase)))
 	    .collect(Collectors.toList());
 	}
+	
 	@Transactional
 	public boolean canApplyLeave(UUID employeeId, String leaveType, int requestedDays) {
-	    // ✅ Count how many leaves of this type the employee has already taken
-	    long takenLeaves = attendanceRepository.countByEmployee_IdAndLeaveType(employeeId, leaveType);
 
-	    // ✅ Hardcoded allowed leave limits
-	    int allowed = switch (leaveType) {
-	        case "SL" -> 10;   // Sick Leave
-	        case "EL" -> 25;  // Earned Leave
-	        case "WFH" -> 315; // Work From Home
-	        case "Extra Milar" -> 2;
-	        case "Paternity Leave" -> 7;
-	        case "Maternity Leave" -> 180;
-	        case "Optional Holidays" -> 2;
-	        case "Holidays" -> 10;
-	        default -> 0;
-	    };
+	    long takenLeaves =
+	            attendanceRepository.countByEmployee_IdAndLeaveType(employeeId, leaveType);
 
-	    // ✅ Compare requested vs available
+	    int allowed = getMaxBalance(leaveType);
+
+
 	    return (takenLeaves + requestedDays) <= allowed;
 	}
+
+//	@Transactional
+//	public boolean canApplyLeave(UUID employeeId, String leaveType, int requestedDays) {
+//	    // ✅ Count how many leaves of this type the employee has already taken
+//	    long takenLeaves = attendanceRepository.countByEmployee_IdAndLeaveType(employeeId, leaveType);
+//
+//	    // ✅ Hardcoded allowed leave limits
+//	    int allowed = switch (leaveType) {
+//	        case "SL" -> 10;   // Sick Leave
+//	        case "EL" -> 25;  // Earned Leave
+//	        case "WFH" -> 315; // Work From Home
+//	        case "Extra Milar" -> 2;
+//	        case "Paternity Leave" -> 7;
+//	        case "Maternity Leave" -> 180;
+//	        case "Optional Holidays" -> 2;
+//	        case "Holidays" -> 10;
+//	        default -> 0;
+//	    };
+//
+//	    // ✅ Compare requested vs available
+//	    return (takenLeaves + requestedDays) <= allowed;
+//	}
 	
 	
 //	private Map<String, Double> calculateProRatedLeaves(LocalDate joiningDate) {
@@ -408,29 +430,6 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 //	    return proRated;
 //	}
 	
-	// 🔹 Calculates leaves based on mid-year joining logic (Jan–Dec year)
-	private Map<String, Integer> calculateLeavesBasedOnJoining(LocalDate joiningDate) {
-	    // Full-year leave configuration
-	    Map<String, Integer> yearlyLeaves = Map.of(
-	        "SL", 10,
-	        "EL", 25,
-	        "Extra Milar", 2,
-	        "Holidays", 10,
-	        "Optional Holidays", 2
-	    );
-
-	    // 🗓️ Mid-year cutoff = June 30
-	    LocalDate midYear = LocalDate.of(joiningDate.getYear(), 6, 30);
-	    boolean joinedBeforeMidYear = !joiningDate.isAfter(midYear);
-
-	    Map<String, Integer> finalLeaves = new java.util.HashMap<>();
-	    yearlyLeaves.forEach((type, total) -> {
-	        int leaves = joinedBeforeMidYear ? total : total / 2; // Half if joined after mid-year
-	        finalLeaves.put(type, leaves);
-	    });
-
-	    return finalLeaves;
-	}
 
 //
 //	@Transactional
@@ -766,9 +765,9 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 //	}
 	
 	private Map<String, Integer> calculateYearlyLimits(LocalDate joiningDate, int year) {
+		int FULL_SL = getMaxBalance("SL");
+		int FULL_EL = getMaxBalance("EL");
 
-	    final int FULL_SL = 10;
-	    final int FULL_EL = 25;
 
 	    int slLimit;
 	    int elLimit;
@@ -791,6 +790,13 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 	    return map;
 	}
 
+
+	private int getMaxBalance(String leaveCode) {
+	    return leaveTypeRepository
+	            .findByCodeIgnoreCaseAndIsActiveTrue(leaveCode)
+	            .map(LeaveTypeEntity::getMaxBalance)
+	            .orElse(0);
+	}
 
 	@Transactional
 	public Map<String, Integer> getEmployeeLeaves(UUID employeeId) {

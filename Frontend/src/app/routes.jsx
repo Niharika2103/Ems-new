@@ -98,6 +98,16 @@ import FreelancerCustomReports from "../pages/Freelancer/Reports/CustomReports/F
 import EmailTemplateEditor from "../pages/Templates/EmailTemplate/EmailTemplateEditor";
 import WhatsAppTemplateEditor from "../pages/Templates/WatsupTemplate/WatsupTemplateEditor";
 import CommunicationInfoDashboard from "../pages/dashbaord/CommunicationInfoDashboard";
+import EventWebhooks from "../pages/Templates/Webhook/EventWebhooks";
+import PanelistFeedback from "../pages/JobPosting/PanelistFeedback";
+import FreelancerLetterGenerator from "../pages/Freelancer/FreelancerLetterGenerator";
+import PayrollVendorManagementSystem from "../pages/Vendor/PayrollVendorManagementSystem";
+import FreelancerJobPostDashboard from "../pages/Freelancer/jobposting/FreelancerJobPostDashboard";
+import PanelistFeedback from "../pages/JobPosting/PanelistFeedback";
+import FreelancerApplicationsTable from "../pages/Freelancer/jobposting/FreelancerApplicationsTable";
+import FreelancerLetterGenerator from "../pages/Freelancer/FreelancerLetterGenerator";
+import FreelancerLettersDownload from "../pages/Freelancer/FreelancerLettersDownload";
+
 function AppRoutes() {
   return (
     <Routes>
@@ -121,6 +131,7 @@ function AppRoutes() {
       <Route path="/attendance/timesheet" element={<Timesheet />} />
       <Route path="/vendor" element={<VendorFormSystem />} />
       <Route path="/moutemplate" element={<MoUGenerationSystem />} />
+      <Route path="/vendor/payroll" element={<PayrollVendorManagementSystem />} />
 
       <Route path='/dashboard/timesheet/monthly'
         element={
@@ -154,7 +165,14 @@ function AppRoutes() {
               <EmpTypeFreelancerDashboard />
             </ProtectedRoute>
           }
-
+        />
+         <Route
+          path="/freelancer/letters"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <FreelancerLetterGenerator />
+            </ProtectedRoute>
+          }
         />
         <Route path="/payslip" element={
           <ProtectedRoute allowedRoles={["employee"]}>
@@ -167,6 +185,15 @@ function AppRoutes() {
        </ProtectedRoute>
        }
        />
+       
+        <Route path="/freelancer/letters-download" 
+        element={
+       <ProtectedRoute allowedRoles={["employee"]}>
+        <FreelancerLettersDownload/>
+       </ProtectedRoute>
+       }
+       />
+       
         <Route path="dashboard/employee/leave" element={
           <ProtectedRoute allowedRoles={["employee"]}>
             <EmployeeLeave />
@@ -206,7 +233,7 @@ function AppRoutes() {
         />
 
 
-        <Route path="/job-postings"
+        <Route path="/job-create"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <CreateJobList />
@@ -214,7 +241,7 @@ function AppRoutes() {
           }
         />
 
-        <Route path="/dashboard/JobPostDashboard"
+        <Route path="/JobPostDashboard"
           element={
             <ProtectedRoute allowedRoles={["employee", "admin"]}>
               <JobPostDashboard />
@@ -251,6 +278,7 @@ function AppRoutes() {
               <JobApplicationTracking />
             </ProtectedRoute>}
         />
+        
         <Route
           path="/offers/status"
           element={<ProtectedRoute allowedRoles={["admin"]}>
@@ -274,7 +302,7 @@ function AppRoutes() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/profile"
           element={
-            <ProtectedRoute allowedRoles={["admin"]}>
+            <ProtectedRoute allowedRoles={["admin","superadmin"]}>
               <Profile />
             </ProtectedRoute>
           } />
@@ -373,6 +401,8 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        
+        
         <Route
           path="/dashboard/freelancer/freelancerattendance"
           element={
@@ -538,6 +568,14 @@ function AppRoutes() {
           }
         />
 
+      {/* <Route
+          path="/freelancer/letters"
+          element={
+            <ProtectedRoute allowedRoles={["employee"]}>
+              <FreelancerLettersDownload />
+            </ProtectedRoute>
+          }
+        /> */}
         <Route path="/documents/admin/letters"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
@@ -560,7 +598,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-        <Route path="/dashboard/reports"
+        <Route path="/reports"
           element={
             <ProtectedRoute allowedRoles={["admin", "employee"]}>
               < ReportsDashboard />
@@ -641,7 +679,20 @@ function AppRoutes() {
        <Route path="/payout-management" element={<PayoutManagement />} />
        <Route path="/commision" element={<CommissionSystemDashboard />} />
        <Route path="/settings" element={<SettingsPage />} />
-       <Route path="/feedback-table" element={<PanelFeedbackTable />} />
+       <Route path="/interview-table"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+              <PanelFeedbackTable />
+            </ProtectedRoute>
+       } 
+       />
+       <Route path="/employee/feedback"
+        element={
+          <ProtectedRoute allowedRoles={["employee","admin"]}>
+              <PanelistFeedback />
+            </ProtectedRoute>
+       } 
+       />
 
        <Route path="/audit-logs"
        element={
@@ -723,6 +774,7 @@ function AppRoutes() {
 
          <Route path="/email-template" element={<EmailTemplateEditor />} />
          <Route path="/watsup-template" element={<WhatsAppTemplateEditor />} />
+         <Route path="/webhook" element={<EventWebhooks />} />
 
          <Route
           path="/communication-info"

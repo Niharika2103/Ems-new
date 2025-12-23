@@ -1,4 +1,6 @@
 import { Router } from "express";
+import webhookRoutes from "./webhook.routes.js";
+
 import {
   adminRegister,
   adminLogin,
@@ -27,12 +29,19 @@ import {
   getAuditLogs,
   generateLetter,
   getEmployeeLetters,
+  downloadEmployeeLetter,
   documentUpload,
   uploadEmployeeDocuments,
   getAllEmployeesWithDocs,
   downloadEmployeeDocument,
   deleteLetter,
   sendLetterEmail,
+  generateFreelancerLetter,
+  getFreelancerLetters,
+  downloadFreelancerLetter,
+  deleteFreelancerLetter,
+  sendFreelancerLetterEmail,
+  getAllFreelancers,
   getAllReferralsAdmin,
   getReferralByIdAdmin,
   updateReferralStatusAdmin,
@@ -41,6 +50,7 @@ import {
   scheduleInterviewReferral,
   rescheduleInterviewReferral,
   getAllInterviewsWithDetails,
+  getMyInterviews,
   addPanelFeedback,
   getPanelFeedback,
   // === EXTRA AUDIT LOG CONTROLLERS ===
@@ -67,11 +77,32 @@ import {
   getNewEmployees,
   getProbationWithUser,
   getMonthlyFinalSummary,
+  validatePayroll,
+  runPayroll,
+  reversePayroll,
+  rerunPayroll,
+  getAllPayroll,
   updateTLReview,
   fetchAllReviews,
-  getFinalRatingsForEmployees
+  getFinalRatingsForEmployees,
+  getDepartmentWisePayroll,
+  getMonthlyPayrollSummary,
+  getPayrollTrend,
+  getFreelancerAnalytics
  
 } from "../controllers/admin.controller.js";
+
+
+import {
+  sendBulkEmailToAllEmployees,
+  getAllEmailTemplates,
+  getEmailTemplateById,
+  createEmailTemplate,
+  updateEmailTemplate,
+  deleteEmailTemplate,
+  toggleEmailTemplateStatus
+} from "../controllers/email.controller.js";
+
 
 // Job post imports
 import {
@@ -116,6 +147,8 @@ import { getEmployeeRoiReport } from "../controllers/employeeRoi.controller.js";
 
 
 const router = Router();
+router.use("/webhooks", webhookRoutes);
+
 
 /* ================= Admin Register/Login ================= */
 router.post("/register", adminRegister);
@@ -172,8 +205,27 @@ router.get("/attendance/pending-parental", getPendingParentalLeaves);
 /* ========== Letters ========== */
 router.post("/letters/generate", generateLetter);
 router.get("/letters/:employeeId", getEmployeeLetters);
+
+
+router.get("/letters/download/:employeeId/:fileName",downloadEmployeeLetter);
 router.delete("/letters/:employeeId/:filename", deleteLetter);
 router.post("/letters/send-email", sendLetterEmail);
+
+
+
+// ================= FREELANCER LETTERS =================
+router.post("/freelancers/letters/generate",generateFreelancerLetter);
+
+router.get("/freelancers/:freelancerId/letters",getFreelancerLetters);
+
+router.get("/freelancers/:freelancerId/letters/:fileName/download",downloadFreelancerLetter);
+
+router.delete("/freelancers/:freelancerId/letters/:filename",deleteFreelancerLetter);
+
+router.post("/freelancers/letters/send-email",sendFreelancerLetterEmail);
+
+router.get("/freelancers", getAllFreelancers);
+
 
 /* ========== Employee Document Upload ========== */
 router.post(
@@ -210,6 +262,7 @@ router.get(
   "/interviews/all",
   getAllInterviewsWithDetails
 );
+router.get("/my-interviews", getMyInterviews);
 
 router.post(
   "/interviews/:interview_id/feedback",
@@ -296,9 +349,57 @@ router.get(
   "/monthly-final-summary/:employeeId/:year/:month",
   getMonthlyFinalSummary
 );
+
+router.post('/validate', validatePayroll);
+
+// POST /api/payroll/run
+router.post("/run", runPayroll);
+
+router.post("/reverse", reversePayroll);
+
+router.post("/rerun", rerunPayroll);
+
+router.get("/payroll", getAllPayroll);
 router.put("/performance/update/:id", updateTLReview);           
 router.get("/performance/all", fetchAllReviews);
 
 router.get("/performance/final-ratings", getFinalRatingsForEmployees);
+
+//payroll analytic
+router.get("/payroll/summary", getMonthlyPayrollSummary);
+
+router.get("/payroll/department-wise", getDepartmentWisePayroll);
+router.get("/payroll/trend", getPayrollTrend);
+
+
+
+router.get("/freelancers/analytics", getFreelancerAnalytics);
+
+/* ============================================================
+   ⭐ ADD NEW EMAIL TEMPLATE SEND ROUTE (ONLY THIS WAS ADDED)
+============================================================ */
+// Get all templates
+router.get("/email-templates", getAllEmailTemplates);
+
+// Create template
+router.post("/email-templates/create", createEmailTemplate);
+
+// Send email to all employees
+router.post("/email-templates/send-all", sendBulkEmailToAllEmployees);
+
+// 🔥 IMPORTANT — toggle BEFORE /:id routes
+router.patch("/email-templates/:id/toggle", toggleEmailTemplateStatus);
+
+// Get template by ID
+router.get("/email-templates/:id", getEmailTemplateById);
+
+// Update template
+router.put("/email-templates/:id", updateEmailTemplate);
+
+// Delete template
+router.delete("/email-templates/:id", deleteEmailTemplate);
+
+
+
 
 export default router;

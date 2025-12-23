@@ -8,7 +8,6 @@ import {
   listFreelancers,
   approveFreelancer,
   rejectFreelancer,
-  // getFreelancerDocs,
 } from "../controllers/Freelancer.controller.js";
 
 const router = express.Router();
@@ -38,5 +37,12 @@ router.post("/reject/:id", rejectFreelancer);
 
 // MUST BE LAST
 // router.get("/:id", getFreelancerDocs);
+
+
+// // ================= LETTER ROUTES =================
+
+import { getFreelancerLetters } from "../../../admin-service/src/controllers/admin.controller.js";
+router.get("/letters/:employeeId", getFreelancerLetters);
+
 
 export default router;

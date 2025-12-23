@@ -88,112 +88,122 @@ export default function AdminTable() {
 
   //Edit Register Model
   const handleEdit = (record) => {
-    setEditingRecord(record);
-    const formatDate = (isoString) => {
-      if (!isoString) return currentDate;
-      return isoString.split("T")[0];
-    };
+  if (!record) return;
 
-    setFormData({
-      name: record.name || "",
-      email: record.email || "",
-      date_of_joining: formatDate(record.date_of_joining),
-      phone: record.phone || "",
-      address: record.address || "",
-      permanent_address: record.permanent_address || "",
-      department: record.department || "",
-      gender: record.gender || "",
-      emergency_contact: record.emergency_contact || "",
-      dob: formatDate(record.dob),
-      designation: record.designation || "",
-      employment_type: record.employment_type || "",
-    });
-    setIsModalOpen(true);
-  };
+  setEditingRecord(record);
 
-  const handlePromote = async (record) => {
-    if (!window.confirm(`Promote ${record.name} to Admin?`)) return;
-
-    try {
-      await promoteEmployeeApi(record.id);
-      toast.success(`${record.name} promoted successfully!`);
-      dispatch(fetchAllEmployees());
-    } catch (err) {
-      console.error("Promote error:", err);
-      toast.error("Failed to promote employee");
+  const formatDate = (value) => {
+    if (!value) return currentDate;
+    if (typeof value === "string" && value.includes("T")) {
+      return value.split("T")[0];
     }
+    return value;
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  setFormData({
+    name: record?.name || "",
+    email: record?.email || "",
+    date_of_joining: formatDate(record?.date_of_joining),
+    phone: record?.phone || "",
+    address: record?.address || "",
+    permanent_address: record?.permanent_address || "",
+    department: record?.department || "",
+    gender: record?.gender || "",
+    emergency_contact: record?.emergency_contact || "",
+    dob: formatDate(record?.dob),
+    designation: record?.designation || "",
+    employment_type: record?.employment_type
+      ? record.employment_type.toLowerCase()
+      : "freelancer",
+  });
 
-     if (name === "phone" || name==="emergency_contact") {
-    if (!/^[0-9]*$/.test(value)) return;  // block letters
-    if (value.length > 10) return;        // max 10 digits
+  setIsModalOpen(true);
+};
+
+const handlePromote = async (record) => {
+  if (!record) return;
+  if (!window.confirm(`Promote ${record.name} to Admin?`)) return;
+
+  try {
+    await promoteEmployeeApi(record.id);
+    toast.success(`${record.name} promoted successfully!`);
+    dispatch(fetchAllEmployees());
+  } catch (err) {
+    console.error("Promote error:", err);
+    toast.error("Failed to promote employee");
   }
-    if (name === "date_of_joining") {
-      if (value && !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-        return;
-      }
-    }
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+};
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleChange = (e) => {
+  const { name, value } = e.target;
 
-    const errors = validateEmployeeEdit(formData);
-    if (Object.keys(errors).length > 0) {
-      const firstError = Object.values(errors)[0];
-      toast.error(firstError);
-      return;
-    }
+  if (name === "phone" || name === "emergency_contact") {
+    if (!/^[0-9]*$/.test(value)) return;
+    if (value.length > 10) return;
+  }
 
-    setLoading(true);
-    try {
-        const payload = {
+  if (name === "date_of_joining") {
+    if (value && !/^\d{4}-\d{2}-\d{2}$/.test(value)) return;
+  }
+
+  setFormData((prev) => ({ ...prev, [name]: value }));
+};
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  const errors = validateEmployeeEdit(formData);
+  if (Object.keys(errors).length > 0) {
+    toast.error(Object.values(errors)[0]);
+    return;
+  }
+
+  setLoading(true);
+  try {
+    const payload = {
       ...formData,
       date_of_joining: formData.date_of_joining || null,
       dob: formData.dob || null,
+      employment_type: formData.employment_type || "freelancer",
     };
-      const res = await dispatch(
-        updateEmployeebyAdmin({ id: editingRecord?.id, data: payload })
-      ).unwrap();
 
-      toast.success(res?.message || "Employee updated successfully");
+    const res = await dispatch(
+      updateEmployeebyAdmin({
+        id: editingRecord?.id,
+        data: payload,
+      })
+    ).unwrap();
 
-      //If the edited employee is the current user, refresh their profile
-      try {
-        const currentUser = await decodeToken();
-        if (editingRecord?.email === currentUser.email) {
-          dispatch(fetchEmployeeProfile(currentUser.email));
-        }
-      } catch (error) {
-        console.warn("Could not refresh user profile after edit:", error);
+    toast.success(res?.message || "Employee updated successfully");
+
+    try {
+      const currentUser = await decodeToken();
+      if (editingRecord?.email === currentUser.email) {
+        dispatch(fetchEmployeeProfile(currentUser.email));
       }
+    } catch {}
 
-      setIsModalOpen(false);
-      dispatch(fetchAllEmployees());
-    } catch (err) {
-      console.error("Update error:", err);
-      toast.error(
-        err?.message ||
+    setIsModalOpen(false);
+    dispatch(fetchAllEmployees());
+  } catch (err) {
+    console.error("Update error:", err);
+    toast.error(
+      err?.message ||
         err?.error ||
         err?.data?.message ||
         "Failed to update employee"
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+    );
+  } finally {
+    setLoading(false);
+  }
+};
 
-
-  const handleNavigate = (email) => {
-    const query = new URLSearchParams();
-    if (email) query.set("email", email);
-    navigate(`/accounts/salary-structure/?${query.toString()}`);
-  };
-  //employee table
+const handleNavigate = (email) => {
+  const query = new URLSearchParams();
+  if (email) query.set("email", email);
+  navigate(`/accounts/salary-structure/?${query.toString()}`);
+};
+//employee table
   const columns = [
     {
       title: "ID",
@@ -337,6 +347,16 @@ export default function AdminTable() {
           >
             Grant
           </Button>
+ 
+          <Button
+  type="dashed"
+  danger
+  size="small"
+  onClick={() => handleRevoke(record.email)}
+  style={{ fontSize: "12px", minWidth: "80px" }}
+>
+  Revoke
+</Button>
 
           {/* Promote Button */}
           <Button
@@ -860,19 +880,19 @@ export default function AdminTable() {
 </Grid>
 
 
-        <Grid item xs={12} sm={6}>
-          <TextField
-            label="Designation"
-            name="designation"
-            value={formData.designation}
-            onChange={handleChange}
-            fullWidth
-            size="small"
-            margin="normal"
-          />
-        </Grid>
+     <Grid item xs={12} sm={6}>
+  <TextField
+    label="Designation"
+    name="designation"
+    value={formData.designation || ""}
+    onChange={handleChange}
+    fullWidth
+    size="small"
+    margin="normal"
+  />
+</Grid>
 
-       <Grid item xs={12} sm={6}>
+<Grid item xs={12} sm={6}>
   <FormControl fullWidth>
     <InputLabel
       shrink
@@ -886,11 +906,10 @@ export default function AdminTable() {
     </InputLabel>
 
     <Select
-      value={formData.employment_type}
-      onChange={handleChange}
       name="employment_type"
+      value={formData.employment_type || "freelancer"}   // ✅ default freelancer
+      onChange={handleChange}
       label="Employment Type *"
-      displayEmpty
       sx={{
         fontSize: "1.05rem",
         minHeight: "56px",
@@ -903,25 +922,12 @@ export default function AdminTable() {
         },
       }}
     >
-      <MenuItem value="" disabled>
-        <em>Select employment type</em>
-      </MenuItem>
-
-      <MenuItem value="fulltime" sx={{ fontSize: "1.05rem" }}>
-        Full Time
-      </MenuItem>
-
-      <MenuItem value="contract" sx={{ fontSize: "1.05rem" }}>
-        Contract
-      </MenuItem>
-
-      <MenuItem value="freelancer" sx={{ fontSize: "1.05rem" }}>
-        Freelancer
-      </MenuItem>
+      <MenuItem value="freelancer">Freelancer</MenuItem>
+      <MenuItem value="fulltime">Full Time</MenuItem>
+      <MenuItem value="contract">Contract</MenuItem>
     </Select>
   </FormControl>
 </Grid>
-
 
         {/* Submit */}
         <Grid item xs={12}>

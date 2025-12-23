@@ -9,6 +9,12 @@ import { sendEmail } from "../services/emailService.js";
 import fs from "fs";
 import speakeasy from "speakeasy";
 import dotenv from "dotenv";
+import axios from "axios";
+dotenv.config();
+
+const FREELANCER_URL = `${process.env.FREELANCER_PROTOCOL}://${process.env.FREELANCER_HOST}:${process.env.FREELANCER_PORT}`;
+console.log("FREELANCER_URL =", FREELANCER_URL);
+
 
 
 const USERS_TABLE = "user_employees_master";
@@ -748,21 +754,46 @@ export const bulkInsertEmployees = async (req, res) => {
 };
 
 // ================== Get All Employees ==================
-export const getEmployees = async (req, res) => {
-  const client = await pool.connect();
-  try {
+// export const getEmployees = async (req, res) => {
+//   const client = await pool.connect();
+//   try {
     // Fetch all users with role in ['admin', 'superadmin', 'employee']
     // const query = `
     //   SELECT *
     //   FROM ${USERS_TABLE}
     //   WHERE role IN ('admin', 'superadmin', 'employee');
     // `;
+//     const query = `
+//       SELECT *
+//       FROM ${USERS_TABLE}
+//       WHERE 
+//         role IN ('admin', 'superadmin')
+//         OR (role = 'employee' AND employment_type = 'fulltime');
+//     `;
+
+//     const { rows } = await client.query(query);
+
+//     return res.status(200).json(rows);
+//   } catch (err) {
+//     console.error("Get Employees Error:", err.message);
+//     return res.status(500).json({ message: err.message });
+//   } finally {
+//     client.release();
+//   }
+// };
+
+export const getEmployees = async (req, res) => {
+  const client = await pool.connect();
+  try {
     const query = `
       SELECT *
       FROM ${USERS_TABLE}
-      WHERE 
-        role IN ('admin', 'superadmin')
-        OR (role = 'employee' AND employment_type = 'fulltime');
+      WHERE employment_type = 'fulltime'
+      AND (
+            LOWER(role) = 'employee'
+         OR LOWER(role_1) = 'employee'
+         OR LOWER(role_2) = 'employee'
+      );
     `;
 
     const { rows } = await client.query(query);
@@ -776,16 +807,16 @@ export const getEmployees = async (req, res) => {
   }
 };
 
+
 // ================== Get Employee by ID ==================
+// ================== Get Employee by Email (for employee profile) ==================
 export const getEmployeeById = async (req, res) => {
   const client = await pool.connect();
   try {
     const { email } = req.params;
-
     if (!email) {
       return res.status(400).json({ error: "Email is required" });
     }
-
     const query = `
       SELECT *
       FROM ${USERS_TABLE}
@@ -793,14 +824,26 @@ export const getEmployeeById = async (req, res) => {
       AND role = 'employee'
       LIMIT 1;
     `;
-
     const { rows } = await client.query(query, [email]);
-
     if (rows.length === 0) {
       return res.status(404).json({ error: "Employee not found" });
     }
 
-    return res.status(200).json(rows[0]);
+    // ✅ ADD FULL URL LOGIC HERE TOO
+    const BASE_URL = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5009}`;
+    const employee = rows[0];
+    const safeEmployee = {
+      ...employee,
+      profile_photo: employee.profile_photo
+        ? `${BASE_URL}/uploads/${employee.profile_photo}`
+        : null,
+      resume: employee.resume
+        ? `${BASE_URL}/uploads/${employee.resume}`
+        : null,
+    };
+    delete safeEmployee.password;
+
+    return res.status(200).json(safeEmployee);
   } catch (err) {
     console.error("Get Employee By ID Error:", err.message);
     return res.status(500).json({ message: err.message });
@@ -809,35 +852,7 @@ export const getEmployeeById = async (req, res) => {
   }
 };
 
-// export const fetchEmployeeById = async (req, res) => {
-//   const client = await pool.connect();
-//   try {
-//     const { email } = req.params;
-//     if (!email) {
-//       return res.status(400).json({ error: "ID is required" });
-//     }
-
-//     const query = `
-//       SELECT *
-//       FROM ${USERS_TABLE}
-//       WHERE email = $1
-//       LIMIT 1;
-//     `;
-
-//     const { rows } = await client.query(query, [email]);
-
-//     if (rows.length === 0) {
-//       return res.status(404).json({ error: "User not found" });
-//     }
-
-//     return res.status(200).json(rows[0]);
-//   } catch (err) {
-//     console.error("Get Employee By ID Error:", err.message);
-//     return res.status(500).json({ message: err.message });
-//   } finally {
-//     client.release();
-//   }
-// };
+// ================== Fetch Employee by Email (general) ==================
 export const fetchEmployeeById = async (req, res) => {
   const client = await pool.connect();
   try {
@@ -856,8 +871,8 @@ export const fetchEmployeeById = async (req, res) => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // ✅ ADD THIS: Build full URLs
-    const BASE_URL = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5204}`;
+    // ✅ FULL URL LOGIC (already present, just fix port)
+    const BASE_URL = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5009}`;
     const employee = rows[0];
     const safeEmployee = {
       ...employee,
@@ -1325,27 +1340,116 @@ export const applyParentalLeave = async (req, res) => {
   }
 };
 
-export const getFreelancers = async (req, res) => {
-  
-  const client = await pool.connect();
-  try {
-    const query = `
-      SELECT *
-      FROM ${USERS_TABLE}
-    WHERE role= 'employee'
-and employment_type = 'freelancer';
-    `;
+    export const getFreelancers = async (req, res) => {
+      const client = await pool.connect();
 
-    const { rows } = await client.query(query);
-    return res.status(200).json(rows);
+      try {
+        const query = `
+          SELECT *
+          FROM ${USERS_TABLE}
+          WHERE role = 'employee'
+          AND employment_type = 'freelancer';
+        `;
 
-  } catch (err) {
-    console.error("Get Freelancers Error:", err.message);
-    return res.status(500).json({ message: err.message });
-  } finally {
-    client.release();
-  }
-};
+        const { rows } = await client.query(query);
+        const FREELANCER_URL = process.env.FREELANCER_SERVICE_URL;
+        const BASE_URL = FREELANCER_URL; // same for file links
+
+        const response = await axios.get(`${FREELANCER_URL}/freelancer/list`);
+
+
+
+        const freelancers = rows.map((emp) => {
+          let doc = {};
+
+          // ---- PARSE DOCUMENT JSON SAFELY ----
+          try {
+            doc = emp.document_url ? JSON.parse(emp.document_url) : {};
+          } catch {
+            doc = emp.document_url || {};
+          }
+
+          // ---- HANDLE ALL POSSIBLE KEY NAMES ----
+          const bankPassbookFile =
+            doc.bankPassbook ||
+            doc.passbook ||
+            doc.bank_passbook ||
+            doc.bankpassbook ||
+            null;
+
+          const aadhaarFile =
+            doc.aadhaarCard ||
+            doc.aadhaar ||
+            doc.aadharCard ||
+            null;
+
+          const panFile =
+            doc.panCard ||
+            doc.pancard ||
+            null;
+
+          const gstCertFile =
+            doc.gstCertificate ||
+            doc.gst_certificate ||
+            null;
+
+          const freelancerDocFile =
+            doc.freelancerDocument ||
+            doc.freelancer_document ||
+            null;
+
+          const gstReturns =
+            Array.isArray(doc.gstReturns) ? doc.gstReturns : [];
+
+          // ---- FILENAME ENCODER ----
+          const enc = (file) => (file ? encodeURIComponent(file) : null);
+
+          // ---- BUILD FULL URLS ----
+          const documentUrls = {
+            photo: doc.photo
+              ? `${BASE_URL}/uploads/photo/${enc(doc.photo)}`
+              : null,
+
+            bankPassbook: bankPassbookFile
+              ? `${BASE_URL}/uploads/passbook/${enc(bankPassbookFile)}`
+              : null,
+
+            aadhaarCard: aadhaarFile
+              ? `${BASE_URL}/uploads/aadhaar/${enc(aadhaarFile)}`
+              : null,
+
+            panCard: panFile
+              ? `${BASE_URL}/uploads/pan/${enc(panFile)}`
+              : null,
+
+            gstCertificate: gstCertFile
+              ? `${BASE_URL}/uploads/gstCertificate/${enc(gstCertFile)}`
+              : null,
+
+            freelancerDocument: freelancerDocFile
+              ? `${BASE_URL}/uploads/freelancerDocument/${enc(freelancerDocFile)}`
+              : null,
+
+            gstReturns: gstReturns.map(
+              (file) => `${BASE_URL}/uploads/gstReturns/${enc(file)}`
+            ),
+          };
+
+          // ---- FINAL CLEANED FREELANCER RESPONSE ----
+          return {
+            ...emp,
+            document_url: documentUrls,
+          };
+        });
+
+        return res.status(200).json(freelancers);
+      } catch (err) {
+        console.error("Get Freelancers Error:", err.message);
+        return res.status(500).json({ message: err.message });
+      } finally {
+        client.release();
+      }
+    };
 
 // to create referrals
 export const createReferral = async (req, res) => {
@@ -1659,4 +1763,11 @@ export const submitSelfReview = async (req, res) => {
   } finally {
     client.release();
   }
+};
+
+export const fetchAuthSettings = async () => {
+  const { data } = await axios.get(
+    `${process.env.SETTINGS_SERVICE_URL}/api/settings/get`
+  );
+  return data;
 };

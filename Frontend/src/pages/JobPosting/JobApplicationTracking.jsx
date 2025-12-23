@@ -327,6 +327,55 @@ export default function ApplicationTrackingTable() {
     startDate: "",
     endDate: "",
   });
+  const [errors, setErrors] = useState({
+  skills: "",
+  location: "",
+  experience: "",
+});
+
+const validateTextOnly = (value, field) => {
+  if (!/^[a-zA-Z\s]*$/.test(value)) {
+    setErrors((prev) => ({
+      ...prev,
+      [field]: "Only alphabets are allowed",
+    }));
+    return false;
+  }
+
+  if (value.length > 50) {
+    setErrors((prev) => ({
+      ...prev,
+      [field]: "Maximum 50 characters allowed",
+    }));
+    return false;
+  }
+
+  setErrors((prev) => ({ ...prev, [field]: "" }));
+  return true;
+};
+
+const validateExperience = (value) => {
+  if (!/^\d*$/.test(value)) {
+    setErrors((prev) => ({
+      ...prev,
+      experience: "Only numbers are allowed",
+    }));
+    return false;
+  }
+
+  if (value.length > 2) {
+    setErrors((prev) => ({
+      ...prev,
+      experience: "Maximum 2 digits allowed",
+    }));
+    return false;
+  }
+
+  setErrors((prev) => ({ ...prev, experience: "" }));
+  return true;
+};
+
+
 
   // ----------------- APPLY FILTERS -----------------
   const handleFilter = async () => {
@@ -824,37 +873,54 @@ export default function ApplicationTrackingTable() {
             <option value="SCREENING">Screening</option>
             <option value="INTERVIEW">Interview</option>
             <option value="DECISION">Decision</option>
+              <option value="HIRED">Hired</option> 
           </select>
 
-          <input
-            type="text"
-            placeholder="Skills"
-            value={filters.skills}
-            onChange={(e) =>
-              setFilters((prev) => ({ ...prev, skills: e.target.value }))
-            }
-            style={{ padding: "8px", borderRadius: "5px" }}
-          />
+          <TextField
+  label="Skills"
+  value={filters.skills}
+  error={!!errors.skills}
+  helperText={errors.skills}
+  onChange={(e) => {
+    const value = e.target.value;
+    if (validateTextOnly(value, "skills")) {
+      setFilters((prev) => ({ ...prev, skills: value }));
+    }
+  }}
+  sx={{ minWidth: 180 }}
+/>
 
-          <input
-            type="text"
-            placeholder="Location"
-            value={filters.location}
-            onChange={(e) =>
-              setFilters((prev) => ({ ...prev, location: e.target.value }))
-            }
-            style={{ padding: "8px", borderRadius: "5px" }}
-          />
 
-          <input
-            type="text"
-            placeholder="Experience (ex: 1)"
-            value={filters.experience}
-            onChange={(e) =>
-              setFilters((prev) => ({ ...prev, experience: e.target.value }))
-            }
-            style={{ padding: "8px", borderRadius: "5px" }}
-          />
+         <TextField
+  label="Location"
+  value={filters.location}
+  error={!!errors.location}
+  helperText={errors.location}
+  onChange={(e) => {
+    const value = e.target.value;
+    if (validateTextOnly(value, "location")) {
+      setFilters((prev) => ({ ...prev, location: value }));
+    }
+  }}
+  sx={{ minWidth: 180 }}
+/>
+
+
+         <TextField
+  label="Experience (Years)"
+  value={filters.experience}
+  error={!!errors.experience}
+  helperText={errors.experience}
+  onChange={(e) => {
+    const value = e.target.value;
+    if (validateExperience(value)) {
+      setFilters((prev) => ({ ...prev, experience: value }));
+    }
+  }}
+  inputProps={{ maxLength: 2 }}
+  sx={{ minWidth: 180 }}
+/>
+
 
           <input
             type="date"

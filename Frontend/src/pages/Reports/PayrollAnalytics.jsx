@@ -1,8 +1,8 @@
-// src/components/reports/PayrollAnalytics.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
+  Grid,
   Card,
   CardContent,
   Button,
@@ -17,204 +17,279 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Chip,
-  TextField,
-  Menu,
-} from '@mui/material';
+  Alert,
+  CircularProgress,
+} from "@mui/material";
+
 import {
   Refresh as RefreshIcon,
   Download as DownloadIcon,
-  Search as SearchIcon,
-} from '@mui/icons-material';
+  FilterAlt as FilterIcon,
+} from "@mui/icons-material";
 
-const getToday = () => new Date().toISOString().split('T')[0];
+import {
+  getMonthlyPayrollSummaryApi,
+  getPayrollTrendApi,
+} from "../../api/authApi";
+
+const monthMap = {
+  January: "01",
+  February: "02",
+  March: "03",
+  April: "04",
+  May: "05",
+  June: "06",
+  July: "07",
+  August: "08",
+  September: "09",
+  October: "10",
+  November: "11",
+  December: "12",
+};
+
+const monthNames = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+];
+
+const formatMonthYear = (month, year) => {
+  const name = monthNames[parseInt(month, 10) - 1] || `Month ${month}`;
+  return `${name} ${year}`;
+};
 
 const PayrollAnalytics = () => {
-  const [payrollData, setPayrollData] = useState([]);
-  const [filteredData, setFilteredData] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [departmentFilter, setDepartmentFilter] = useState('all');
-  const [startDate, setStartDate] = useState(getToday());
-  const [endDate, setEndDate] = useState(getToday());
-  const [anchorEl, setAnchorEl] = useState(null);
+  const [period, setPeriod] = useState("current");
+  const [year, setYear] = useState("2025");
+  const [month, setMonth] = useState("December");
 
-  // 🔹 Realistic dummy data: employee-level payroll with dates
-  useEffect(() => {
-    const dummyPayroll = [
-      { id: 1, name: 'Alex Johnson', department: 'Engineering', salary: 95000, bonus: 8000, total: 103000, payDate: '2025-11-30' },
-      { id: 2, name: 'Maria Garcia', department: 'Marketing', salary: 78000, bonus: 5000, total: 83000, payDate: '2025-11-30' },
-      { id: 3, name: 'Raj Patel', department: 'Engineering', salary: 92000, bonus: 0, total: 92000, payDate: '2025-12-15' },
-      { id: 4, name: 'Linda Chen', department: 'Sales', salary: 85000, bonus: 12000, total: 97000, payDate: '2025-11-30' },
-      { id: 5, name: 'James Wilson', department: 'HR', salary: 72000, bonus: 3000, total: 75000, payDate: '2025-11-30' },
-      { id: 6, name: 'Sophie Müller', department: 'Engineering', salary: 98000, bonus: 10000, total: 108000, payDate: '2025-11-30' },
-      { id: 7, name: 'Carlos Rodriguez', department: 'Sales', salary: 80000, bonus: 9000, total: 89000, payDate: '2025-11-30' },
-      { id: 8, name: 'Aisha Khan', department: 'Finance', salary: 90000, bonus: 7000, total: 97000, payDate: '2025-12-15' },
-    ];
-    setPayrollData(dummyPayroll);
-    setFilteredData(dummyPayroll);
-  }, []);
+  const [currentMetrics, setCurrentMetrics] = useState(null);
+  const [hasCurrentPayroll, setHasCurrentPayroll] = useState(true);
+  const [trendData, setTrendData] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    let result = payrollData;
-
-    // Search by employee name
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      result = result.filter(emp => emp.name.toLowerCase().includes(term));
-    }
-
-    // Department filter
-    if (departmentFilter !== 'all') {
-      result = result.filter(emp => emp.department.toLowerCase() === departmentFilter);
-    }
-
-    // Date range filter (by payDate)
-    if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      end.setDate(end.getDate() + 1); // include end date
-
-      result = result.filter(emp => {
-        const pay = new Date(emp.payDate);
-        return pay >= start && pay < end;
-      });
-    }
-
-    setFilteredData(result);
-  }, [searchTerm, departmentFilter, startDate, endDate, payrollData]);
-
-  const handleExport = (format) => {
-    console.log(`[AUDIT] Payroll report exported in ${format}`);
-    alert(`Exporting Payroll Analytics report as ${format}...`);
-    setAnchorEl(null);
+  const getTrendLimit = () => {
+    if (period === "quarter") return 3;
+    if (period === "year") return 12;
+    return 6;
   };
 
+  const loadData = async () => {
+    try {
+      setLoading(true);
+
+      // ✅ Only load current month payroll if period is "current"
+      if (period === "current") {
+        const monthNumber = monthMap[month];
+        if (!monthNumber) {
+          throw new Error("Invalid month");
+        }
+
+        let currentData = null;
+        let payrollExists = true;
+
+        try {
+          const summaryRes = await getMonthlyPayrollSummaryApi(monthNumber, year);
+          currentData = summaryRes.data;
+        } catch (summaryErr) {
+          if (summaryErr.response?.status === 404) {
+            payrollExists = false;
+            currentData = null;
+          } else {
+            throw summaryErr;
+          }
+        }
+
+        setCurrentMetrics(currentData);
+        setHasCurrentPayroll(payrollExists);
+      } else {
+        // ✅ In trend mode: reset current metrics
+        setCurrentMetrics(null);
+        setHasCurrentPayroll(true); // not used, but clean
+      }
+
+      // ✅ Always load trend data
+      const limit = getTrendLimit();
+      const trendRes = await getPayrollTrendApi(limit);
+      setTrendData(trendRes.data.trend || []);
+
+      setLoading(false);
+    } catch (err) {
+      console.error("LOAD ERROR:", err);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, [month, year, period]);
+
+  const handlePeriodChange = (value) => {
+    setPeriod(value);
+  };
+
+  const avgSalary = currentMetrics?.totalEmployees > 0
+    ? Math.round(currentMetrics.totalNet / currentMetrics.totalEmployees)
+    : 0;
+
   return (
-    <Box sx={{ p: 2 }}>
-      {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" fontWeight="medium">
-          Payroll Analytics
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 1 }}>
+    <Box>
+      {/* HEADER */}
+      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
+        <Typography variant="h4">Payroll Analytics</Typography>
+        <Box sx={{ display: "flex", gap: 1 }}>
+          <Button variant="outlined" startIcon={<FilterIcon />}>
+            Filter
+          </Button>
           <Button
             variant="outlined"
             startIcon={<RefreshIcon />}
-            onClick={() => window.location.reload()}
+            onClick={loadData}
           >
             Refresh
           </Button>
-          <Button
-            variant="contained"
-            startIcon={<DownloadIcon />}
-            onClick={(e) => setAnchorEl(e.currentTarget)}
-          >
+          <Button variant="contained" startIcon={<DownloadIcon />}>
             Export
           </Button>
-          <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={() => setAnchorEl(null)}>
-            <MenuItem onClick={() => handleExport('PDF')}>PDF</MenuItem>
-            <MenuItem onClick={() => handleExport('Excel')}>Excel (.xlsx)</MenuItem>
-            <MenuItem onClick={() => handleExport('CSV')}>CSV</MenuItem>
-          </Menu>
         </Box>
       </Box>
 
-      {/* Filters + Search */}
-      <Box sx={{ mb: 3, display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'flex-end' }}>
-        <TextField
-          size="small"
-          placeholder="Search employee..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          InputProps={{ startAdornment: <SearchIcon sx={{ color: 'action.active', mr: 0.5 }} /> }}
-          sx={{ minWidth: 220 }}
-        />
+      {loading ? (
+        <Box sx={{ textAlign: "center", py: 5 }}>
+          <CircularProgress />
+        </Box>
+      ) : (
+        <>
+          {/* === METRICS SECTION: ONLY FOR "current" period === */}
+          {period === "current" && (
+            <>
+              {!hasCurrentPayroll ? (
+                <Alert severity="info" sx={{ mb: 4 }}>
+                  Payroll has not been generated yet for <strong>{month} {year}</strong>. 
+                  It will be available after the month ends and payroll processing is complete.
+                </Alert>
+              ) : currentMetrics ? (
+                <Grid container spacing={3} sx={{ mb: 4 }}>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Card>
+                      <CardContent>
+                        <Typography color="text.secondary">Total Gross</Typography>
+                        <Typography variant="h5">${currentMetrics.totalGross.toLocaleString()}</Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Card>
+                      <CardContent>
+                        <Typography color="text.secondary">Total Net</Typography>
+                        <Typography variant="h5">${currentMetrics.totalNet.toLocaleString()}</Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Card>
+                      <CardContent>
+                        <Typography color="text.secondary">Avg Salary</Typography>
+                        <Typography variant="h5">${avgSalary.toLocaleString()}</Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Card>
+                      <CardContent>
+                        <Typography color="text.secondary">Employees</Typography>
+                        <Typography variant="h5">{currentMetrics.totalEmployees}</Typography>
+                      </CardContent>
+                    </Card>
+                  </Grid>
+                </Grid>
+              ) : (
+                <Alert severity="error" sx={{ mb: 4 }}>
+                  Failed to load payroll data for {month} {year}.
+                </Alert>
+              )}
+            </>
+          )}
 
-        <FormControl size="small" sx={{ minWidth: 140 }}>
-          <InputLabel>Department</InputLabel>
-          <Select
-            value={departmentFilter}
-            label="Department"
-            onChange={(e) => setDepartmentFilter(e.target.value)}
-          >
-            <MenuItem value="all">All Departments</MenuItem>
-            <MenuItem value="engineering">Engineering</MenuItem>
-            <MenuItem value="marketing">Marketing</MenuItem>
-            <MenuItem value="sales">Sales</MenuItem>
-            <MenuItem value="hr">HR</MenuItem>
-            <MenuItem value="finance">Finance</MenuItem>
-          </Select>
-        </FormControl>
+          {/* FILTERS */}
+          <Box sx={{ display: "flex", gap: 2, mb: 4, flexWrap: "wrap" }}>
+            <FormControl size="small" sx={{ minWidth: 160 }}>
+              <InputLabel>Period</InputLabel>
+              <Select value={period} onChange={(e) => handlePeriodChange(e.target.value)}>
+                <MenuItem value="current">Current Month</MenuItem>
+                <MenuItem value="quarter">Last 3 Months</MenuItem>
+                <MenuItem value="year">Last 12 Months</MenuItem>
+              </Select>
+            </FormControl>
 
-        <TextField
-          label="Start Date"
-          type="date"
-          size="small"
-          InputLabelProps={{ shrink: true }}
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-          sx={{ minWidth: 140 }}
-        />
+            <FormControl size="small" sx={{ minWidth: 120 }}>
+              <InputLabel>Year</InputLabel>
+              <Select value={year} onChange={(e) => setYear(e.target.value)}>
+                <MenuItem value="2025">2025</MenuItem>
+                <MenuItem value="2024">2024</MenuItem>
+                <MenuItem value="2023">2023</MenuItem>
+              </Select>
+            </FormControl>
 
-        <TextField
-          label="End Date"
-          type="date"
-          size="small"
-          InputLabelProps={{ shrink: true }}
-          value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
-          sx={{ minWidth: 140 }}
-        />
-      </Box>
+            <FormControl size="small" sx={{ minWidth: 140 }}>
+              <InputLabel>Month</InputLabel>
+              <Select
+                value={month}
+                onChange={(e) => setMonth(e.target.value)}
+                // Optional: disable month selection in trend mode
+                // disabled={period !== "current"}
+              >
+                {Object.keys(monthMap).map((m) => (
+                  <MenuItem key={m} value={m}>
+                    {m}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Box>
 
-      {/* Payroll Table */}
-      <Card variant="outlined">
-        <CardContent>
-          <Typography variant="h6" fontWeight="medium" gutterBottom>
-            Employee Payroll Details
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            {filteredData.length} record(s) found
-          </Typography>
+          {/* TREND TABLE — always shown */}
+          <Card>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                Payroll Trend ({trendData.length} Months)
+              </Typography>
 
-          <TableContainer component={Paper} sx={{ maxHeight: 550, overflow: 'auto' }}>
-            <Table size="small" stickyHeader>
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Employee Name</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }}>Department</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }} align="right">Base Salary</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }} align="right">Bonus</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }} align="right">Total Pay</TableCell>
-                  <TableCell sx={{ fontWeight: 'bold' }} align="right">Pay Date</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredData.length > 0 ? (
-                  filteredData.map((emp) => (
-                    <TableRow key={emp.id} hover>
-                      <TableCell>{emp.name}</TableCell>
-                      <TableCell>{emp.department}</TableCell>
-                      <TableCell align="right">${emp.salary.toLocaleString()}</TableCell>
-                      <TableCell align="right">${emp.bonus.toLocaleString()}</TableCell>
-                      <TableCell align="right">${emp.total.toLocaleString()}</TableCell>
-                      <TableCell align="right">{emp.payDate}</TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={6} align="center" sx={{ py: 3 }}>
-                      <Typography color="text.secondary">
-                        No payroll records match the selected filters.
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </CardContent>
-      </Card>
+              {trendData.length === 0 ? (
+                <Typography color="text.secondary">
+                  No completed payroll records found.
+                </Typography>
+              ) : (
+                <TableContainer component={Paper} sx={{ mt: 2 }}>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell sx={{ fontWeight: "bold" }}>Period</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: "bold" }}>Employees</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: "bold" }}>Gross Payroll</TableCell>
+                        <TableCell align="right" sx={{ fontWeight: "bold" }}>Net Payroll</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {trendData.map((row, index) => (
+                        <TableRow key={index} sx={{ '& td': { py: 1.5 } }}>
+                          <TableCell>{formatMonthYear(row.month, row.year)}</TableCell>
+                          <TableCell align="right">{row.total_employees}</TableCell>
+                          <TableCell align="right">
+                            ${Number(row.total_gross).toLocaleString()}
+                          </TableCell>
+                          <TableCell align="right">
+                            ${Number(row.total_net).toLocaleString()}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              )}
+            </CardContent>
+          </Card>
+        </>
+      )}
     </Box>
   );
 };

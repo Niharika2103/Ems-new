@@ -10,6 +10,7 @@ export const API_BASES = {
   SALARYSTRUCTURE:import.meta.env.VITE_SalaryStructure_URL || "http://localhost:9092/",
   FREELANCER: import.meta.env.VITE_FREELANCER_URL || "http://localhost:5005",
   VENDOR: import.meta.env.VITE_VENDOR_URL || "http://localhost:5006",
+  SETTINGS: import.meta.env.VITE_SETTINGS_URL || "http://localhost:5008",
 };
 
 
@@ -23,7 +24,8 @@ export const AUTH_API = {
   ATTENDANCE:`${API_BASES.ATTENDANCE}`,
   SALARYSTRUCTURE:`${API_BASES.SALARYSTRUCTURE}/salary`,
   FREELANCER: `${API_BASES.FREELANCER}/freelancer`,
-  VENDOR: `${API_BASES.VENDOR}/vendor` 
+  VENDOR: `${API_BASES.VENDOR}/vendor` ,
+  SETTINGS: `${API_BASES.SETTINGS}/api`,
 };
 
 export const ROLES = {
@@ -35,6 +37,7 @@ export const ROLES = {
   SALARYSTRUCTURE:"salarystructure",
   FREELANCER: "freelancer",
   VENDOR: "vendor",
+  SETTINGS: "settings",
 };
 
 export const OTP_LENGTH = 6;

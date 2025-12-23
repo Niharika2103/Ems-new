@@ -7,6 +7,8 @@ import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import PersonIcon from "@mui/icons-material/Person";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import BarChartIcon from "@mui/icons-material/BarChart";
+import WorkIcon from "@mui/icons-material/Work";
+
 
 
 const FreelancerDashboard = () => {
@@ -62,6 +64,8 @@ const FreelancerDashboard = () => {
     iconColor: "text-green-600",
     onClick: () => navigate("/dashboard/freelancer/freelancerreports"),
   },
+ 
+
 ];
 
   return (

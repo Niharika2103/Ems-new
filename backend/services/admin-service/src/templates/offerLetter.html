@@ -4,7 +4,6 @@
     body { font-family: Arial, sans-serif; line-height: 1.6; }
     .container { width: 85%; margin: 0 auto; }
     h2 { text-align: center; text-decoration: underline; }
-
     table {
       width: 100%;
       border-collapse: collapse;
@@ -20,52 +19,39 @@
     th {
       background-color: #f0f0f0;
     }
-
     .footer {
       margin-top: 25px;
       font-weight: bold;
     }
   </style>
 </head>
-
 <body>
   <div class="container">
-
-    <h2>OFFER  LETTER</h2>
+    <!-- THIS LINE WILL BE REPLACED DYNAMICALLY -->
+    <h2>LETTER_HEADER_PLACEHOLDER</h2>
 
     <p><b>Date:</b> {{effective_from}}</p>
-
     <p><b>To,</b><br>
       <b>{{name}}</b><br>
       {{address}}
     </p>
-
     <p>Dear <b>{{name}}</b>,</p>
-
-    <p>Congratulations on being selected to join <b>Zigma People Private Limited (An AI India Venture)</b> 
+    <p>Congratulations on being selected to join <b>{{company_name}}</b> 
     as <b>{{designation}}</b>.</p>
-
     <p>Your annual Cost to Company (CTC) will be <b>₹{{ctc}}</b>.<br>
        Your joining date will be <b>{{date_of_joining}}</b>.
     </p>
-
     <p>Enclosed are <b>Annexure – A</b> (Terms & Conditions) and <b>Annexure – B</b> (Salary Structure).</p>
 
-
-    <!-- Annexure A -->
     <h3>Annexure A – Terms & Conditions of Employment</h3>
-
     <p><b>1. Probation Period:</b> 6 months, extendable at Company’s discretion.</p>
-
     <p><b>2. Working Hours:</b> 9:30 AM – 6:30 PM (including 60 minutes break).</p>
-
     <p><b>3. Leave Policy:</b></p>
     <ul>
       <li>12 Paid Leaves, 6 Casual Leaves, 6 Sick Leaves annually (for confirmed employees).</li>
       <li>Unused Paid Leaves up to 20 can be carried forward; Casual & Sick Leaves cannot.</li>
       <li>Planned leave requires advance notice; medical leave requires proof.</li>
     </ul>
-
     <p><b>4. Compensation & Benefits:</b></p>
     <ul>
       <li>Annual salary review based on performance.</li>
@@ -73,59 +59,32 @@
       <li>Parental insurance available on cost-sharing basis.</li>
       <li>Statutory benefits (PF, ESI, Gratuity, Bonus, etc.) as per applicable laws.</li>
     </ul>
-
     <p><b>5. Confidentiality & Restrictions:</b></p>
     <ul>
       <li>Maintain confidentiality of company/client information during & after employment.</li>
       <li>Non-compete: You shall not join direct competitors for 6 months post-separation without written approval.</li>
       <li>Non-solicit: You shall not solicit clients/employees for 1 year post-employment.</li>
     </ul>
-
     <p><b>6. Termination:</b> 1 month’s notice or salary in lieu. Immediate termination in case of misconduct.</p>
 
-<h3> Annexure – B Salary Structure</h3>
-
+    <h3>Annexure – B Salary Structure</h3>
     <table>
-      <tr>
-        <th>Earnings</th>
-        <th>Amount (₹)</th>
-      </tr>
-      <tr>
-        <td>Basic Pay</td>
-        <td>{{basic_pay}}</td>
-      </tr>
-      <tr>
-        <td>HRA</td>
-        <td>{{hra}}</td>
-      </tr>
-      <tr>
-        <td>Special Allowance</td>
-        <td>{{special_allowance}}</td>
-      </tr>
-      <tr>
-        <td>Other Allowances</td>
-        <td>{{other_allowances}}</td>
-      </tr>
-      <tr>
-        <th>Gross Salary</th>
-        <th>{{gross_salary}}</th>
-      </tr>
-      <tr>
-        <th>Net Salary</th>
-        <th>{{net_salary}}</th>
-      </tr>
+      <tr><th>Earnings</th><th>Amount (₹)</th></tr>
+      <tr><td>Basic Pay</td><td>{{basic_pay}}</td></tr>
+      <tr><td>HRA</td><td>{{hra}}</td></tr>
+      <tr><td>Special Allowance</td><td>{{special_allowance}}</td></tr>
+      <tr><td>Other Allowances</td><td>{{other_allowances}}</td></tr>
+      <tr><th>Gross Salary</th><th>{{gross_salary}}</th></tr>
+      <tr><th>Net Salary</th><th>{{net_salary}}</th></tr>
     </table> 
 
     <br>
     <p><b>Candidate Declaration</b></p>
     <p>I, <b>{{name}}</b>, accept the terms of this offer and agree to join as <b>{{designation}}</b>
-       at <b>Zigma People Private Limited (An AI India Venture)</b> under the above-mentioned conditions.</p>
-
+       at <b>{{company_name}}</b> under the above-mentioned conditions.</p>
     <br><br>
-
     <p>Signature: ___________________ &nbsp;&nbsp;&nbsp;&nbsp;  Date: ___________________</p>
-
-    <p class="footer">Confidential Document – Zigma People Private Limited (An AI India Venture)</p>
+    <p class="footer">Confidential Document – {{company_name}}</p>
   </div>
 </body>
 </html>
