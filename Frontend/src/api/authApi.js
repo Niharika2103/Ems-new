@@ -202,6 +202,38 @@ export const deleteLetterApi = (employeeId, filename) =>
 export const sendLetterEmailApi = (employeeId, fileName) =>
   adminClient.post(`${AUTH_API.ADMIN}/letters/send-email`, { employeeId, fileName });
 
+// ================= FREELANCER APIs =================
+
+// Get all freelancers
+export const freelancerFetchApi = () =>
+  adminClient.get(`${AUTH_API.ADMIN}/freelancers`);
+
+// Generate freelancer letter
+export const generateFreelancerLetterApi = (data) =>
+  adminClient.post(`${AUTH_API.ADMIN}/freelancers/letters/generate`,data);
+
+// Get freelancer letters
+export const getFreelancerLettersApi = (freelancerId) =>
+  adminClient.get(`${AUTH_API.ADMIN}/freelancers/${freelancerId}/letters`);
+
+// Download freelancer letter PDF
+// ⬇️ Download freelancer letter PDF
+export const downloadFreelancerLetterApi = (freelancerId, fileName) =>
+  adminClient.get(
+    `${AUTH_API.ADMIN}/freelancers/${freelancerId}/letters/${fileName}/download`,
+    {
+      responseType: "blob", // 🔑 REQUIRED for PDF download
+    }
+  );
+
+// Delete freelancer letter
+export const deleteFreelancerLetterApi = (freelancerId, fileName) =>
+  adminClient.delete(`${AUTH_API.ADMIN}/freelancers/${freelancerId}/letters/${fileName}`);
+
+// Send freelancer letter email
+export const sendFreelancerLetterEmailApi = (data) =>
+  adminClient.post(`${AUTH_API.ADMIN}/freelancers/letters/send-email`,data);
+
 
 // ================= Employee Auth =================
 
@@ -871,6 +903,7 @@ export const updateLeaveTypeApi = (id, data) =>
 export const toggleLeaveTypeStatusApi = (id, isActive) =>
   adminClient.patch(`/admin/settings/leave-types/${id}/status`, { isActive });
 
+<<<<<<< HEAD
 export const createAuthSettingsApi = (data) => {
   return settingsClient.post(`${AUTH_API.SETTINGS}/settings/create`, data);
 };
@@ -882,3 +915,49 @@ export const getAuthSettingsApi = () => {
 export const updateAuthSettingsApi = (data) => {
   return settingsClient.post(`${AUTH_API.SETTINGS}/settings/update`, data);
 };
+=======
+
+// /* =====================================================
+//    📄 FREELANCER LETTER APIs
+//    ===================================================== */
+
+// // 1️⃣ Get all freelancers (employment_type = freelancer)
+// // export const getFreelancersApi = () =>
+// //   freelancerClient.get(`/freelancers`);
+
+// // ✅ Fetch freelancer list (REUSE working endpoint)
+// // ✅ FIXED – matches backend route
+// export const getFreelancersApi = () =>
+//   employeeClient.get(`${AUTH_API.ADMIN}/employees/freelancers`);
+
+
+// //2️⃣ Generate freelancer letter
+// export const generateFreelancerLetterApi = (data) =>
+//   freelancerClient.post(`/letters/generate`, data);
+
+
+// // 3️⃣ Get freelancer letters
+// export const getFreelancerLettersApi = (freelancerId) =>
+//   freelancerClient.get(`/letters/${freelancerId}`);
+
+
+// // 4️⃣ Download freelancer letter (PDF)
+// export const downloadFreelancerLetterApi = (freelancerId, fileName) =>
+//   freelancerClient.get(
+//     `/letters/download/${freelancerId}/${fileName}`,
+//     {
+//       responseType: "blob", // ✅ IMPORTANT for PDF
+//     }
+//   );
+
+
+// // 5️⃣ Delete freelancer letter
+// export const deleteFreelancerLetterApi = (freelancerId, fileName) =>
+//   freelancerClient.delete(`/letters/${freelancerId}/${fileName}`);
+
+
+// // 6️⃣ Send freelancer letter via email
+// export const sendFreelancerLetterEmailApi = (data) =>
+//   freelancerClient.post(`/letters/send-email`, data);
+
+>>>>>>> 274fc6c251b844a328303d77ba85ebff977ee108

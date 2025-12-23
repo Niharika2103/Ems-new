@@ -1,60 +1,21 @@
-// FreelancerLetterGenerator.jsx
-import React, { useState, useEffect } from 'react';
-import { jsPDF } from 'jspdf';
+// src/pages/Admin/FreelancerLetterGenerator.jsx
+import React, { useEffect, useState } from "react";
+import {
+  freelancerFetchApi,
+  generateFreelancerLetterApi,
+  getFreelancerLettersApi,
+  deleteFreelancerLetterApi,
+  sendFreelancerLetterEmailApi,
+} from "../../api/authApi";
 
 const FreelancerLetterGenerator = () => {
-  // Sample freelancer data
-  const [freelancers] = useState([
-    {
-      id: 1,
-      name: 'Alex Johnson',
-      email: 'alex.johnson@example.com',
-      freelancer_id: 'FRE001',
-      services: 'Full Stack Development',
-      rate: '$65/hr',
-      joinDate: '2024-01-10',
-      address: '123 Tech Street, Silicon Valley, CA',
-      phone: '+1 (555) 123-4567',
-    },
-    {
-      id: 2,
-      name: 'Maria Garcia',
-      email: 'maria.garcia@example.com',
-      freelancer_id: 'FRE002',
-      services: 'UI/UX Design',
-      rate: '$55/hr',
-      joinDate: '2024-02-15',
-      address: '456 Design Ave, Brooklyn, NY',
-      phone: '+1 (555) 987-6543',
-    },
-    {
-      id: 3,
-      name: 'David Kim',
-      email: 'david.kim@example.com',
-      freelancer_id: 'FRE003',
-      services: 'Digital Marketing',
-      rate: '$45/hr',
-      joinDate: '2024-03-05',
-      address: '789 Marketing Blvd, Austin, TX',
-      phone: '+1 (555) 456-7890',
-    },
-    {
-      id: 4,
-      name: 'Sarah Wilson',
-      email: 'sarah.wilson@example.com',
-      freelancer_id: 'FRE004',
-      services: 'Content Writing',
-      rate: '$35/hr',
-      joinDate: '2024-01-25',
-      address: '321 Content Lane, Portland, OR',
-      phone: '+1 (555) 234-5678',
-    }
-  ]);
-
-  const [selectedLetterType, setSelectedLetterType] = useState('Offer Letter');
-  const [freelancerLettersMap, setFreelancerLettersMap] = useState({});
+  const [freelancers, setFreelancers] = useState([]);
+  const [lettersMap, setLettersMap] = useState({});
+  const [selectedLetterType, setSelectedLetterType] = useState("Offer Letter");
+  const [loading, setLoading] = useState(false);
   const [generatingFor, setGeneratingFor] = useState(null);
 
+<<<<<<< HEAD
   // Letter templates
   const letterTemplates = {
     'Offer Letter': (freelancer) => {
@@ -584,553 +545,242 @@ Global Freelance Network`;
   };
 
   // Supported letter types
+=======
+>>>>>>> 274fc6c251b844a328303d77ba85ebff977ee108
   const letterTypes = [
-    { id: 'Offer Letter', name: 'Offer Letter', icon: '📄', color: '#007bff' },
-    { id: 'Appointment Letter', name: 'Appointment Letter', icon: '💼', color: '#28a745' },
-    { id: 'Experience Letter', name: 'Experience Letter', icon: '⭐', color: '#ffc107' },
-    { id: 'Relieving Letter', name: 'Relieving Letter', icon: '👋', color: '#6f42c1' },
-    { id: 'Confirmation Letter', name: 'Confirmation Letter', icon: '✅', color: '#17a2b8' },
-    // { id: 'Promotion Letter', name: 'Promotion Letter', icon: '📈', color: '#fd7e14' },
-    // { id: 'Salary Increment Letter', name: 'Salary Increment Letter', icon: '💰', color: '#20c997' },
-    // { id: 'Warning Letter', name: 'Warning Letter', icon: '⚠️', color: '#dc3545' },
-    // { id: 'Form16', name: 'Form 16', icon: '📑', color: '#343a40' },
-    // { id: 'Form16A', name: 'Form 16A', icon: '📊', color: '#6c757d' },
+    { id: "Offer Letter", icon: "📄" },
+    { id: "Appointment Letter", icon: "💼" },
+    { id: "Experience Letter", icon: "⭐" },
+    { id: "Relieving Letter", icon: "👋" },
+    { id: "Confirmation Letter", icon: "✅" },
+    { id: "Promotion Letter", icon: "📈" },
+    { id: "Salary Increment Letter", icon: "💰" },
+    { id: "Warning Letter", icon: "⚠️" },
   ];
 
-  // Load data from localStorage on component mount
   useEffect(() => {
-    const savedLetters = localStorage.getItem('freelancerLetters');
-    if (savedLetters) {
-      setFreelancerLettersMap(JSON.parse(savedLetters));
-    }
+    const load = async () => {
+      setLoading(true);
+      try {
+        const res = await freelancerFetchApi();
+        const list = res.data || [];
+        setFreelancers(list);
+
+        const map = {};
+        for (const f of list) {
+          const lr = await getFreelancerLettersApi(f.id);
+          map[f.id] = lr.data.files || [];
+        }
+        setLettersMap(map);
+      } catch {
+        alert("Failed to load freelancers");
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
   }, []);
 
-  // Save data to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('freelancerLetters', JSON.stringify(freelancerLettersMap));
-  }, [freelancerLettersMap]);
-
-  // Generate PDF from text
-  const generatePDF = (content, filename) => {
-    const doc = new jsPDF();
-    const lines = doc.splitTextToSize(content, 180);
-    const pageHeight = doc.internal.pageSize.height;
-    
-    // Add header
-    doc.setFillColor(40, 40, 150);
-    doc.rect(0, 0, 210, 30, 'F');
-    
-    doc.setFontSize(20);
-    doc.setTextColor(255, 255, 255);
-    doc.text('FreelanceHub', 105, 20, null, null, 'center');
-    
-    // Add content
-    let yPosition = 40;
-    const lineHeight = 7;
-    
-    doc.setFontSize(14);
-    doc.setTextColor(40, 40, 150);
-    const titleLines = doc.splitTextToSize(filename.replace('.pdf', ''), 180);
-    doc.text(titleLines, 15, yPosition);
-    yPosition += titleLines.length * lineHeight + 10;
-    
-    doc.setFontSize(11);
-    doc.setTextColor(0, 0, 0);
-    
-    const allLines = doc.splitTextToSize(content, 180);
-    
-    for (let i = 0; i < allLines.length; i++) {
-      if (yPosition > pageHeight - 30) {
-        doc.addPage();
-        yPosition = 20;
-      }
-      
-      doc.text(allLines[i], 15, yPosition);
-      yPosition += lineHeight;
+  const generateLetter = async (id) => {
+    setGeneratingFor(id);
+    try {
+      await generateFreelancerLetterApi({
+        freelancerId: id,
+        letterType: selectedLetterType,
+      });
+      const res = await getFreelancerLettersApi(id);
+      setLettersMap((p) => ({ ...p, [id]: res.data.files || [] }));
+    } finally {
+      setGeneratingFor(null);
     }
-    
-    // Add footer
-    doc.setFontSize(9);
-    doc.setTextColor(150, 150, 150);
-    doc.text(`Generated on ${new Date().toLocaleDateString()}`, 105, pageHeight - 5, null, null, 'center');
-    
-    // Save PDF
-    doc.save(filename);
-    
-    // Return object URL for preview
-    const pdfBlob = doc.output('blob');
-    const url = URL.createObjectURL(pdfBlob);
-    
-    return {
-      name: filename,
-      url: url,
-      blob: pdfBlob,
-      generatedAt: new Date().toISOString(),
-    };
   };
 
-  const handleGenerateLetter = async (freelancerId) => {
-    if (!freelancerId || !selectedLetterType) return;
-
-    setGeneratingFor(freelancerId);
-    
-    setTimeout(() => {
-      try {
-        const freelancer = freelancers.find(f => f.id === freelancerId);
-        if (!freelancer) return;
-
-        const template = letterTemplates[selectedLetterType];
-        
-        if (!template) {
-          alert('Template not found for this letter type');
-          return;
-        }
-
-        const content = template(freelancer);
-        const filename = `${selectedLetterType.replace(/\s+/g, '_')}_${freelancer.name.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
-        
-        const generatedFile = generatePDF(content, filename);
-        
-        // Add to letters map
-        setFreelancerLettersMap(prev => ({
-          ...prev,
-          [freelancerId]: [
-            ...(prev[freelancerId] || []),
-            generatedFile
-          ]
-        }));
-        
-        alert(`✅ ${selectedLetterType} generated for ${freelancer.name}!`);
-      } catch (err) {
-        console.error('Generation failed:', err);
-        alert(`❌ Failed to generate letter: ${err.message}`);
-      } finally {
-        setGeneratingFor(null);
-      }
-    }, 500);
+  const deleteLetter = async (id, file) => {
+    if (!window.confirm("Delete this letter?")) return;
+    await deleteFreelancerLetterApi(id, file);
+    setLettersMap((p) => ({
+      ...p,
+      [id]: p[id].filter((f) => f.name !== file),
+    }));
   };
 
-  const handleDeleteLetter = (freelancerId, filename) => {
-    if (!window.confirm(`Are you sure you want to delete "${filename}"?`)) {
-      return;
-    }
-
-    setFreelancerLettersMap(prev => {
-      const updated = { ...prev };
-      updated[freelancerId] = (updated[freelancerId] || []).filter(file => file.name !== filename);
-      
-      // Clean up URL object
-      const fileToDelete = prev[freelancerId]?.find(f => f.name === filename);
-      if (fileToDelete?.url) {
-        URL.revokeObjectURL(fileToDelete.url);
-      }
-      
-      return updated;
-    });
-
-    alert('✅ Letter deleted successfully!');
-  };
-
-  const handleSend = async (freelancerId, fileName) => {
-    const freelancer = freelancers.find(f => f.id === freelancerId);
-    if (!freelancer) return;
-
-    const letters = freelancerLettersMap[freelancerId] || [];
-    const file = letters.find(f => f.name === fileName);
-    
-    if (!file) {
-      alert('File not found');
-      return;
-    }
-
-    // Create email link
-    const subject = encodeURIComponent(`${fileName.replace('.pdf', '')}`);
-    const body = encodeURIComponent(`Dear ${freelancer.name},\n\nPlease find attached ${fileName}.\n\nBest regards,\nFreelanceHub Team`);
-    const mailtoLink = `mailto:${freelancer.email}?subject=${subject}&body=${body}`;
-    
-    window.open(mailtoLink, '_blank');
-  };
-
-  const handleDownload = (url) => {
-    window.open(url, '_blank');
+  const sendLetter = async (id, file) => {
+    await sendFreelancerLetterEmailApi({ freelancerId: id, fileName: file });
+    alert("Email sent");
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.headerSection}>
-        <h1 style={styles.header}>📝 Freelancer Letter Generator</h1>
-        <p style={styles.subHeader}>Generate professional letters for freelancers instantly</p>
-      </div>
+    <div style={styles.page}>
+      <h2 style={styles.title}>Freelancer Letter Management</h2>
 
-      {/* Letter Type Selector */}
-      <div style={styles.letterTypeSection}>
-        <h3 style={styles.sectionTitle}>Select Letter Type</h3>
-        <div style={styles.letterTypeButtons}>
-          {letterTypes.map((type) => (
+      {/* LETTER TYPE */}
+      <div style={styles.letterTypeBox}>
+        <span style={styles.sectionLabel}>Select Letter Type</span>
+        <div style={styles.letterButtons}>
+          {letterTypes.map((t) => (
             <button
-              key={type.id}
+              key={t.id}
+              onClick={() => setSelectedLetterType(t.id)}
               style={{
-                ...styles.letterTypeButton,
-                borderColor: type.color,
-                color: selectedLetterType === type.id ? 'white' : type.color,
-                backgroundColor: selectedLetterType === type.id ? type.color : 'white',
+                ...styles.letterBtn,
+                ...(selectedLetterType === t.id
+                  ? styles.letterBtnActive
+                  : {}),
               }}
-              onClick={() => setSelectedLetterType(type.id)}
             >
-              <span style={styles.typeIcon}>{type.icon}</span>
-              {type.name}
+              {t.icon} {t.id}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Freelancer List */}
-      <div style={styles.mainContent}>
-        <div style={styles.freelancerListContainer}>
-          <div style={styles.listHeaderContainer}>
-            <h3 style={styles.listHeader}>
-              Freelancers ({freelancers.length})
-            </h3>
-          </div>
-          
-          <div style={styles.freelancerList}>
-            {freelancers.map((freelancer) => {
-              const letters = freelancerLettersMap[freelancer.id] || [];
-              
-              return (
-                <div key={freelancer.id} style={styles.freelancerCard}>
-                  <div style={styles.freelancerHeader}>
-                    <div style={styles.freelancerInfo}>
-                      <div style={styles.nameRow}>
-                        <strong style={styles.freelancerName}>{freelancer.name}</strong>
-                        <span style={styles.freelancerId}>ID: {freelancer.freelancer_id}</span>
-                      </div>
-                      <div style={styles.detailsRow}>
-                        <span style={styles.detailItem}>📧 {freelancer.email}</span>
-                        <span style={styles.detailItem}>📱 {freelancer.phone}</span>
-                        <span style={styles.detailItem}>💰 {freelancer.rate}</span>
-                      </div>
-                    </div>
-
-                    <div style={styles.actionRow}>
-                      <button
-                        onClick={() => handleGenerateLetter(freelancer.id)}
-                        disabled={generatingFor === freelancer.id}
-                        style={styles.generateBtn}
-                      >
-                        {generatingFor === freelancer.id ? (
-                          <>
-                            <span style={styles.spinner}></span> Generating...
-                          </>
-                        ) : (
-                          `Generate ${selectedLetterType}`
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Show existing letters */}
-                  {letters.length > 0 && (
-                    <div style={styles.letterPreviewList}>
-                      <small style={styles.letterLabel}>
-                        Generated Letters ({letters.length})
-                      </small>
-                      {letters.map((file, idx) => (
-                        <div key={idx} style={styles.fileRow}>
-                          <div style={styles.fileInfo}>
-                            <span style={styles.fileIcon}>📄</span>
-                            <span style={styles.fileName}>
-                              {file.name.replace('.pdf', '')}
-                            </span>
-                          </div>
-                          <div style={styles.fileActions}>
-                            <button
-                              onClick={() => handleDownload(file.url)}
-                              style={styles.viewBtn}
-                              title="View PDF"
-                            >
-                              View
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleSend(freelancer.id, file.name);
-                              }}
-                              style={styles.sendBtn}
-                              title="Send via email"
-                            >
-                              Send
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteLetter(freelancer.id, file.name);
-                              }}
-                              style={styles.deleteBtn}
-                              title="Delete letter"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+      {/* FREELANCER LIST (SCROLLABLE) */}
+      <div style={styles.freelancerList}>
+        {loading ? (
+          <p>Loading...</p>
+        ) : (
+          freelancers.map((f) => (
+            <div key={f.id} style={styles.card}>
+              <div style={styles.cardHeader}>
+                <div>
+                  <strong>{f.name}</strong>
+                  <div>Emp ID: {f.employee_id || "-"}</div>
+                  <div>Dept: {f.department || "-"}</div>
+                  <div>Designation: {f.designation || "-"}</div>
                 </div>
-              );
-            })}
-          </div>
-        </div>
+
+                <button
+                  style={styles.generateBtn}
+                  disabled={generatingFor === f.id}
+                  onClick={() => generateLetter(f.id)}
+                >
+                  {generatingFor === f.id ? "Generating..." : "Generate"}
+                </button>
+              </div>
+
+              {(lettersMap[f.id] || []).length > 0 && (
+                <div style={styles.generatedBox}>
+                  <span style={styles.generatedLabel}>Generated:</span>
+
+                  {(lettersMap[f.id] || []).map((file) => (
+                    <div key={file.name} style={styles.generatedRow}>
+                      <span>{file.name}</span>
+
+                      <div style={styles.actions}>
+                        <button
+                          style={styles.viewBtn}
+                          onClick={() => window.open(file.url)}
+                        >
+                          View
+                        </button>
+                        <button
+                          style={styles.deleteBtn}
+                          onClick={() => deleteLetter(f.id, file.name)}
+                        >
+                          Delete
+                        </button>
+                        <button
+                          style={styles.sendBtn}
+                          onClick={() => sendLetter(f.id, file.name)}
+                        >
+                          Send
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
 };
 
-// Styles
+/* ================= STYLES ================= */
+
 const styles = {
-  container: {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    padding: '15px',
-    fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-    backgroundColor: '#f8f9fa',
-    minHeight: '100vh',
+  page: { padding: 20 },
+  title: { textAlign: "center", marginBottom: 20 },
+
+  letterTypeBox: {
+    background: "#f8f9fa",
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 20,
   },
-  headerSection: {
-    textAlign: 'center',
-    marginBottom: '20px',
-    padding: '15px',
-    backgroundColor: 'white',
-    borderRadius: '8px',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+  sectionLabel: { fontWeight: 600, marginBottom: 10, display: "block" },
+  letterButtons: { display: "flex", gap: 10, flexWrap: "wrap" },
+  letterBtn: {
+    padding: "8px 14px",
+    border: "2px solid #007bff",
+    background: "#fff",
+    color: "#007bff",
+    borderRadius: 6,
+    cursor: "pointer",
+    fontWeight: 600,
   },
-  header: {
-    color: '#2c3e50',
-    marginBottom: '5px',
-    fontSize: '1.8rem',
-  },
-  subHeader: {
-    color: '#6c757d',
-    fontSize: '1rem',
-    maxWidth: '600px',
-    margin: '0 auto',
-  },
-  letterTypeSection: {
-    backgroundColor: 'white',
-    padding: '15px',
-    borderRadius: '8px',
-    marginBottom: '20px',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-  },
-  sectionTitle: {
-    margin: '0 0 15px 0',
-    color: '#495057',
-    fontSize: '1.1rem',
-    fontWeight: '600',
-  },
-  letterTypeButtons: {
-    display: 'flex',
-    gap: '8px',
-    flexWrap: 'wrap',
-  },
-  letterTypeButton: {
-    padding: '8px 12px',
-    border: '2px solid',
-    backgroundColor: 'white',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '13px',
-    fontWeight: '500',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '5px',
-    transition: 'all 0.2s ease',
-    minWidth: '140px',
-  },
-  typeIcon: {
-    fontSize: '14px',
-  },
-  mainContent: {
-    display: 'flex',
-    gap: '15px',
-  },
-  freelancerListContainer: {
-    flex: 1,
-    backgroundColor: '#fff',
-    border: '1px solid #e9ecef',
-    borderRadius: '8px',
-    padding: '15px',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-    maxHeight: '70vh',
-    overflowY: 'auto',
-  },
-  listHeaderContainer: {
-    marginBottom: '15px',
-    paddingBottom: '10px',
-    borderBottom: '1px solid #f0f0f0',
-  },
-  listHeader: {
-    margin: '0',
-    color: '#495057',
-    fontSize: '1.2rem',
-  },
+  letterBtnActive: { background: "#007bff", color: "#fff" },
+
+  /* ✅ THIS IS THE IMPORTANT PART */
   freelancerList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '15px',
+    maxHeight: "65vh",
+    overflowY: "auto",
+    paddingRight: 6,
   },
-  freelancerCard: {
-    display: 'flex',
-    flexDirection: 'column',
-    padding: '15px',
-    border: '1px solid #e9ecef',
-    borderRadius: '8px',
-    backgroundColor: '#fafafa',
+
+  card: {
+    background: "#fff",
+    border: "1px solid #ddd",
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 16,
   },
-  freelancerHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: '10px',
-    flexWrap: 'wrap',
-    gap: '10px',
-  },
-  freelancerInfo: {
-    flex: 1,
-    minWidth: '200px',
-  },
-  nameRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    marginBottom: '5px',
-  },
-  freelancerName: {
-    fontSize: '1.1rem',
-    color: '#2c3e50',
-  },
-  freelancerId: {
-    backgroundColor: '#e9ecef',
-    padding: '3px 8px',
-    borderRadius: '12px',
-    fontSize: '0.75rem',
-    color: '#6c757d',
-  },
-  detailsRow: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '10px',
-  },
-  detailItem: {
-    fontSize: '0.8rem',
-    color: '#495057',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '3px',
-  },
-  actionRow: {
-    display: 'flex',
+  cardHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   generateBtn: {
-    padding: '8px 16px',
-    backgroundColor: '#28a745',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '13px',
-    fontWeight: '600',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '5px',
+    background: "#28a745",
+    color: "#fff",
+    border: "none",
+    padding: "8px 16px",
+    borderRadius: 5,
+    cursor: "pointer",
   },
-  spinner: {
-    width: '12px',
-    height: '12px',
-    border: '2px solid rgba(255,255,255,0.3)',
-    borderRadius: '50%',
-    borderTopColor: 'white',
-    animation: 'spin 1s linear infinite',
+
+  generatedBox: { marginTop: 12 },
+  generatedLabel: { fontSize: 13, color: "#6c757d" },
+  generatedRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 8,
   },
-  letterPreviewList: {
-    borderTop: '1px dashed #ddd',
-    paddingTop: '10px',
-    marginTop: '10px',
-  },
-  letterLabel: {
-    display: 'block',
-    marginBottom: '8px',
-    color: '#495057',
-    fontSize: '0.9rem',
-    fontWeight: '600',
-  },
-  fileRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '8px',
-    backgroundColor: 'white',
-    border: '1px solid #e9ecef',
-    borderRadius: '6px',
-    marginBottom: '8px',
-  },
-  fileInfo: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    flex: 1,
-  },
-  fileIcon: {
-    fontSize: '1rem',
-  },
-  fileName: {
-    fontSize: '0.85rem',
-    color: '#2c3e50',
-    fontWeight: '500',
-  },
-  fileActions: {
-    display: 'flex',
-    gap: '6px',
-  },
+  actions: { display: "flex", gap: 8 },
   viewBtn: {
-    padding: '4px 8px',
-    backgroundColor: '#17a2b8',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '12px',
-    fontWeight: '500',
-  },
-  sendBtn: {
-    padding: '4px 8px',
-    backgroundColor: '#dda31b',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '12px',
-    fontWeight: '500',
+    background: "#17a2b8",
+    color: "#fff",
+    border: "none",
+    padding: "4px 10px",
+    borderRadius: 4,
   },
   deleteBtn: {
-    padding: '4px 8px',
-    backgroundColor: '#dc3545',
-    color: 'white',
-    border: 'none',
-    borderRadius: '4px',
-    cursor: 'pointer',
-    fontSize: '12px',
-    fontWeight: '500',
+    background: "#dc3545",
+    color: "#fff",
+    border: "none",
+    padding: "4px 10px",
+    borderRadius: 4,
+  },
+  sendBtn: {
+    background: "#ffc107",
+    color: "#000",
+    border: "none",
+    padding: "4px 10px",
+    borderRadius: 4,
   },
 };
-
-// Add CSS animation for spinner
-const styleSheet = document.styleSheets[0];
-styleSheet.insertRule(`
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-`, styleSheet.cssRules.length);
 
 export default FreelancerLetterGenerator;
