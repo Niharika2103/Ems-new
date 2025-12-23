@@ -903,7 +903,6 @@ export const updateLeaveTypeApi = (id, data) =>
 export const toggleLeaveTypeStatusApi = (id, isActive) =>
   adminClient.patch(`/admin/settings/leave-types/${id}/status`, { isActive });
 
-<<<<<<< HEAD
 export const createAuthSettingsApi = (data) => {
   return settingsClient.post(`${AUTH_API.SETTINGS}/settings/create`, data);
 };
@@ -915,7 +914,6 @@ export const getAuthSettingsApi = () => {
 export const updateAuthSettingsApi = (data) => {
   return settingsClient.post(`${AUTH_API.SETTINGS}/settings/update`, data);
 };
-=======
 
 // /* =====================================================
 //    📄 FREELANCER LETTER APIs
@@ -960,4 +958,3 @@ export const updateAuthSettingsApi = (data) => {
 // export const sendFreelancerLetterEmailApi = (data) =>
 //   freelancerClient.post(`/letters/send-email`, data);
 
->>>>>>> 274fc6c251b844a328303d77ba85ebff977ee108

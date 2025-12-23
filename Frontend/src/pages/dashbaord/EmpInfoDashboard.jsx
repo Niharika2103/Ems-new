@@ -42,34 +42,7 @@ const EmpInfoDashboard = () => {
     return "/";
   };
 
-<<<<<<< HEAD
-const getLetterPath = () => {
-  if (role === "admin") {
-    return "/documents/admin/letters";
-  }
-
-  if (role === "freelancer" || storedUser?.employment_type === "freelancer") {
-    return "/freelancer/letters";
-  }
-
-  if (role === "employee" || storedUser?.employment_type === "fulltime") {
-    return "/employee/letters";
-  }
-
-  return "/";
-};
-
-
-=======
-  // const getLetterPath = () => {
-  //   if (storedUser?.employment_type === "fulltime" || storedUser?.employment_type === "freelancer" ) {
-  //     return "/employee/letters";
-  //   }
-  //   if (role === "admin") {
-  //     return "/documents/admin/letters";
-  //   }
-  //   return "/";
-  // };
+  
 
   const getLetterPath = () => {
     if (storedUser?.employment_type === "fulltime") {
@@ -83,7 +56,6 @@ const getLetterPath = () => {
     }
     return "/";
   };
->>>>>>> 274fc6c251b844a328303d77ba85ebff977ee108
   const getReferralspath = () => {
     if (storedUser?.employment_type === "fulltime") {
       return "/dashboard/emp_info/referral";

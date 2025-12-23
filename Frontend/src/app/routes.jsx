@@ -99,17 +99,14 @@ import EmailTemplateEditor from "../pages/Templates/EmailTemplate/EmailTemplateE
 import WhatsAppTemplateEditor from "../pages/Templates/WatsupTemplate/WatsupTemplateEditor";
 import CommunicationInfoDashboard from "../pages/dashbaord/CommunicationInfoDashboard";
 import EventWebhooks from "../pages/Templates/Webhook/EventWebhooks";
-<<<<<<< HEAD
 import PanelistFeedback from "../pages/JobPosting/PanelistFeedback";
 import FreelancerLetterGenerator from "../pages/Freelancer/FreelancerLetterGenerator";
 import PayrollVendorManagementSystem from "../pages/Vendor/PayrollVendorManagementSystem";
-=======
 import FreelancerJobPostDashboard from "../pages/Freelancer/jobposting/FreelancerJobPostDashboard";
 import PanelistFeedback from "../pages/JobPosting/PanelistFeedback";
 import FreelancerApplicationsTable from "../pages/Freelancer/jobposting/FreelancerApplicationsTable";
 import FreelancerLetterGenerator from "../pages/Freelancer/FreelancerLetterGenerator";
 import FreelancerLettersDownload from "../pages/Freelancer/FreelancerLettersDownload";
->>>>>>> 274fc6c251b844a328303d77ba85ebff977ee108
 
 function AppRoutes() {
   return (
@@ -188,17 +185,14 @@ function AppRoutes() {
        </ProtectedRoute>
        }
        />
-<<<<<<< HEAD
         {/* <Route path="/freelancer/letters" 
         element={
        <ProtectedRoute allowedRoles={["employee"]}>
         <FreelancerLetterGenerator/>
-=======
         <Route path="/freelancer/letters-download" 
         element={
        <ProtectedRoute allowedRoles={["employee"]}>
         <FreelancerLettersDownload/>
->>>>>>> 274fc6c251b844a328303d77ba85ebff977ee108
        </ProtectedRoute>
        }
        /> */}
