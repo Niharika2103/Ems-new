@@ -29,7 +29,7 @@ const EmpInfoDashboard = () => {
     useSelector((state) => state.adminSlice?.role) ||
     useSelector((state) => state.authSlice?.role) ||
     useSelector((state) => state.employeeSlice?.role);
-
+    console.log("role",role)
   /* ---------------- PATH HELPERS ---------------- */
 
   const getDocumentPath = () => {
@@ -42,23 +42,20 @@ const EmpInfoDashboard = () => {
     return "/";
   };
 
-const getLetterPath = () => {
-  if (role === "admin") {
-    return "/documents/admin/letters";
-  }
+  
 
-  if (role === "freelancer" || storedUser?.employment_type === "freelancer") {
-    return "/freelancer/letters";
-  }
-
-  if (role === "employee" || storedUser?.employment_type === "fulltime") {
-    return "/employee/letters";
-  }
-
-  return "/";
-};
-
-
+  const getLetterPath = () => {
+    if (storedUser?.employment_type === "fulltime") {
+      return "/employee/letters";
+    }
+    if (storedUser?.employment_type === "freelancer") {
+      return "/freelancer/letters-download";
+    }
+    if (role === "admin") {
+      return "/documents/admin/letters";
+    }
+    return "/";
+  };
   const getReferralspath = () => {
     if (storedUser?.employment_type === "fulltime") {
       return "/dashboard/emp_info/referral";
