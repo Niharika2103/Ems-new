@@ -2535,7 +2535,7 @@ export const getAllFreelancers = async (req, res) => {
   const result = await pool.query(
     `SELECT *
      FROM user_employees_master
-     WHERE employment_type = 'freelancer'`
+     WHERE role='employee' AND employment_type = 'freelancer'`
   );
   res.json(result.rows);
 };
