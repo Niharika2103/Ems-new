@@ -28,5 +28,5 @@ app.use("/vendor", vendorRoutes);
   }
 })();
 
-const PORT = process.env.PORT || 5010;
+const PORT = process.env.PORT || 5006;
 app.listen(PORT, () => console.log(`vendor service running on port ${PORT}`));

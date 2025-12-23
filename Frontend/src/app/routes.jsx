@@ -103,9 +103,7 @@ import PanelistFeedback from "../pages/JobPosting/PanelistFeedback";
 import FreelancerLetterGenerator from "../pages/Freelancer/FreelancerLetterGenerator";
 import PayrollVendorManagementSystem from "../pages/Vendor/PayrollVendorManagementSystem";
 import FreelancerJobPostDashboard from "../pages/Freelancer/jobposting/FreelancerJobPostDashboard";
-import PanelistFeedback from "../pages/JobPosting/PanelistFeedback";
 import FreelancerApplicationsTable from "../pages/Freelancer/jobposting/FreelancerApplicationsTable";
-import FreelancerLetterGenerator from "../pages/Freelancer/FreelancerLetterGenerator";
 import FreelancerLettersDownload from "../pages/Freelancer/FreelancerLettersDownload";
 
 function AppRoutes() {
@@ -185,17 +183,14 @@ function AppRoutes() {
        </ProtectedRoute>
        }
        />
-        {/* <Route path="/freelancer/letters" 
-        element={
-       <ProtectedRoute allowedRoles={["employee"]}>
-        <FreelancerLetterGenerator/>
+       
         <Route path="/freelancer/letters-download" 
         element={
        <ProtectedRoute allowedRoles={["employee"]}>
         <FreelancerLettersDownload/>
        </ProtectedRoute>
        }
-       /> */}
+       />
        
         <Route path="dashboard/employee/leave" element={
           <ProtectedRoute allowedRoles={["employee"]}>
