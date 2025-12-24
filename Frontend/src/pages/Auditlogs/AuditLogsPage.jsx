@@ -120,15 +120,31 @@ const [dateTo, setDateTo] = useState(today);
   useEffect(() => {
     let filtered = logs;
 
+    // if (search) {
+    //   const lowerSearch = search.toLowerCase();
+    //   filtered = filtered.filter(
+    //     (log) =>
+    //       log.user.toString().toLowerCase().includes(lowerSearch) ||
+    //       log.name.toLowerCase().includes(lowerSearch) ||
+    //       log.email.toLowerCase().includes(lowerSearch)
+    //   );
+    // }
     if (search) {
-      const lowerSearch = search.toLowerCase();
-      filtered = filtered.filter(
-        (log) =>
-          log.user.toString().toLowerCase().includes(lowerSearch) ||
-          log.name.toLowerCase().includes(lowerSearch) ||
-          log.email.toLowerCase().includes(lowerSearch)
-      );
-    }
+  const lowerSearch = search.toLowerCase();
+
+  filtered = filtered.filter((log) =>
+    String(log.user || "")
+      .toLowerCase()
+      .includes(lowerSearch) ||
+    String(log.name || "")
+      .toLowerCase()
+      .includes(lowerSearch) ||
+    String(log.email || "")
+      .toLowerCase()
+      .includes(lowerSearch)
+  );
+}
+
 
     if (dateFrom) {
       filtered = filtered.filter(
