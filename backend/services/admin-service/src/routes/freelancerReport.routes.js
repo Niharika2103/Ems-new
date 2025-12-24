@@ -6,7 +6,7 @@ import {
 
 const router = express.Router();
 
-router.get("/reports/departments", getDepartments);
-router.post("/reports/custom", generateCustomReport);
+router.get("/freelancer/reports/departments", getDepartments);
+router.post("/freelancer/reports/custom", generateCustomReport);
 
 export default router;

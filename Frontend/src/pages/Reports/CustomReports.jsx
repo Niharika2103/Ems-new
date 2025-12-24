@@ -108,7 +108,7 @@ export default function CustomReports() {
     if (!selectedFields.length) return;
 
     try {
-      const res = await fetch(`${AUTH_API.ADMIN}/custom`, {
+      const res = await fetch(`${AUTH_API.ADMIN}/reports/custom`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fields: selectedFields, department }),

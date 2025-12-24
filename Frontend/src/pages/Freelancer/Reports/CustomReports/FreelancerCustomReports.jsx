@@ -59,7 +59,7 @@ export default function CustomReports() {
 
   const fetchDepartments = async () => {
     try {
-      const res = await fetch(`${AUTH_API.ADMIN}/reports/departments`);
+      const res = await fetch(`${AUTH_API.ADMIN}/freelancer/reports/departments`);
       const data = await res.json();
       setDepartments(data);
     } catch (error) {
@@ -108,7 +108,7 @@ export default function CustomReports() {
     if (!selectedFields.length) return;
 
     try {
-      const res = await fetch(`${AUTH_API.ADMIN}/reports/custom`, {
+      const res = await fetch(`${AUTH_API.ADMIN}/freelancer/reports/custom`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fields: selectedFields, department }),

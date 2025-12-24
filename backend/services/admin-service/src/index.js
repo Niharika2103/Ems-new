@@ -8,8 +8,8 @@ import pool from "./config/db.js"; // PostgreSQL connection
 import zohoAuthRoutes from "./routes/zohoAuthRoutes.js";
 import "./cron/emailCron.js";
 import leavePolicyRoutes from "./routes/leavePolicy.routes.js";
-import freelancerReport from "./routes/freelancerReport.routes.js"
-import report from "./routes/report.routes.js"
+import freelancerReportRoutes from "./routes/freelancerReport.routes.js";
+import reportRoutes from "./routes/report.routes.js";
 
 dotenv.config();
 const app = express();
@@ -28,8 +28,8 @@ app.use("/admin", adminRoutes);
 
 app.use("/admin", leavePolicyRoutes);
 
-app.use("/admin",freelancerReport)
-app.use("/admin",report)
+app.use("/admin", freelancerReportRoutes);
+app.use("/admin", reportRoutes);
 
 // Test PostgreSQL connection on startup
 (async () => {
