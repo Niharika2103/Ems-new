@@ -38,23 +38,29 @@ export const superadminApproveAdminApi = (id, is_approved) =>
 export const promoteAdminToSuperadminApi = (adminId) =>
   superadminClient.put(`${AUTH_API.SUPERADMIN}/promote/${adminId}`);
 
-export const updateSuperAdminProfileApi = (data, id) => {
-  const formData = new FormData();
+// export const updateSuperAdminProfileApi = (data, id) => {
+//   const formData = new FormData();
 
-  Object.keys(data).forEach((key) => {
-    if (data[key] !== null && data[key] !== undefined) {
-      if (key === "profilePhoto" && data[key] instanceof File) {
-        formData.append("profilePhoto", data[key]);
-      } else if (key === "resume" && data[key] instanceof File) {
-        formData.append("resume", data[key]);
-      } else {
-        formData.append(key, data[key]);
-      }
-    }
-  }
-);
+//   Object.keys(data).forEach((key) => {
+//     if (data[key] !== null && data[key] !== undefined) {
+//       if (key === "profilePhoto" && data[key] instanceof File) {
+//         formData.append("profilePhoto", data[key]);
+//       } else if (key === "resume" && data[key] instanceof File) {
+//         formData.append("resume", data[key]);
+//       } else {
+//         formData.append(key, data[key]);
+//       }
+//     }
+//   }
+// );
 
-  return superadminClient.put(`${AUTH_API.SUPERADMIN}/profile/${id}`, formData);
+//   return superadminClient.put(`${AUTH_API.SUPERADMIN}/profile/${id}`, formData);
+// };
+export const updateSuperAdminProfileApi = (formData, id) => {
+  return superadminClient.put(
+    `${AUTH_API.SUPERADMIN}/profile/${id}`,
+    formData
+  );
 };
 
 // ================= Admin =================
@@ -915,4 +921,23 @@ export const updateAuthSettingsApi = (data) => {
   return settingsClient.post(`${AUTH_API.SETTINGS}/settings/update`, data);
 };
 
+export const createSalaryCycleApi = (data) => {
+  return settingsClient.post(
+    `${AUTH_API.SETTINGS}/salary-cycle`,
+    data
+  );
+};
 
+// Update salary cycle (PARTIAL update)
+export const updateSalaryCycleApi = (data) => {
+  return settingsClient.patch(
+    `${AUTH_API.SETTINGS}/salary-cycle`,
+    data
+  );
+};
+
+export const getSalaryCycleApi = () => {
+  return settingsClient.get(
+    `${AUTH_API.SETTINGS}/settings/salary-cycle`
+  );
+};
