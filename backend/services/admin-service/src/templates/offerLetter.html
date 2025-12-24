@@ -27,7 +27,9 @@
 </head>
 <body>
   <div class="container">
-    <h2>OFFER LETTER</h2>
+    <!-- THIS LINE WILL BE REPLACED DYNAMICALLY -->
+    <h2>LETTER_HEADER_PLACEHOLDER</h2>
+
     <p><b>Date:</b> {{effective_from}}</p>
     <p><b>To,</b><br>
       <b>{{name}}</b><br>
@@ -40,7 +42,7 @@
        Your joining date will be <b>{{date_of_joining}}</b>.
     </p>
     <p>Enclosed are <b>Annexure – A</b> (Terms & Conditions) and <b>Annexure – B</b> (Salary Structure).</p>
-    <!-- Annexure A -->
+
     <h3>Annexure A – Terms & Conditions of Employment</h3>
     <p><b>1. Probation Period:</b> 6 months, extendable at Company’s discretion.</p>
     <p><b>2. Working Hours:</b> 9:30 AM – 6:30 PM (including 60 minutes break).</p>
@@ -64,37 +66,18 @@
       <li>Non-solicit: You shall not solicit clients/employees for 1 year post-employment.</li>
     </ul>
     <p><b>6. Termination:</b> 1 month’s notice or salary in lieu. Immediate termination in case of misconduct.</p>
+
     <h3>Annexure – B Salary Structure</h3>
     <table>
-      <tr>
-        <th>Earnings</th>
-        <th>Amount (₹)</th>
-      </tr>
-      <tr>
-        <td>Basic Pay</td>
-        <td>{{basic_pay}}</td>
-      </tr>
-      <tr>
-        <td>HRA</td>
-        <td>{{hra}}</td>
-      </tr>
-      <tr>
-        <td>Special Allowance</td>
-        <td>{{special_allowance}}</td>
-      </tr>
-      <tr>
-        <td>Other Allowances</td>
-        <td>{{other_allowances}}</td>
-      </tr>
-      <tr>
-        <th>Gross Salary</th>
-        <th>{{gross_salary}}</th>
-      </tr>
-      <tr>
-        <th>Net Salary</th>
-        <th>{{net_salary}}</th>
-      </tr>
+      <tr><th>Earnings</th><th>Amount (₹)</th></tr>
+      <tr><td>Basic Pay</td><td>{{basic_pay}}</td></tr>
+      <tr><td>HRA</td><td>{{hra}}</td></tr>
+      <tr><td>Special Allowance</td><td>{{special_allowance}}</td></tr>
+      <tr><td>Other Allowances</td><td>{{other_allowances}}</td></tr>
+      <tr><th>Gross Salary</th><th>{{gross_salary}}</th></tr>
+      <tr><th>Net Salary</th><th>{{net_salary}}</th></tr>
     </table> 
+
     <br>
     <p><b>Candidate Declaration</b></p>
     <p>I, <b>{{name}}</b>, accept the terms of this offer and agree to join as <b>{{designation}}</b>

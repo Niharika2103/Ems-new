@@ -208,3 +208,86 @@ cron.schedule("0 9 3 * *", async () => {
     console.error("❌ Payslip Cron Error:", err.message);
   }
 });
+/* ==============================================================
+   🟦 PROBATION COMPLETED EMAIL CRON (Runs Daily @ 12:10 AM)
+   Category used: 'other'
+============================================================== */
+cron.schedule("10 0 * * *", async () => {
+  console.log("⏳ Probation Completed Cron Started...");
+
+  try {
+    const companyName = await getCompanyName();
+
+    const today = new Date().toISOString().split("T")[0];
+
+    // 1️⃣ Get employees whose probation is completed
+    const probationRes = await db.query(
+      `
+      SELECT 
+        p.probationid,
+        p.employee_id,
+        u.name,
+        u.email
+      FROM probation p
+      JOIN user_employees_master u ON u.id = p.employee_id
+      WHERE p.status = 'active'
+      AND p.enddate < $1
+      AND u.email IS NOT NULL
+      `,
+      [today]
+    );
+
+    if (probationRes.rows.length === 0) {
+      console.log("ℹ No completed probations found.");
+      return;
+    }
+
+    // 2️⃣ Fetch probation completed template (category = other)
+    const templateRes = await db.query(
+      `
+      SELECT * FROM email_templates
+      WHERE category = 'other'
+      AND template_name ILIKE '%Probation Completed%'
+      AND status = 'active'
+      LIMIT 1
+      `
+    );
+
+    if (templateRes.rows.length === 0) {
+      console.log("⚠ Probation completed template not found.");
+      return;
+    }
+
+    const template = templateRes.rows[0];
+
+    // 3️⃣ Send email to each employee
+    for (const emp of probationRes.rows) {
+      const body = template.body_html
+        .replace(/{employee_name}/g, emp.name)
+        .replace(/{company_name}/g, companyName);
+
+      const subject = template.subject
+        .replace(/{employee_name}/g, emp.name)
+        .replace(/{company_name}/g, companyName);
+
+      await sendEmail(emp.email, subject, body);
+
+      console.log(`✅ Probation completed mail sent → ${emp.email}`);
+
+      // OPTIONAL: mark probation as completed
+      await db.query(
+        `
+        UPDATE probation
+        SET status = 'completed', updatedat = NOW()
+        WHERE probationid = $1
+        `,
+        [emp.probationid]
+      );
+    }
+
+    console.log("✔ Probation Completed Cron Finished.");
+
+  } catch (err) {
+    console.error("❌ Probation Completed Cron Error:", err.message);
+  }
+});

@@ -1829,10 +1829,7 @@ export const getAuditLogs = async (req, res) => {
     client.release();
   }
 };
-
-
-
-// Template mapping
+// Template mapping (already exists in your file)
 const templateFileMap = {
   "Offer Letter": "offerLetter.html",
   "Appointment Letter": "appointmentLetter.html",
@@ -1842,9 +1839,8 @@ const templateFileMap = {
   "Promotion Letter": "promotionLetter.html",
   "Salary Increment Letter": "salaryIncrementLetter.html",
   "Warning Letter": "warningLetter.html",
-  "freelancer contract":"freelancerContract.html" ,
-  "invoice Template":"invoiceTemplate.html",
-
+  "freelancer contract": "freelancerContract.html",
+  "invoice Template": "invoiceTemplate.html",
 };
 
 // Replace {{placeholders}}
@@ -1858,23 +1854,13 @@ async function generatePDF(htmlContent, outputPath) {
     headless: "new",
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
-
   const page = await browser.newPage();
   await page.setContent(htmlContent, { waitUntil: "networkidle0" });
-
-  await page.pdf({
-    path: outputPath,
-    format: "A4",
-    printBackground: true,
-  });
-
+  await page.pdf({ path: outputPath, format: "A4", printBackground: true });
   await browser.close();
 }
 
-// MAIN API
-
-
-
+// ✅ FULLY UPDATED generateLetter
 export const generateLetter = async (req, res) => {
   const client = await pool.connect();
   try {
@@ -1893,8 +1879,8 @@ export const generateLetter = async (req, res) => {
       [employeeId]
     );
     const sal = salResult.rows[0] || {};
-    
-    // ✅ GET BRANDING FOR "LETTERS"
+
+    // ✅ GET BRANDING (this was missing!)
     const branding = await getBrandingForContext("letters");
 
     const selectedTemplate = templateFileMap[letterType];
@@ -1905,7 +1891,7 @@ export const generateLetter = async (req, res) => {
       return res.status(500).json({ error: "Template file missing" });
     }
 
-    // Prepare data WITH company_name
+    // ✅ Inject company_name from branding or fallback
     const data = {
       name: emp.name,
       designation: emp.designation,
@@ -1927,24 +1913,33 @@ export const generateLetter = async (req, res) => {
       bank_name: sal.bank_name,
       ifsc_code: sal.ifsc_code,
       account_number: sal.account_number,
-      // ✅ Inject company name from branding or fallback
       company_name: branding?.companyName || "Zigma People Private Limited (An AI India Venture)",
-      ctc: sal.gross_salary, // assuming CTC = gross_salary
+      ctc: sal.gross_salary,
     };
 
     let filledHTML = fillTemplate(templateContent, data);
 
-    // ✅ INJECT LOGO + STYLED HEADER (replaces <h2>OFFER LETTER</h2>)
-    const logoHtml = branding?.logoUrl
-      ? `<img src="${branding.logoUrl}" style="max-height:60px; margin-bottom:10px;">`
-      : "";
-    const headerHtml = `
-      <div style="text-align:center; margin-bottom:20px;">
-        ${logoHtml}
-        <h2 style="color:${branding?.primaryColor || '#000'}; text-decoration:underline;">${letterType.toUpperCase()} LETTER</h2>
-      </div>
-    `;
-    filledHTML = filledHTML.replace(/<h2>[A-Z\s]+LETTER<\/h2>/, headerHtml);
+    // ✅ INJECT LOGO + HEADER (this was missing!)
+    if (branding) {
+      const logoHtml = branding.logoUrl
+        ? `<img src="${branding.logoUrl}" style="max-height:60px; margin-bottom:10px;" />`
+        : "";
+      const headerHtml = `
+        <div style="text-align:center; margin-bottom:20px;">
+          ${logoHtml}
+          <h2 style="color:${branding.primaryColor || '#000'}; text-decoration:underline;">
+            ${letterType.toUpperCase()}
+          </h2>
+        </div>
+      `;
+      filledHTML = filledHTML.replace('<h2>LETTER_HEADER_PLACEHOLDER</h2>', headerHtml);
+    } else {
+      // Fallback if branding is disabled
+      filledHTML = filledHTML.replace(
+        '<h2>LETTER_HEADER_PLACEHOLDER</h2>',
+        `<h2 style="text-align:center; text-decoration:underline;">${letterType.toUpperCase()}</h2>`
+      );
+    }
 
     // Generate PDF
     const lettersDir = path.join(process.cwd(), "src/uploads/letters");
@@ -1982,8 +1977,6 @@ export const generateLetter = async (req, res) => {
     client.release();
   }
 };
-
-
 // export const getEmployeeLetters = async (req, res) => {
 //   const client = await pool.connect();
 
