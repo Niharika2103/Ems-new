@@ -1,5 +1,3 @@
-//Sidebar-Auditlogs
-
 import { NavLink } from "react-router-dom";
 import {
   Home,
@@ -23,6 +21,12 @@ const Sidebar = ({ isOpen, handleClose }) => {
   const authRole = useSelector((state) => state.authSlice?.role);
   const employeeRole = useSelector((state) => state.employeeSlice?.role);
 
+  // ✅ PROFILE PHOTO FROM REDUX
+  const profilePhoto =
+    useSelector((state) => state.employeeDetails?.profile?.profile_photo) ||
+    JSON.parse(localStorage.getItem("user"))?.profile_photo ||
+    null;
+
   const role =
     adminRole ||
     authRole ||
@@ -33,7 +37,6 @@ const Sidebar = ({ isOpen, handleClose }) => {
     useSelector((state) => state.employeeSlice?.employment_type) ||
     localStorage.getItem("employment_type");
 
-  // EMAIL for logout
   const [email, setEmail] = useState("");
 
   useEffect(() => {
@@ -42,9 +45,7 @@ const Sidebar = ({ isOpen, handleClose }) => {
         const decoded = await decodeToken();
         const stored = JSON.parse(localStorage.getItem("user") || "null");
         const finalEmail = decoded?.email || stored?.email || "";
-
         setEmail(finalEmail);
-        console.log("Sidebar Logout Email:", finalEmail);
       } catch (err) {
         console.error("Decode Error:", err);
       }
@@ -52,7 +53,7 @@ const Sidebar = ({ isOpen, handleClose }) => {
     loadUser();
   }, []);
 
-  // ⭐ EMPLOYEE MENUS
+  /* ------------------ EMPLOYEE MENUS ------------------ */
   let employeeMenus = [];
 
   if (employment_type === "freelancer") {
@@ -60,30 +61,24 @@ const Sidebar = ({ isOpen, handleClose }) => {
       { name: "Dashboard", icon: <Home size={20} />, path: "/dashboard" },
       { name: "Job Posting", icon: <Briefcase size={20} />, path: "/dashboard/JobPostDashboard" },
       { name: "Attendance", icon: <Calendar size={20} />, path: "/dashboard/emp_attendance" },
-      // { name: "Tasks", icon: <CheckSquare size={20} />, path: "/freelancer/tasks" },
       { name: "Payments", icon: <Users size={20} />, path: "/freelancer/payments" },
-      // { name: "Reports", icon: <BarChart3 size={20} />, path: "/reports" },
     ];
   } else if (employment_type === "contract") {
     employeeMenus = [
       { name: "Dashboard", icon: <Home size={20} />, path: "/contract/dashboard" },
       { name: "Attendance", icon: <Calendar size={20} />, path: "/contract/attendance" },
-      // { name: "HR", icon: <CheckSquare size={20} />, path: "/contract/hr" },
       { name: "Payslip", icon: <Users size={20} />, path: "/contract/payslip" },
-      // { name: "Reports", icon: <BarChart3 size={20} />, path: "/reports" },
     ];
   } else {
     employeeMenus = [
       { name: "Dashboard", icon: <Home size={20} />, path: "/dashboard" },
       { name: "Job Posting", icon: <Briefcase size={20} />, path: "/JobPostDashboard" },
       { name: "Attendance", icon: <Calendar size={20} />, path: "/emp_attendance" },
-      // { name: "HR", icon: <CheckSquare size={20} />, path: "/hr" },
       { name: "Payslip", icon: <Users size={20} />, path: "/payslip" },
-      // { name: "Reports", icon: <BarChart3 size={20} />, path: "/reports" },
     ];
   }
 
-  // ⭐ ADMIN + SUPERADMIN MENUS
+  /* ------------------ ADMIN / SUPERADMIN MENUS ------------------ */
   const roleMenus = {
     admin: [
       { name: "Dashboard", icon: <Home size={20} />, path: "/dashboard" },
@@ -95,7 +90,6 @@ const Sidebar = ({ isOpen, handleClose }) => {
       { name: "Reports", icon: <BarChart3 size={20} />, path: "/reports" },
       { name: "Settings", icon: <Settings size={20} />, path: "/settings" },
     ],
-
     superadmin: [
       { name: "Dashboard", icon: <Home size={20} />, path: "/dashboard" },
       { name: "Job Posting", icon: <Briefcase size={20} />, path: "/jobs" },
@@ -111,15 +105,12 @@ const Sidebar = ({ isOpen, handleClose }) => {
   const finalMenus =
     role === "employee" ? employeeMenus : roleMenus[role] || [];
 
-  // ⭐ FIXED LOGOUT — calls correct backend
+  /* ------------------ LOGOUT ------------------ */
   const handleLogout = async () => {
     try {
       if (email) {
-        if (role === "superadmin") {
-          await superAdminLogoutApi(email);
-        } else if (role === "admin") {
-          await adminLogoutApi(email);
-        }
+        if (role === "superadmin") await superAdminLogoutApi(email);
+        else if (role === "admin") await adminLogoutApi(email);
       }
     } catch (error) {
       console.error("Logout API Error:", error);
@@ -134,7 +125,6 @@ const Sidebar = ({ isOpen, handleClose }) => {
     if (handleClose) handleClose();
   };
 
-  // ROLE DISPLAY
   let displayRole = role?.toUpperCase();
   if (role === "employee") {
     displayRole =
@@ -150,16 +140,17 @@ const Sidebar = ({ isOpen, handleClose }) => {
       className={`font-robo font-medium bg-[#51b4f2] text-white transition-all duration-300 
         flex flex-col ${isOpen ? "w-56" : "w-16"}`}
     >
+      {/* ROLE */}
       <div className="flex items-center justify-center py-4">
         {isOpen && <span className="ml-3 text-lg font-bold">{displayRole}</span>}
       </div>
 
       {/* PROFILE IMAGE */}
-      <div className="flex items-center justify-center py-2 ml-3">
+      <div className="flex items-center justify-center py-2">
         <img
-          src="/default-user.jpg"
+          src={profilePhoto || "/default-user.jpg"}
           alt="User"
-          className="w-12 h-12 rounded-full border-2 border-white"
+          className="w-12 h-12 rounded-full border-2 border-white object-cover"
         />
       </div>
 
@@ -169,30 +160,28 @@ const Sidebar = ({ isOpen, handleClose }) => {
           {finalMenus.map((item) => (
             <li key={item.name}>
               <NavLink
-  to={item.path}
-  className={({ isActive }) =>
-    `group flex items-center p-2 rounded-l-full cursor-pointer transition-all duration-300
-     ${
-       isActive
-         ? "bg-white text-[#51b4f2] font-semibold shadow-md"
-         : "text-white hover:bg-white hover:text-[#51b4f2]"
-     }`
-  }
->
-  {({ isActive }) => (
-    <>
-      <span
-        className={`${isOpen ? "mr-3" : ""} transition-colors duration-300
-        ${isActive ? "text-[#51b4f2]" : "group-hover:text-[#51b4f2]"}`}
-      >
-        {item.icon}
-      </span>
-
-      {isOpen && <span>{item.name}</span>}
-    </>
-  )}
-</NavLink>
-
+                to={item.path}
+                className={({ isActive }) =>
+                  `group flex items-center p-2 rounded-l-full cursor-pointer transition-all duration-300
+                   ${
+                     isActive
+                       ? "bg-white text-[#51b4f2] font-semibold shadow-md"
+                       : "text-white hover:bg-white hover:text-[#51b4f2]"
+                   }`
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <span
+                      className={`${isOpen ? "mr-3" : ""} transition-colors duration-300
+                        ${isActive ? "text-[#51b4f2]" : "group-hover:text-[#51b4f2]"}`}
+                    >
+                      {item.icon}
+                    </span>
+                    {isOpen && <span>{item.name}</span>}
+                  </>
+                )}
+              </NavLink>
             </li>
           ))}
 
