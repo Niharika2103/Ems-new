@@ -27,6 +27,7 @@ import {
   Checkbox,
   FormControlLabel,
   Tooltip,
+  TablePagination,
 } from "@mui/material";
 import {
   Visibility,
@@ -123,6 +124,11 @@ export default function AdminReferralDashboard() {
   const [interviewDate, setInterviewDate] = useState(null);
   const [interviewTime, setInterviewTime] = useState(null);
   const [meetingLink, setMeetingLink] = useState("");
+
+  // Pagination
+const [page, setPage] = useState(0);
+const [rowsPerPage, setRowsPerPage] = useState(10);
+
 
   // Fetch data
   useEffect(() => {
@@ -270,6 +276,11 @@ export default function AdminReferralDashboard() {
       </Box>
     );
   }
+  const paginatedReferrals = filteredReferrals.slice(
+  page * rowsPerPage,
+  page * rowsPerPage + rowsPerPage
+);
+
 
   const combinedMembers = selectedPanelNames.flatMap(panelName => {
     const panel = panels.find(p => p.panel_name === panelName);
@@ -331,7 +342,7 @@ export default function AdminReferralDashboard() {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredReferrals.map((referral) => (
+                paginatedReferrals.map((referral) => (
                   <TableRow key={referral.id} hover>
                     <TableCell>
                       <Box>
@@ -424,6 +435,19 @@ export default function AdminReferralDashboard() {
               )}
             </TableBody>
           </Table>
+          <TablePagination
+  component="div"
+  count={filteredReferrals.length}
+  page={page}
+  onPageChange={(event, newPage) => setPage(newPage)}
+  rowsPerPage={rowsPerPage}
+  onRowsPerPageChange={(event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  }}
+  rowsPerPageOptions={[5, 10, 25]}
+/>
+
         </TableContainer>
 
         {/* Schedule / Reschedule Dialog */}

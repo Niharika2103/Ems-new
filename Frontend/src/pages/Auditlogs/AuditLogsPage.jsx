@@ -28,6 +28,18 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 
 import { getAllAdminAuditLogsApi } from "../../api/authApi"; // ✅ Adjust path as needed
 
+const LabelValue = ({ label, value }) => (
+  <Box>
+    <Typography variant="caption" color="text.secondary">
+      {label}
+    </Typography>
+    <Typography variant="body1" fontWeight={500}>
+      {value || "—"}
+    </Typography>
+  </Box>
+);
+
+
 const AuditLogsPage = () => {
   const [logs, setLogs] = useState([]);
   const [filteredLogs, setFilteredLogs] = useState([]);
@@ -108,15 +120,31 @@ const [dateTo, setDateTo] = useState(today);
   useEffect(() => {
     let filtered = logs;
 
+    // if (search) {
+    //   const lowerSearch = search.toLowerCase();
+    //   filtered = filtered.filter(
+    //     (log) =>
+    //       log.user.toString().toLowerCase().includes(lowerSearch) ||
+    //       log.name.toLowerCase().includes(lowerSearch) ||
+    //       log.email.toLowerCase().includes(lowerSearch)
+    //   );
+    // }
     if (search) {
-      const lowerSearch = search.toLowerCase();
-      filtered = filtered.filter(
-        (log) =>
-          log.user.toString().toLowerCase().includes(lowerSearch) ||
-          log.name.toLowerCase().includes(lowerSearch) ||
-          log.email.toLowerCase().includes(lowerSearch)
-      );
-    }
+  const lowerSearch = search.toLowerCase();
+
+  filtered = filtered.filter((log) =>
+    String(log.user || "")
+      .toLowerCase()
+      .includes(lowerSearch) ||
+    String(log.name || "")
+      .toLowerCase()
+      .includes(lowerSearch) ||
+    String(log.email || "")
+      .toLowerCase()
+      .includes(lowerSearch)
+  );
+}
+
 
     if (dateFrom) {
       filtered = filtered.filter(
@@ -288,7 +316,7 @@ const [dateTo, setDateTo] = useState(today);
               Audit Log Details
             </Typography>
           </DialogTitle>
-          <DialogContent dividers>
+          {/* <DialogContent dividers>
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <Typography variant="subtitle1" fontWeight="bold" color="primary" gutterBottom>
@@ -367,7 +395,109 @@ const [dateTo, setDateTo] = useState(today);
                 </Paper>
               </Grid>
             </Grid>
-          </DialogContent>
+          </DialogContent> */}
+          <DialogContent dividers sx={{ backgroundColor: "#fafafa" }}>
+  <Grid container spacing={3}>
+
+    {/* USER INFORMATION */}
+    <Grid item xs={12}>
+      <Paper elevation={0} sx={{ p: 2.5, borderRadius: 2 }}>
+        <Typography variant="subtitle1" fontWeight={600} mb={2}>
+          User Information
+        </Typography>
+
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={4}>
+            <LabelValue label="User ID" value={selectedLog.user} />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <LabelValue label="Full Name" value={selectedLog.name} />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <LabelValue label="Email" value={selectedLog.email} />
+          </Grid>
+        </Grid>
+      </Paper>
+    </Grid>
+
+    {/* SESSION DETAILS */}
+    <Grid item xs={12}>
+      <Paper elevation={0} sx={{ p: 2.5, borderRadius: 2 }}>
+        <Typography variant="subtitle1" fontWeight={600} mb={2}>
+          Session Details
+        </Typography>
+
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={4}>
+            <LabelValue label="Login Time" value={selectedLog.login} />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <LabelValue label="Logout Time" value={selectedLog.logout || "—"} />
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <LabelValue label="Session Duration" value={selectedLog.sessionDuration} />
+          </Grid>
+        </Grid>
+      </Paper>
+    </Grid>
+
+    {/* ACTIVITY DETAILS */}
+    <Grid item xs={12}>
+      <Paper elevation={0} sx={{ p: 2.5, borderRadius: 2 }}>
+        <Typography variant="subtitle1" fontWeight={600} mb={2}>
+          Activity Details
+        </Typography>
+
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={3}>
+            <Typography variant="caption" color="text.secondary">
+              Log Level
+            </Typography>
+            <Box mt={0.5}>
+              <Chip
+                label={selectedLog.level}
+                color={getLevelColor(selectedLog.level)}
+                size="small"
+              />
+            </Box>
+          </Grid>
+
+          <Grid item xs={12} md={3}>
+            <LabelValue label="Timestamp" value={selectedLog.timestamp} />
+          </Grid>
+
+          <Grid item xs={12} md={3}>
+            <LabelValue label="IP Address" value={selectedLog.ipAddress} />
+          </Grid>
+
+          <Grid item xs={12} md={3}>
+            <LabelValue label="Device / Browser" value={selectedLog.device} />
+          </Grid>
+        </Grid>
+      </Paper>
+    </Grid>
+
+    {/* DETAILS BOX */}
+    <Grid item xs={12}>
+      <Paper
+        elevation={0}
+        sx={{
+          p: 2.5,
+          borderRadius: 2,
+          backgroundColor: "#f5f7fa",
+        }}
+      >
+        <Typography variant="subtitle1" fontWeight={600} mb={1}>
+          Detailed Information
+        </Typography>
+        <Typography variant="body2">
+          {selectedLog.details}
+        </Typography>
+      </Paper>
+    </Grid>
+  </Grid>
+</DialogContent>
+
           <DialogActions>
             <Button onClick={() => setOpenModal(false)} variant="contained" color="primary">
               Close

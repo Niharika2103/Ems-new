@@ -17,6 +17,7 @@ import {
   DialogContent,
   DialogActions,
   Divider,
+  TablePagination,
 } from "@mui/material";
 
 import {
@@ -34,6 +35,11 @@ const InvoiceModule = () => {
 
   // Reminder popup
   const [openReminder, setOpenReminder] = useState(false);
+
+  // Pagination
+const [page, setPage] = useState(0);
+const [rowsPerPage, setRowsPerPage] = useState(5);
+
 
   /* ======================================================
       1. LOAD ALL INVOICES ON PAGE LOAD
@@ -116,6 +122,11 @@ const InvoiceModule = () => {
       console.error("Reminder error:", err);
     }
   };
+  const paginatedInvoices = invoices.slice(
+  page * rowsPerPage,
+  page * rowsPerPage + rowsPerPage
+);
+
 
   /* ======================================================
       LIST SCREEN
@@ -140,7 +151,7 @@ const InvoiceModule = () => {
         </TableHead>
 
         <TableBody>
-          {invoices.map((inv) => (
+          {paginatedInvoices.map((inv) => (
             <TableRow key={inv.id}>
               <TableCell>{inv.invoice_number}</TableCell>
               <TableCell>{inv.freelancer_name}</TableCell>
@@ -185,6 +196,19 @@ const InvoiceModule = () => {
           ))}
         </TableBody>
       </Table>
+      <TablePagination
+  component="div"
+  count={invoices.length}
+  page={page}
+  onPageChange={(e, newPage) => setPage(newPage)}
+  rowsPerPage={rowsPerPage}
+  onRowsPerPageChange={(e) => {
+    setRowsPerPage(parseInt(e.target.value, 10));
+    setPage(0);
+  }}
+  rowsPerPageOptions={[5, 10, 25]}
+/>
+
     </Paper>
   );
 

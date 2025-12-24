@@ -2150,6 +2150,397 @@ export const downloadEmployeeLetter = async (req, res) => {
   }
 };
 
+export const generateFreelancerLetter = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { freelancerId, letterType } = req.body;
+
+    if (!freelancerId || !letterType) {
+      return res.status(400).json({
+        error: "freelancerId and letterType are required"
+      });
+    }
+
+    // Fetch freelancer (SAME AS EMPLOYEE)
+    const empResult = await client.query(
+      `SELECT *
+       FROM user_employees_master
+       WHERE id = $1 AND employment_type = 'freelancer'`,
+      [freelancerId]
+    );
+
+    const emp = empResult.rows[0];
+
+    if (!emp) {
+      return res.status(404).json({
+        error: "Freelancer not found"
+      });
+    }
+
+    // Fetch latest salary record (KEPT SAME)
+    const salResult = await client.query(
+      `SELECT *
+       FROM salary_structure
+       WHERE employee_id = $1
+       ORDER BY created_at DESC
+       LIMIT 1`,
+      [freelancerId]
+    );
+
+    const sal = salResult.rows[0] || {};
+
+    // Select template file (USE FREELANCER MAP)
+    const selectedTemplate = templateFileMap[letterType];
+
+    if (!selectedTemplate) {
+      return res.status(400).json({
+        error: "Invalid letter type selected"
+      });
+    }
+
+    const templateContent = loadTemplate(selectedTemplate);
+    if (!templateContent) {
+      return res.status(500).json({
+        error: "Template file missing"
+      });
+    }
+
+    // Prepare placeholder data (UNCHANGED)
+    const data = {
+      name: emp.name,
+      designation: emp.designation,
+      department: emp.department,
+      employee_code: emp.employee_id,
+      address: emp.address,
+      permanent_address: emp.permanent_address,
+      date_of_joining: emp.date_of_joining,
+      effective_from: sal.effective_from,
+      effective_to: sal.effective_to,
+      location: sal.location,
+      basic_pay: sal.basic_pay,
+      hra: sal.hra,
+      special_allowance: sal.special_allowance,
+      other_allowances: sal.other_allowances,
+      gross_salary: sal.gross_salary,
+      net_salary: sal.net_salary,
+      pan_number: sal.pan_number,
+      bank_name: sal.bank_name,
+      ifsc_code: sal.ifsc_code,
+      account_number: sal.account_number
+    };
+
+    // Fill HTML
+    const filledHTML = fillTemplate(templateContent, data);
+
+    // Generate PDF file (UNCHANGED)
+    const lettersDir = path.join(process.cwd(), "src/uploads/letters");
+    if (!fs.existsSync(lettersDir)) {
+      fs.mkdirSync(lettersDir, { recursive: true });
+    }
+
+    const fileName = `${letterType.replace(/ /g, "_")}_${Date.now()}.pdf`;
+    const filePath = path.join(lettersDir, fileName);
+
+    await generatePDF(filledHTML, filePath);
+
+    // Save MULTIPLE PDF files in JSONB (UNCHANGED)
+    const docResult = await client.query(
+      `SELECT document_url
+       FROM user_employees_master
+       WHERE id = $1`,
+      [freelancerId]
+    );
+
+    let existingDocs = docResult.rows[0]?.document_url || [];
+    if (!Array.isArray(existingDocs)) existingDocs = [];
+
+    existingDocs.push(fileName);
+
+    await client.query(
+      `UPDATE user_employees_master
+       SET document_url = $1::jsonb,
+           updated_at = NOW()
+       WHERE id = $2`,
+      [JSON.stringify(existingDocs), freelancerId]
+    );
+
+    // Success Response
+    return res.json({
+      message: "Freelancer letter generated successfully",
+      pdf_url: `/uploads/letters/${fileName}`,
+      file_name: fileName,
+      documents: existingDocs
+    });
+
+  } catch (err) {
+    console.error("Generate Freelancer Letter Error:", err.message);
+    return res.status(500).json({
+      error: "Failed to generate freelancer letter"
+    });
+  } finally {
+    client.release();
+  }
+};
+export const getFreelancerLetters = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { freelancerId } = req.params;
+
+    const result = await client.query(
+      `SELECT document_url
+       FROM user_employees_master
+       WHERE id = $1 AND employment_type = 'freelancer'`,
+      [freelancerId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        error: "Freelancer not found"
+      });
+    }
+
+    const docs = result.rows[0].document_url || [];
+    const BASE_URL =
+      process.env.BASE_URL ||
+      `http://localhost:${process.env.PORT || 5002}`;
+
+    const files = Array.isArray(docs)
+      ? docs.map(file => ({
+          name: file,
+          url: `${BASE_URL}/uploads/letters/${file}`
+        }))
+      : [];
+
+    return res.json({
+      success: true,
+      total: files.length,
+      files
+    });
+
+  } catch (err) {
+    console.error("Get Freelancer Letters Error:", err);
+    return res.status(500).json({
+      error: "Failed to fetch freelancer letters"
+    });
+  } finally {
+    client.release();
+  }
+};
+export const downloadFreelancerLetter = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { freelancerId, fileName } = req.params;
+
+    // ✅ Validate input
+    if (!freelancerId || !fileName) {
+      return res.status(400).json({
+        error: "Freelancer ID and file name are required"
+      });
+    }
+
+    // 1️⃣ Verify freelancer + letter ownership
+    const result = await client.query(
+      `SELECT document_url
+       FROM user_employees_master
+       WHERE id = $1 AND employment_type = 'freelancer'`,
+      [freelancerId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        error: "Freelancer not found"
+      });
+    }
+
+    const docs = result.rows[0].document_url || [];
+
+    if (!Array.isArray(docs) || !docs.includes(fileName)) {
+      return res.status(403).json({
+        error: "You are not authorized to access this file"
+      });
+    }
+
+    // 2️⃣ File path
+    const filePath = path.join(
+      process.cwd(),
+      "src/uploads/letters",
+      fileName
+    );
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({
+        error: "File not found on server"
+      });
+    }
+
+    // 3️⃣ Send file for download
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${fileName}"`
+    );
+    res.setHeader("Content-Type", "application/pdf");
+
+    return res.sendFile(filePath);
+
+  } catch (err) {
+    console.error("Download Freelancer Letter Error:", err);
+    return res.status(500).json({
+      error: "Failed to download freelancer letter"
+    });
+  } finally {
+    client.release();
+  }
+};
+export const deleteFreelancerLetter = async (req, res) => {
+  const client = await pool.connect();
+  const { freelancerId, filename } = req.params;
+
+  try {
+    // 1️⃣ Validate input
+    if (!freelancerId || !filename) {
+      return res.status(400).json({
+        error: "freelancerId and filename are required"
+      });
+    }
+
+    // 2️⃣ Fetch freelancer (only freelancer)
+    const docResult = await client.query(
+      `SELECT document_url
+       FROM user_employees_master
+       WHERE id = $1 AND employment_type = 'freelancer'`,
+      [freelancerId]
+    );
+
+    if (docResult.rows.length === 0) {
+      return res.status(404).json({
+        error: "Freelancer not found"
+      });
+    }
+
+    const existingDocs = docResult.rows[0].document_url || [];
+
+    if (!Array.isArray(existingDocs) || !existingDocs.includes(filename)) {
+      return res.status(404).json({
+        error: "Letter not found"
+      });
+    }
+
+    // 3️⃣ Remove file from JSONB
+    const updatedDocs = existingDocs.filter(file => file !== filename);
+
+    await client.query(
+      `UPDATE user_employees_master
+       SET document_url = $1::jsonb,
+           updated_at = NOW()
+       WHERE id = $2`,
+      [JSON.stringify(updatedDocs), freelancerId]
+    );
+
+    // 4️⃣ Delete file from filesystem
+    const filePath = path.join(
+      process.cwd(),
+      "src/uploads/letters",
+      filename
+    );
+
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    return res.json({
+      message: "Freelancer letter deleted successfully",
+      documents: updatedDocs
+    });
+
+  } catch (err) {
+    console.error("Delete Freelancer Letter Error:", err);
+    return res.status(500).json({
+      error: "Failed to delete freelancer letter"
+    });
+  } finally {
+    client.release();
+  }
+};
+export const sendFreelancerLetterEmail = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { freelancerId, fileName } = req.body;
+
+    if (!freelancerId || !fileName) {
+      return res.status(400).json({
+        error: "freelancerId and fileName are required"
+      });
+    }
+
+    // 1️⃣ Fetch freelancer info
+    const empResult = await client.query(
+      `SELECT name, email
+       FROM user_employees_master
+       WHERE id = $1 AND employment_type = 'freelancer'`,
+      [freelancerId]
+    );
+
+    const freelancer = empResult.rows[0];
+
+    if (!freelancer) {
+      return res.status(404).json({
+        error: "Freelancer not found"
+      });
+    }
+
+    // 2️⃣ Verify file exists
+    const filePath = path.join(
+      process.cwd(),
+      "src/uploads/letters",
+      fileName
+    );
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({
+        error: "File not found on server"
+      });
+    }
+
+    // 3️⃣ Send email
+    await sendEmail(
+      freelancer.email,
+      `Your ${fileName.split("_")[0]} Document`,
+      `<p>Hello ${freelancer.name},</p>
+       <p>Please find your <strong>${fileName.split("_")[0]}</strong> attached.</p>
+       <p>Regards,<br/>HR Team</p>`,
+      filePath,
+      fileName
+    );
+
+    return res.json({
+      message: "📧 Freelancer email sent successfully",
+      sent_to: freelancer.email,
+      file: fileName
+    });
+
+  } catch (err) {
+    console.error("Send Freelancer Letter Email Error:", err);
+    return res.status(500).json({
+      error: "Failed to send freelancer email"
+    });
+  } finally {
+    client.release();
+  }
+};
+export const getAllFreelancers = async (req, res) => {
+  const result = await pool.query(
+    `SELECT *
+     FROM user_employees_master
+     WHERE employment_type = 'freelancer'`
+  );
+  res.json(result.rows);
+};
+
+
 
 export const documentUpload = upload.fields([
   { name: "passbook", maxCount: 1 },

@@ -41,6 +41,9 @@ import {
   getAuthSettingsApi,
   updateAuthSettingsApi,
   createAuthSettingsApi,
+  createSalaryCycleApi,
+  updateSalaryCycleApi,
+  getSalaryCycleApi,
 } from "../../api/authApi";
 
 export default function SettingsPage() {
@@ -192,82 +195,154 @@ function BrandingSection() {
 
 function SalarySection() {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [editing, setEditing] = useState(null);
+  const [cycle, setCycle] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const cycles = [
-    { id: 1, name: 'Default monthly', frequency: 'Monthly', groups: 'All employees' },
-    { id: 2, name: 'Sales bi‑weekly', frequency: 'Bi‑weekly', groups: 'Sales' },
-  ];
+  useEffect(() => {
+    const fetchCycle = async () => {
+      try {
+        const res = await getSalaryCycleApi();
+        setCycle(res.data);
+      } catch (err) {
+        if (err.response?.status === 404) {
+          setCycle(null);
+        } else {
+          console.error("Failed to fetch salary cycle", err);
+          toast.error("Failed to load salary cycle");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const openDrawer = (cycle) => {
-    setEditing(cycle);
+    fetchCycle();
+  }, []);
+
+  const openDrawer = () => {
     setDrawerOpen(true);
   };
 
   const closeDrawer = () => {
-    setEditing(null);
     setDrawerOpen(false);
   };
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <>
       <Grid container spacing={2}>
-        {cycles.map((c) => (
-          <Grid key={c.id} item xs={12} md={4}>
-            <Card sx={{ cursor: 'pointer' }} onClick={() => openDrawer(c)}>
+        {cycle ? (
+          <Grid item xs={12} md={6}>
+            <Card>
               <CardContent>
-                <Typography variant="h6">{c.name}</Typography>
+                <Typography variant="h6">{cycle.cycle_name}</Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Frequency: {c.frequency}
+                  Frequency: {cycle.pay_frequency}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Groups: {c.groups}
+                  Cycle: Day {cycle.cycle_start_day} – {cycle.cycle_end_day}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Cut-off: Day {cycle.cut_off_day} | Processing: Day {cycle.processing_day} | Payout: Day {cycle.payout_day}
                 </Typography>
               </CardContent>
+              <CardActions sx={{ px: 2, pb: 2 }}>
+                <Button variant="outlined" size="small" onClick={openDrawer}>
+                  Edit
+                </Button>
+              </CardActions>
             </Card>
           </Grid>
-        ))}
-
-        <Grid item xs={12} md={4}>
-          <Card
-            variant="outlined"
-            sx={{
-              borderStyle: 'dashed',
-              height: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-            }}
-            onClick={() => openDrawer(null)}
-          >
-            <Typography color="primary">+ Add salary cycle</Typography>
-          </Card>
-        </Grid>
+        ) : (
+          <Grid item xs={12} md={6}>
+            <Card
+              variant="outlined"
+              sx={{
+                borderStyle: 'dashed',
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+              }}
+              onClick={openDrawer}
+            >
+              <Typography color="primary">+ Set up salary cycle</Typography>
+            </Card>
+          </Grid>
+        )}
       </Grid>
 
       <RightDrawer
         open={drawerOpen}
         onClose={closeDrawer}
-        title={editing ? 'Edit salary cycle' : 'Add salary cycle'}
+        title={cycle ? 'Edit salary cycle' : 'Set up salary cycle'}
       >
-        <SalaryForm initial={editing} onClose={closeDrawer} />
+        <SalaryForm
+          initial={cycle}
+          onClose={closeDrawer}
+          onSaved={async () => {
+            try {
+              const res = await getSalaryCycleApi();
+              setCycle(res.data);
+            } catch (err) {
+              if (err.response?.status === 404) {
+                setCycle(null);
+              }
+            }
+          }}
+        />
       </RightDrawer>
     </>
   );
 }
 
-function SalaryForm({ initial, onClose }) {
-  const [name, setName] = useState(initial?.name || '');
-  const [frequency, setFrequency] = useState(initial?.frequency || 'Monthly');
-  const [cutoff, setCutoff] = useState(initial?.cutoffDay || '');
-  const [groups, setGroups] = useState(initial?.groups || '');
-  const [workflow, setWorkflow] = useState(initial?.workflow || '');
+function SalaryForm({ initial, onClose, onSaved }) {
+  const [cycle_name, setCycleName] = useState(initial?.cycle_name || '');
+  const [pay_frequency, setPayFrequency] = useState(initial?.pay_frequency || 'monthly');
+  const [cycle_start_day, setCycleStartDay] = useState(initial?.cycle_start_day?.toString() || '');
+  const [cycle_end_day, setCycleEndDay] = useState(initial?.cycle_end_day?.toString() || '');
+  const [cut_off_day, setCutOffDay] = useState(initial?.cut_off_day?.toString() || '');
+  const [processing_day, setProcessingDay] = useState(initial?.processing_day?.toString() || '');
+  const [payout_day, setPayoutDay] = useState(initial?.payout_day?.toString() || '');
+  const [saving, setSaving] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log({ name, frequency, cutoff, groups, workflow });
-    onClose();
+    setSaving(true);
+
+    const payload = {
+      cycle_name,
+      pay_frequency,
+      cycle_start_day: parseInt(cycle_start_day, 10),
+      cycle_end_day: parseInt(cycle_end_day, 10),
+      cut_off_day: parseInt(cut_off_day, 10),
+      processing_day: parseInt(processing_day, 10),
+      payout_day: parseInt(payout_day, 10),
+    };
+
+    try {
+      if (initial) {
+        await updateSalaryCycleApi(payload);
+      } else {
+        await createSalaryCycleApi(payload);
+      }
+      onSaved();
+      onClose();
+      toast.success("Salary cycle saved successfully");
+    } catch (err) {
+      const errorMsg = err.response?.data?.error || "Failed to save salary cycle";
+      toast.error(errorMsg);
+      console.error("Save error:", err);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -275,52 +350,80 @@ function SalaryForm({ initial, onClose }) {
       <Stack spacing={2}>
         <TextField
           label="Cycle name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          value={cycle_name}
+          onChange={(e) => setCycleName(e.target.value)}
           fullWidth
           required
         />
 
         <FormControl fullWidth>
-          <InputLabel id="freq-label">Frequency</InputLabel>
+          <InputLabel id="freq-label">Pay frequency</InputLabel>
           <Select
             labelId="freq-label"
-            label="Frequency"
-            value={frequency}
-            onChange={(e) => setFrequency(e.target.value)}
+            label="Pay frequency"
+            value={pay_frequency}
+            onChange={(e) => setPayFrequency(e.target.value)}
           >
-            <MenuItem value="Monthly">Monthly</MenuItem>
-            <MenuItem value="Bi-weekly">Bi-weekly</MenuItem>
-            <MenuItem value="Weekly">Weekly</MenuItem>
+            <MenuItem value="monthly">Monthly</MenuItem>
+            <MenuItem value="biweekly">Bi-weekly</MenuItem>
+            <MenuItem value="weekly">Weekly</MenuItem>
           </Select>
         </FormControl>
 
         <TextField
-          label="Cut‑off day / date"
-          value={cutoff}
-          onChange={(e) => setCutoff(e.target.value)}
+          label="Cycle start day"
+          type="number"
+          inputProps={{ min: 1, max: 31, step: 1 }}
+          value={cycle_start_day}
+          onChange={(e) => setCycleStartDay(e.target.value)}
           fullWidth
+          required
         />
 
         <TextField
-          label="Employee groups"
-          value={groups}
-          onChange={(e) => setGroups(e.target.value)}
+          label="Cycle end day"
+          type="number"
+          inputProps={{ min: 1, max: 31, step: 1 }}
+          value={cycle_end_day}
+          onChange={(e) => setCycleEndDay(e.target.value)}
           fullWidth
+          required
         />
 
         <TextField
-          label="Approval workflow"
-          placeholder="Manager → HR → Finance"
-          value={workflow}
-          onChange={(e) => setWorkflow(e.target.value)}
+          label="Cut-off day"
+          type="number"
+          inputProps={{ min: 1, max: 31, step: 1 }}
+          value={cut_off_day}
+          onChange={(e) => setCutOffDay(e.target.value)}
           fullWidth
+          required
+        />
+
+        <TextField
+          label="Processing day"
+          type="number"
+          inputProps={{ min: 1, max: 31, step: 1 }}
+          value={processing_day}
+          onChange={(e) => setProcessingDay(e.target.value)}
+          fullWidth
+          required
+        />
+
+        <TextField
+          label="Payout day"
+          type="number"
+          inputProps={{ min: 1, max: 31, step: 1 }}
+          value={payout_day}
+          onChange={(e) => setPayoutDay(e.target.value)}
+          fullWidth
+          required
         />
 
         <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ mt: 1 }}>
           <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="contained">
-            Save
+          <Button type="submit" variant="contained" disabled={saving}>
+            {saving ? <CircularProgress size={24} /> : 'Save'}
           </Button>
         </Stack>
       </Stack>
@@ -890,7 +993,7 @@ function ErpForm({ onClose }) {
 
 function SecuritySection() {
   const [drawerKey, setDrawerKey] = useState(null);
-  const [authSettings, setAuthSettings] = useState(null); // null = not exists or not loaded
+  const [authSettings, setAuthSettings] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -898,11 +1001,6 @@ function SecuritySection() {
       try {
         const res = await getAuthSettingsApi();
         const data = res.data;
-
-        // Debug log
-        console.log("Auth settings API response:", data);
-
-        // Check if we got a real record with an id
         if (data && typeof data === 'object' && data.id !== undefined) {
           setAuthSettings(data);
         } else {
@@ -924,13 +1022,9 @@ function SecuritySection() {
     try {
       let result;
       if (authSettings && authSettings.id !== undefined) {
-        // ✅ UPDATE
-        console.log("Updating auth settings with ID:", authSettings.id);
         result = await updateAuthSettingsApi(partialData);
         setAuthSettings(result.data.settings);
       } else {
-        // ✅ CREATE
-        console.log("Creating new auth settings");
         const fullPayload = {
           min_password_length: 8,
           require_uppercase: true,
