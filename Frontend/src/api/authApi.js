@@ -882,3 +882,24 @@ export const getAuthSettingsApi = () => {
 export const updateAuthSettingsApi = (data) => {
   return settingsClient.post(`${AUTH_API.SETTINGS}/settings/update`, data);
 };
+
+export const createSalaryCycleApi = (data) => {
+  return settingsClient.post(
+    `${AUTH_API.SETTINGS}/salary-cycle`,
+    data
+  );
+};
+
+// Update salary cycle (PARTIAL update)
+export const updateSalaryCycleApi = (data) => {
+  return settingsClient.patch(
+    `${AUTH_API.SETTINGS}/salary-cycle`,
+    data
+  );
+};
+
+export const getSalaryCycleApi = () => {
+  return settingsClient.get(
+    `${AUTH_API.SETTINGS}/settings/salary-cycle`
+  );
+};
