@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Box,
   Grid,
@@ -11,8 +11,6 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Chip,
-  Divider,
   Checkbox,
   FormControlLabel,
   Dialog,
@@ -21,76 +19,80 @@ import {
   DialogActions,
 } from "@mui/material";
 import { Search, Download, Add, Save } from "@mui/icons-material";
+import { AUTH_API } from "../../../../utils/constants";
+
+/* ===== EXPORT LIBRARIES ===== */
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 /* =========================================================
-   1️⃣ FREELANCER DUMMY MASTER DATA
+   CONSTANTS
 ========================================================= */
-
-const FREELANCER_REPORTS_LIST = [
-  { id: 1, name: "Freelancer Cost Report", department: "Finance" },
-  { id: 2, name: "Project Utilization", department: "Operations" },
-  { id: 3, name: "Active Contracts", department: "HR" },
-];
-
-const DUMMY_FREELANCERS = [
-  {
-    name: "Suresh R",
-    department: "Operations",
-    rate: "₹1,200 / day",
-    project: "Mobile App",
-    contractType: "Hourly",
-  },
-  {
-    name: "Meera Patel",
-    department: "Finance",
-    rate: "₹80,000 / month",
-    project: "ERP Migration",
-    contractType: "Monthly",
-  },
-];
 
 const AVAILABLE_FIELDS = [
-  "Freelancer Name",
+  "Employee Name",
   "Department",
-  "Rate",
-  "Project",
-  "Contract Type",
+  "Salary",
+  "Attendance",
+  "Date of Joining",
 ];
 
-const FIELD_MAP = {
-  "Freelancer Name": "name",
-  "Department": "department",
-  "Rate": "rate",
-  "Project": "project",
-  "Contract Type": "contractType",
-};
-
-/* =========================================================
-   2️⃣ MAIN COMPONENT
-========================================================= */
-
-export default function FreelancerCustomReports() {
+export default function CustomReports() {
+  /* ---------- UI STATES ---------- */
   const [search, setSearch] = useState("");
   const [department, setDepartment] = useState("");
   const [openGenerate, setOpenGenerate] = useState(false);
 
+  /* ---------- DATA STATES ---------- */
+  const [departments, setDepartments] = useState([]);
   const [selectedFields, setSelectedFields] = useState([]);
   const [generatedReport, setGeneratedReport] = useState(null);
 
   /* =========================================================
-     3️⃣ FILTER LOGIC
+     FETCH DEPARTMENTS
   ========================================================= */
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
 
-  const filteredReports = FREELANCER_REPORTS_LIST.filter(
-    (r) =>
-      r.name.toLowerCase().includes(search.toLowerCase()) &&
-      (department ? r.department === department : true)
-  );
+  const fetchDepartments = async () => {
+    try {
+      const res = await fetch(`${AUTH_API.ADMIN}/reports/departments`);
+      const data = await res.json();
+      setDepartments(data);
+    } catch (error) {
+      console.error("Failed to fetch departments", error);
+    }
+  };
 
   /* =========================================================
-     4️⃣ FIELD SELECTION
+     CLEAR OLD REPORT WHEN DEPARTMENT CHANGES
   ========================================================= */
+  useEffect(() => {
+    setGeneratedReport(null);
+    setSearch("");
+  }, [department]);
 
+  /* =========================================================
+     SEARCH FILTER (FINAL & CORRECT)
+  ========================================================= */
+  const filteredReportData = useMemo(() => {
+    if (!generatedReport) return [];
+
+    if (!search) return generatedReport.data;
+
+    return generatedReport.data.filter((row) =>
+      row["Employee Name"]
+        ?.toLowerCase()
+        .includes(search.toLowerCase())
+    );
+  }, [generatedReport, search]);
+
+  /* =========================================================
+     FIELD SELECTION
+  ========================================================= */
   const toggleField = (field) => {
     setSelectedFields((prev) =>
       prev.includes(field)
@@ -100,41 +102,115 @@ export default function FreelancerCustomReports() {
   };
 
   /* =========================================================
-     5️⃣ GENERATE REPORT
+     GENERATE REPORT
   ========================================================= */
-
-  const handleGenerateReport = () => {
+  const handleGenerateReport = async () => {
     if (!selectedFields.length) return;
 
-    setGeneratedReport({
-      fields: selectedFields,
-      data: DUMMY_FREELANCERS,
+    try {
+      const res = await fetch(`${AUTH_API.ADMIN}/reports/custom`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fields: selectedFields, department }),
+      });
+
+      const data = await res.json();
+      setGeneratedReport(data);
+      setSelectedFields([]);
+      setOpenGenerate(false);
+    } catch (error) {
+      console.error("Failed to generate report", error);
+    }
+  };
+
+  /* =========================================================
+     DOWNLOADS (FILTER AWARE)
+  ========================================================= */
+
+  const downloadCSV = () => {
+    if (!generatedReport) return;
+
+    const rows = [];
+    rows.push(generatedReport.fields.join(","));
+
+    filteredReportData.forEach((row) => {
+      rows.push(
+        generatedReport.fields
+          .map((f) => `"${row[f] ?? ""}"`)
+          .join(",")
+      );
     });
 
-    setSelectedFields([]);
-    setOpenGenerate(false);
+    saveAs(
+      new Blob([rows.join("\n")], { type: "text/csv;charset=utf-8;" }),
+      "custom_report.csv"
+    );
+  };
+
+  const downloadExcel = () => {
+    if (!generatedReport) return;
+
+    const excelData = filteredReportData.map((row) => {
+      const obj = {};
+      generatedReport.fields.forEach((f) => {
+        obj[f] = row[f] ?? "";
+      });
+      return obj;
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Report");
+
+    const buffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+
+    saveAs(
+      new Blob([buffer], {
+        type:
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      }),
+      "custom_report.xlsx"
+    );
+  };
+
+  const downloadPDF = () => {
+    if (!generatedReport) return;
+
+    const doc = new jsPDF();
+    doc.text("Custom Report", 14, 15);
+
+    autoTable(doc, {
+      startY: 20,
+      head: [generatedReport.fields],
+      body: filteredReportData.map((row) =>
+        generatedReport.fields.map((f) =>
+          f === "Date of Joining" && row[f]
+            ? new Date(row[f]).toLocaleDateString()
+            : row[f] ?? "-"
+        )
+      ),
+    });
+
+    doc.save("custom_report.pdf");
   };
 
   return (
     <Box sx={{ p: 4, backgroundColor: "#f4f6f8", minHeight: "100vh" }}>
-      {/* HEADER */}
-      <Box mb={3}>
-        <Typography fontSize="26px" fontWeight={700}>
-          Freelancer Custom Reports
-        </Typography>
-        <Typography color="text.secondary">
-          Generate and preview freelancer reports
-        </Typography>
-      </Box>
+      <Typography fontSize="26px" fontWeight={700}>
+        Custom Reports
+      </Typography>
+      <Typography color="text.secondary">
+        Generate, filter and preview enterprise reports
+      </Typography>
 
       {/* FILTER BAR */}
-      <Card sx={{ mb: 3, borderRadius: 3 }}>
+      <Card sx={{ mt: 3 }}>
         <CardContent>
           <Grid container spacing={2} alignItems="center">
             <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
-                placeholder="Search report"
+                placeholder="Search report by name"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 InputProps={{ startAdornment: <Search sx={{ mr: 1 }} /> }}
@@ -143,105 +219,73 @@ export default function FreelancerCustomReports() {
 
             <Grid item xs={12} md={3}>
               <FormControl fullWidth>
-                <InputLabel shrink>Department</InputLabel>
+                <InputLabel>Department</InputLabel>
                 <Select
                   value={department}
                   onChange={(e) => setDepartment(e.target.value)}
-                  displayEmpty
                 >
-                  <MenuItem value="">
-                    <em>All Departments</em>
-                  </MenuItem>
-                  <MenuItem value="HR">HR</MenuItem>
-                  <MenuItem value="Finance">Finance</MenuItem>
-                  <MenuItem value="Operations">Operations</MenuItem>
+                  <MenuItem value="">All Departments</MenuItem>
+                  {departments.map((d) => (
+                    <MenuItem key={d.department} value={d.department}>
+                      {d.department}
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
             </Grid>
 
             <Grid item xs={12} md={5} textAlign="right">
-              <Button variant="outlined" startIcon={<Download />} sx={{ mr: 1 }}>
-                PDF
-              </Button>
-              <Button variant="outlined" startIcon={<Download />} sx={{ mr: 1 }}>
-                Excel
-              </Button>
-              <Button variant="outlined" startIcon={<Download />}>
-                CSV
-              </Button>
+              <Button onClick={downloadPDF} disabled={!generatedReport} startIcon={<Download />}>PDF</Button>
+              <Button onClick={downloadExcel} disabled={!generatedReport} startIcon={<Download />}>Excel</Button>
+              <Button onClick={downloadCSV} disabled={!generatedReport} startIcon={<Download />}>CSV</Button>
             </Grid>
           </Grid>
         </CardContent>
       </Card>
 
-      {/* REPORT LIST */}
-      <Grid container spacing={3}>
-        {filteredReports.map((report) => (
-          <Grid item xs={12} md={4} key={report.id}>
-            <Card sx={{ borderRadius: 3 }}>
-              <CardContent>
-                <Typography fontWeight={600}>{report.name}</Typography>
-                <Divider sx={{ my: 1 }} />
-                <Chip label={report.department} />
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-
-      {/* GENERATE BUTTON */}
-      <Box mt={4}>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={() => setOpenGenerate(true)}
-        >
-          Generate Freelancer Report
+      {/* GENERATE */}
+      <Box mt={3}>
+        <Button variant="contained" startIcon={<Add />} onClick={() => setOpenGenerate(true)}>
+          Generate Custom Report
         </Button>
       </Box>
 
-      {/* REPORT PREVIEW */}
+      {/* TABLE */}
       {generatedReport && (
-        <Box mt={5}>
-          <Typography fontWeight={600} mb={2}>
-            Generated Report Preview
-          </Typography>
-
-          <Card>
+        <Box mt={4}>
+          <Typography fontWeight={600}>Generated Report Preview</Typography>
+          <Card sx={{ mt: 2 }}>
             <CardContent>
               <table width="100%" style={{ borderCollapse: "collapse" }}>
                 <thead>
                   <tr>
-                    {generatedReport.fields.map((field) => (
-                      <th
-                        key={field}
-                        style={{
-                          padding: 10,
-                          background: "#f1f5f9",
-                          textAlign: "left",
-                        }}
-                      >
-                        {field}
+                    {generatedReport.fields.map((f) => (
+                      <th key={f} style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>
+                        {f}
                       </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {generatedReport.data.map((row, index) => (
-                    <tr key={index}>
-                      {generatedReport.fields.map((field) => (
-                        <td
-                          key={field}
-                          style={{
-                            padding: 10,
-                            borderTop: "1px solid #e5e7eb",
-                          }}
-                        >
-                          {row[FIELD_MAP[field]]}
+                  {filteredReportData.map((row, i) => (
+                    <tr key={i}>
+                      {generatedReport.fields.map((f) => (
+                        <td key={f} style={{ padding: 8 }}>
+                          {f === "Date of Joining" && row[f]
+                            ? new Date(row[f]).toLocaleDateString()
+                            : row[f] ?? "-"}
                         </td>
                       ))}
                     </tr>
                   ))}
+
+                  {filteredReportData.length === 0 && (
+                    <tr>
+                      <td colSpan={generatedReport.fields.length} style={{ textAlign: "center", padding: 16 }}>
+                        No matching records found
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </CardContent>
@@ -251,7 +295,7 @@ export default function FreelancerCustomReports() {
 
       {/* MODAL */}
       <Dialog open={openGenerate} onClose={() => setOpenGenerate(false)}>
-        <DialogTitle>Generate Freelancer Report</DialogTitle>
+        <DialogTitle>Generate Custom Report</DialogTitle>
         <DialogContent>
           {AVAILABLE_FIELDS.map((field) => (
             <FormControlLabel
@@ -268,7 +312,12 @@ export default function FreelancerCustomReports() {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenGenerate(false)}>Cancel</Button>
-          <Button variant="contained" startIcon={<Save />} onClick={handleGenerateReport}>
+          <Button
+            variant="contained"
+            startIcon={<Save />}
+            onClick={handleGenerateReport}
+            disabled={!selectedFields.length}
+          >
             Generate
           </Button>
         </DialogActions>

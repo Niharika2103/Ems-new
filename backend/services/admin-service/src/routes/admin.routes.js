@@ -1,5 +1,8 @@
 import { Router } from "express";
 import webhookRoutes from "./webhook.routes.js";
+import reportRoutes from "./report.routes.js";
+
+
 
 import {
   adminRegister,
@@ -148,6 +151,7 @@ import { getEmployeeRoiReport } from "../controllers/employeeRoi.controller.js";
 
 const router = Router();
 router.use("/webhooks", webhookRoutes);
+router.use("/reports", reportRoutes);
 
 
 /* ================= Admin Register/Login ================= */
@@ -302,6 +306,7 @@ router.put("/applications/status/:application_id", updateApplicationStatus);
 //freelancerroireport
 router.get("/reports/freelancer-roi", getFreelancerRoiReport);
 router.get("/reports/employee-roi", getEmployeeRoiReport);
+
 
 /* -------------------------------------------------------------------------- */
 /*                       FREELANCER CONTRACT ROUTES                           */
