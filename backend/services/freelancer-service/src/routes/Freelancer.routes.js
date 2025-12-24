@@ -10,13 +10,8 @@ import {
   rejectFreelancer,
   // getFreelancerDocs,
   
-  generateFreelancerLetter,
-  getFreelancerLetters,
-  downloadFreelancerLetter,
-  deleteFreelancerLetter,
-  sendFreelancerLetterEmail
 } from "../controllers/Freelancer.controller.js";
-
+import { getFreelancerLetters } from "../../../admin-service/src/controllers/admin.controller.js";
 const router = express.Router();
 
 const uploadFields = upload.fields([
@@ -42,33 +37,10 @@ router.get("/list", listFreelancers);
 router.post("/approve/:id", approveFreelancer);
 router.post("/reject/:id", rejectFreelancer);
 
+router.get("/letters/:employeeId", getFreelancerLetters);
 // MUST BE LAST
 // router.get("/:id", getFreelancerDocs);
 
 
-// ================= LETTER ROUTES =================
-
-// Generate letter
-router.post("/letters/generate", generateFreelancerLetter);
-
-// Get freelancer letters
-router.get("/letters/:freelancerId", getFreelancerLetters);
-
-// Download freelancer letter
-router.get(
-  "/letters/download/:freelancerId/:fileName",
-  downloadFreelancerLetter
-);
-
-// Delete freelancer letter
-router.delete(
-  "/letters/:freelancerId/:fileName",
-  deleteFreelancerLetter
-);
-
-// Send letter via email
-router.post("/letters/send-email", sendFreelancerLetterEmail);
-
-
-
+router.get("/letters/:employeeId", getFreelancerLetters);
 export default router;

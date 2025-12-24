@@ -38,23 +38,29 @@ export const superadminApproveAdminApi = (id, is_approved) =>
 export const promoteAdminToSuperadminApi = (adminId) =>
   superadminClient.put(`${AUTH_API.SUPERADMIN}/promote/${adminId}`);
 
-export const updateSuperAdminProfileApi = (data, id) => {
-  const formData = new FormData();
+// export const updateSuperAdminProfileApi = (data, id) => {
+//   const formData = new FormData();
 
-  Object.keys(data).forEach((key) => {
-    if (data[key] !== null && data[key] !== undefined) {
-      if (key === "profilePhoto" && data[key] instanceof File) {
-        formData.append("profilePhoto", data[key]);
-      } else if (key === "resume" && data[key] instanceof File) {
-        formData.append("resume", data[key]);
-      } else {
-        formData.append(key, data[key]);
-      }
-    }
-  }
-);
+//   Object.keys(data).forEach((key) => {
+//     if (data[key] !== null && data[key] !== undefined) {
+//       if (key === "profilePhoto" && data[key] instanceof File) {
+//         formData.append("profilePhoto", data[key]);
+//       } else if (key === "resume" && data[key] instanceof File) {
+//         formData.append("resume", data[key]);
+//       } else {
+//         formData.append(key, data[key]);
+//       }
+//     }
+//   }
+// );
 
-  return superadminClient.put(`${AUTH_API.SUPERADMIN}/profile/${id}`, formData);
+//   return superadminClient.put(`${AUTH_API.SUPERADMIN}/profile/${id}`, formData);
+// };
+export const updateSuperAdminProfileApi = (formData, id) => {
+  return superadminClient.put(
+    `${AUTH_API.SUPERADMIN}/profile/${id}`,
+    formData
+  );
 };
 
 // ================= Admin =================
@@ -915,46 +921,23 @@ export const updateAuthSettingsApi = (data) => {
   return settingsClient.post(`${AUTH_API.SETTINGS}/settings/update`, data);
 };
 
-// /* =====================================================
-//    📄 FREELANCER LETTER APIs
-//    ===================================================== */
+export const createSalaryCycleApi = (data) => {
+  return settingsClient.post(
+    `${AUTH_API.SETTINGS}/salary-cycle`,
+    data
+  );
+};
 
-// // 1️⃣ Get all freelancers (employment_type = freelancer)
-// // export const getFreelancersApi = () =>
-// //   freelancerClient.get(`/freelancers`);
+// Update salary cycle (PARTIAL update)
+export const updateSalaryCycleApi = (data) => {
+  return settingsClient.patch(
+    `${AUTH_API.SETTINGS}/salary-cycle`,
+    data
+  );
+};
 
-// // ✅ Fetch freelancer list (REUSE working endpoint)
-// // ✅ FIXED – matches backend route
-// export const getFreelancersApi = () =>
-//   employeeClient.get(`${AUTH_API.ADMIN}/employees/freelancers`);
-
-
-// //2️⃣ Generate freelancer letter
-// export const generateFreelancerLetterApi = (data) =>
-//   freelancerClient.post(`/letters/generate`, data);
-
-
-// // 3️⃣ Get freelancer letters
-// export const getFreelancerLettersApi = (freelancerId) =>
-//   freelancerClient.get(`/letters/${freelancerId}`);
-
-
-// // 4️⃣ Download freelancer letter (PDF)
-// export const downloadFreelancerLetterApi = (freelancerId, fileName) =>
-//   freelancerClient.get(
-//     `/letters/download/${freelancerId}/${fileName}`,
-//     {
-//       responseType: "blob", // ✅ IMPORTANT for PDF
-//     }
-//   );
-
-
-// // 5️⃣ Delete freelancer letter
-// export const deleteFreelancerLetterApi = (freelancerId, fileName) =>
-//   freelancerClient.delete(`/letters/${freelancerId}/${fileName}`);
-
-
-// // 6️⃣ Send freelancer letter via email
-// export const sendFreelancerLetterEmailApi = (data) =>
-//   freelancerClient.post(`/letters/send-email`, data);
-
+export const getSalaryCycleApi = () => {
+  return settingsClient.get(
+    `${AUTH_API.SETTINGS}/settings/salary-cycle`
+  );
+};

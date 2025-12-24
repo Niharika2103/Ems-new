@@ -34,6 +34,7 @@ import { Autoplay, EffectCoverflow } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/effect-coverflow";
 
+
 export default function Login() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -119,6 +120,8 @@ export default function Login() {
       dispatch(employeeLogin({ email: formData.email, password: formData.password, employment_type: formData.employment_type }))
         .unwrap()
         .then((response) => {
+          localStorage.setItem("token", response.token);
+  console.log("TOKEN SAVED:", localStorage.getItem("token"));
           if (response.firstLogin) {
             localStorage.setItem("resetToken", response.resetToken);
             toast.success("Password Reseted successfully!")
@@ -131,8 +134,29 @@ export default function Login() {
             toast.info(response.message);
           } else {
             localStorage.setItem("token", response.token);
-            const decoded = decodeToken();
-            console.log("Decoded after login:", decoded.employment_type);
+
+// ✅ DECODE TOKEN
+const decoded = decodeToken();
+
+if (!decoded) {
+  toast.error("Invalid login token");
+  return;
+}
+
+// ✅ SAVE USER FOR HEADER + SIDEBAR
+localStorage.setItem(
+  "user",
+  JSON.stringify({
+    email: decoded.email,
+    name: decoded.name,
+    role: decoded.role || "employee",
+    employment_type: decoded.employment_type,
+  })
+);
+
+localStorage.setItem("role", decoded.role || "employee");
+localStorage.setItem("employment_type", decoded.employment_type);
+
             if (decoded.employment_type === "freelancer") {
               toast.success("Login successfully!")
               setTimeout(() => {
@@ -160,7 +184,31 @@ export default function Login() {
         .then((response) => {
 
           localStorage.setItem("token", response.token);
-          const decoded = decodeToken();
+  console.log("TOKEN SAVED:", localStorage.getItem("token"));
+          localStorage.setItem("token", response.token);
+
+// ✅ DECODE TOKEN
+const decoded = decodeToken();
+
+if (!decoded) {
+  toast.error("Invalid OTP token");
+  return;
+}
+
+// ✅ SAVE USER FOR HEADER + SIDEBAR
+localStorage.setItem(
+  "user",
+  JSON.stringify({
+    email: decoded.email,
+    name: decoded.name,
+    role: decoded.role || "employee",
+    employment_type: decoded.employment_type,
+  })
+);
+
+localStorage.setItem("role", decoded.role || "employee");
+localStorage.setItem("employment_type", decoded.employment_type);
+
           if (decoded.employment_type === "freelancer") {
             toast.success("Login Successfully!");
             setTimeout(() => {

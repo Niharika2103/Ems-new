@@ -26,6 +26,9 @@ import {
 } from "@mui/material";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 
 const EmailTemplateEditor = () => {
   /* 🔥 API BASE FROM ENV — NO LOCALHOST HARD CODING */
@@ -175,7 +178,11 @@ const EmailTemplateEditor = () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-
+toast.success(
+  editTemplate
+    ? "Template updated successfully"
+    : "Template created successfully"
+);
     loadTemplates();
     setShowDialog(false);
   };
@@ -210,13 +217,25 @@ const EmailTemplateEditor = () => {
   /* ------------------------------
       ACTIVATE / DEACTIVATE
   ------------------------------- */
-  const handleToggleStatus = async (id) => {
-    await fetch(`${API_BASE}/email-templates/${id}/toggle`, {
+  const handleToggleStatus = async (template) => {
+  try {
+    await fetch(`${API_BASE}/email-templates/${template.id}/toggle`, {
       method: "PATCH",
     });
 
+    // ✅ SHOW TOAST BASED ON CURRENT STATUS
+    toast.success(
+      template.isActive
+        ? "Email template deactivated successfully"
+        : "Email template activated successfully"
+    );
+
     loadTemplates();
-  };
+  } catch (error) {
+    toast.error("Failed to update email template status");
+  }
+};
+
 
   /* ------------------------------
       FINAL FILTER
@@ -236,7 +255,22 @@ const EmailTemplateEditor = () => {
   /* ------------------------------
       UI START
   ------------------------------- */
+  
   return (
+    
+  <>
+    {/* ✅ TOAST CONTAINER – ADD HERE */}
+    <ToastContainer
+      position="top-right"
+      autoClose={2000}
+      hideProgressBar={false}
+      newestOnTop
+      closeOnClick
+      pauseOnHover
+      draggable
+    />
+    
+    
     <Box p={3}>
       <Typography variant="h4" fontWeight="bold" mb={3}>
         Email Templates
@@ -278,6 +312,8 @@ const EmailTemplateEditor = () => {
           + Create Template
         </Button>
       </Box>
+        
+
 
       {/* TABLE */}
       <TableContainer component={Paper} elevation={2} sx={{ borderRadius: "10px" }}>
@@ -347,7 +383,7 @@ const EmailTemplateEditor = () => {
                       size="small"
                       variant="outlined"
                       color={t.isActive ? "warning" : "success"}
-                      onClick={() => handleToggleStatus(t.id)}
+                      onClick={() => handleToggleStatus(t)}
                     >
                       {t.isActive ? "Deactivate" : "Activate"}
                     </Button>
@@ -457,8 +493,13 @@ const EmailTemplateEditor = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      
     </Box>
-  );
+      </>
+);
+  
+  
 };
+
 
 export default EmailTemplateEditor;
