@@ -22,17 +22,16 @@ export const getDepartments = async (req, res) => {
     const query = `
       SELECT DISTINCT LOWER(u.department::text) AS department
       FROM user_employees_master u
-      WHERE u.department IS NOT NULL
+        WHERE u.department IS NOT NULL
         AND u.department::text <> ''
         AND u.department::text !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
         AND LOWER(TRIM(COALESCE(u.employment_type, ''))) = 'fulltime'
         AND (
-          LOWER(TRIM(COALESCE(u.role, ''))) = 'employee'
-          OR LOWER(TRIM(COALESCE(u.role_1, ''))) = 'employee'
-          OR LOWER(TRIM(COALESCE(u.role_2, ''))) = 'employee'
+            LOWER(TRIM(COALESCE(u.role, ''))) = 'employee'
+            OR LOWER(TRIM(COALESCE(u.role_2, ''))) = 'employee'
         )
-      ORDER BY department
-    `;
+        ORDER BY department;
+        `;
 
     const { rows } = await pool.query(query);
     return res.status(200).json(rows);
@@ -93,7 +92,6 @@ export const generateCustomReport = async (req, res) => {
         u.employment_type = 'fulltime'
         AND (
           LOWER(TRIM(COALESCE(u.role, ''))) = 'employee'
-          OR LOWER(TRIM(COALESCE(u.role_1, ''))) = 'employee'
           OR LOWER(TRIM(COALESCE(u.role_2, ''))) = 'employee'
         )
     `;
