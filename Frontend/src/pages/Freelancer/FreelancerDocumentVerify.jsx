@@ -20,6 +20,7 @@ import {
   TextField,
   InputAdornment,
   Chip,
+  TablePagination,
 } from "@mui/material";
 
 import SearchIcon from "@mui/icons-material/Search";
@@ -135,6 +136,9 @@ export default function AdminVerificationTabs() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [page, setPage] = useState(0);
+const [rowsPerPage, setRowsPerPage] = useState(5);
+
 
   const dispatch = useDispatch();
 
@@ -217,6 +221,7 @@ export default function AdminVerificationTabs() {
       alert("No passbook uploaded!");
       return;
     }
+    
 
     const password = prompt("Enter PDF Password (if any):");
 
@@ -231,6 +236,18 @@ export default function AdminVerificationTabs() {
 
     window.open(fileUrl, "_blank");
   };
+  // ------------------------------------------------------
+// TABLE PAGINATION HANDLERS ✅ MUST BE HERE
+// ------------------------------------------------------
+const handleChangePage = (event, newPage) => {
+  setPage(newPage);
+};
+
+const handleChangeRowsPerPage = (event) => {
+  setRowsPerPage(parseInt(event.target.value, 10));
+  setPage(0);
+};
+
 
   return (
     <Box sx={{ p: 4 }}>
@@ -277,7 +294,8 @@ export default function AdminVerificationTabs() {
               </TableHead>
 
               <TableBody>
-                {filteredFreelancers?.map((row) => (
+                {filteredFreelancers  ?.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+  .map((row) =>  (
                   <TableRow key={row.id} hover>
                     <TableCell>
                       <Stack direction="row" spacing={2} alignItems="center">
@@ -307,6 +325,19 @@ export default function AdminVerificationTabs() {
               </TableBody>
             </Table>
           </TableContainer>
+          <TablePagination
+  component="div"
+  count={filteredFreelancers?.length || 0}
+  page={page}
+  onPageChange={handleChangePage}
+  rowsPerPage={rowsPerPage}
+  onRowsPerPageChange={handleChangeRowsPerPage}
+  rowsPerPageOptions={[5, 10, 25]}
+  sx={{
+    borderTop: "1px solid #e5e7eb",
+  }}
+/>
+
         </CardContent>
       </Card>
 
