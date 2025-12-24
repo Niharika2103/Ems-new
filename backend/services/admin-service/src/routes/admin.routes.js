@@ -82,7 +82,13 @@ import {
   getDepartmentWisePayroll,
   getMonthlyPayrollSummary,
   getPayrollTrend,
-  getFreelancerAnalytics
+  getFreelancerAnalytics,
+  generateFreelancerLetter,
+  getFreelancerLetters,
+  downloadFreelancerLetter,
+  deleteFreelancerLetter,
+  sendFreelancerLetterEmail,
+  getAllFreelancers,
  
 } from "../controllers/admin.controller.js";
 
@@ -377,7 +383,17 @@ router.put("/email-templates/:id", updateEmailTemplate);
 // Delete template
 router.delete("/email-templates/:id", deleteEmailTemplate);
 
-
+router.post("/freelancers/letters/generate",generateFreelancerLetter);
+ 
+router.get("/freelancers/:freelancerId/letters",getFreelancerLetters);
+ 
+router.get("/freelancers/:freelancerId/letters/:fileName/download",downloadFreelancerLetter);
+ 
+router.delete("/freelancers/:freelancerId/letters/:filename",deleteFreelancerLetter);
+ 
+router.post("/freelancers/letters/send-email",sendFreelancerLetterEmail);
+ 
+router.get("/freelancers", getAllFreelancers);
 
 
 export default router;

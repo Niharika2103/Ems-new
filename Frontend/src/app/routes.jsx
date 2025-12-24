@@ -99,10 +99,12 @@ import EmailTemplateEditor from "../pages/Templates/EmailTemplate/EmailTemplateE
 import WhatsAppTemplateEditor from "../pages/Templates/WatsupTemplate/WatsupTemplateEditor";
 import CommunicationInfoDashboard from "../pages/dashbaord/CommunicationInfoDashboard";
 import EventWebhooks from "../pages/Templates/Webhook/EventWebhooks";
-import FreelancerJobPostDashboard from "../pages/Freelancer/jobposting/FreelancerJobPostDashboard";
 import PanelistFeedback from "../pages/JobPosting/PanelistFeedback";
-import FreelancerApplicationsTable from "../pages/Freelancer/jobposting/FreelancerApplicationsTable";
 import FreelancerLetterGenerator from "../pages/Freelancer/FreelancerLetterGenerator";
+import PayrollVendorManagementSystem from "../pages/Vendor/PayrollVendorManagementSystem";
+import FreelancerJobPostDashboard from "../pages/Freelancer/jobposting/FreelancerJobPostDashboard";
+import FreelancerApplicationsTable from "../pages/Freelancer/jobposting/FreelancerApplicationsTable";
+import FreelancerLettersDownload from "../pages/Freelancer/FreelancerLettersDownload";
 
 function AppRoutes() {
   return (
@@ -127,6 +129,7 @@ function AppRoutes() {
       <Route path="/attendance/timesheet" element={<Timesheet />} />
       <Route path="/vendor" element={<VendorFormSystem />} />
       <Route path="/moutemplate" element={<MoUGenerationSystem />} />
+      <Route path="/vendor/payroll" element={<PayrollVendorManagementSystem />} />
 
       <Route path='/dashboard/timesheet/monthly'
         element={
@@ -180,20 +183,15 @@ function AppRoutes() {
        </ProtectedRoute>
        }
        />
-        <Route path="/freelancer/letters" 
+       
+        <Route path="/freelancer/letters-download" 
         element={
-       <ProtectedRoute allowedRoles={["admin"]}>
-        <FreelancerLetterGenerator/>
+       <ProtectedRoute allowedRoles={["employee"]}>
+        <FreelancerLettersDownload/>
        </ProtectedRoute>
        }
        />
-        <Route path="/freelancer/applications"
-         element={
-       <ProtectedRoute allowedRoles={["admin"]}>
-        <FreelancerApplicationsTable/>
-       </ProtectedRoute>
-       }
-       />
+       
         <Route path="dashboard/employee/leave" element={
           <ProtectedRoute allowedRoles={["employee"]}>
             <EmployeeLeave />
@@ -208,7 +206,7 @@ function AppRoutes() {
           }
         />
         <Route
-          path="/freelancer"
+          path="/dashboard/freelancer"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <FreelancerDashboard />
@@ -278,13 +276,7 @@ function AppRoutes() {
               <JobApplicationTracking />
             </ProtectedRoute>}
         />
-        <Route
-          path="/freelancer/application"
-          element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <FreelancerApplicationsTable />
-            </ProtectedRoute>}
-        />
+        
         <Route
           path="/offers/status"
           element={<ProtectedRoute allowedRoles={["admin"]}>
@@ -322,7 +314,7 @@ function AppRoutes() {
           } />
 
         <Route
-          path="/emp_attendance"
+          path="/dashboard/emp_attendance"
           element={
             <ProtectedRoute allowedRoles={["employee", "admin"]}>
               <EmpAttendanceDashboard />
@@ -364,7 +356,7 @@ function AppRoutes() {
 
         {/* Admin routes */}
         <Route
-          path="/emp_requestTable"
+          path="/dashboard/emp_requestTable"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <AdminTable />
@@ -407,14 +399,7 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
-         <Route
-          path="/dashboard/freelancer/job-posting"
-          element={
-            <ProtectedRoute allowedRoles={["admin"]}>
-              <FreelancerJobPostDashboard />
-            </ProtectedRoute>
-          }
-        />
+        
         
         <Route
           path="/dashboard/freelancer/freelancerattendance"
@@ -515,7 +500,7 @@ function AppRoutes() {
           }
         />
         <Route
-          path="/attendance"
+          path="/dashboard/attendance"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <ProjectDashboard />
@@ -523,7 +508,7 @@ function AppRoutes() {
           }
         />
         <Route
-          path="/accounts"
+          path="/dashboard/accounts"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
               <AccountsDashboard />
@@ -581,6 +566,14 @@ function AppRoutes() {
           }
         />
 
+      {/* <Route
+          path="/freelancer/letters"
+          element={
+            <ProtectedRoute allowedRoles={["employee"]}>
+              <FreelancerLettersDownload />
+            </ProtectedRoute>
+          }
+        /> */}
         <Route path="/documents/admin/letters"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
