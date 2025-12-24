@@ -42,10 +42,5 @@ router.get("/letters/:employeeId", getFreelancerLetters);
 // router.get("/:id", getFreelancerDocs);
 
 
-
-
-
-
-import { getFreelancerLetters } from "../../../admin-service/src/controllers/admin.controller.js";
 router.get("/letters/:employeeId", getFreelancerLetters);
 export default router;
