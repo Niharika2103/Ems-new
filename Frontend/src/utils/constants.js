@@ -1,12 +1,10 @@
-import { SalaryStructureClient } from "../api/axiosClient";
-
 // Different base URLs per r
 export const API_BASES = {
-  SUPERADMIN: import.meta.env.VITE_SUPERADMIN_URL || "http://20.40.57.43:5001",
-  ADMIN: import.meta.env.VITE_ADMIN_URL || "http://20.40.57.43:5002",
-  EMPLOYEE: import.meta.env.VITE_EMPLOYEE_URL || "http://20.40.57.43:5004",
-  PROJECT:import.meta.env.VITE_Project_URL || "http://20.40.57.43:8080/api",
-  ATTENDANCE:import.meta.env.VITE_Attendance_URL || "http://20.40.57.43:9091/api",
+  SUPERADMIN: import.meta.env.VITE_SUPERADMIN_URL || "http://localhost:5001",
+  ADMIN: import.meta.env.VITE_ADMIN_URL || "http://localhost:5002",
+  EMPLOYEE: import.meta.env.VITE_EMPLOYEE_URL || "http://localhost:5004",
+  PROJECT:import.meta.env.VITE_Project_URL || "http://localhost:8080/api",
+  ATTENDANCE:import.meta.env.VITE_Attendance_URL || "http://localhost:9091/api",
   SALARYSTRUCTURE:import.meta.env.VITE_SalaryStructure_URL || "http://localhost:9092/",
   FREELANCER: import.meta.env.VITE_FREELANCER_URL || "http://localhost:5005",
   VENDOR: import.meta.env.VITE_VENDOR_URL || "http://localhost:5006",

@@ -2150,6 +2150,139 @@ export const downloadEmployeeLetter = async (req, res) => {
   }
 };
 
+// export const generateFreelancerLetter = async (req, res) => {
+//   const client = await pool.connect();
+
+//   try {
+//     const { freelancerId, letterType } = req.body;
+
+//     if (!freelancerId || !letterType) {
+//       return res.status(400).json({
+//         error: "freelancerId and letterType are required"
+//       });
+//     }
+
+//     // Fetch freelancer (SAME AS EMPLOYEE)
+//     const empResult = await client.query(
+//       `SELECT *
+//        FROM user_employees_master
+//        WHERE id = $1 AND employment_type = 'freelancer'`,
+//       [freelancerId]
+//     );
+
+//     const emp = empResult.rows[0];
+
+//     if (!emp) {
+//       return res.status(404).json({
+//         error: "Freelancer not found"
+//       });
+//     }
+
+//     // Fetch latest salary record (KEPT SAME)
+//     const salResult = await client.query(
+//       `SELECT *
+//        FROM salary_structure
+//        WHERE employee_id = $1
+//        ORDER BY created_at DESC
+//        LIMIT 1`,
+//       [freelancerId]
+//     );
+
+//     const sal = salResult.rows[0] || {};
+
+//     // Select template file (USE FREELANCER MAP)
+//     const selectedTemplate = templateFileMap[letterType];
+
+//     if (!selectedTemplate) {
+//       return res.status(400).json({
+//         error: "Invalid letter type selected"
+//       });
+//     }
+
+//     const templateContent = loadTemplate(selectedTemplate);
+//     if (!templateContent) {
+//       return res.status(500).json({
+//         error: "Template file missing"
+//       });
+//     }
+
+//     // Prepare placeholder data (UNCHANGED)
+//     const data = {
+//       name: emp.name,
+//       designation: emp.designation,
+//       department: emp.department,
+//       employee_code: emp.employee_id,
+//       address: emp.address,
+//       permanent_address: emp.permanent_address,
+//       date_of_joining: emp.date_of_joining,
+//       effective_from: sal.effective_from,
+//       effective_to: sal.effective_to,
+//       location: sal.location,
+//       basic_pay: sal.basic_pay,
+//       hra: sal.hra,
+//       special_allowance: sal.special_allowance,
+//       other_allowances: sal.other_allowances,
+//       gross_salary: sal.gross_salary,
+//       net_salary: sal.net_salary,
+//       pan_number: sal.pan_number,
+//       bank_name: sal.bank_name,
+//       ifsc_code: sal.ifsc_code,
+//       account_number: sal.account_number
+//     };
+
+//     // Fill HTML
+//     const filledHTML = fillTemplate(templateContent, data);
+
+//     // Generate PDF file (UNCHANGED)
+//     const lettersDir = path.join(process.cwd(), "src/uploads/letters");
+//     if (!fs.existsSync(lettersDir)) {
+//       fs.mkdirSync(lettersDir, { recursive: true });
+//     }
+
+//     const fileName = `${letterType.replace(/ /g, "_")}_${Date.now()}.pdf`;
+//     const filePath = path.join(lettersDir, fileName);
+
+//     await generatePDF(filledHTML, filePath);
+
+//     // Save MULTIPLE PDF files in JSONB (UNCHANGED)
+//     const docResult = await client.query(
+//       `SELECT document_url
+//        FROM user_employees_master
+//        WHERE id = $1`,
+//       [freelancerId]
+//     );
+
+//     let existingDocs = docResult.rows[0]?.document_url || [];
+//     if (!Array.isArray(existingDocs)) existingDocs = [];
+
+//     existingDocs.push(fileName);
+
+//     await client.query(
+//       `UPDATE user_employees_master
+//        SET document_url = $1::jsonb,
+//            updated_at = NOW()
+//        WHERE id = $2`,
+//       [JSON.stringify(existingDocs), freelancerId]
+//     );
+
+//     // Success Response
+//     return res.json({
+//       message: "Freelancer letter generated successfully",
+//       pdf_url: `/uploads/letters/${fileName}`,
+//       file_name: fileName,
+//       documents: existingDocs
+//     });
+
+//   } catch (err) {
+//     console.error("Generate Freelancer Letter Error:", err.message);
+//     return res.status(500).json({
+//       error: "Failed to generate freelancer letter"
+//     });
+//   } finally {
+//     client.release();
+//   }
+// };
+
 export const generateFreelancerLetter = async (req, res) => {
   const client = await pool.connect();
 
@@ -2162,7 +2295,7 @@ export const generateFreelancerLetter = async (req, res) => {
       });
     }
 
-    // Fetch freelancer (SAME AS EMPLOYEE)
+    // Fetch freelancer
     const empResult = await client.query(
       `SELECT *
        FROM user_employees_master
@@ -2178,7 +2311,7 @@ export const generateFreelancerLetter = async (req, res) => {
       });
     }
 
-    // Fetch latest salary record (KEPT SAME)
+    // Fetch latest salary record
     const salResult = await client.query(
       `SELECT *
        FROM salary_structure
@@ -2190,9 +2323,11 @@ export const generateFreelancerLetter = async (req, res) => {
 
     const sal = salResult.rows[0] || {};
 
-    // Select template file (USE FREELANCER MAP)
-    const selectedTemplate = templateFileMap[letterType];
+    // ✅ ADD: GET BRANDING (same as employee)
+    const branding = await getBrandingForContext("letters");
 
+    // Select template file
+    const selectedTemplate = templateFileMap[letterType];
     if (!selectedTemplate) {
       return res.status(400).json({
         error: "Invalid letter type selected"
@@ -2206,7 +2341,7 @@ export const generateFreelancerLetter = async (req, res) => {
       });
     }
 
-    // Prepare placeholder data (UNCHANGED)
+    // ✅ ADD: company_name + ctc (same as employee)
     const data = {
       name: emp.name,
       designation: emp.designation,
@@ -2227,13 +2362,48 @@ export const generateFreelancerLetter = async (req, res) => {
       pan_number: sal.pan_number,
       bank_name: sal.bank_name,
       ifsc_code: sal.ifsc_code,
-      account_number: sal.account_number
+      account_number: sal.account_number,
+
+      // 🔽 NEW (ADDED)
+      company_name:
+        branding?.companyName ||
+        "Zigma People Private Limited (An AI India Venture)",
+      ctc: sal.gross_salary,
     };
 
     // Fill HTML
-    const filledHTML = fillTemplate(templateContent, data);
+    let filledHTML = fillTemplate(templateContent, data);
 
-    // Generate PDF file (UNCHANGED)
+    // ✅ ADD: LOGO + HEADER (same as employee)
+    if (branding) {
+      const logoHtml = branding.logoUrl
+        ? `<img src="${branding.logoUrl}" style="max-height:60px; margin-bottom:10px;" />`
+        : "";
+
+      const headerHtml = `
+        <div style="text-align:center; margin-bottom:20px;">
+          ${logoHtml}
+          <h2 style="color:${branding.primaryColor || "#000"}; text-decoration:underline;">
+            ${letterType.toUpperCase()}
+          </h2>
+        </div>
+      `;
+
+      filledHTML = filledHTML.replace(
+        "<h2>LETTER_HEADER_PLACEHOLDER</h2>",
+        headerHtml
+      );
+    } else {
+      // fallback (same as employee)
+      filledHTML = filledHTML.replace(
+        "<h2>LETTER_HEADER_PLACEHOLDER</h2>",
+        `<h2 style="text-align:center; text-decoration:underline;">
+          ${letterType.toUpperCase()}
+        </h2>`
+      );
+    }
+
+    // Generate PDF
     const lettersDir = path.join(process.cwd(), "src/uploads/letters");
     if (!fs.existsSync(lettersDir)) {
       fs.mkdirSync(lettersDir, { recursive: true });
@@ -2244,7 +2414,7 @@ export const generateFreelancerLetter = async (req, res) => {
 
     await generatePDF(filledHTML, filePath);
 
-    // Save MULTIPLE PDF files in JSONB (UNCHANGED)
+    // Save documents
     const docResult = await client.query(
       `SELECT document_url
        FROM user_employees_master
@@ -2265,7 +2435,6 @@ export const generateFreelancerLetter = async (req, res) => {
       [JSON.stringify(existingDocs), freelancerId]
     );
 
-    // Success Response
     return res.json({
       message: "Freelancer letter generated successfully",
       pdf_url: `/uploads/letters/${fileName}`,
@@ -2282,6 +2451,7 @@ export const generateFreelancerLetter = async (req, res) => {
     client.release();
   }
 };
+
 export const getFreelancerLetters = async (req, res) => {
   const client = await pool.connect();
 
@@ -2535,7 +2705,7 @@ export const getAllFreelancers = async (req, res) => {
   const result = await pool.query(
     `SELECT *
      FROM user_employees_master
-     WHERE employment_type = 'freelancer'`
+     WHERE role='employee' AND employment_type = 'freelancer'`
   );
   res.json(result.rows);
 };
@@ -4846,8 +5016,14 @@ export const fetchAllReviews = async (req, res) => {
         ue.employee_id AS employee_code,
         ue.name AS employee_name,
         ue.designation,
+
         pr.self_rating,
+        pr.self_strengths,
+        pr.self_improvements,
+        pr.self_comments,
+
         pr.tl_rating,
+        pr.tl_comments,
         pr.status
       FROM performance_reviews pr
       JOIN user_employees_master ue
@@ -4865,6 +5041,7 @@ export const fetchAllReviews = async (req, res) => {
     client.release();
   }
 };
+
 export const getFinalRatingsForEmployees = async (req, res) => {
   const client = await pool.connect();
   try {

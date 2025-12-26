@@ -114,41 +114,44 @@ const Profile = () => {
     }
   };
 
-  // 🔥 Submit handler
+ 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!decoded?.id) return;
+  e.preventDefault();
+  if (!decoded?.id) return;
 
-    if (roles === "admin") {
-      const sendData = new FormData();
+  const sendData = new FormData();
 
-      // Append all text fields
-      Object.entries(formData).forEach(([key, value]) => {
-        sendData.append(key, value || "");
+  // append text fields
+  Object.entries(formData).forEach(([key, value]) => {
+    sendData.append(key, value || "");
+  });
+
+  // append photo
+  if (profilePicFile) {
+    sendData.append("profilePhoto", profilePicFile);
+  }
+
+  // ADMIN
+  if (roles === "admin") {
+    dispatch(updateAdminProfile({ data: sendData, id: decoded.id }))
+      .unwrap()
+      .then(() => {
+        toast.success("Profile updated successfully!");
+        dispatch(fetchAdminProfile(decoded.id));
       });
+  }
 
-      // Append file if selected
-      if (profilePicFile) {
-        sendData.append("profilePhoto", profilePicFile);
-      }
+  // SUPERADMIN
+  if (roles === "superadmin") {
+    dispatch(updateSuperAdminProfile({ data: sendData, id: decoded.id }))
+      .unwrap()
+      .then(() => {
+        toast.success("Profile updated successfully!");
+        dispatch(fetchSuperAdminProfile(decoded.id));
+      });
+  }
+};
 
-      dispatch(updateAdminProfile({ data: sendData, id: decoded.id }))
-        .unwrap()
-        .then(() => {
-          toast.success("Profile updated successfully!");
-          // ✅ Re-fetch to get updated profile_photo URL
-          dispatch(fetchAdminProfile(decoded.id));
-        });
-
-    } else if (roles === "superadmin") {
-      dispatch(updateSuperAdminProfile({ data: formData, id: decoded.id }))
-        .unwrap()
-        .then(() => {
-          toast.success("Profile updated successfully!");
-          dispatch(fetchSuperAdminProfile(decoded.id));
-        });
-    }
-  };
 
   // ✅ Determine photo source for Avatar
   const photoSrc = profilePicFile
