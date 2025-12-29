@@ -48,11 +48,9 @@ import {
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('branding');
-
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
   };
-
   return (
     <Box sx={{ height: '100vh', bgcolor: 'grey.50' }}>
       <AppBar position="static" color="default" elevation={1}>
@@ -77,7 +75,6 @@ export default function SettingsPage() {
           <Tab value="security" label="Security" />
         </Tabs>
       </AppBar>
-
       <Box sx={{ p: 3 }}>
         {activeTab === 'branding' && <BrandingSection />}
         {activeTab === 'salary' && <SalarySection />}
@@ -91,12 +88,10 @@ export default function SettingsPage() {
 }
 
 /* ---------- Branding ---------- */
-
 function BrandingSection() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerKey, setDrawerKey] = useState(null);
   const [activeTenant, setActiveTenant] = useState(null);
-
   useEffect(() => {
     fetchSettings().then((res) => {
       setActiveTenant(res.data?.whiteLabel?.activeTenant);
@@ -106,12 +101,10 @@ function BrandingSection() {
     setDrawerKey(key);
     setDrawerOpen(true);
   };
-
   const closeDrawer = () => {
     setDrawerOpen(false);
     setDrawerKey('');
   };
-
   return (
     <>
       <Grid container spacing={2}>
@@ -130,7 +123,6 @@ function BrandingSection() {
             </CardActions>
           </Card>
         </Grid>
-
         <Grid item xs={12} md={4}>
           <Card sx={{ height: '100%' }}>
             <CardContent>
@@ -146,7 +138,6 @@ function BrandingSection() {
             </CardActions>
           </Card>
         </Grid>
-
         <Grid item xs={12} md={4}>
           <Card sx={{ height: '100%' }}>
             <CardContent>
@@ -162,7 +153,6 @@ function BrandingSection() {
             </CardActions>
           </Card>
         </Grid>
-
         <Grid item xs={12} md={4}>
           <Card sx={{ height: '100%' }}>
             <CardContent>
@@ -192,38 +182,48 @@ function BrandingSection() {
 }
 
 /* ---------- Salary Cycle ---------- */
-
 function SalarySection() {
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [cycle, setCycle] = useState(null);
+  const [cycles, setCycles] = useState([]); // now an array
   const [loading, setLoading] = useState(true);
+  const [editingCycle, setEditingCycle] = useState(null);
 
   useEffect(() => {
-    const fetchCycle = async () => {
+    const fetchCycles = async () => {
       try {
         const res = await getSalaryCycleApi();
-        setCycle(res.data);
+        setCycles(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
-        if (err.response?.status === 404) {
-          setCycle(null);
-        } else {
-          console.error("Failed to fetch salary cycle", err);
-          toast.error("Failed to load salary cycle");
-        }
+        console.error("Failed to fetch salary cycles", err);
+        toast.error("Failed to load salary cycles");
+        setCycles([]);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchCycle();
+    fetchCycles();
   }, []);
 
-  const openDrawer = () => {
+  const openDrawer = (cycle = null) => {
+    setEditingCycle(cycle);
     setDrawerOpen(true);
   };
 
   const closeDrawer = () => {
     setDrawerOpen(false);
+    setEditingCycle(null);
+  };
+
+  const handleSaved = async () => {
+    try {
+      const res = await getSalaryCycleApi();
+      setCycles(Array.isArray(res.data) ? res.data : []);
+      toast.success("Salary cycle saved successfully");
+    } catch (err) {
+      console.error("Failed to refresh salary cycles", err);
+      toast.error("Failed to refresh salary cycles");
+    }
+    closeDrawer();
   };
 
   if (loading) {
@@ -236,44 +236,74 @@ function SalarySection() {
 
   return (
     <>
+      <Box sx={{ mb: 3 }}>
+        <Button
+          variant="contained"
+          onClick={() => openDrawer(null)}
+          sx={{ mb: 2 }}
+        >
+          + Add Salary Cycle
+        </Button>
+      </Box>
+
       <Grid container spacing={2}>
-        {cycle ? (
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6">{cycle.cycle_name}</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Frequency: {cycle.pay_frequency}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Cycle: Day {cycle.cycle_start_day} – {cycle.cycle_end_day}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Cut-off: Day {cycle.cut_off_day} | Processing: Day {cycle.processing_day} | Payout: Day {cycle.payout_day}
-                </Typography>
-              </CardContent>
-              <CardActions sx={{ px: 2, pb: 2 }}>
-                <Button variant="outlined" size="small" onClick={openDrawer}>
-                  Edit
-                </Button>
-              </CardActions>
-            </Card>
-          </Grid>
+        {cycles.length > 0 ? (
+          cycles.map((cycle) => (
+            <Grid item xs={12} md={6} key={cycle.id}>
+              <Card>
+                <CardContent>
+                  <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                    <Box>
+                      <Typography variant="h6">{cycle.cycle_name}</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Frequency: {cycle.pay_frequency} • {cycle.is_active ? "Active" : "Inactive"}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Cycle: Day {cycle.cycle_start_day} – {cycle.cycle_end_day}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Cut-off: {cycle.cut_off_day} | Processing: {cycle.processing_day} | Payout: {cycle.payout_day}
+                      </Typography>
+                    </Box>
+                    {cycle.is_active && (
+                      <Box
+                        sx={{
+                          width: 12,
+                          height: 12,
+                          borderRadius: '50%',
+                          bgcolor: 'success.main',
+                          ml: 1,
+                        }}
+                      />
+                    )}
+                  </Stack>
+                </CardContent>
+                <CardActions sx={{ px: 2, pb: 2 }}>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => openDrawer(cycle)}
+                    disabled={!cycle.is_active}
+                  >
+                    {cycle.is_active ? 'Edit' : 'View Only'}
+                  </Button>
+                </CardActions>
+              </Card>
+            </Grid>
+          ))
         ) : (
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12}>
             <Card
               variant="outlined"
               sx={{
                 borderStyle: 'dashed',
-                height: '100%',
+                height: 150,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                cursor: 'pointer',
               }}
-              onClick={openDrawer}
             >
-              <Typography color="primary">+ Set up salary cycle</Typography>
+              <Typography color="text.secondary">No salary cycles configured</Typography>
             </Card>
           </Grid>
         )}
@@ -282,21 +312,12 @@ function SalarySection() {
       <RightDrawer
         open={drawerOpen}
         onClose={closeDrawer}
-        title={cycle ? 'Edit salary cycle' : 'Set up salary cycle'}
+        title={editingCycle ? 'Edit Salary Cycle' : 'Add Salary Cycle'}
       >
         <SalaryForm
-          initial={cycle}
+          initial={editingCycle}
           onClose={closeDrawer}
-          onSaved={async () => {
-            try {
-              const res = await getSalaryCycleApi();
-              setCycle(res.data);
-            } catch (err) {
-              if (err.response?.status === 404) {
-                setCycle(null);
-              }
-            }
-          }}
+          onSaved={handleSaved}
         />
       </RightDrawer>
     </>
@@ -316,7 +337,6 @@ function SalaryForm({ initial, onClose, onSaved }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-
     const payload = {
       cycle_name,
       pay_frequency,
@@ -355,7 +375,6 @@ function SalaryForm({ initial, onClose, onSaved }) {
           fullWidth
           required
         />
-
         <FormControl fullWidth>
           <InputLabel id="freq-label">Pay frequency</InputLabel>
           <Select
@@ -369,7 +388,6 @@ function SalaryForm({ initial, onClose, onSaved }) {
             <MenuItem value="weekly">Weekly</MenuItem>
           </Select>
         </FormControl>
-
         <TextField
           label="Cycle start day"
           type="number"
@@ -379,7 +397,6 @@ function SalaryForm({ initial, onClose, onSaved }) {
           fullWidth
           required
         />
-
         <TextField
           label="Cycle end day"
           type="number"
@@ -389,7 +406,6 @@ function SalaryForm({ initial, onClose, onSaved }) {
           fullWidth
           required
         />
-
         <TextField
           label="Cut-off day"
           type="number"
@@ -399,7 +415,6 @@ function SalaryForm({ initial, onClose, onSaved }) {
           fullWidth
           required
         />
-
         <TextField
           label="Processing day"
           type="number"
@@ -409,7 +424,6 @@ function SalaryForm({ initial, onClose, onSaved }) {
           fullWidth
           required
         />
-
         <TextField
           label="Payout day"
           type="number"
@@ -419,7 +433,6 @@ function SalaryForm({ initial, onClose, onSaved }) {
           fullWidth
           required
         />
-
         <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ mt: 1 }}>
           <Button onClick={onClose}>Cancel</Button>
           <Button type="submit" variant="contained" disabled={saving}>
@@ -432,6 +445,7 @@ function SalaryForm({ initial, onClose, onSaved }) {
 }
 
 /* ---------- Leave Policy ---------- */
+// ... (unchanged — keep all existing LeaveSection code as-is)
 
 function LeaveSection() {
   const [leaves, setLeaves] = useState([]);
@@ -480,7 +494,6 @@ function LeaveSection() {
             </Card>
           </Grid>
         ))}
-
         <Grid item xs={12} md={4}>
           <Card
             variant="outlined"
@@ -497,7 +510,6 @@ function LeaveSection() {
             <Typography color="primary">+ Add leave type</Typography>
           </Card>
         </Grid>
-
         <Grid item xs={12} md={4}>
           <Card sx={{ cursor: "pointer" }} onClick={() => navigate("/dashboard/employee/holiday")}>
             <CardContent>
@@ -509,7 +521,6 @@ function LeaveSection() {
           </Card>
         </Grid>
       </Grid>
-
       <RightDrawer
         open={drawerOpen}
         onClose={closeDrawer}
@@ -535,12 +546,10 @@ function LeaveForm({ initial, onClose, onSaved }) {
   const [requiresCertificate, setRequiresCertificate] = useState(
     initial?.requires_certificate || false
   );
-
   const isSick = name.toLowerCase().includes("sick");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     const payload = {
       name,
       code,
@@ -550,7 +559,6 @@ function LeaveForm({ initial, onClose, onSaved }) {
       maxBalance,
       requiresCertificate,
     };
-
     try {
       if (initial?.id) {
         await updateLeaveTypeApi(initial.id, payload);
@@ -576,7 +584,6 @@ function LeaveForm({ initial, onClose, onSaved }) {
           fullWidth
           required
         />
-
         <TextField
           label="Code"
           value={code}
@@ -584,7 +591,6 @@ function LeaveForm({ initial, onClose, onSaved }) {
           fullWidth
           required
         />
-
         <FormControl fullWidth>
           <InputLabel>Category</InputLabel>
           <Select value={category} onChange={(e) => setCategory(e.target.value)}>
@@ -592,7 +598,6 @@ function LeaveForm({ initial, onClose, onSaved }) {
             <MenuItem value="Unpaid">Unpaid</MenuItem>
           </Select>
         </FormControl>
-
         <FormControl fullWidth>
           <InputLabel>Accrual</InputLabel>
           <Select value={accrual} onChange={(e) => setAccrual(e.target.value)}>
@@ -602,7 +607,6 @@ function LeaveForm({ initial, onClose, onSaved }) {
             <MenuItem value="None">None</MenuItem>
           </Select>
         </FormControl>
-
         <TextField
           label="Maximum balance (days)"
           type="number"
@@ -610,7 +614,6 @@ function LeaveForm({ initial, onClose, onSaved }) {
           onChange={(e) => setMaxBalance(e.target.value)}
           fullWidth
         />
-
         <FormControlLabel
           control={
             <Checkbox
@@ -620,7 +623,6 @@ function LeaveForm({ initial, onClose, onSaved }) {
           }
           label="Allow carry-forward"
         />
-
         {isSick && (
           <FormControlLabel
             control={
@@ -632,7 +634,6 @@ function LeaveForm({ initial, onClose, onSaved }) {
             label="Require medical certificate"
           />
         )}
-
         <Stack direction="row" spacing={1} justifyContent="flex-end">
           <Button onClick={onClose}>Cancel</Button>
           <Button type="submit" variant="contained">
@@ -645,12 +646,11 @@ function LeaveForm({ initial, onClose, onSaved }) {
 }
 
 /* ---------- Integrations ---------- */
+// ... (unchanged — keep all existing IntegrationsSection code as-is)
 
 function IntegrationsSection() {
   const [drawerKey, setDrawerKey] = useState(null);
-
   const closeDrawer = () => setDrawerKey(null);
-
   return (
     <>
       <Grid container spacing={2}>
@@ -669,7 +669,6 @@ function IntegrationsSection() {
             </CardActions>
           </Card>
         </Grid>
-
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
@@ -685,7 +684,6 @@ function IntegrationsSection() {
             </CardActions>
           </Card>
         </Grid>
-
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
@@ -701,7 +699,6 @@ function IntegrationsSection() {
             </CardActions>
           </Card>
         </Grid>
-
         <Grid item xs={12} md={6}>
           <Card>
             <CardContent>
@@ -718,7 +715,6 @@ function IntegrationsSection() {
           </Card>
         </Grid>
       </Grid>
-
       <RightDrawer
         open={Boolean(drawerKey)}
         onClose={closeDrawer}
@@ -750,7 +746,6 @@ function ApiSftpForm({ onClose }) {
   const [sftpEnabled, setSftpEnabled] = useState(false);
   const [sftpHost, setSftpHost] = useState('');
   const [sftpUser, setSftpUser] = useState('');
-
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log({
@@ -759,7 +754,6 @@ function ApiSftpForm({ onClose }) {
     });
     onClose();
   };
-
   return (
     <Box component="form" onSubmit={handleSubmit}>
       <Stack spacing={2}>
@@ -786,7 +780,6 @@ function ApiSftpForm({ onClose }) {
             />
           </>
         )}
-
         <FormControlLabel
           control={
             <Checkbox checked={sftpEnabled} onChange={(e) => setSftpEnabled(e.target.checked)} />
@@ -809,7 +802,6 @@ function ApiSftpForm({ onClose }) {
             />
           </>
         )}
-
         <Stack direction="row" spacing={1} justifyContent="flex-end">
           <Button onClick={onClose}>Cancel</Button>
           <Button type="submit" variant="contained">
@@ -826,13 +818,11 @@ function SsoForm({ onClose }) {
   const [provider, setProvider] = useState('SAML');
   const [clientId, setClientId] = useState('');
   const [clientSecret, setClientSecret] = useState('');
-
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log({ enabled, provider, clientId, clientSecret });
     onClose();
   };
-
   return (
     <Box component="form" onSubmit={handleSubmit}>
       <Stack spacing={2}>
@@ -840,7 +830,6 @@ function SsoForm({ onClose }) {
           control={<Checkbox checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />}
           label="Enable SSO"
         />
-
         {enabled && (
           <>
             <FormControl fullWidth>
@@ -855,7 +844,6 @@ function SsoForm({ onClose }) {
                 <MenuItem value="OIDC">OpenID Connect</MenuItem>
               </Select>
             </FormControl>
-
             <TextField
               label="Client ID"
               value={clientId}
@@ -871,7 +859,6 @@ function SsoForm({ onClose }) {
             />
           </>
         )}
-
         <Stack direction="row" spacing={1} justifyContent="flex-end">
           <Button onClick={onClose}>Cancel</Button>
           <Button type="submit" variant="contained">
@@ -887,13 +874,11 @@ function DeviceForm({ onClose }) {
   const [enabled, setEnabled] = useState(false);
   const [baseUrl, setBaseUrl] = useState('');
   const [schedule, setSchedule] = useState('Hourly');
-
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log({ enabled, baseUrl, schedule });
     onClose();
   };
-
   return (
     <Box component="form" onSubmit={handleSubmit}>
       <Stack spacing={2}>
@@ -901,7 +886,6 @@ function DeviceForm({ onClose }) {
           control={<Checkbox checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />}
           label="Enable attendance integration"
         />
-
         {enabled && (
           <>
             <TextField
@@ -925,7 +909,6 @@ function DeviceForm({ onClose }) {
             </FormControl>
           </>
         )}
-
         <Stack direction="row" spacing={1} justifyContent="flex-end">
           <Button onClick={onClose}>Cancel</Button>
           <Button type="submit" variant="contained">
@@ -941,13 +924,11 @@ function ErpForm({ onClose }) {
   const [system, setSystem] = useState('Generic');
   const [companyCode, setCompanyCode] = useState('');
   const [costCenter, setCostCenter] = useState('');
-
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log({ system, companyCode, costCenter });
     onClose();
   };
-
   return (
     <Box component="form" onSubmit={handleSubmit}>
       <Stack spacing={2}>
@@ -964,7 +945,6 @@ function ErpForm({ onClose }) {
             <MenuItem value="Oracle">Oracle</MenuItem>
           </Select>
         </FormControl>
-
         <TextField
           label="Default company code"
           value={companyCode}
@@ -977,7 +957,6 @@ function ErpForm({ onClose }) {
           onChange={(e) => setCostCenter(e.target.value)}
           fullWidth
         />
-
         <Stack direction="row" spacing={1} justifyContent="flex-end">
           <Button onClick={onClose}>Cancel</Button>
           <Button type="submit" variant="contained">
@@ -990,6 +969,7 @@ function ErpForm({ onClose }) {
 }
 
 /* ---------- Security ---------- */
+// ... (unchanged — keep all existing SecuritySection code as-is)
 
 function SecuritySection() {
   const [drawerKey, setDrawerKey] = useState(null);
@@ -1075,7 +1055,6 @@ function SecuritySection() {
             </CardActions>
           </Card>
         </Grid>
-
         <Grid item xs={12} md={4}>
           <Card sx={{ height: '100%' }}>
             <CardContent>
@@ -1091,7 +1070,6 @@ function SecuritySection() {
             </CardActions>
           </Card>
         </Grid>
-
         <Grid item xs={12} md={4}>
           <Card sx={{ height: '100%' }}>
             <CardContent>
@@ -1108,7 +1086,6 @@ function SecuritySection() {
           </Card>
         </Grid>
       </Grid>
-
       <RightDrawer
         open={Boolean(drawerKey)}
         onClose={closeDrawer}
@@ -1145,13 +1122,11 @@ function SecuritySection() {
 function SecurityRolesForm({ onClose }) {
   const [roleName, setRoleName] = useState('');
   const [permissions, setPermissions] = useState('');
-
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log({ roleName, permissions });
     onClose();
   };
-
   return (
     <Box component="form" onSubmit={handleSubmit}>
       <Stack spacing={2}>
@@ -1191,7 +1166,6 @@ function SecurityAuthForm({ current, onSave, onClose }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-
     const payload = {
       min_password_length: minLength,
       require_uppercase: requireUppercase,
@@ -1200,7 +1174,6 @@ function SecurityAuthForm({ current, onSave, onClose }) {
       require_special: requireSpecial,
       otp_expiry_minutes: otpExpiryMinutes,
     };
-
     const success = await onSave(payload);
     setSaving(false);
     if (success) {
@@ -1220,7 +1193,6 @@ function SecurityAuthForm({ current, onSave, onClose }) {
           fullWidth
           required
         />
-
         <FormControlLabel
           control={
             <Checkbox
@@ -1230,7 +1202,6 @@ function SecurityAuthForm({ current, onSave, onClose }) {
           }
           label="Require uppercase letter (A–Z)"
         />
-
         <FormControlLabel
           control={
             <Checkbox
@@ -1240,7 +1211,6 @@ function SecurityAuthForm({ current, onSave, onClose }) {
           }
           label="Require lowercase letter (a–z)"
         />
-
         <FormControlLabel
           control={
             <Checkbox
@@ -1250,7 +1220,6 @@ function SecurityAuthForm({ current, onSave, onClose }) {
           }
           label="Require number (0–9)"
         />
-
         <FormControlLabel
           control={
             <Checkbox
@@ -1260,7 +1229,6 @@ function SecurityAuthForm({ current, onSave, onClose }) {
           }
           label="Require special character (!@#$%^&*)"
         />
-
         <TextField
           label="OTP expiry (minutes)"
           type="number"
@@ -1272,7 +1240,6 @@ function SecurityAuthForm({ current, onSave, onClose }) {
           fullWidth
           required
         />
-
         <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ mt: 1 }}>
           <Button onClick={onClose}>Cancel</Button>
           <Button type="submit" variant="contained" disabled={saving}>
@@ -1296,17 +1263,14 @@ function SecurityNetworkForm({ current, onSave, onClose }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-
     const ipList = allowedIps
       .split(',')
       .map(ip => ip.trim())
       .filter(ip => ip);
-
     const payload = {
       ip_restriction_enabled: ipRestrictionEnabled,
       allowed_ips: ipList,
     };
-
     const success = await onSave(payload);
     setSaving(false);
     if (success) {
@@ -1326,7 +1290,6 @@ function SecurityNetworkForm({ current, onSave, onClose }) {
           }
           label="Enable IP address restrictions"
         />
-
         {ipRestrictionEnabled && (
           <TextField
             label="Allowed IP addresses"
@@ -1338,7 +1301,6 @@ function SecurityNetworkForm({ current, onSave, onClose }) {
             fullWidth
           />
         )}
-
         <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ mt: 1 }}>
           <Button onClick={onClose}>Cancel</Button>
           <Button type="submit" variant="contained" disabled={saving}>
@@ -1351,7 +1313,6 @@ function SecurityNetworkForm({ current, onSave, onClose }) {
 }
 
 /* ---------- Shared Right Drawer ---------- */
-
 function RightDrawer({ open, onClose, title, children }) {
   return (
     <Drawer
@@ -1364,7 +1325,7 @@ function RightDrawer({ open, onClose, title, children }) {
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
           {title}
         </Typography>
-        <IconButton size="small" onClick={onClose}>
+        <IconButton size="小" onClick={onClose}>
           <CloseIcon />
         </IconButton>
       </Box>
