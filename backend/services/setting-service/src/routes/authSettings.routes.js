@@ -5,7 +5,7 @@ import {
   createAuthSettings,
   createSalaryCycle,
   updateSalaryCycle,
-  getSalaryCycle
+  getAllSalaryCycles
 } from "../controllers/authSettings.controller.js";
 
 const router = express.Router();
@@ -21,7 +21,7 @@ router.post("/settings/update", updateAuthSettings);
 
 router.post("/salary-cycle", createSalaryCycle);
 router.patch("/salary-cycle", updateSalaryCycle);
-router.get("/settings/salary-cycle", getSalaryCycle);
+router.get("/settings/salary-cycle", getAllSalaryCycles);
 
 
 export default router;
