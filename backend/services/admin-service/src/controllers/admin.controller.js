@@ -5016,8 +5016,14 @@ export const fetchAllReviews = async (req, res) => {
         ue.employee_id AS employee_code,
         ue.name AS employee_name,
         ue.designation,
+
         pr.self_rating,
+        pr.self_strengths,
+        pr.self_improvements,
+        pr.self_comments,
+
         pr.tl_rating,
+        pr.tl_comments,
         pr.status
       FROM performance_reviews pr
       JOIN user_employees_master ue
@@ -5035,6 +5041,7 @@ export const fetchAllReviews = async (req, res) => {
     client.release();
   }
 };
+
 export const getFinalRatingsForEmployees = async (req, res) => {
   const client = await pool.connect();
   try {

@@ -233,7 +233,6 @@ export const createSalaryCycle = async (req, res) => {
     payout_day
   } = req.body;
 
-  // Strict validation
   if (
     !cycle_name ||
     !pay_frequency ||
@@ -244,20 +243,30 @@ export const createSalaryCycle = async (req, res) => {
     !payout_day
   ) {
     return res.status(400).json({
-      error: "All salary cycle fields are required for first setup"
+      error: "All salary cycle fields are required"
     });
   }
 
-  await pool.query(`UPDATE salary_cycles SET is_active = false`);
+  // 🔹 Deactivate ONLY the same frequency
+  await pool.query(
+    `UPDATE salary_cycles
+     SET is_active = false
+     WHERE pay_frequency = $1`,
+    [pay_frequency]
+  );
 
   const result = await pool.query(
     `INSERT INTO salary_cycles (
-      cycle_name, pay_frequency,
-      cycle_start_day, cycle_end_day,
-      cut_off_day, processing_day,
+      cycle_name,
+      pay_frequency,
+      cycle_start_day,
+      cycle_end_day,
+      cut_off_day,
+      processing_day,
       payout_day,
       is_active
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,true)
+    )
+    VALUES ($1,$2,$3,$4,$5,$6,$7,true)
     RETURNING *`,
     [
       cycle_name,
@@ -275,23 +284,31 @@ export const createSalaryCycle = async (req, res) => {
 
 
 export const updateSalaryCycle = async (req, res) => {
-  const updates = req.body;
+  const { pay_frequency, ...updates } = req.body;
 
-  // Get active cycle
+  if (!pay_frequency) {
+    return res.status(400).json({
+      error: "pay_frequency is required to update salary cycle"
+    });
+  }
+
   const current = await pool.query(
-    `SELECT * FROM salary_cycles WHERE is_active = true LIMIT 1`
+    `SELECT * FROM salary_cycles
+     WHERE pay_frequency = $1 AND is_active = true
+     LIMIT 1`,
+    [pay_frequency]
   );
 
   if (!current.rows.length) {
-    return res.status(404).json({ error: "No active salary cycle found" });
+    return res.status(404).json({
+      error: `No active ${pay_frequency} salary cycle found`
+    });
   }
 
   const existing = current.rows[0];
 
-  // Merge fields (new value OR existing)
   const merged = {
     cycle_name: updates.cycle_name ?? existing.cycle_name,
-    pay_frequency: updates.pay_frequency ?? existing.pay_frequency,
     cycle_start_day: updates.cycle_start_day ?? existing.cycle_start_day,
     cycle_end_day: updates.cycle_end_day ?? existing.cycle_end_day,
     cut_off_day: updates.cut_off_day ?? existing.cut_off_day,
@@ -299,7 +316,6 @@ export const updateSalaryCycle = async (req, res) => {
     payout_day: updates.payout_day ?? existing.payout_day
   };
 
-  // Business validation
   if (merged.cut_off_day > merged.processing_day) {
     return res.status(400).json({
       error: "Cut-off day cannot be after processing day"
@@ -309,18 +325,16 @@ export const updateSalaryCycle = async (req, res) => {
   const result = await pool.query(
     `UPDATE salary_cycles SET
       cycle_name = $1,
-      pay_frequency = $2,
-      cycle_start_day = $3,
-      cycle_end_day = $4,
-      cut_off_day = $5,
-      processing_day = $6,
-      payout_day = $7,
+      cycle_start_day = $2,
+      cycle_end_day = $3,
+      cut_off_day = $4,
+      processing_day = $5,
+      payout_day = $6,
       updated_at = NOW()
-     WHERE id = $8
+     WHERE id = $7
      RETURNING *`,
     [
       merged.cycle_name,
-      merged.pay_frequency,
       merged.cycle_start_day,
       merged.cycle_end_day,
       merged.cut_off_day,
@@ -333,10 +347,11 @@ export const updateSalaryCycle = async (req, res) => {
   res.json(result.rows[0]);
 };
 
-export const getSalaryCycle = async (req, res) => {
+
+export const getAllSalaryCycles = async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT 
+      `SELECT
         id,
         cycle_name,
         pay_frequency,
@@ -349,21 +364,17 @@ export const getSalaryCycle = async (req, res) => {
         created_at,
         updated_at
        FROM salary_cycles
-       WHERE is_active = true
-       LIMIT 1`
+       ORDER BY
+         pay_frequency,
+         is_active DESC,
+         created_at DESC`
     );
 
-    if (!result.rows.length) {
-      return res.status(404).json({
-        error: "No active salary cycle found"
-      });
-    }
-
-    res.status(200).json(result.rows[0]);
+    res.status(200).json(result.rows);
   } catch (error) {
-    console.error("Error fetching salary cycle:", error);
+    console.error("Error fetching salary cycles:", error);
     res.status(500).json({
-      error: "Failed to fetch salary cycle"
+      error: "Failed to fetch salary cycles"
     });
   }
 };
