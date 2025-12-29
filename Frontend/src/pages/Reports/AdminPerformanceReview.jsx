@@ -16,14 +16,41 @@ import {
 import { updateTLReviewApi } from "../../api/authApi";
 
 export default function AdminPerformanceReview({ employee, onStatusChange }) {
+  // Debug once if needed:
+  // console.log("EMPLOYEE FROM API ===>", employee);
+
   const [form, setForm] = useState({
     id: employee.review_id,
     employeeName: employee.employee_name,
     employeeCode: employee.employee_code,
     designation: employee.designation,
+
+    // Self review data
     selfRating: employee.self_rating,
+
+    // ⭐ handle multiple possible backend field names
+    selfStrengths:
+      employee.self_strength ||
+      employee.self_strengths ||
+      employee.employee_strengths ||
+      "",
+
+    selfImprovements:
+      employee.self_improvement ||
+      employee.self_improvements ||
+      employee.employee_improvements ||
+      "",
+
+    selfComments:
+      employee.self_comment ||
+      employee.self_comments ||
+      employee.employee_comments ||
+      "",
+
+    // TL data
     tlRating: employee.tl_rating || null,
     tlComment: employee.tl_comments || "",
+
     status: employee.status,
   });
 
@@ -33,8 +60,8 @@ export default function AdminPerformanceReview({ employee, onStatusChange }) {
     severity: "success",
   });
 
-  const updateTLRating = (val) => {
-    setForm((prev) => ({ ...prev, tlRating: val }));
+  const updateTLRating = (value) => {
+    setForm((prev) => ({ ...prev, tlRating: value }));
   };
 
   const handleCommentChange = (e) => {
@@ -64,10 +91,7 @@ export default function AdminPerformanceReview({ employee, onStatusChange }) {
         severity: "success",
       });
 
-      // Close after short delay
-      setTimeout(() => {
-        onStatusChange();
-      }, 1000);
+      setTimeout(() => onStatusChange(), 800);
     } catch (err) {
       console.error("Update error:", err);
       setSnackbar({
@@ -117,6 +141,7 @@ export default function AdminPerformanceReview({ employee, onStatusChange }) {
         <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
           Employee Self Review
         </Typography>
+
         <Divider sx={{ mb: 3 }} />
 
         <Grid container spacing={3}>
@@ -137,7 +162,43 @@ export default function AdminPerformanceReview({ employee, onStatusChange }) {
             <Rating value={form.selfRating || 0} readOnly size="large" />
           </Grid>
 
-          {/* TL Review Section */}
+          {/* ⭐ Strengths */}
+          <Grid item xs={12}>
+            <TextField
+              label="Strengths"
+              value={form.selfStrengths}
+              fullWidth
+              multiline
+              rows={3}
+              disabled
+            />
+          </Grid>
+
+          {/* ⭐ Areas of Improvement */}
+          <Grid item xs={12}>
+            <TextField
+              label="Areas of Improvement"
+              value={form.selfImprovements}
+              fullWidth
+              multiline
+              rows={3}
+              disabled
+            />
+          </Grid>
+
+          {/* ⭐ Comments */}
+          <Grid item xs={12}>
+            <TextField
+              label="Employee Comments"
+              value={form.selfComments}
+              fullWidth
+              multiline
+              rows={3}
+              disabled
+            />
+          </Grid>
+
+          {/* TL Review */}
           <Grid item xs={12}>
             <Divider sx={{ my: 3 }} />
             <Typography variant="h6" fontWeight={600}>
@@ -149,7 +210,7 @@ export default function AdminPerformanceReview({ employee, onStatusChange }) {
             <Typography fontWeight={600}>TL Rating</Typography>
             <Rating
               value={form.tlRating || 0}
-              onChange={(e, val) => updateTLRating(val)}
+              onChange={(e, value) => updateTLRating(value)}
               size="large"
             />
           </Grid>
@@ -165,7 +226,6 @@ export default function AdminPerformanceReview({ employee, onStatusChange }) {
             />
           </Grid>
 
-          {/* Action Buttons */}
           <Grid item xs={6}>
             <Button
               variant="contained"

@@ -36,6 +36,12 @@ import {
   downloadEmployeeDocument,
   deleteLetter,
   sendLetterEmail,
+  generateFreelancerLetter,
+  getFreelancerLetters,
+  downloadFreelancerLetter,
+  deleteFreelancerLetter,
+  sendFreelancerLetterEmail,
+  getAllFreelancers,
   getAllReferralsAdmin,
   getReferralByIdAdmin,
   updateReferralStatusAdmin,
@@ -83,12 +89,6 @@ import {
   getMonthlyPayrollSummary,
   getPayrollTrend,
   getFreelancerAnalytics,
-  generateFreelancerLetter,
-  getFreelancerLetters,
-  downloadFreelancerLetter,
-  deleteFreelancerLetter,
-  sendFreelancerLetterEmail,
-  getAllFreelancers,
  
 } from "../controllers/admin.controller.js";
 
@@ -210,6 +210,19 @@ router.get("/letters/:employeeId", getEmployeeLetters);
 router.get("/letters/download/:employeeId/:fileName",downloadEmployeeLetter);
 router.delete("/letters/:employeeId/:filename", deleteLetter);
 router.post("/letters/send-email", sendLetterEmail);
+
+// ================= FREELANCER LETTERS =================
+router.post("/freelancers/letters/generate",generateFreelancerLetter);
+
+router.get("/freelancers/:freelancerId/letters",getFreelancerLetters);
+
+router.get("/freelancers/:freelancerId/letters/:fileName/download",downloadFreelancerLetter);
+
+router.delete("/freelancers/:freelancerId/letters/:filename",deleteFreelancerLetter);
+
+router.post("/freelancers/letters/send-email",sendFreelancerLetterEmail);
+
+router.get("/freelancers", getAllFreelancers);
 
 /* ========== Employee Document Upload ========== */
 router.post(
@@ -382,18 +395,6 @@ router.put("/email-templates/:id", updateEmailTemplate);
 
 // Delete template
 router.delete("/email-templates/:id", deleteEmailTemplate);
-
-router.post("/freelancers/letters/generate",generateFreelancerLetter);
- 
-router.get("/freelancers/:freelancerId/letters",getFreelancerLetters);
- 
-router.get("/freelancers/:freelancerId/letters/:fileName/download",downloadFreelancerLetter);
- 
-router.delete("/freelancers/:freelancerId/letters/:filename",deleteFreelancerLetter);
- 
-router.post("/freelancers/letters/send-email",sendFreelancerLetterEmail);
- 
-router.get("/freelancers", getAllFreelancers);
 
 
 export default router;
