@@ -176,12 +176,12 @@ const openAadhaarDocHandler = async (selected, setSelected) => {
   //     `DOB: ${data.dob}\n` +
   //     `Aadhaar: ${data.aadhaarNumber || "Hidden"}`
   // );
-     alert(
+  alert(
       `✅ Aadhaar Processed\n\n` +
         `Aadhaar: ${data.aadhaarNumber || "Not detected"}\n` +
         `Name: ${data.name || "Not detected"}\n` +
         `DOB: ${data.dob || "Not detected"}`
-    );
+  );
 
   setSelected((prev) => ({
     ...prev,
@@ -323,10 +323,10 @@ export default function AdminVerificationTabs() {
 //   setModalOpen(true);
 // };
 
-      const openModal = (row) => {
+ const openModal = (row) => {
         setSelected(row);
-        setModalOpen(true);
-      };
+  setModalOpen(true);
+};
 
 
   const closeModal = () => setModalOpen(false);
