@@ -8,6 +8,8 @@ import { grantTempAdminApi, revokeTempAdminApi, promoteEmployeeApi } from "../..
 import ReusableModal from "../../components/MyProfile/ReusableModal";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import * as XLSX from 'xlsx';
+import { DownloadOutlined } from '@ant-design/icons';
 import {
   TextField,
   Box,
@@ -382,6 +384,59 @@ const handleNavigate = (email) => {
       ),
     }
   ];
+  const handleExportExcel = () => {
+  // Get the table data from Redux store or API
+  // You'll need to fetch or access the employee data
+  dispatch(fetchAllEmployees())
+    .unwrap()
+    .then((employees) => {
+      // Prepare data for Excel
+      const excelData = employees.map(emp => ({
+        'ID': emp.id,
+        'Name': emp.name,
+        'Email': emp.email,
+        'Department': emp.department,
+        'Phone': emp.phone,
+        'Status': emp.is_active ? 'Active' : 'Inactive',
+        'Date of Joining': emp.date_of_joining,
+        'Designation': emp.designation,
+        'Employment Type': emp.employment_type,
+        'Gender': emp.gender,
+        'Date of Birth': emp.dob,
+        'Address': emp.address,
+        'Permanent Address': emp.permanent_address,
+        'Emergency Contact': emp.emergency_contact,
+        'Is Promoted': emp.is_promoted ? 'Yes' : 'No'
+      }));
+
+      // Create worksheet
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+      
+      // Create workbook
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Employees');
+      
+      // Generate Excel file
+      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+      const data = new Blob([excelBuffer], { type: 'application/octet-stream' });
+      const url = window.URL.createObjectURL(data);
+      
+      // Create download link
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `employees_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Excel file downloaded successfully!');
+    })
+    .catch((error) => {
+      console.error('Error exporting Excel:', error);
+      toast.error('Failed to download Excel file');
+    });
+};
 
   // Table scroll configuration
   const tableScrollConfig = {
@@ -391,23 +446,37 @@ const handleNavigate = (email) => {
     <>
       <ToastContainer position="top-right" autoClose={2000} />
 
-      {/* Header */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '16px',
-        padding: '0 8px'
-      }}>
-        <h1 style={{
-          fontSize: '24px',
-          fontWeight: 'bold',
-          margin: 0,
-          color: '#1f2937'
-        }}>
-          Employee Management
-        </h1>
-      </div>
+    
+     {/* Header */}
+<div style={{
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginBottom: '16px',
+  padding: '0 8px'
+}}>
+  <h1 style={{
+    fontSize: '24px',
+    fontWeight: 'bold',
+    margin: 0,
+    color: '#1f2937'
+  }}>
+    Employee Management
+  </h1>
+  
+  <Button
+    type="primary"
+    icon={<DownloadOutlined />}
+    onClick={handleExportExcel}
+    style={{
+      backgroundColor: '#10b981',
+      borderColor: '#10b981',
+      fontWeight: '500'
+    }}
+  >
+    Download Excel
+  </Button>
+</div>
 
       {/* Table Container with Clean Styling */}
       <div style={{
