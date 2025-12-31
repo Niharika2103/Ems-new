@@ -12,24 +12,33 @@ import {
   IconButton,
   InputAdornment,
 } from "@mui/material";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
+
+import { Visibility, VisibilityOff, CheckCircle, Cancel } from "@mui/icons-material";
 import PersonIcon from "@mui/icons-material/Person";
-import { checkEmail, login, resetEmailStatus } from "../../features/auth/authSlice";
-import { ToastContainer, toast } from "react-toastify";
-import { validateLogin } from "../../utils/validation";
-import "react-toastify/dist/ReactToastify.css";
-import "./login.css";
-import { CheckCircle, Cancel } from "@mui/icons-material";
+
 import debounce from "lodash.debounce";
 
-// === Swiper ===
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+import { validateLogin } from "../../utils/validation";
+
+// Redux actions
+import { checkEmail, login, resetEmailStatus } from "../../features/auth/authSlice";
+
+// API calls for forgot / reset password
+import {
+  superAdminForgotPasswordApi,
+  superAdminResetPasswordApi,
+} from "../../api/authApi";
+
+// Swiper
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, EffectCoverflow } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/effect-coverflow";
-import "swiper/css/autoplay";
 
-// === Images ===
+// Images
 import company from "../../assets/company.jpg";
 import company1 from "../../assets/company1.jpg";
 import company2 from "../../assets/company2.jpg";
@@ -37,218 +46,274 @@ import company2 from "../../assets/company2.jpg";
 export default function SuperAdminLogin() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { loading, error } = useSelector((state) => state.auth);
+
+  const { loading } = useSelector((state) => state.auth);
   const emailStatus = useSelector((state) => state.auth.emailStatus);
 
+  /* ---------------- LOGIN FORM STATE ---------------- */
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-
   });
+
   const [otp, setOtp] = useState("");
   const [errors, setErrors] = useState({});
-  const [showPassword, setShowPassword] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
 
+  /* ---------------- FORGOT PASSWORD STATE ---------------- */
+  const [showForgot, setShowForgot] = useState(false);
+  const [fp, setFp] = useState({ email: "", otp: "", newPassword: "" });
+  const [otpSent, setOtpSent] = useState(false);
+
+  /* --------- CHECK EMAIL LIVE ----------- */
   const debouncedCheckEmail = debounce((email) => {
     if (email) dispatch(checkEmail(email));
   }, 500);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    //  Password max length check
+
     if (name === "password" && value.length > 16) {
-      setErrors((prev) => ({
-        ...prev,
-        password: "Password cannot exceed 16 characters",
-      }));
-      return; // stop updating
-    } else {
-      setErrors((prev) => ({ ...prev, [name]: "" }));
+      setErrors((p) => ({ ...p, password: "Password cannot exceed 16 characters" }));
+      return;
     }
 
+    setErrors((p) => ({ ...p, [name]: "" }));
     setFormData({ ...formData, [name]: value });
 
     if (name === "email") {
-      // Only trigger email check if it looks like an email
       const emailRegex = /\S+@\S+\.\S+/;
-      if (emailRegex.test(value)) {
-        debouncedCheckEmail(value);
-      } else {
-        dispatch(resetEmailStatus()); // Reset status if not valid
-      }
+      if (emailRegex.test(value)) debouncedCheckEmail(value);
+      else dispatch(resetEmailStatus());
     }
   };
+
+  /* ---------------- LOGIN SUBMIT ---------------- */
   const handleLoginSubmit = (e) => {
     e.preventDefault();
+
     if (emailStatus !== true) {
-      toast.error("Please enter a valid authorized email first.");
+      toast.error("Please enter a valid authorized email");
       return;
     }
+
     const validationErrors = validateLogin(formData);
-    if (formData.password.length > 16) {
-      toast.error("Password cannot exceed 16 characters");
+    if (Object.keys(validationErrors).length) {
+      setErrors(validationErrors);
       return;
     }
 
+    dispatch(login({ ...formData, otp }))
+      .unwrap()
+      .then((res) => {
+        toast.success(res.message || "Login success");
+        setTimeout(() => navigate("/dashboard", { replace: true }), 1500);
+      })
+      .catch((err) => {
+        toast.error(err.error || "Login failed");
+      });
+  };
 
-    if (Object.keys(validationErrors).length === 0) {
+  /* ---------------- FORGOT PASSWORD FLOW ---------------- */
 
+  const sendResetOtp = async () => {
+    try {
+      await superAdminForgotPasswordApi({ email: fp.email });
+      toast.success("OTP sent to email");
+      setOtpSent(true);
+    } catch (err) {
+      toast.error(err.response?.data?.error || "Failed to send OTP");
+    }
+  };
 
-      dispatch(login({ ...formData, otp }))
-        .unwrap()
-        .then((response) => {
-          toast.success(response.message);
-          setFormData({
-            fullName: "",
-            email: "",
-            password: "",
-            confirmPassword: "",
-            role: "superadmin",
-          });
-          setOtp("");
-          dispatch(resetEmailStatus());
-          setErrors({});
-          setTimeout(() => {
-            navigate("/dashboard", { replace: true });
-          }, 2000);
-          window.onpopstate = null;
-        })
-        .catch((err) => {
-          toast.error(err.error || "Login failed");
-        });
-    } else {
-      setErrors(validationErrors);
+  const resetPassword = async () => {
+    if (!fp.email || !fp.otp || !fp.newPassword) {
+      toast.error("All fields required");
+      return;
+    }
+
+    try {
+      await superAdminResetPasswordApi(fp);
+      toast.success("Password reset successfully");
+      setShowForgot(false);
+      setOtpSent(false);
+      setFp({ email: "", otp: "", newPassword: "" });
+    } catch (err) {
+      toast.error(err.response?.data?.error || "Reset failed");
     }
   };
 
   return (
     <Box className="super-admin-container">
-      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
+      <ToastContainer position="top-right" autoClose={3000} />
 
-      {/* === Top Half Carousel === */}
+      {/* ====== IMAGE CAROUSEL ====== */}
       <Box className="super-admin-top">
         <Swiper
-          className="super-strip-swiper"
+          modules={[Autoplay, EffectCoverflow]}
           effect="coverflow"
-          grabCursor
           centeredSlides
           slidesPerView={3}
           loop
-          speed={1000}
           autoplay={{ delay: 2500, disableOnInteraction: false }}
-          coverflowEffect={{ rotate: 0, stretch: 0, depth: 150, modifier: 2, slideShadows: false }}
-          modules={[Autoplay, EffectCoverflow]}
+          coverflowEffect={{ rotate: 0, stretch: 0, depth: 150, modifier: 1 }}
         >
-          {[company, company1, company2, company, company1, company2].map((img, idx) => (
-            <SwiperSlide key={idx}>
-              <img src={img} alt={`company${idx}`} className="strip-img" />
+          {[company, company1, company2, company].map((img, i) => (
+            <SwiperSlide key={i}>
+              <img src={img} className="strip-img" alt="company" />
             </SwiperSlide>
           ))}
         </Swiper>
       </Box>
 
-      {/* === Bottom White Half === */}
-      <Box className="super-admin-bottom" />
-
-      {/* === Login Card === */}
+      {/* ====== LOGIN / FORGOT CARD ====== */}
       <Box className="super-admin-card">
         <Card sx={{ borderRadius: 3, boxShadow: 6, width: "100%" }}>
           <CardContent>
-            <Box textAlign="center" mb={2}>
-              <PersonIcon className="admin-icon" sx={{ fontSize: { xs: 35, sm: 40 } }} />
-              <Typography variant="h6" fontWeight="bold" mt={1} fontSize={{ xs: "1rem", sm: "1.2rem" }}>
-                SuperAdmin Sign In
-              </Typography>
-            </Box>
+            {!showForgot && (
+              <>
+                <Box textAlign="center">
+                  <PersonIcon sx={{ fontSize: 35 }} />
+                  <Typography variant="h6" fontWeight="bold">
+                    SuperAdmin Sign In
+                  </Typography>
+                </Box>
 
-            <Divider sx={{ mb: 2 }} />
+                <Divider sx={{ my: 2 }} />
 
-            <Box component="form" onSubmit={handleLoginSubmit} noValidate>
+                <Box component="form" onSubmit={handleLoginSubmit}>
+                  <TextField
+                    label="Email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    fullWidth
+                    size="small"
+                    error={!!errors.email || emailStatus === false}
+                    helperText={
+                      errors.email ||
+                      (emailStatus === false ? "Email not authorized" : "")
+                    }
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          {emailStatus === true && <CheckCircle sx={{ color: "green" }} />}
+                          {emailStatus === false && <Cancel sx={{ color: "red" }} />}
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
 
-              <TextField
-                label="Email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                fullWidth
-                size="small"
-                error={!!errors.email || emailStatus === false}
-                helperText={errors.email || (emailStatus === false ? "Email not authorized" : "")}
-                required
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      {emailStatus === true && <CheckCircle sx={{ color: "green" }} />}
-                      {emailStatus === false && <Cancel sx={{ color: "red" }} />}
-                    </InputAdornment>
-                  ),
-                }}
-              />
+                  <TextField
+                    label="Password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    value={formData.password}
+                    onChange={handleChange}
+                    fullWidth
+                    size="small"
+                    margin="dense"
+                    error={!!errors.password}
+                    helperText={errors.password}
+                    inputProps={{ maxLength: 16 }}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          <IconButton onClick={() => setShowPassword(!showPassword)}>
+                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                          </IconButton>
+                        </InputAdornment>
+                      ),
+                    }}
+                  />
 
+                  <TextField
+                    label="Enter OTP"
+                    fullWidth
+                    size="small"
+                    margin="dense"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    required
+                  />
 
-              {/* Password */}
-              <TextField
-                label="Password"
-                name="password"
-                type={showPassword ? "password" : "text"}
-                value={formData.password}
-                onChange={handleChange}
-                fullWidth
-                size="small"
-                margin="normal"
-                variant="outlined"
-                onCopy={(e) => e.preventDefault()}
-                onPaste={(e) => e.preventDefault()}
-                onCut={(e) => e.preventDefault()}
-                onContextMenu={(e) => e.preventDefault()}
-                error={!!errors.password}
-                helperText={errors.password}
-                required
-                inputProps={{ maxLength: 16 }}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton onClick={() => setShowPassword((prev) => !prev)} edge="end">
-                        {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-              />
+                  <Typography align="right">
+                    <Button size="small" onClick={() => setShowForgot(true)}>
+                      Forgot Password?
+                    </Button>
+                  </Typography>
 
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    sx={{ mt: 1 }}
+                    type="submit"
+                    disabled={loading}
+                  >
+                    {loading ? "Logging in..." : "Log In"}
+                  </Button>
+                </Box>
+              </>
+            )}
 
+            {/* ===== FORGOT PASSWORD ===== */}
+            {showForgot && (
+              <>
+                <Typography variant="h6" textAlign="center">
+                  Reset SuperAdmin Password
+                </Typography>
 
-              {/* OTP */}
-              <TextField
-                label="Enter OTP"
-                name="otp"
-                fullWidth
-                size="small"
-                margin="normal"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-                required
-              />
+                <Divider sx={{ my: 2 }} />
 
-              <Typography variant="body2" align="center" sx={{ mt: 2 }}>
-                Don’t have an account?{" "}
-                <a href="/#/superadmin/register" className="admin-register-link">
-                  Register Here
-                </a>
-              </Typography>
+                <TextField
+                  label="Registered Email"
+                  fullWidth
+                  size="small"
+                  value={fp.email}
+                  onChange={(e) => setFp({ ...fp, email: e.target.value })}
+                />
 
-              <Button
-                fullWidth
-                variant="contained"
-                size="small"
-                className="!px-1 !py-1 !text-md admin-button"
-                sx={{ mt: 2, fontSize: { xs: "0.9rem", sm: "1rem" } }}
-                type="submit"
-                disabled={loading}
-              >
-                {loading ? "Logging in..." : "Log In"}
-              </Button>
-            </Box>
+                <Button sx={{ mt: 1 }} variant="outlined" onClick={sendResetOtp}>
+                  Send OTP
+                </Button>
+
+                {otpSent && (
+                  <>
+                    <TextField
+                      label="Enter OTP"
+                      fullWidth
+                      size="small"
+                      sx={{ mt: 1 }}
+                      value={fp.otp}
+                      onChange={(e) => setFp({ ...fp, otp: e.target.value })}
+                    />
+
+                    <TextField
+                      label="New Password"
+                      type="password"
+                      fullWidth
+                      size="small"
+                      sx={{ mt: 1 }}
+                      value={fp.newPassword}
+                      onChange={(e) => setFp({ ...fp, newPassword: e.target.value })}
+                    />
+
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      sx={{ mt: 2 }}
+                      onClick={resetPassword}
+                    >
+                      Reset Password
+                    </Button>
+                  </>
+                )}
+
+                <Button sx={{ mt: 1 }} onClick={() => setShowForgot(false)}>
+                  Back to Login
+                </Button>
+              </>
+            )}
           </CardContent>
         </Card>
       </Box>
