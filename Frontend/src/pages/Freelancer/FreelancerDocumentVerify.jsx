@@ -50,6 +50,66 @@ const pdfPageToImage = async (page) => {
 };
 
 // ------------------------------------------------------
+// Aadhaar PDF Extractor (Text → Parsed fields)
+// ------------------------------------------------------
+
+// ---------------- Aadhaar Extractor ----------------
+const extractAadhaarFromPDF = async (fileUrl) => {
+  const response = await fetch(fileUrl);
+  const blob = await response.blob();
+  const buffer = await blob.arrayBuffer();
+
+  const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+  let text = "";
+
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map((t) => t.str).join(" ");
+  }
+
+  text = text.replace(/\s+/g, " ").toUpperCase();
+
+  return {
+    aadhaarNumber: (text.match(/\d{4}\s\d{4}\s\d{4}/) || [null])[0],
+    name: (text.match(/NAME[:\s]+([A-Z ]+)/)?.[1] || null),
+    dob: (text.match(/DOB[:\s]+([0-9\-\/]+)/)?.[1] || null),
+  };
+};
+
+// ---------------- Aadhaar Open & Verify ----------------
+const openAadhaarDocHandler = async (selected, setSelected) => {
+  const fileUrl = selected?.document_url?.aadhaar;
+
+  if (!fileUrl) {
+    alert("No Aadhaar document uploaded!");
+    return;
+  }
+
+  const data = await extractAadhaarFromPDF(fileUrl);
+
+  if (!data?.name) {
+    alert("❌ Unable to extract Aadhaar details");
+    return;
+  }
+
+  alert(
+    `✅ Aadhaar Extracted\n\n` +
+      `Name: ${data.name}\n` +
+      `DOB: ${data.dob}\n` +
+      `Aadhaar: ${data.aadhaarNumber || "Hidden"}`
+  );
+
+  setSelected((prev) => ({
+    ...prev,
+    aadhaarData: data,
+    aadhaarVerified: true,
+  }));
+
+  window.open(fileUrl, "_blank");
+};
+
+// ------------------------------------------------------
 // OCR Extraction (fallback for scanned passbooks)
 // ------------------------------------------------------
 const extractIFSC_OCR = async (fileUrl) => {
@@ -131,7 +191,7 @@ const extractIFSC = async (fileUrl, password = null) => {
 // MAIN COMPONENT
 // ------------------------------------------------------
 export default function AdminVerificationTabs() {
-  const [tab, setTab] = useState(2); // default bank tab for testing
+  const [tab, setTab] = useState(1); // default bank tab for testing
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -333,6 +393,34 @@ export default function AdminVerificationTabs() {
               <Typography variant="caption">{selected.email}</Typography>
 
               <Divider sx={{ my: 2 }} />
+
+              {/* Aadhaar Tab */}
+              {tab === 1 && (
+                <>
+                  <Typography fontWeight={700}>Aadhaar Verification</Typography>
+
+                  {selected?.aadhaarData && (
+                    <Typography sx={{ mt: 1 }}>
+                      Name: <b>{selected.aadhaarData.name}</b><br />
+                      DOB: <b>{selected.aadhaarData.dob}</b><br />
+                      Aadhaar:{" "}
+                      <b>{selected.aadhaarData.aadhaarNumber}</b>
+                    </Typography>
+                  )}
+
+                  {selected.document_url?.aadhaar ? (
+                    <Button
+                      variant="outlined"
+                      sx={{ mt: 2 }}
+                      onClick={() => openAadhaarDocHandler(selected, setSelected)}
+                    >
+                      View / Extract Aadhaar
+                    </Button>
+                  ) : (
+                    <Typography>No Aadhaar Uploaded</Typography>
+                  )}
+                </>
+              )}
 
               {tab === 2 && (
                 <>

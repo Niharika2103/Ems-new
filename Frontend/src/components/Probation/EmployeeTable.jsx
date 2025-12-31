@@ -25,6 +25,7 @@ const calculateDaysLeft = (end) => {
 
   return days < 0 ? 0 : days;
 };
+
 const formatDate = (dateStr) => {
   if (!dateStr) return "";
 
