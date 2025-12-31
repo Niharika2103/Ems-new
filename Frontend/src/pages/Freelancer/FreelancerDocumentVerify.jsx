@@ -117,7 +117,7 @@ const extractAadhaarOCR = async (fileUrl) => {
 
 // ---------------- Aadhaar Open & Verify ----------------
 const openAadhaarDocHandler = async (selected, setSelected) => {
-  const fileUrl = selected?.document_url?.aadhaar;
+  const fileUrl = selected?.document_url?.aadhaarCard;
   console.log("Aadhaar URL:", fileUrl);
 
   if (!fileUrl) {
@@ -268,10 +268,18 @@ export default function AdminVerificationTabs() {
     }
   };
 
-  const openModal = (row) => {
-    setSelected(row);
-    setModalOpen(true);
-  };
+ const openModal = (row) => {
+  setSelected({
+    ...row,
+    document_url: {
+      ...row.document_url,
+      aadhaar: row.document_url?.aadhaarCard,
+      bankPassbook: row.document_url?.bankPassbook,
+    },
+  });
+  setModalOpen(true);
+};
+
 
   const closeModal = () => setModalOpen(false);
 
@@ -436,31 +444,41 @@ export default function AdminVerificationTabs() {
 
               {/* Aadhaar Tab */}
               {tab === 1 && (
-                <>
-                  <Typography fontWeight={700}>Aadhaar Verification</Typography>
+  <>
+    <Typography fontWeight={700}>Aadhaar Verification</Typography>
 
-                  {selected?.aadhaarData && (
-                    <Typography sx={{ mt: 1 }}>
-                      Name: <b>{selected.aadhaarData.name}</b><br />
-                      DOB: <b>{selected.aadhaarData.dob}</b><br />
-                      Aadhaar:{" "}
-                      <b>{selected.aadhaarData.aadhaarNumber}</b>
-                    </Typography>
-                  )}
+    {selected?.aadhaarData && (
+      <Typography sx={{ mt: 1 }}>
+        Name: <b>{selected.aadhaarData.name}</b><br />
+        DOB: <b>{selected.aadhaarData.dob}</b><br />
+        Aadhaar: <b>{selected.aadhaarData.aadhaarNumber}</b>
+      </Typography>
+    )}
 
-                  {selected.document_url?.aadhaar ? (
-                    <Button
-                      variant="outlined"
-                      sx={{ mt: 2 }}
-                      onClick={() => openAadhaarDocHandler(selected, setSelected)}
-                    >
-                      View / Extract Aadhaar
-                    </Button>
-                  ) : (
-                    <Typography>No Aadhaar Uploaded</Typography>
-                  )}
-                </>
-              )}
+    {selected.document_url?.aadhaarCard ? (
+      <Button
+        variant="outlined"
+        sx={{ mt: 2 }}
+        onClick={() =>
+          openAadhaarDocHandler(
+            {
+              ...selected,
+              document_url: {
+                aadhaar: selected.document_url.aadhaarCard,
+              },
+            },
+            setSelected
+          )
+        }
+      >
+        View / Extract Aadhaar
+      </Button>
+    ) : (
+      <Typography>No Aadhaar Uploaded</Typography>
+    )}
+  </>
+)}
+
 
               {tab === 2 && (
                 <>
