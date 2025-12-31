@@ -73,7 +73,12 @@ const extractAadhaarFromPDF = async (fileUrl) => {
     text = text.replace(/\s+/g, " ").toUpperCase();
 
     return {
-      aadhaarNumber: (text.match(/\d{4}\s\d{4}\s\d{4}/) || [null])[0],
+      // aadhaarNumber: (text.match(/\d{4}\s\d{4}\s\d{4}/) || [null])[0],
+      aadhaarNumber: (
+        text.match(/\b\d{12}\b/) ||
+        text.match(/\b\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/)
+      )?.[0] || null,
+
       name: (text.match(/NAME[:\s]+([A-Z ]+)/)?.[1] || null),
       dob: (text.match(/DOB[:\s]+([0-9\-\/]+)/)?.[1] || null),
       source: "TEXT",
@@ -115,6 +120,34 @@ const extractAadhaarOCR = async (fileUrl) => {
   };
 };
 
+// ---------------- PAN Extractor ----------------
+// const extractPANFromPDF = async (fileUrl) => {
+//   try {
+//     const response = await fetch(fileUrl);
+//     const blob = await response.blob();
+//     const buffer = await blob.arrayBuffer();
+
+//     const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+//     let text = "";
+
+//     for (let i = 1; i <= pdf.numPages; i++) {
+//       const page = await pdf.getPage(i);
+//       const content = await page.getTextContent();
+//       text += content.items.map(t => t.str).join(" ");
+//     }
+
+//     text = text.replace(/\s+/g, " ").toUpperCase();
+
+//     return {
+//       panNumber: (text.match(/[A-Z]{5}[0-9]{4}[A-Z]/) || [null])[0],
+//       source: "TEXT",
+//     };
+//   } catch {
+//     return { panNumber: null, source: "FAILED" };
+//   }
+// };
+
+
 // ---------------- Aadhaar Open & Verify ----------------
 const openAadhaarDocHandler = async (selected, setSelected) => {
   const fileUrl = selected?.document_url?.aadhaarCard;
@@ -128,17 +161,27 @@ const openAadhaarDocHandler = async (selected, setSelected) => {
   const data = await extractAadhaarFromPDF(fileUrl);
 
   console.log("Aadhaar Extract Source:", data.source);
-  if (!data?.name) {
-    alert("❌ Unable to extract Aadhaar details");
-    return;
-  }
+  // if (!data?.name) {
+  //   alert("❌ Unable to extract Aadhaar details");
+  //   return;
+  // }
+  if (!data?.aadhaarNumber) {
+  alert("⚠️ Aadhaar number not detected automatically. Please verify manually.");
+}
 
-  alert(
-    `✅ Aadhaar Extracted\n\n` +
-      `Name: ${data.name}\n` +
-      `DOB: ${data.dob}\n` +
-      `Aadhaar: ${data.aadhaarNumber || "Hidden"}`
-  );
+
+  // alert(
+  //   `✅ Aadhaar Extracted\n\n` +
+  //     `Name: ${data.name}\n` +
+  //     `DOB: ${data.dob}\n` +
+  //     `Aadhaar: ${data.aadhaarNumber || "Hidden"}`
+  // );
+     alert(
+      `✅ Aadhaar Processed\n\n` +
+        `Aadhaar: ${data.aadhaarNumber || "Not detected"}\n` +
+        `Name: ${data.name || "Not detected"}\n` +
+        `DOB: ${data.dob || "Not detected"}`
+    );
 
   setSelected((prev) => ({
     ...prev,
@@ -268,17 +311,22 @@ export default function AdminVerificationTabs() {
     }
   };
 
- const openModal = (row) => {
-  setSelected({
-    ...row,
-    document_url: {
-      ...row.document_url,
-      aadhaar: row.document_url?.aadhaarCard,
-      bankPassbook: row.document_url?.bankPassbook,
-    },
-  });
-  setModalOpen(true);
-};
+//  const openModal = (row) => {
+//   setSelected({
+//     ...row,
+//     document_url: {
+//       ...row.document_url,
+//       aadhaar: row.document_url?.aadhaarCard,
+//       bankPassbook: row.document_url?.bankPassbook,
+//     },
+//   });
+//   setModalOpen(true);
+// };
+
+      const openModal = (row) => {
+        setSelected(row);
+        setModalOpen(true);
+      };
 
 
   const closeModal = () => setModalOpen(false);
@@ -459,17 +507,19 @@ export default function AdminVerificationTabs() {
       <Button
         variant="outlined"
         sx={{ mt: 2 }}
-        onClick={() =>
-          openAadhaarDocHandler(
-            {
-              ...selected,
-              document_url: {
-                aadhaar: selected.document_url.aadhaarCard,
-              },
-            },
-            setSelected
-          )
-        }
+        // onClick={() =>
+        //   openAadhaarDocHandler(
+        //     {
+        //       ...selected,
+        //       document_url: {
+        //         aadhaar: selected.document_url.aadhaarCard,
+        //       },
+        //     },
+        //     setSelected
+        //   )
+        // }
+        onClick={() => openAadhaarDocHandler(selected, setSelected)}
+
       >
         View / Extract Aadhaar
       </Button>
