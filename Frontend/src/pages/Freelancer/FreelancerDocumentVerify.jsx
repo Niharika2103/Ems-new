@@ -1,4 +1,13 @@
 import React, { useState, useEffect } from "react";
+import jsQR from "jsqr";
+
+import { GlobalWorkerOptions } from 'pdfjs-dist';
+
+// Use the CDN version of the worker
+GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+
+import * as asn1js from "asn1js"; 
+import * as pkijs from "pkijs";
 import {
   Box,
   Tabs,
@@ -33,13 +42,59 @@ import "pdfjs-dist/build/pdf.worker.min.mjs";
 // OCR (for scanned PDFs)
 import { createWorker } from "tesseract.js";
 
+
+
+
+const UIDAI_ROOT_CERT_PEM = `
+-----BEGIN CERTIFICATE-----
+MIIGDzCCA/egAwIBAgIBADANBgkqhkiG9w0BAQsFADCBqTELMAkGA1UEBhMCSU4x
+...
+-----END CERTIFICATE-----
+`;
+
+const pemToBuffer = (pem) =>
+  Uint8Array.from(
+    atob(pem.replace(/-----(BEGIN|END) CERTIFICATE-----/g, "").replace(/\s/g, "")),
+    c => c.charCodeAt(0)
+  ).buffer;
+
+const validateAadhaarQRSignature = async (qrPayload) => {
+  try {
+    // Secure QR comes base64-encoded
+    const bytes = Uint8Array.from(atob(qrPayload), c => c.charCodeAt(0));
+
+    const asn1 = asn1js.fromBER(bytes.buffer);
+    const cms = new pkijs.ContentInfo({ schema: asn1.result });
+    const signed = new pkijs.SignedData({ schema: cms.content });
+
+    const trustedCert = new pkijs.Certificate({
+      schema: asn1js.fromBER(pemToBuffer(UIDAI_ROOT_CERT_PEM)).result
+    });
+
+    const result = await signed.verify({
+      signer: 0,
+      trustedCerts: [trustedCert]
+    });
+
+    return {
+      valid: result,
+      signedBy: signed.certificates[0]?.subject?.typesAndValues?.[0]?.value.valueBlock.value || "UIDAI",
+      certificateExpiry: signed.certificates[0]?.notAfter?.value || null
+    };
+  } catch (err) {
+    console.error("Signature verify failed", err);
+    return { valid: false };
+  }
+};
+
 // ------------------------------------------------------
 // Convert PDF page → IMAGE (for OCR)
 // ------------------------------------------------------
 const pdfPageToImage = async (page) => {
-  const viewport = page.getViewport({ scale: 2 });
+  const viewport = page.getViewport({ scale: 4 });
   const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
+const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
 
   canvas.width = viewport.width;
   canvas.height = viewport.height;
@@ -120,6 +175,95 @@ const extractAadhaarOCR = async (fileUrl) => {
   };
 };
 
+
+// ---------- Parse UIDAI QR Payload ----------
+const parseAadhaarQR = (text) => {
+  return {
+    name: text.match(/name="([^"]+)"/i)?.[1] || null,
+    dob: text.match(/dob="([^"]+)"/i)?.[1] || null,
+    gender: text.match(/gender="([^"]+)"/i)?.[1] || null,
+    aadhaarMasked: text.match(/uid="([^"]+)"/i)?.[1] || null,
+    referenceId: text.match(/refid="([^"]+)"/i)?.[1] || null,
+    source: "QR"
+  };
+};
+
+// ---------- Extract QR from PDF ----------
+
+const extractAadhaarFromQR = async (fileUrl) => {
+  const res = await fetch(fileUrl);
+  const buffer = await res.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+
+    // 🔹 Higher scale improves QR readability
+    const viewport = page.getViewport({ scale: 5 });
+
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+
+    await page.render({ canvasContext: ctx, viewport }).promise;
+
+    // ---- 1) Try FULL-PAGE scan first ----
+    let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    let qr = jsQR(imageData.data, imageData.width, imageData.height, {
+      inversionAttempts: "attemptBoth",
+    });
+
+    // ---- 2) If not found, try cropped regions ----
+    if (!qr) {
+      const regions = [
+        [canvas.width * 0.60, canvas.height * 0.55, canvas.width * 0.35, canvas.height * 0.35],
+        [0, canvas.height * 0.55, canvas.width * 0.35, canvas.height * 0.35],
+        [canvas.width * 0.30, canvas.height * 0.55, canvas.width * 0.40, canvas.height * 0.35],
+      ];
+
+      for (const [x, y, w, h] of regions) {
+        const r = ctx.getImageData(x, y, w, h);
+        qr = jsQR(r.data, r.width, r.height, { inversionAttempts: "attemptBoth" });
+        if (qr) break;
+      }
+    }
+
+    if (!qr) continue; // no QR on this page, move on
+
+    const payload = qr.data.trim();
+    let parsed = {};
+    let signature = { valid: false };
+
+    if (payload.startsWith("<") || payload.includes('uid="')) {
+      parsed = parseAadhaarQR(payload);
+      parsed.aadhaarSource = "XML_QR";
+    } else {
+      signature = await validateAadhaarQRSignature(payload);
+      const decoded = atob(payload);
+
+      if (decoded.includes("<PrintLetterBarcodeData"))
+        parsed = parseAadhaarQR(decoded);
+
+      parsed.aadhaarSource = "SECURE_QR";
+    }
+
+    return {
+      ...parsed,
+      signatureValid: signature.valid,
+      signedBy: signature.signedBy,
+      certificateExpiry: signature.certificateExpiry,
+      source: "QR",
+    };
+  }
+
+  return null;
+};
+
+
+
+
 // ---------------- PAN Extractor ----------------
 // const extractPANFromPDF = async (fileUrl) => {
 //   try {
@@ -149,48 +293,55 @@ const extractAadhaarOCR = async (fileUrl) => {
 
 
 // ---------------- Aadhaar Open & Verify ----------------
+
+// Temporary signature validator (no external lib)
+
+
 const openAadhaarDocHandler = async (selected, setSelected) => {
   const fileUrl = selected?.document_url?.aadhaarCard;
-  console.log("Aadhaar URL:", fileUrl);
+  if (!fileUrl) return alert("No Aadhaar document uploaded!");
 
-  if (!fileUrl) {
-    alert("No Aadhaar document uploaded!");
-    return;
-  }
+  let data = await extractAadhaarFromQR(fileUrl);
 
-  const data = await extractAadhaarFromPDF(fileUrl);
+  let verificationStatus = "failed";
 
-  console.log("Aadhaar Extract Source:", data.source);
-  // if (!data?.name) {
-  //   alert("❌ Unable to extract Aadhaar details");
-  //   return;
-  // }
-  if (!data?.aadhaarNumber) {
-  alert("⚠️ Aadhaar number not detected automatically. Please verify manually.");
+if (data?.aadhaarSource === "SECURE_QR") {
+  verificationStatus = data.signatureValid ? "verified" : "failed";
+} else if (data?.aadhaarSource === "XML_QR") {
+  verificationStatus = "partial";
 }
 
 
-  // alert(
-  //   `✅ Aadhaar Extracted\n\n` +
-  //     `Name: ${data.name}\n` +
-  //     `DOB: ${data.dob}\n` +
-  //     `Aadhaar: ${data.aadhaarNumber || "Hidden"}`
-  // );
-     alert(
-      `✅ Aadhaar Processed\n\n` +
-        `Aadhaar: ${data.aadhaarNumber || "Not detected"}\n` +
-        `Name: ${data.name || "Not detected"}\n` +
-        `DOB: ${data.dob || "Not detected"}`
-    );
+  // Fallback → OCR / Text
+  if (!data) {
+    console.log("QR not found → using text/OCR fallback");
+    data = await extractAadhaarFromPDF(fileUrl);
+    verificationStatus = data?.aadhaarNumber ? "partial" : "failed";
+  }
 
-  setSelected((prev) => ({
+  alert(
+    `Aadhaar Processed (${data.source})\n\n` +
+    `Name: ${data.name || "-" }\n` +
+    `DOB: ${data.dob || "-" }\n` +
+    `Aadhaar: ${data.aadhaarMasked || data.aadhaarNumber || "-" }\n\n` +
+    `Signature: ${
+      data.signatureValid ? "VALID ✔️ (Verified)" :
+      verificationStatus === "partial" ? "NO QR — Manual Review ⚠️" :
+      "FAILED ❌"
+    }`
+  );
+
+  setSelected(prev => ({
     ...prev,
     aadhaarData: data,
-    aadhaarVerified: true,
+    aadhaarVerified: verificationStatus === "verified",
+    aadhaarStatus: verificationStatus
   }));
 
   window.open(fileUrl, "_blank");
 };
+
+
 
 // ------------------------------------------------------
 // OCR Extraction (fallback for scanned passbooks)
@@ -323,10 +474,10 @@ export default function AdminVerificationTabs() {
 //   setModalOpen(true);
 // };
 
-      const openModal = (row) => {
+ const openModal = (row) => {
         setSelected(row);
-        setModalOpen(true);
-      };
+  setModalOpen(true);
+};
 
 
   const closeModal = () => setModalOpen(false);
