@@ -55,18 +55,55 @@ const pdfPageToImage = async (page) => {
 
 // ---------------- Aadhaar Extractor ----------------
 const extractAadhaarFromPDF = async (fileUrl) => {
+  try {
+    const response = await fetch(fileUrl);
+    const blob = await response.blob();
+    const buffer = await blob.arrayBuffer();
+
+    // Try normal PDF text extraction
+    const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+    let text = "";
+
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      text += content.items.map(t => t.str).join(" ");
+    }
+
+    text = text.replace(/\s+/g, " ").toUpperCase();
+
+    return {
+      aadhaarNumber: (text.match(/\d{4}\s\d{4}\s\d{4}/) || [null])[0],
+      name: (text.match(/NAME[:\s]+([A-Z ]+)/)?.[1] || null),
+      dob: (text.match(/DOB[:\s]+([0-9\-\/]+)/)?.[1] || null),
+      source: "TEXT",
+    };
+  } catch (err) {
+    console.warn("⚠️ PDF text extract failed — switching to OCR…", err);
+
+    // 👉 Force OCR fallback
+    return await extractAadhaarOCR(fileUrl);
+  }
+};
+
+const extractAadhaarOCR = async (fileUrl) => {
   const response = await fetch(fileUrl);
   const blob = await response.blob();
   const buffer = await blob.arrayBuffer();
 
   const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+  const worker = await createWorker("eng");
+
   let text = "";
 
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
-    text += content.items.map((t) => t.str).join(" ");
+    const img = await pdfPageToImage(page);
+    const { data } = await worker.recognize(img);
+    text += data.text + " ";
   }
+
+  await worker.terminate();
 
   text = text.replace(/\s+/g, " ").toUpperCase();
 
@@ -74,12 +111,14 @@ const extractAadhaarFromPDF = async (fileUrl) => {
     aadhaarNumber: (text.match(/\d{4}\s\d{4}\s\d{4}/) || [null])[0],
     name: (text.match(/NAME[:\s]+([A-Z ]+)/)?.[1] || null),
     dob: (text.match(/DOB[:\s]+([0-9\-\/]+)/)?.[1] || null),
+    source: "OCR",
   };
 };
 
 // ---------------- Aadhaar Open & Verify ----------------
 const openAadhaarDocHandler = async (selected, setSelected) => {
   const fileUrl = selected?.document_url?.aadhaar;
+  console.log("Aadhaar URL:", fileUrl);
 
   if (!fileUrl) {
     alert("No Aadhaar document uploaded!");
@@ -88,6 +127,7 @@ const openAadhaarDocHandler = async (selected, setSelected) => {
 
   const data = await extractAadhaarFromPDF(fileUrl);
 
+  console.log("Aadhaar Extract Source:", data.source);
   if (!data?.name) {
     alert("❌ Unable to extract Aadhaar details");
     return;
