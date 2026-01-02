@@ -6,6 +6,7 @@ import EmployeeTable from "../../components/Probation/EmployeeTable";
 import AssignProbation from '../../components/Probation/AssignProbation';
 import { fetchassignProbation } from "../../features/Salarystructure/salaryStructureSlice";
 import EmployeeDetailView from "../../components/Probation/EmployeeDetailView";
+import { generateLetterApi } from "../../api/authApi";
 
 
 const ProbationManagementSystem = () => {
@@ -19,7 +20,8 @@ const ProbationManagementSystem = () => {
   const [assignMode, setAssignMode] = useState('new');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [viewEmployee, setViewEmployee] = useState(null);      
+  const [viewEmployee, setViewEmployee] = useState(null);
+  const [recentlyGeneratedLetter, setRecentlyGeneratedLetter] = useState(null);      
   useEffect(() => {
     if (activeTab === "employees") {
       dispatch(fetchNewEmployees());
@@ -69,8 +71,33 @@ const ProbationManagementSystem = () => {
 
   return matchesSearch && matchesFilter;
 });
+const handleGenerateLetter = async (emp) => {
+  try {
+    const payload = {
+      employeeId: emp.employee_id || emp.user_id || emp.id,
+      letterType: "Probation Completion Letter"
+    };
 
+    const res = await generateLetterApi(payload);
 
+    // ✅ Store the generated letter info
+    const letterData = {
+      ...res.data,
+      employeeId: payload.employeeId,
+      associatedEmployee: emp // optional: keep ref to employee row
+    };
+    setRecentlyGeneratedLetter(letterData);
+
+    alert("Letter generated successfully");
+
+    if (res.data?.pdf_url) {
+      window.open(res.data.pdf_url, "_blank");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Failed to generate letter");
+  }
+};
 
 
 
@@ -193,7 +220,7 @@ const ProbationManagementSystem = () => {
               data={filteredList}
               // onActionClick={setSelectedEmployee}
               onActionClick={(emp) => setViewEmployee(emp)}
-
+              onGenerateLetter={handleGenerateLetter}
               showAssignAction={false}
               getStatusColor={getStatusColor}
               getStatusText={getStatusText}

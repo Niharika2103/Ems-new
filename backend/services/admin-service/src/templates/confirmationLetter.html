@@ -1,10 +1,29 @@
 <html>
-<body>
-  <h2>LETTER_HEADER_PLACEHOLDER</h2>
-  <p>Dear {{name}},</p>
-  <p>We are pleased to confirm your employment effective <b>{{effective_from}}</b>.</p>
-  <p>Designation: <b>{{designation}}</b></p>
-  <p>Congratulations on your performance.</p>
-  <p>Regards,<br>HR Team</p>
+<body style="font-family: Arial, sans-serif; line-height: 1.6;">
+
+  <h2 style="text-align:center;">CONFIRMATION OF EMPLOYMENT</h2>
+
+  <p>Date: <b>{{issue_date}}</b></p>
+
+  <p>To,<br>
+  <b>{{name}}</b><br>
+  {{address}}</p>
+
+  <p>Dear <b>{{name}}</b>,</p>
+
+  <p>We are pleased to inform you that your employment with <b>{{company_name}}</b> has been confirmed effective from <b>{{effective_from}}</b>.</p>
+
+  <p>You will continue to serve in the position of <b>{{designation}}</b> in the <b>{{department}}</b> department.</p>
+
+  <p>This confirmation is based on your satisfactory performance during the probation period. We look forward to your continued contribution and commitment to the organization.</p>
+
+  <p>All other terms and conditions of your employment shall remain unchanged.</p>
+
+  <p>We congratulate you on this milestone and wish you success in your role.</p>
+
+  <p>Regards,<br>
+  <b>HR Department</b><br>
+  {{company_name}}</p>
+
 </body>
 </html>

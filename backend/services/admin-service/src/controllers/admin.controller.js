@@ -1963,6 +1963,8 @@ const templateFileMap = {
   "Warning Letter": "warningLetter.html",
   "freelancer contract": "freelancerContract.html",
   "invoice Template": "invoiceTemplate.html",
+  "Probation Completion Letter": "probationCompletionLetter.html",
+
 };
 
 // Replace {{placeholders}}
@@ -2013,6 +2015,15 @@ export const generateLetter = async (req, res) => {
       return res.status(500).json({ error: "Template file missing" });
     }
 
+    const probationResult = await client.query(
+  `SELECT * FROM probation 
+   WHERE employee_id = $1 
+   ORDER BY createdat DESC LIMIT 1`,
+  [employeeId]
+);
+
+const probation = probationResult.rows[0] || {};
+
     // ✅ Inject company_name from branding or fallback
     const data = {
       name: emp.name,
@@ -2037,6 +2048,11 @@ export const generateLetter = async (req, res) => {
       account_number: sal.account_number,
       company_name: branding?.companyName || "Zigma People Private Limited (An AI India Venture)",
       ctc: sal.gross_salary,
+      start_date: probation.startdate,
+end_date: probation.enddate,
+confirmation_date: probation.enddate,
+issue_date: new Date().toLocaleDateString(),
+
     };
 
     let filledHTML = fillTemplate(templateContent, data);
