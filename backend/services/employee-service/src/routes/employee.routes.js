@@ -1,4 +1,5 @@
 import { Router } from "express";
+import path from "path";
 import {
   registerEmployee,
   employeeLogin,
@@ -28,6 +29,7 @@ import {
 
 
 } from "../controllers/employee.controller.js";
+
 
 
 const router = Router();
@@ -102,6 +104,30 @@ router.get("/salary/:employeeId", getEmployeeSalary);
 router.get("/employees/fulltime", getFullTimeEmployees);
 router.post("/performance/submit", submitSelfReview); 
 
+//resume download
+router.get("/download/:filename", (req, res) => {
+  const { filename } = req.params;
+
+  const filePath = path.join(
+    process.cwd(),
+    "src",
+    "uploads",
+    filename
+  );
+
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename="${filename}"`
+  );
+
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      console.error("PDF download error:", err);
+      res.status(404).json({ error: "File not found" });
+    }
+  });
+});
 
 
 export default router;

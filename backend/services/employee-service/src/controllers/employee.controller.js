@@ -1548,10 +1548,15 @@ export const createReferral = async (req, res) => {
     }
 
     // Create JSON for uploading resume
-    const resumeJson = {
-      resume: req.file.filename,
+    // const resumeJson = {
+    //   resume: req.file.filename,
       
-    };
+    // };
+          const resumeJson = {
+        resume: req.file.filename,
+      };
+
+
 
     // Use your referral ID generator
     const referralId = await generateReferralId(client);
@@ -1572,7 +1577,8 @@ export const createReferral = async (req, res) => {
       phone_number,
       position,
       work_exp,
-      resumeJson,
+      // resumeJson,
+      JSON.stringify(resumeJson),
       referralId,
       employee.name,
       employee.name,
@@ -1640,11 +1646,36 @@ export const getMyReferrals = async (req, res) => {
     `;
 
     const result = await client.query(query, [employeeId]);
+    const BASE_URL =
+  process.env.BASE_URL || `http://localhost:${process.env.PORT}`;
 
-    return res.status(200).json({
-      total: result.rowCount,
-      referrals: result.rows,
+const referrals = result.rows.map((row) => {
+  let resumeFile = null;
+
+  if (row.resume && typeof row.resume === "object" && row.resume.resume) {
+    resumeFile = row.resume.resume;
+  } else if (typeof row.resume === "string") {
+    resumeFile = row.resume;
+  }
+
+  return {
+    ...row,
+    resume: resumeFile
+      ? `${BASE_URL}/uploads/${resumeFile}`
+      : null,
+  };
+});
+ return res.status(200).json({
+      total: referrals.length,
+      referrals,
     });
+
+
+
+    // return res.status(200).json({
+    //   total: result.rowCount,
+    //   referrals: result.rows,
+    // });
 
   } catch (err) {
     console.error("Get My Referrals Error:", err.message);

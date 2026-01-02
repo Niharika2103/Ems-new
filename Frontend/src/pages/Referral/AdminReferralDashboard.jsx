@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { API_BASES } from "../../utils/constants";
 import {
   Box,
   Typography,
@@ -51,6 +52,8 @@ import {
   rescheduleInterviewReferralApi
 } from "../../api/authApi";
 
+const EMPLOYEE_URL = API_BASES.EMPLOYEE;
+
 // ===== STATUS CONFIG =====
 const STATUS_ORDER = {
   submitted: 0,
@@ -78,25 +81,73 @@ const statusLabels = {
   rejected: "Rejected"
 };
 
-const normalizeReferral = (ref) => ({
-  id: ref.id,
-  referralId: ref.referral_id,
-  candidateName: ref.candidate_name || "—",
-  candidateEmail: ref.candidate_email || "—",
-  candidatePhone: ref.phone_number || "—",
-  position: ref.position || "—",
-  experience: ref.work_exp || "",
-  referredBy: ref.referrer_name || "—",
-  referralDate: ref.referred_at,
-  status: (ref.status || "Submitted").toLowerCase(),
-  resumeUrl: ref.resume ? `/uploads/resumes/${ref.resume.resume}` : null,
-  resumeName: ref.resume?.resume || "resume.pdf",
-  interviewDate: ref.interview_date,
-  interviewType: ref.interview_type,
-  interviewer: ref.interviewer,
-  meetingLink: ref.meeting_link,
-  interviewNotes: ref.interview_notes,
-});
+// const normalizeReferral = (ref) => ({
+//   id: ref.id,
+//   referralId: ref.referral_id,
+//   candidateName: ref.candidate_name || "—",
+//   candidateEmail: ref.candidate_email || "—",
+//   candidatePhone: ref.phone_number || "—",
+//   position: ref.position || "—",
+//   experience: ref.work_exp || "",
+//   referredBy: ref.referrer_name || "—",
+//   referralDate: ref.referred_at,
+//   status: (ref.status || "Submitted").toLowerCase(),
+  // resumeUrl: ref.resume ? `/uploads/resumes/${ref.resume.resume}` : null,
+  // resumeName: ref.resume?.resume || "resume.pdf",
+
+  
+//   interviewDate: ref.interview_date,
+//   interviewType: ref.interview_type,
+//   interviewer: ref.interviewer,
+//   meetingLink: ref.meeting_link,
+//   interviewNotes: ref.interview_notes,
+// });
+
+ const normalizeReferral = (ref) => {
+  let resumeUrl = null;
+  let resumeName = "resume.pdf";
+
+  // ✅ Case 1: Backend already sends full URL
+  if (typeof ref.resume === "string") {
+    resumeUrl = ref.resume;
+    resumeName = ref.resume.split("/").pop();
+  }
+
+  // ✅ Case 2: Backend sends JSON { resume: "file.pdf" }
+  else if (
+    ref.resume &&
+    typeof ref.resume === "object" &&
+    ref.resume.resume
+  ) {
+
+    resumeUrl = `${EMPLOYEE_URL}/uploads/${ref.resume.resume}`;
+    resumeName = ref.resume.resume;
+  }
+
+  return {
+    id: ref.id,
+    referralId: ref.referral_id,
+    candidateName: ref.candidate_name || "—",
+    candidateEmail: ref.candidate_email || "—",
+    candidatePhone: ref.phone_number || "—",
+    position: ref.position || "—",
+    experience: ref.work_exp || "",
+    referredBy: ref.referrer_name || "—",
+    referralDate: ref.referred_at,
+    status: (ref.status || "submitted").toLowerCase(),
+
+    resumeUrl,
+    resumeName,
+
+    interviewDate: ref.interview_date,
+    interviewType: ref.interview_type,
+    interviewer: ref.interviewer,
+    meetingLink: ref.meeting_link,
+    interviewNotes: ref.interview_notes,
+  };
+};
+
+
 
 export default function AdminReferralDashboard() {
   const dispatch = useDispatch();
@@ -107,7 +158,7 @@ export default function AdminReferralDashboard() {
   const [selectedReferral, setSelectedReferral] = useState(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
-  const [resumeDialogOpen, setResumeDialogOpen] = useState(false);
+  //const [resumeDialogOpen, setResumeDialogOpen] = useState(false);
   const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
   const [scheduleMode, setScheduleMode] = useState("new"); // "new" or "reschedule"
 
@@ -186,20 +237,44 @@ const [rowsPerPage, setRowsPerPage] = useState(10);
     }
   };
 
-  const handleViewResume = (referral) => {
-    setSelectedReferral(referral);
-    setResumeDialogOpen(true);
-  };
+  // const handleViewResume = (referral) => {
+  //   setSelectedReferral(referral);
+  //   setResumeDialogOpen(true);
+  // };
 
-  const handleDownloadResume = (referral) => {
-    if (!referral.resumeUrl) return;
-    const link = document.createElement("a");
-    link.href = referral.resumeUrl;
-    link.download = referral.resumeName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+
+    // const handleDownloadResume = (referral) => {
+  //   if (!referral.resumeUrl) return;
+  //   const link = document.createElement("a");
+  //   link.href = referral.resumeUrl;
+  //   link.download = referral.resumeName;
+  //   document.body.appendChild(link);
+  //   link.click();
+  //   document.body.removeChild(link);
+  // };
+
+  
+  const handleViewResume = (resumeUrl) => {
+  if (!resumeUrl) return;
+  window.open(resumeUrl, "_blank", "noopener,noreferrer");
+};
+
+
+const handleDownloadResume = (resumeUrl) => {
+  if (!resumeUrl) return;
+
+  const filename = resumeUrl.split("/").pop();
+
+  const downloadUrl =
+    `${EMPLOYEE_URL}/employee/download/${filename}`;
+
+  window.location.href = downloadUrl; // 🔥 force download
+};
+
+
+
+
+
 
   const handleNavigateToPanelManagement = () => {
     navigate("/recruitment/panel-management");
@@ -374,12 +449,30 @@ const [rowsPerPage, setRowsPerPage] = useState(10);
                       <Box display="flex" gap={1}>
                         {referral.resumeUrl && (
                           <>
-                            <IconButton size="small" onClick={() => handleViewResume(referral)} color="primary">
+                            {/* <IconButton size="small" onClick={() => handleViewResume(referral)} color="primary">
                               <Visibility />
                             </IconButton>
                             <IconButton size="small" onClick={() => handleDownloadResume(referral)} color="secondary">
                               <Download />
+                            </IconButton> */}
+                            <IconButton
+                              size="small"
+                              onClick={() => handleViewResume(referral.resumeUrl)}
+                              color="primary"
+                            >
+                              <Visibility />
                             </IconButton>
+
+                            <IconButton
+                              size="small"
+                              onClick={() =>
+                                handleDownloadResume(referral.resumeUrl, referral.resumeName)
+                              }
+                              color="secondary"
+                            >
+                              <Download />
+                            </IconButton>
+
                           </>
                         )}
                       </Box>
@@ -629,7 +722,7 @@ const [rowsPerPage, setRowsPerPage] = useState(10);
         </Dialog>
 
         {/* Resume & View Dialogs */}
-        <Dialog open={resumeDialogOpen} onClose={() => setResumeDialogOpen(false)} maxWidth="md" fullWidth>
+        {/* <Dialog open={resumeDialogOpen} onClose={() => setResumeDialogOpen(false)} maxWidth="md" fullWidth>
           <DialogTitle>Resume Preview</DialogTitle>
           <DialogContent>
             {selectedReferral?.resumeUrl ? (
@@ -661,7 +754,7 @@ const [rowsPerPage, setRowsPerPage] = useState(10);
           <DialogActions>
             <Button onClick={() => setViewDialogOpen(false)}>Close</Button>
           </DialogActions>
-        </Dialog>
+        </Dialog> */}
       </Box>
     </LocalizationProvider>
   );

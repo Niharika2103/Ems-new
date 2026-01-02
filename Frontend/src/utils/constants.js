@@ -38,4 +38,5 @@ export const ROLES = {
   SETTINGS: "settings",
 };
 
+
 export const OTP_LENGTH = 6;
