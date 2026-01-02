@@ -29,6 +29,15 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 
 import { getAllSuperAdminAuditLogsApi } from "../../api/authApi"; // <-- API for superadmin logs
 
+const getTodayDate = () => {
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, "0");
+  const dd = String(today.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`; // YYYY-MM-DD
+};
+
+
 const SuperAdminAuditLogs = () => {
   const [logs, setLogs] = useState([]);
   const [filteredLogs, setFilteredLogs] = useState([]);
@@ -36,8 +45,9 @@ const SuperAdminAuditLogs = () => {
   const [error, setError] = useState(null);
 
   const [search, setSearch] = useState("");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const [dateFrom, setDateFrom] = useState(getTodayDate());
+const [dateTo, setDateTo] = useState(getTodayDate());
+
 
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
@@ -217,18 +227,38 @@ const SuperAdminAuditLogs = () => {
       </Card>
 
       {/* Table */}
-      <TableContainer component={Paper}>
+      <TableContainer
+  component={Paper}
+  sx={{
+    borderRadius: 2,
+    boxShadow: "0 4px 12px rgba(0,0,0,0.08)"
+  }}
+>
+
         <Table>
-          <TableHead sx={{ background: "#f4f4f4" }}>
-            <TableRow>
-              <TableCell>User ID</TableCell>
-              <TableCell>Name</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Login Time</TableCell>
-              <TableCell>Logout Time</TableCell>
-              <TableCell align="center">View</TableCell>
-            </TableRow>
-          </TableHead>
+          <TableHead>
+  <TableRow
+    sx={{
+      backgroundColor: "#f5f7fa",
+      "& th": {
+        fontWeight: 600,
+        fontSize: "0.85rem",
+        textTransform: "uppercase",
+        color: "#374151",
+        borderBottom: "2px solid #e5e7eb",
+        whiteSpace: "nowrap"
+      }
+    }}
+  >
+    <TableCell>User ID</TableCell>
+    <TableCell>Name</TableCell>
+    <TableCell>Email</TableCell>
+    <TableCell>Login Time</TableCell>
+    <TableCell>Logout Time</TableCell>
+    <TableCell align="center">View</TableCell>
+  </TableRow>
+</TableHead>
+
 
           <TableBody>
             {filteredLogs
@@ -276,103 +306,125 @@ const SuperAdminAuditLogs = () => {
       </TableContainer>
 
       {/* Modal */}
-      {selectedLog && (
-        <Dialog open={openModal} onClose={() => setOpenModal(false)} maxWidth="md" fullWidth>
-          <DialogTitle>
-            <Typography variant="h6" fontWeight="bold">
-              Audit Log Details
-            </Typography>
-          </DialogTitle>
+     {selectedLog && (
+  <Dialog
+    open={openModal}
+    onClose={() => setOpenModal(false)}
+    maxWidth="md"
+    fullWidth
+  >
+    <DialogTitle sx={{ fontWeight: 600 }}>
+      Audit Log Details
+    </DialogTitle>
 
-          <DialogContent dividers>
-            <Grid container spacing={2}>
-              {/* User Info */}
-              <Grid item xs={12}>
-                <Typography variant="subtitle1" fontWeight="bold" color="primary">
-                  User Information
-                </Typography>
-              </Grid>
+    <DialogContent dividers>
+      <Grid container spacing={3}>
 
-              <Grid item xs={12} md={4}>
-                <b>User ID</b>
-                <div>{selectedLog.user}</div>
-              </Grid>
+        {/* USER INFORMATION */}
+        <Grid item xs={12}>
+          <Typography variant="subtitle1" fontWeight={600} color="primary">
+            User Information
+          </Typography>
+        </Grid>
 
-              <Grid item xs={12} md={4}>
-                <b>Name</b>
-                <div>{selectedLog.name}</div>
-              </Grid>
+        <Grid item xs={12} md={4}>
+          <Typography variant="caption">User ID</Typography>
+          <Typography fontWeight={500}>{selectedLog.user}</Typography>
+        </Grid>
 
-              <Grid item xs={12} md={4}>
-                <b>Email</b>
-                <div>{selectedLog.email}</div>
-              </Grid>
+        <Grid item xs={12} md={4}>
+          <Typography variant="caption">Name</Typography>
+          <Typography fontWeight={500}>{selectedLog.name}</Typography>
+        </Grid>
 
-              {/* Session */}
-              <Grid item xs={12} mt={2}>
-                <Typography variant="subtitle1" fontWeight="bold" color="primary">
-                  Session Details
-                </Typography>
-              </Grid>
+        <Grid item xs={12} md={4}>
+          <Typography variant="caption">Email</Typography>
+          <Typography fontWeight={500}>{selectedLog.email}</Typography>
+        </Grid>
 
-              <Grid item xs={12} md={4}>
-                <b>Login Time</b>
-                <div>{selectedLog.login}</div>
-              </Grid>
+        {/* SESSION DETAILS */}
+        <Grid item xs={12} mt={2}>
+          <Typography variant="subtitle1" fontWeight={600} color="primary">
+            Session Details
+          </Typography>
+        </Grid>
 
-              <Grid item xs={12} md={4}>
-                <b>Logout Time</b>
-                <div>{selectedLog.logout}</div>
-              </Grid>
+        <Grid item xs={12} md={4}>
+          <Typography variant="caption">Login Time</Typography>
+          <Typography fontWeight={500}>{selectedLog.login}</Typography>
+        </Grid>
 
-              <Grid item xs={12} md={4}>
-                <b>Duration</b>
-                <div>{selectedLog.sessionDuration}</div>
-              </Grid>
+        <Grid item xs={12} md={4}>
+          <Typography variant="caption">Logout Time</Typography>
+          <Typography fontWeight={500}>{selectedLog.logout}</Typography>
+        </Grid>
 
-              {/* Activity */}
-              <Grid item xs={12} mt={2}>
-                <Typography variant="subtitle1" fontWeight="bold" color="primary">
-                  Activity Details
-                </Typography>
-              </Grid>
+        <Grid item xs={12} md={4}>
+          <Typography variant="caption">Session Duration</Typography>
+          <Chip
+            label={selectedLog.sessionDuration}
+            color={selectedLog.logout === "—" ? "warning" : "success"}
+            size="small"
+          />
+        </Grid>
 
-              <Grid item xs={12} md={4}>
-                <b>Level</b>
-                <Chip label={selectedLog.level} color={getLevelColor(selectedLog.level)} size="small" />
-              </Grid>
+        {/* ACTIVITY DETAILS */}
+        <Grid item xs={12} mt={2}>
+          <Typography variant="subtitle1" fontWeight={600} color="primary">
+            Activity Details
+          </Typography>
+        </Grid>
 
-              <Grid item xs={12} md={4}>
-                <b>Timestamp</b>
-                <div>{selectedLog.timestamp}</div>
-              </Grid>
+        <Grid item xs={12} md={4}>
+          <Typography variant="caption">Level</Typography>
+          <Chip
+            label={selectedLog.level}
+            color={getLevelColor(selectedLog.level)}
+            size="small"
+          />
+        </Grid>
 
-              <Grid item xs={12} md={4}>
-                <b>IP Address</b>
-                <div>{selectedLog.ipAddress}</div>
-              </Grid>
+        <Grid item xs={12} md={4}>
+          <Typography variant="caption">Timestamp</Typography>
+          <Typography fontWeight={500}>{selectedLog.timestamp}</Typography>
+        </Grid>
 
-              <Grid item xs={12} md={4}>
-                <b>Device</b>
-                <div>{selectedLog.device}</div>
-              </Grid>
+        <Grid item xs={12} md={4}>
+          <Typography variant="caption">IP Address</Typography>
+          <Typography fontWeight={500}>{selectedLog.ipAddress}</Typography>
+        </Grid>
 
-              <Grid item xs={12} mt={2}>
-                <b>Details</b>
-                <Paper variant="outlined" sx={{ p: 2, bgcolor: "grey.50" }}>
-                  {selectedLog.details}
-                </Paper>
-              </Grid>
-            </Grid>
-          </DialogContent>
+        <Grid item xs={12} md={4}>
+          <Typography variant="caption">Device</Typography>
+          <Typography fontWeight={500}>{selectedLog.device}</Typography>
+        </Grid>
 
-          <DialogActions>
-            <Button variant="contained" onClick={() => setOpenModal(false)}>
-              Close
-            </Button>
-          </DialogActions>
-        </Dialog>
-      )}
+        <Grid item xs={12}>
+          <Typography variant="caption">Description</Typography>
+          <Paper
+            variant="outlined"
+            sx={{
+              p: 2,
+              mt: 1,
+              backgroundColor: "#f9fafb",
+              fontSize: "0.95rem"
+            }}
+          >
+            {selectedLog.details}
+          </Paper>
+        </Grid>
+      </Grid>
+    </DialogContent>
+
+    <DialogActions>
+      <Button variant="outlined" onClick={() => setOpenModal(false)}>
+        Close
+      </Button>
+    </DialogActions>
+  </Dialog>
+)}
+
+    
     </Box>
   );
 };

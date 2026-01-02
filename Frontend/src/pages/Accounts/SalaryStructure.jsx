@@ -250,23 +250,52 @@ const SalaryStructure = () => {
 
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-     if (name === "accountNumber") {
-    if (!/^\d*$/.test(value)) return; // prevents non-digits
-  }
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  const { name, value } = e.target;
 
-    // clear error for this field as user types/changes
-    setErrors(prev => {
-      if (!prev[name]) return prev;
-      const copy = { ...prev };
-      delete copy[name];
-      return copy;
-    });
-  };
+  const salaryFields = [
+    'basicPay',
+    'houseRentAllowance',
+    'medicalAllowance',
+    'conveyanceAllowance',
+    'specialAllowance',
+    'otherAllowance',
+    'driftAllowance',
+    'providentFund',
+    'professionalTax',
+    'incomeTax',
+    'loanDeductions',
+    'TotalDeductions',
+    'payableDays',
+    'lossofDaysDays',
+    'lossofpayreversalDays'
+  ];
+
+  // block negative values
+  if (salaryFields.includes(name)) {
+    if (value === '-' || Number(value) < 0) {
+      return;
+    }
+  }
+
+  // digits only for account number
+  if (name === "accountNumber") {
+    if (!/^\d*$/.test(value)) return;
+  }
+
+  setFormData(prev => ({
+    ...prev,
+    [name]: value
+  }));
+
+  setErrors(prev => {
+    if (!prev[name]) return prev;
+    const copy = { ...prev };
+    delete copy[name];
+    return copy;
+  });
+};
+
+    
 
   // TOTAL CALCULATION
   const calculateTotals = () => {

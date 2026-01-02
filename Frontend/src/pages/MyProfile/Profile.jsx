@@ -38,6 +38,10 @@ import {
   UploadFile as UploadIcon,
 } from "@mui/icons-material";
 
+const EMAIL_DOMAIN_REGEX = /^[a-zA-Z0-9._%+-]+@company\.com$/; // change domain
+const PHONE_REGEX = /^[0-9]{10}$/;
+
+
 const Profile = () => {
   const dispatch = useDispatch();
   const { profile, loading } = useSelector((state) => state.employeeDetails);
@@ -57,6 +61,9 @@ const Profile = () => {
 
   const [profilePicFile, setProfilePicFile] = useState(null); // ✅ Separate file state
   const [decoded, setDecoded] = useState(null);
+
+  const [errors, setErrors] = useState({});
+
 
   const roles =
     useSelector((state) => state.adminSlice?.role) ||
@@ -102,36 +109,121 @@ const Profile = () => {
     }
   }, [profile]);
 
-  const handleChange = (e) => {
-    const { name, value, files } = e.target;
-    if (name === "profilePhoto" && files?.[0]) {
-      setProfilePicFile(files[0]);
-    } else {
-      setFormData((prev) => ({
-        ...prev,
-        [name]: value,
-      }));
-    }
-  };
+  // const handleChange = (e) => {
+  //   const { name, value, files } = e.target;
+  //   if (name === "profilePhoto" && files?.[0]) {
+  //     setProfilePicFile(files[0]);
+  //   } else {
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       [name]: value,
+  //     }));
+  //   }
+  // };
+const handleChange = (e) => {
+  const { name, value, files } = e.target;
+
+  // Profile photo
+  if (name === "profilePhoto" && files?.[0]) {
+    setProfilePicFile(files[0]);
+    return;
+  }
+
+  // Phone & Emergency Contact → digits only + max 10
+  if (name === "phone" || name === "emergency_contact") {
+    if (!/^\d*$/.test(value)) return;
+    if (value.length > 10) return;
+  }
+
+  setFormData((prev) => ({
+    ...prev,
+    [name]: value,
+  }));
+
+  // Clear error while typing
+  setErrors((prev) => {
+    if (!prev[name]) return prev;
+    const copy = { ...prev };
+    delete copy[name];
+    return copy;
+  });
+};
 
  
-  const handleSubmit = (e) => {
+//   const handleSubmit = (e) => {
+//   e.preventDefault();
+//   if (!decoded?.id) return;
+
+//   const sendData = new FormData();
+
+//   // append text fields
+//   Object.entries(formData).forEach(([key, value]) => {
+//     sendData.append(key, value || "");
+//   });
+
+//   // append photo
+//   if (profilePicFile) {
+//     sendData.append("profilePhoto", profilePicFile);
+//   }
+
+//   // ADMIN
+//   if (roles === "admin") {
+//     dispatch(updateAdminProfile({ data: sendData, id: decoded.id }))
+//       .unwrap()
+//       .then(() => {
+//         toast.success("Profile updated successfully!");
+//         dispatch(fetchAdminProfile(decoded.id));
+//       });
+//   }
+
+//   // SUPERADMIN
+//   if (roles === "superadmin") {
+//     dispatch(updateSuperAdminProfile({ data: sendData, id: decoded.id }))
+//       .unwrap()
+//       .then(() => {
+//         toast.success("Profile updated successfully!");
+//         dispatch(fetchSuperAdminProfile(decoded.id));
+//       });
+//   }
+// };
+
+
+  // ✅ Determine photo source for Avatar
+const handleSubmit = (e) => {
   e.preventDefault();
   if (!decoded?.id) return;
 
-  const sendData = new FormData();
+  const newErrors = {};
 
-  // append text fields
+  // Email validation
+  if (!formData.email || !EMAIL_DOMAIN_REGEX.test(formData.email.trim())) {
+    newErrors.email = "Email must be a valid @company.com address";
+  }
+
+  // Phone validation
+  if (!PHONE_REGEX.test(formData.phone)) {
+    newErrors.phone = "Phone number must be exactly 10 digits";
+  }
+
+  // Emergency contact validation
+  if (!PHONE_REGEX.test(formData.emergency_contact)) {
+    newErrors.emergency_contact = "Emergency contact must be exactly 10 digits";
+  }
+
+  if (Object.keys(newErrors).length > 0) {
+    setErrors(newErrors);
+    return;
+  }
+
+  const sendData = new FormData();
   Object.entries(formData).forEach(([key, value]) => {
     sendData.append(key, value || "");
   });
 
-  // append photo
   if (profilePicFile) {
     sendData.append("profilePhoto", profilePicFile);
   }
 
-  // ADMIN
   if (roles === "admin") {
     dispatch(updateAdminProfile({ data: sendData, id: decoded.id }))
       .unwrap()
@@ -141,7 +233,6 @@ const Profile = () => {
       });
   }
 
-  // SUPERADMIN
   if (roles === "superadmin") {
     dispatch(updateSuperAdminProfile({ data: sendData, id: decoded.id }))
       .unwrap()
@@ -152,8 +243,6 @@ const Profile = () => {
   }
 };
 
-
-  // ✅ Determine photo source for Avatar
   const photoSrc = profilePicFile
     ? URL.createObjectURL(profilePicFile)
     : profile?.profile_photo || undefined;
@@ -279,15 +368,41 @@ const Profile = () => {
             <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>📞 Contact Information</Typography>
             <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>
               <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <TextField fullWidth label="Email" name="email" value={formData.email} onChange={handleChange} />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField fullWidth label="Phone" name="phone" value={formData.phone} onChange={handleChange} />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField fullWidth label="Emergency Contact" name="emergency_contact" value={formData.emergency_contact} onChange={handleChange} />
-                </Grid>
+                <TextField
+  fullWidth
+  label="Email"
+  name="email"
+  placeholder="example@company.com"
+  value={formData.email}
+  onChange={handleChange}
+  error={!!errors.email}
+  helperText={errors.email || "Use your official company email"}
+/>
+
+               <TextField
+  fullWidth
+  label="Phone"
+  name="phone"
+  placeholder="10-digit mobile number"
+  value={formData.phone}
+  onChange={handleChange}
+  error={!!errors.phone}
+  helperText={errors.phone || "Digits only (e.g., 9876543210)"}
+  inputProps={{ maxLength: 10 }}
+/>
+
+             <TextField
+  fullWidth
+  label="Emergency Contact"
+  name="emergency_contact"
+  placeholder="Alternate 10-digit number"
+  value={formData.emergency_contact}
+  onChange={handleChange}
+  error={!!errors.emergency_contact}
+  helperText={errors.emergency_contact || "Digits only (e.g., 9123456789)"}
+  inputProps={{ maxLength: 10 }}
+/>
+
               </Grid>
             </Paper>
 

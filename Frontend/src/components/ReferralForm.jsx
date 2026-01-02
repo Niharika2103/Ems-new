@@ -25,6 +25,11 @@ const { referralLoading, referralError, referralSuccess } = useSelector((state) 
 
  const EMAIL_DOMAIN_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
  
+ const ALLOWED_EMAIL_DOMAINS = ["gmail.com", "company.com", "yahoo.com"];
+
+ const POSITION_REGEX = /^[A-Za-z ]{2,50}$/;
+
+
 
   const [form, setForm] = useState({
     candidate_name: "",
@@ -51,6 +56,17 @@ const { referralLoading, referralError, referralSuccess } = useSelector((state) 
     setForm((prev) => ({
       ...prev,
       phone_number: digitsOnly,
+    }));
+    return;
+  }
+    // ✅ Work experience: numbers only (years)
+  if (name === "experience") {
+    const digitsOnly = value.replace(/\D/g, "");
+    if (digitsOnly.length > 2) return; // max 99 years
+
+    setForm((prev) => ({
+      ...prev,
+      experience: digitsOnly,
     }));
     return;
   }
@@ -91,6 +107,46 @@ const { referralLoading, referralError, referralSuccess } = useSelector((state) 
       });
       return;
     }
+
+    const emailDomain = form.candidate_email.split("@")[1];
+
+if (!EMAIL_DOMAIN_REGEX.test(form.candidate_email)) {
+  setSnackbar({
+    open: true,
+    message: "Invalid email format",
+    type: "error",
+  });
+  return;
+}
+
+if (!ALLOWED_EMAIL_DOMAINS.includes(emailDomain)) {
+  setSnackbar({
+    open: true,
+    message: `Email domain must be one of: ${ALLOWED_EMAIL_DOMAINS.join(", ")}`,
+    type: "error",
+  });
+  return;
+}
+
+if (!form.position.trim()) {
+  setSnackbar({
+    open: true,
+    message: "Position is required",
+    type: "error",
+  });
+  return;
+}
+
+if (!POSITION_REGEX.test(form.position.trim())) {
+  setSnackbar({
+    open: true,
+    message: "Position should contain only letters and spaces (min 2 characters)",
+    type: "error",
+  });
+  return;
+}
+
+
 
     const fd = new FormData();
     fd.append("candidate_name", form.candidate_name);
@@ -164,12 +220,15 @@ const { referralLoading, referralError, referralSuccess } = useSelector((state) 
 
         <Grid item xs={12} md={6}>
           <TextField
-            fullWidth
-            label="Email ID"
-            name="candidate_email"
-            type="email"
-            onChange={handleChange}
-          />
+  fullWidth
+  label="Email ID"
+  name="candidate_email"
+  type="email"
+  value={form.candidate_email}
+  onChange={handleChange}
+  placeholder="e.g., johndoe@gmail.com"
+/>
+
         </Grid>
 
         <Grid item xs={12} md={6}>
@@ -207,25 +266,33 @@ const { referralLoading, referralError, referralSuccess } = useSelector((state) 
         </Grid>
 
         <Grid item xs={12}>
-          <TextField
-            fullWidth
-            label="Work Experience"
-            name="experience"
-            multiline
-            rows={3}
-            onChange={handleChange}
-          />
+         <TextField
+  fullWidth
+  label="Work Experience (Years)"
+  name="experience"
+  value={form.experience}
+  onChange={handleChange}
+  inputProps={{
+    inputMode: "numeric",
+    pattern: "[0-9]*",
+    maxLength: 2,
+  }}
+  placeholder="Enter years of experience (e.g., 3)"
+/>
+
         </Grid>
 
         <Grid item xs={12} md={6}>
   <TextField
-    fullWidth
-    label="Position"
-    name="position"
-    value={form.position}
-    onChange={handleChange}
-    required
-  />
+  fullWidth
+  label="Position"
+  name="position"
+  value={form.position}
+  onChange={handleChange}
+  required
+  placeholder="e.g., Frontend Developer"
+/>
+
 </Grid>
 
         <Grid item xs={12}>

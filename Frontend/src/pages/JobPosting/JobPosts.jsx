@@ -70,6 +70,10 @@ const JobCard = ({ job, onClick }) => (
   </Card>
 );
 
+const EMAIL_DOMAIN_REGEX = /^[a-zA-Z0-9._%+-]+@([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
+const ALLOWED_EMAIL_DOMAINS = ["gmail.com", "yahoo.com", "company.com","zigmaneural.com"];
+
+
 // ================= MAIN COMPONENT =================
 const JobPost = () => {
   const [jobs, setJobs] = useState([]);
@@ -190,6 +194,19 @@ const handleChange = (e) => {
     return;
   }
 
+  // ✅ EXPERIENCE RESTRICTION (YEARS ONLY)
+if (name === "experience") {
+  const digitsOnly = value.replace(/\D/g, "");
+  if (digitsOnly.length > 2) return;
+
+  setFormData((prev) => ({
+    ...prev,
+    experience: digitsOnly,
+  }));
+  return;
+}
+
+
   setFormData((prev) => ({
     ...prev,
     [name]: files ? files[0] : value,
@@ -239,6 +256,20 @@ const handleChange = (e) => {
       alert("Please select a job before applying.");
       return;
     }
+    // ✅ EMAIL VALIDATION
+if (!EMAIL_DOMAIN_REGEX.test(formData.email)) {
+  alert("Invalid email format");
+  return;
+}
+
+const emailDomain = formData.email.split("@")[1];
+if (!ALLOWED_EMAIL_DOMAINS.includes(emailDomain)) {
+  alert(
+    `Email domain must be one of: ${ALLOWED_EMAIL_DOMAINS.join(", ")}`
+  );
+  return;
+}
+
 
     const fd = new FormData();
     fd.append("job_id", selectedJob.job_id);
@@ -463,14 +494,16 @@ const handleChange = (e) => {
 
               <Grid item xs={12} sm={6}>
                 <TextField
-                  label="Email"
-                  name="email"
-                  type="email"
-                  fullWidth
-                  required
-                  onChange={handleChange}
-                  value={formData.email}
-                />
+  label="Email"
+  name="email"
+  type="email"
+  fullWidth
+  required
+  onChange={handleChange}
+  value={formData.email}
+  placeholder="e.g. johndoe@gmail.com"
+/>
+
               </Grid>
 
               <Grid item xs={12} sm={6}>
@@ -508,12 +541,19 @@ const handleChange = (e) => {
               {/* EXPERIENCE */}
               <Grid item xs={12} sm={6}>
                 <TextField
-                  label="Experience (years)"
-                  name="experience"
-                  fullWidth
-                  onChange={handleChange}
-                  value={formData.experience}
-                />
+  label="Experience (years)"
+  name="experience"
+  fullWidth
+  onChange={handleChange}
+  value={formData.experience}
+  inputProps={{
+    inputMode: "numeric",
+    pattern: "[0-9]*",
+    maxLength: 2,
+  }}
+  placeholder="e.g. 3"
+/>
+
               </Grid>
 
               {/* RESUME UPLOAD (AUTO PARSE) */}
