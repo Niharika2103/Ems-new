@@ -1807,6 +1807,61 @@ export const submitSelfReview = async (req, res) => {
   }
 };
 
+export const getEmployeeReview = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { employee_uuid } = req.params;
+
+    if (!employee_uuid) {
+      return res.status(400).json({ error: "employee_uuid is required" });
+    }
+
+   const query = `
+  SELECT 
+    pr.id AS review_id,
+
+    -- employee info
+    ue.employee_id AS employee_code,
+    ue.name AS employee_name,
+    ue.designation,
+
+    -- self review
+    pr.self_rating,
+    pr.self_strengths,
+    pr.self_improvements,
+    pr.self_comments,
+
+    -- TL review
+    pr.tl_rating,
+    pr.tl_comments,
+
+    pr.status
+  FROM performance_reviews pr
+  JOIN user_employees_master ue
+    ON ue.id = pr.employee_id
+  WHERE pr.employee_id = $1
+  ORDER BY pr.updated_at DESC
+  LIMIT 1;
+`;
+
+
+    const { rows } = await client.query(query, [employee_uuid]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "No review found" });
+    }
+
+    res.status(200).json(rows[0]);
+
+  } catch (err) {
+    console.error("Get Employee Review Error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  } finally {
+    client.release();
+  }
+};
+
+
 export const fetchAuthSettings = async () => {
   const { data } = await axios.get(
     `${process.env.SETTINGS_SERVICE_URL}/api/settings/get`

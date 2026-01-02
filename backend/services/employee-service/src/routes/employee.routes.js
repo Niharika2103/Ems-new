@@ -25,6 +25,7 @@ import {
   getFullTimeEmployees,
   //getFreelancerAssignments
   submitSelfReview,
+  getEmployeeReview
 
 
 } from "../controllers/employee.controller.js";
@@ -101,6 +102,8 @@ router.get("/salary/:employeeId", getEmployeeSalary);
  
 router.get("/employees/fulltime", getFullTimeEmployees);
 router.post("/performance/submit", submitSelfReview); 
+
+router.get("/performance/:employee_uuid", getEmployeeReview);
 
 
 
