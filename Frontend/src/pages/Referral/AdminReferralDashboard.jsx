@@ -204,6 +204,13 @@ const [rowsPerPage, setRowsPerPage] = useState(10);
   const handleNavigateToPanelManagement = () => {
     navigate("/recruitment/panel-management");
   };
+  
+  const generateJitsiLink = (candidateName = "Interview") => {
+  const randomId = Math.random().toString(36).substring(2, 10);
+  const roomName = `${candidateName.replace(/\s+/g, "")}_${Date.now()}_${randomId}`;
+  return `https://meet.jit.si/${roomName}`;
+};
+
 
   // ✅ MAIN FIX: Send correct field based on mode
   const handleScheduleSubmit = async () => {
@@ -560,15 +567,32 @@ const [rowsPerPage, setRowsPerPage] = useState(10);
                 />
               </Grid>
 
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Meeting Link / Location *"
-                  value={meetingLink}
-                  onChange={(e) => setMeetingLink(e.target.value)}
-                  placeholder="https://meet.google.com/xxx-xxxx-xxx"
-                />
-              </Grid>
+              <Grid container spacing={1}>
+  <Grid item xs={9}>
+    <TextField
+      fullWidth
+      label="Meeting Link *"
+      value={meetingLink}
+      onChange={(e) => setMeetingLink(e.target.value)}
+      placeholder="Auto-generated interview link"
+    />
+  </Grid>
+
+  <Grid item xs={3}>
+    <Button
+      fullWidth
+      variant="outlined"
+      onClick={() => {
+        const link = generateJitsiLink(selectedReferral?.candidateName);
+        setMeetingLink(link);
+      }}
+      sx={{ height: "56px" }}
+    >
+      Generate
+    </Button>
+  </Grid>
+</Grid>
+
             </Grid>
           </DialogContent>
           <DialogActions>
