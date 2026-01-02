@@ -8,6 +8,8 @@ import {
   adminRegister,
   adminLogin,
   verifyAdminMfaSetup,
+  requestAdminPasswordReset,
+  resetAdminPassword,
   getAdminById,
   updateAdminProfile,
   upload,
@@ -158,6 +160,8 @@ router.use("/reports", reportRoutes);
 router.post("/register", adminRegister);
 router.post("/verify-mfa", verifyAdminMfaSetup);
 router.post("/login", adminLogin);
+router.post("/forgot-password", requestAdminPasswordReset);
+router.post("/reset-password", resetAdminPassword);
 
 /* ========== AUDIT LOGS ========== */
 router.post("/logout", adminLogout);

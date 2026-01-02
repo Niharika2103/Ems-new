@@ -8,7 +8,9 @@ import {
   verifyMfaSetup, 
   updateSuperAdminProfile,
   getSuperadminById, 
-  promoteAdminToSuperAdmin
+  promoteAdminToSuperAdmin,
+  superAdminRequestPasswordReset,
+  superAdminResetPassword
 } from "../controllers/auth.controller.js";
 import { upload } from "../middlewares/upload.js";
 import { verifyToken } from "../middlewares/upload.js";
@@ -20,6 +22,10 @@ router.post("/superadmin/register", superAdminRegister);
 router.post("/superadmin/check-email", checkEmail);
 router.post("/superadmin/login", superAdminLogin);
 // Verify MFA setup (first-time QR confirmation)
+
+router.post("/request-password-reset", superAdminRequestPasswordReset);
+router.post("/reset-password", superAdminResetPassword);
+
 router.post("/superadmin/mfa/verify", verifyMfaSetup);
  router.put(
   "/superadmin/profile/:id",

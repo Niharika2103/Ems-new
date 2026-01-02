@@ -13,6 +13,14 @@ export const superadminRegisterApi = (data) =>
 export const superadminLoginApi = (data) =>
   superadminClient.post(`${AUTH_API.SUPERADMIN}/login`, data);
 
+
+export const superAdminForgotPasswordApi = (data) =>
+  superadminClient.post("/auth/request-password-reset", data);
+
+export const superAdminResetPasswordApi = (data) =>
+  superadminClient.post("/auth/reset-password", data);
+
+
 //Superadmin auditlogs
 
 //  Get All SuperAdmin Audit Logs
@@ -72,6 +80,15 @@ export const adminLoginApi = (data) =>
 
 export const adminVerifyOtpApi = (data) =>
   adminClient.post(`${AUTH_API.ADMIN}/verify-mfa`, data);
+
+// ============ Admin Forgot / Reset Password ============
+
+export const adminForgotPasswordApi = (data) =>
+  adminClient.post(`${AUTH_API.ADMIN}/forgot-password`, data);
+
+export const adminResetPasswordApi = (data) =>
+  adminClient.post(`${AUTH_API.ADMIN}/reset-password`, data);
+
 
 export const grantTempAdminApi = (email, durationHours) =>
   adminClient.post(`${AUTH_API.ADMIN}/grant-temp`, { email, durationHours });
