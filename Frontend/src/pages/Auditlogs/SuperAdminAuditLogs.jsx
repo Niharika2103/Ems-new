@@ -313,101 +313,144 @@ const [dateTo, setDateTo] = useState(getTodayDate());
     maxWidth="md"
     fullWidth
   >
-    <DialogTitle sx={{ fontWeight: 600 }}>
+    {/* HEADER */}
+    <DialogTitle
+      sx={{
+        fontWeight: 600,
+        fontSize: "1rem",
+        borderBottom: "1px solid #e5e7eb",
+        backgroundColor: "#f9fafb",
+      }}
+    >
       Audit Log Details
     </DialogTitle>
 
-    <DialogContent dividers>
+    {/* CONTENT */}
+    <DialogContent sx={{ py: 3 }}>
       <Grid container spacing={3}>
 
         {/* USER INFORMATION */}
         <Grid item xs={12}>
-          <Typography variant="subtitle1" fontWeight={600} color="primary">
+          <Typography
+            variant="subtitle2"
+            fontWeight={600}
+            sx={{ color: "#2563eb", textTransform: "uppercase" }}
+          >
             User Information
           </Typography>
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Typography variant="caption">User ID</Typography>
+          <Typography variant="caption" color="text.secondary">
+            User ID
+          </Typography>
           <Typography fontWeight={500}>{selectedLog.user}</Typography>
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Typography variant="caption">Name</Typography>
+          <Typography variant="caption" color="text.secondary">
+            Name
+          </Typography>
           <Typography fontWeight={500}>{selectedLog.name}</Typography>
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Typography variant="caption">Email</Typography>
+          <Typography variant="caption" color="text.secondary">
+            Email
+          </Typography>
           <Typography fontWeight={500}>{selectedLog.email}</Typography>
         </Grid>
 
         {/* SESSION DETAILS */}
-        <Grid item xs={12} mt={2}>
-          <Typography variant="subtitle1" fontWeight={600} color="primary">
+        <Grid item xs={12} mt={1}>
+          <Typography
+            variant="subtitle2"
+            fontWeight={600}
+            sx={{ color: "#2563eb", textTransform: "uppercase" }}
+          >
             Session Details
           </Typography>
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Typography variant="caption">Login Time</Typography>
+          <Typography variant="caption" color="text.secondary">
+            Login Time
+          </Typography>
           <Typography fontWeight={500}>{selectedLog.login}</Typography>
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Typography variant="caption">Logout Time</Typography>
+          <Typography variant="caption" color="text.secondary">
+            Logout Time
+          </Typography>
           <Typography fontWeight={500}>{selectedLog.logout}</Typography>
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Typography variant="caption">Session Duration</Typography>
+          <Typography variant="caption" color="text.secondary">
+            Session Duration
+          </Typography>
           <Chip
             label={selectedLog.sessionDuration}
-            color={selectedLog.logout === "—" ? "warning" : "success"}
             size="small"
+            color={selectedLog.logout === "—" ? "warning" : "success"}
           />
         </Grid>
 
         {/* ACTIVITY DETAILS */}
-        <Grid item xs={12} mt={2}>
-          <Typography variant="subtitle1" fontWeight={600} color="primary">
+        <Grid item xs={12} mt={1}>
+          <Typography
+            variant="subtitle2"
+            fontWeight={600}
+            sx={{ color: "#2563eb", textTransform: "uppercase" }}
+          >
             Activity Details
           </Typography>
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Typography variant="caption">Level</Typography>
+          <Typography variant="caption" color="text.secondary">
+            Level
+          </Typography>
           <Chip
             label={selectedLog.level}
-            color={getLevelColor(selectedLog.level)}
             size="small"
+            color={getLevelColor(selectedLog.level)}
           />
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Typography variant="caption">Timestamp</Typography>
+          <Typography variant="caption" color="text.secondary">
+            Timestamp
+          </Typography>
           <Typography fontWeight={500}>{selectedLog.timestamp}</Typography>
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Typography variant="caption">IP Address</Typography>
+          <Typography variant="caption" color="text.secondary">
+            IP Address
+          </Typography>
           <Typography fontWeight={500}>{selectedLog.ipAddress}</Typography>
         </Grid>
 
         <Grid item xs={12} md={4}>
-          <Typography variant="caption">Device</Typography>
+          <Typography variant="caption" color="text.secondary">
+            Device
+          </Typography>
           <Typography fontWeight={500}>{selectedLog.device}</Typography>
         </Grid>
 
         <Grid item xs={12}>
-          <Typography variant="caption">Description</Typography>
+          <Typography variant="caption" color="text.secondary">
+            Description
+          </Typography>
           <Paper
             variant="outlined"
             sx={{
-              p: 2,
               mt: 1,
+              p: 2,
+              fontSize: "0.9rem",
               backgroundColor: "#f9fafb",
-              fontSize: "0.95rem"
             }}
           >
             {selectedLog.details}
@@ -416,13 +459,22 @@ const [dateTo, setDateTo] = useState(getTodayDate());
       </Grid>
     </DialogContent>
 
-    <DialogActions>
-      <Button variant="outlined" onClick={() => setOpenModal(false)}>
+    {/* FOOTER */}
+    <DialogActions
+      sx={{
+        borderTop: "1px solid #e5e7eb",
+        px: 3,
+        py: 2,
+      }}
+    >
+      <Button variant="outlined" size="small" onClick={() => setOpenModal(false)}>
         Close
       </Button>
     </DialogActions>
   </Dialog>
 )}
+
+
 
     
     </Box>
