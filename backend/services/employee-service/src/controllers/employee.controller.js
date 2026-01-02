@@ -10,6 +10,7 @@ import fs from "fs";
 import speakeasy from "speakeasy";
 import dotenv from "dotenv";
 import axios from "axios";
+
 dotenv.config();
 
 const FREELANCER_URL = `${process.env.FREELANCER_PROTOCOL}://${process.env.FREELANCER_HOST}:${process.env.FREELANCER_PORT}`;
@@ -808,7 +809,6 @@ export const getEmployees = async (req, res) => {
 };
 
 
-// ================== Get Employee by ID ==================
 // ================== Get Employee by Email (for employee profile) ==================
 export const getEmployeeById = async (req, res) => {
   const client = await pool.connect();
@@ -851,6 +851,48 @@ export const getEmployeeById = async (req, res) => {
     client.release();
   }
 };
+
+
+// ================== Get Logged-in Employee Profile (FOR REFERRAL AUTO-FILL) ==================
+export const getMyEmployeeProfile = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const decoded = getUserFromToken(req);
+    const employeeUuid = decoded.id;
+
+    const query = `
+      SELECT id, employee_id, name, email
+      FROM user_employees_master
+      WHERE id = $1
+      AND role = 'employee'
+      LIMIT 1;
+    `;
+
+    const { rows } = await client.query(query, [employeeUuid]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        employee_id: rows[0].employee_id,
+        employee_name: rows[0].name,
+        email: rows[0].email,
+      },
+    });
+
+  } catch (err) {
+    console.error("Get My Employee Profile Error:", err.message);
+    return res.status(401).json({ error: "Invalid or expired token" });
+  } finally {
+    client.release();
+  }
+};
+
+
 
 // ================== Fetch Employee by Email (general) ==================
 export const fetchEmployeeById = async (req, res) => {

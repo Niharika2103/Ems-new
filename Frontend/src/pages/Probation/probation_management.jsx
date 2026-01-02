@@ -6,6 +6,7 @@ import EmployeeTable from "../../components/Probation/EmployeeTable";
 import AssignProbation from '../../components/Probation/AssignProbation';
 import { fetchassignProbation } from "../../features/Salarystructure/salaryStructureSlice";
 import EmployeeDetailView from "../../components/Probation/EmployeeDetailView";
+import { getProbationDashboardCountsApi } from "../../api/authApi";
 
 
 const ProbationManagementSystem = () => {
@@ -20,6 +21,12 @@ const ProbationManagementSystem = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [viewEmployee, setViewEmployee] = useState(null);      
+  const [dashboardCounts, setDashboardCounts] = useState({
+  active: 0,
+  endingSoon: 0,
+  completed: 0,
+});
+
   useEffect(() => {
     if (activeTab === "employees") {
       dispatch(fetchNewEmployees());
@@ -27,6 +34,22 @@ const ProbationManagementSystem = () => {
       dispatch(fetchassignProbation());
     }
   }, [activeTab, dispatch]);
+  
+    useEffect(() => {
+      getProbationDashboardCountsApi()
+        .then((res) => {
+          setDashboardCounts({
+            active: res.data.active,
+            endingSoon: res.data.endingSoon,
+            completed: res.data.completed,
+          });
+        })
+        .catch((err) => {
+          console.error("Dashboard count error", err);
+        });
+    }, []);
+
+
 
 
   const getStatusColor = (status) => {
@@ -99,7 +122,7 @@ const ProbationManagementSystem = () => {
                 </div>
               </div>
               <p className="text-3xl font-bold text-gray-800">
-                {/* {probationList.filter(e => e.status === 'active').length} */}
+                {dashboardCounts.active}
               </p>
             </div>
 
@@ -111,7 +134,7 @@ const ProbationManagementSystem = () => {
                 </div>
               </div>
               <p className="text-3xl font-bold text-gray-800">
-                {/* {probationList.filter(e => e.daysRemaining <= 30 && e.status === 'active').length} */}
+                {dashboardCounts.endingSoon}
               </p>
             </div>
 
@@ -123,7 +146,7 @@ const ProbationManagementSystem = () => {
                 </div>
               </div>
               <p className="text-3xl font-bold text-gray-800">
-                {/* {probationList.filter(e => e.status === 'completed').length} */}
+                {dashboardCounts.completed}
               </p>
             </div>
           </div>

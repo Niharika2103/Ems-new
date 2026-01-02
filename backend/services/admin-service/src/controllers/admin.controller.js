@@ -4225,6 +4225,41 @@ export const createProbation = async (req, res) => {
     client.release();
   }
 };
+
+export const getProbationDashboardCounts = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const query = `
+      SELECT
+        COUNT(*) FILTER (WHERE status = 'active') AS active_count,
+
+        COUNT(*) FILTER (
+          WHERE status = 'active'
+          AND enddate BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '5 days'
+        ) AS ending_soon_count,
+
+        COUNT(*) FILTER (WHERE status = 'completed') AS completed_count
+      FROM probation;
+    `;
+
+    const { rows } = await client.query(query);
+
+    return res.status(200).json({
+      success: true,
+      active: Number(rows[0].active_count),
+      endingSoon: Number(rows[0].ending_soon_count),
+      completed: Number(rows[0].completed_count),
+    });
+
+  } catch (err) {
+    console.error("Dashboard Count Error:", err);
+    return res.status(500).json({ message: "Failed to fetch dashboard counts" });
+  } finally {
+    client.release();
+  }
+};
+
 //Audit log -logout
 export const adminLogout = async (req, res) => {
   const client = await pool.connect();

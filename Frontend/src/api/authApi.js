@@ -609,6 +609,11 @@ export const getMyReferralsApi = (employeeId) => {
   return employeeClient.get(`${AUTH_API.EMPLOYEE}/my-referrals/${employeeId}`);
 };
 
+export const getMyEmployeeProfileApi = () => {
+  return employeeClient.get(`${AUTH_API.EMPLOYEE}/me`);
+};
+
+
 // =============== Referral Management (Admin) ===============
 export const getAllReferralsAdminApi = () =>
   adminClient.get(`${AUTH_API.ADMIN}/referrals`);
@@ -723,6 +728,11 @@ export const createProbationPeriodApi =(payload)=>{
 export const fetchassignProbationApi =()=>{
   return adminClient.get(`${AUTH_API.ADMIN}/probation/user`)
 }
+// export const getProbationDashboardCountsApi = () =>
+//   adminClient.get("/probation/dashboard-counts");
+export const getProbationDashboardCountsApi = () =>
+  adminClient.get("/admin/probation/dashboard-counts");
+
 
 // / ================== INVOICE APIs ======================
 export const createInvoiceApi = (data) =>
