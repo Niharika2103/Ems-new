@@ -8,7 +8,7 @@ export const API_BASES = {
   SALARYSTRUCTURE:import.meta.env.VITE_SalaryStructure_URL || "http://localhost:9092/",
   FREELANCER: import.meta.env.VITE_FREELANCER_URL || "http://localhost:5105",
   VENDOR: import.meta.env.VITE_VENDOR_URL || "http://localhost:5006",
-  SETTINGS: import.meta.env.VITE_SETTINGS_URL || "http://localhost:5008",
+  SETTINGS: import.meta.env.VITE_SETTINGS_URL || "http://localhost:5009",
 };
 
 

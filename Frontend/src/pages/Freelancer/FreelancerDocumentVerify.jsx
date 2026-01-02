@@ -433,6 +433,69 @@ export default function AdminVerificationTabs() {
   const [page, setPage] = useState(0);
 const [rowsPerPage, setRowsPerPage] = useState(5);
 
+// ---------- Extract Aadhaar QR from IMAGE (JPG/PNG) ----------
+const extractAadhaarFromImage = async (fileUrl) => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = fileUrl;
+
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      ctx.drawImage(img, 0, 0);
+
+      const imageData = ctx.getImageData(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+
+      const qr = jsQR(
+        imageData.data,
+        imageData.width,
+        imageData.height,
+        { inversionAttempts: "attemptBoth" }
+      );
+
+      if (!qr) {
+        resolve(null);
+        return;
+      }
+
+      const payload = qr.data.trim();
+      let parsed = {};
+
+      if (payload.startsWith("<") || payload.includes('uid="')) {
+        parsed = parseAadhaarQR(payload);
+        parsed.aadhaarSource = "XML_QR";
+      } else {
+        try {
+          const decoded = atob(payload);
+          if (decoded.includes("<PrintLetterBarcodeData")) {
+            parsed = parseAadhaarQR(decoded);
+          }
+          parsed.aadhaarSource = "SECURE_QR";
+        } catch {
+          parsed.aadhaarSource = "UNKNOWN_QR";
+        }
+      }
+
+      resolve({
+        ...parsed,
+        source: "IMAGE_QR",
+      });
+    };
+
+    img.onerror = () => resolve(null);
+  });
+};
+
+
 
   const dispatch = useDispatch();
 
