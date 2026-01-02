@@ -90,43 +90,7 @@ const ProbationManagementSystem = () => {
               </button> */}
             </div>
           </div>
-          <div className="grid grid-cols-4 gap-4 mt-6">
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-gray-600 text-sm">Active Probations</p>
-                <div className="bg-blue-100 p-2 rounded-lg">
-                  <Clock className="text-blue-600" size={20} />
-                </div>
-              </div>
-              <p className="text-3xl font-bold text-gray-800">
-                {/* {probationList.filter(e => e.status === 'active').length} */}
-              </p>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-gray-600 text-sm">Ending Soon</p>
-                <div className="bg-red-100 p-2 rounded-lg">
-                  <Bell className="text-red-600" size={20} />
-                </div>
-              </div>
-              <p className="text-3xl font-bold text-gray-800">
-                {/* {probationList.filter(e => e.daysRemaining <= 30 && e.status === 'active').length} */}
-              </p>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-gray-600 text-sm">Completed</p>
-                <div className="bg-green-100 p-2 rounded-lg">
-                  <CheckCircle className="text-green-600" size={20} />
-                </div>
-              </div>
-              <p className="text-3xl font-bold text-gray-800">
-                {/* {probationList.filter(e => e.status === 'completed').length} */}
-              </p>
-            </div>
-          </div>
+          
         </div>
 
         <div className="bg-white rounded-lg shadow-sm mb-6">

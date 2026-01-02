@@ -58,6 +58,11 @@ const getCurrentDate = () => {
     description: "",
   });
 
+  const [errors, setErrors] = useState({
+  title: "",
+  company: "",
+});
+
   const departments = [
     "Engineering",
     "Human Resources",
@@ -101,12 +106,93 @@ const getCurrentDate = () => {
     "Asia Pacific"
   ];
 
+  // const handleChange = (e) => {
+  //   setForm({ ...form, [e.target.name]: e.target.value });
+  // };
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const { name, value } = e.target;
+  
+  // Update form first
+  setForm({ ...form, [name]: value });
+  
+  // Clear error for this field when user starts typing
+  if (errors[name]) {
+    setErrors({ ...errors, [name]: "" });
+  }
+  
+  // Validate character limits
+  if (name === "title" || name === "company") {
+    const maxLength = name === "title" ? 100 : 80;
+    if (value.length > maxLength) {
+      setErrors({ 
+        ...errors, 
+        [name]: `${name === "title" ? "Job title" : "Company name"} cannot exceed ${maxLength} characters` 
+      });
+    }
+  }
+};
+
+// const handleSubmit = async (e) => {
+//   e.preventDefault();
+//   setLoading(true);
+
+//   try {
+//     const payload = {
+//       job_title: form.title,
+//       company: form.company,
+//       experience: form.experience,
+//       description: form.description,
+//       requirements: form.skills,
+//       salary_range: `${form.salaryMin} - ${form.salaryMax} LPA`,
+//       location: form.location,
+//       created_by: "ADMIN_ID_HERE",
+//       department: form.department,
+//       employment_type: form.type,
+//       status: form.status,  // 🔥 Must include this
+//     };
+
+//     const res = await createAdminJobPostApi(payload);
+
+//     console.log("Job Created:", res.data);
+
+//     setOpenSnackbar(true);
+
+//     setTimeout(() => {
+//       navigate("/published-jobs");
+//     }, 1000);
+
+//   } catch (error) {
+//     console.error("Error creating job:", error);
+//   } finally {
+//     setLoading(false);
+//   }
+// };
 
 const handleSubmit = async (e) => {
   e.preventDefault();
+  
+  // Validate before submission
+  const newErrors = {};
+  let hasError = false;
+  
+  // Validate title (max 100 characters)
+  if (form.title.length > 100) {
+    newErrors.title = "Job title cannot exceed 100 characters";
+    hasError = true;
+  }
+  
+  // Validate company (max 80 characters)
+  if (form.company.length > 80) {
+    newErrors.company = "Company name cannot exceed 80 characters";
+    hasError = true;
+  }
+  
+  // Set errors if any
+  if (hasError) {
+    setErrors(newErrors);
+    return; // Stop submission
+  }
+  
   setLoading(true);
 
   try {
@@ -121,13 +207,11 @@ const handleSubmit = async (e) => {
       created_by: "ADMIN_ID_HERE",
       department: form.department,
       employment_type: form.type,
-      status: form.status,  // 🔥 Must include this
+      status: "active",  // Add default status
     };
 
     const res = await createAdminJobPostApi(payload);
-
     console.log("Job Created:", res.data);
-
     setOpenSnackbar(true);
 
     setTimeout(() => {
@@ -140,8 +224,6 @@ const handleSubmit = async (e) => {
     setLoading(false);
   }
 };
-
-
 
   const handleCloseSnackbar = () => {
     setOpenSnackbar(false);
@@ -202,68 +284,115 @@ const handleSubmit = async (e) => {
               <Grid container spacing={3}>
                 
                 {/* Job Title */}
-                <Grid item xs={12}>
-                  <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1, color: "#374151" }}>
-                    Job Title *
-                  </Typography>
-                  <TextField
-                    fullWidth
-                    name="title"
-                    value={form.title}
-                    onChange={handleChange}
-                    required
-                    placeholder="e.g., Senior Frontend Developer"
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <WorkOutline sx={{ color: "#6b7280", fontSize: 20 }} />
-                        </InputAdornment>
-                      ),
-                    }}
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: "8px",
-                        backgroundColor: "#ffffff",
-                        "&:hover fieldset": {
-                          borderColor: "#3b82f6",
-                        },
-                        "&.Mui-focused fieldset": {
-                          borderColor: "#3b82f6",
-                          borderWidth: "1px",
-                        },
-                      },
-                    }}
-                  />
-                </Grid>
+                {/* Job Title */}
+<Grid item xs={12}>
+  <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1, color: "#374151" }}>
+    Job Title *
+    <Typography 
+      component="span" 
+      variant="caption" 
+      sx={{ 
+        ml: 1, 
+        color: form.title.length > 100 ? "#d32f2f" : "#6b7280",
+        fontWeight: 400 
+      }}
+    >
+      
+    </Typography>
+  </Typography>
+  <TextField
+    fullWidth
+    name="title"
+    value={form.title}
+    onChange={handleChange}
+    required
+    placeholder="e.g., Senior Frontend Developer"
+    error={!!errors.title}
+    helperText={errors.title}
+    inputProps={{
+      maxLength: 100
+    }}
+    InputProps={{
+      startAdornment: (
+        <InputAdornment position="start">
+          <WorkOutline sx={{ color: "#6b7280", fontSize: 20 }} />
+        </InputAdornment>
+      ),
+    }}
+    sx={{
+      "& .MuiOutlinedInput-root": {
+        borderRadius: "8px",
+        backgroundColor: "#ffffff",
+        "&:hover fieldset": {
+          borderColor: errors.title ? "#d32f2f" : "#3b82f6",
+        },
+        "&.Mui-focused fieldset": {
+          borderColor: errors.title ? "#d32f2f" : "#3b82f6",
+          borderWidth: "1px",
+        },
+      },
+      "& .MuiFormHelperText-root": {
+        marginLeft: 0,
+        marginRight: 0,
+      },
+    }}
+  />
+</Grid>
 
                 {/* Company */}
-                <Grid item xs={12}>
-                  <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1, color: "#374151" }}>
-                    Company *
-                  </Typography>
-                  <TextField
-                    fullWidth
-                    name="company"
-                    value={form.company}
-                    onChange={handleChange}
-                    required
-                    placeholder="e.g., Tech Solutions Inc."
-                    InputProps={{
-                      startAdornment: (
-                        <InputAdornment position="start">
-                          <CorporateFare sx={{ color: "#6b7280", fontSize: 20 }} />
-                        </InputAdornment>
-                      ),
-                    }}
-                    sx={{
-                      "& .MuiOutlinedInput-root": {
-                        borderRadius: "8px",
-                        backgroundColor: "#ffffff",
-                      },
-                    }}
-                  />
-                </Grid>
-
+               {/* Company */}
+<Grid item xs={12}>
+  <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1, color: "#374151" }}>
+    Company *
+    <Typography 
+      component="span" 
+      variant="caption" 
+      sx={{ 
+        ml: 1, 
+        color: form.company.length > 80 ? "#d32f2f" : "#6b7280",
+        fontWeight: 400 
+      }}
+    >
+    </Typography>
+  </Typography>
+  <TextField
+    fullWidth
+    name="company"
+    value={form.company}
+    onChange={handleChange}
+    required
+    placeholder="e.g., Tech Solutions Inc."
+    error={!!errors.company}
+    helperText={errors.company}
+    inputProps={{
+      maxLength: 80
+    }}
+    InputProps={{
+      startAdornment: (
+        <InputAdornment position="start">
+          <CorporateFare sx={{ color: "#6b7280", fontSize: 20 }} />
+        </InputAdornment>
+      ),
+    }}
+    sx={{
+      "& .MuiOutlinedInput-root": {
+        borderRadius: "8px",
+        backgroundColor: "#ffffff",
+        "&:hover fieldset": {
+          borderColor: errors.company ? "#d32f2f" : "#3b82f6",
+        },
+        "&.Mui-focused fieldset": {
+          borderColor: errors.company ? "#d32f2f" : "#3b82f6",
+          borderWidth: "1px",
+        },
+      },
+      "& .MuiFormHelperText-root": {
+        marginLeft: 0,
+        marginRight: 0,
+      },
+    }}
+  />
+</Grid>
                 {/* Location */}
                 <Grid item xs={12} md={6}>
                   <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1, color: "#374151" }}>

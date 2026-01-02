@@ -261,7 +261,7 @@ const EmployeeDocumentList = () => {
                         <TableRow>
                           <TableCell><strong>Document Type</strong></TableCell>
                           <TableCell><strong>File Name</strong></TableCell>
-                          <TableCell><strong>Uploaded Date</strong></TableCell>
+                          <TableCell><strong>joining date</strong></TableCell>
                           <TableCell><strong>Actions</strong></TableCell>
                         </TableRow>
                       </TableHead>

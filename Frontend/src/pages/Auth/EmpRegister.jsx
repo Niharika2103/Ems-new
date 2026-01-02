@@ -372,19 +372,29 @@ export default function EmployeeRegisterForm() {
               />
             </Grid>
             <Grid item xs={12} sm={3}>
-              <TextField
-                label="Phone Number"
-                name="phone"
-                type="tel"
-                value={formData.phone}
-                onChange={handleChange}
-                fullWidth
-                size="small"
-                error={!!errors.phone}
-                helperText={errors.phone}
-                required
-              />
-            </Grid>
+  <TextField
+    label="Phone Number"
+    name="phone"
+    value={formData.phone}
+    fullWidth
+    size="small"
+    required
+    error={!!errors.phone}
+    helperText={errors.phone || "Enter 10-digit mobile number"}
+    inputProps={{
+      inputMode: "numeric",
+      pattern: "[0-9]*",
+      maxLength: 10,
+    }}
+    onChange={(e) => {
+      const value = e.target.value.replace(/\D/g, ""); // ❌ remove letters
+      if (value.length <= 10) {
+        setFormData({ ...formData, phone: value });
+      }
+    }}
+  />
+</Grid>
+
 
             {/* Row 2: 2 fields */}
             <Grid item xs={12} sm={6}>
