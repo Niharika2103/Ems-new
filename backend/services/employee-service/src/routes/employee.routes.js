@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   registerEmployee,
   employeeLogin,
+  getMyEmployeeProfile,
   requestPasswordReset,
   resetPassword,
   uploadExcel,
@@ -38,6 +39,9 @@ router.post("/register", registerEmployee);
 // 🚀 Employee login (with first login + OTP)
 router.post("/login", employeeLogin);
  
+// 👤 Get logged-in employee profile (FOR REFERRAL AUTO-FILL)
+router.get("/me", getMyEmployeeProfile);
+
 // 🔄 Forgot password → reset link
 router.post("/request-password-reset", requestPasswordReset);
  

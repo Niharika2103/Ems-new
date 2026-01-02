@@ -80,6 +80,7 @@ import {
   sendInvoiceReminder,
   deleteInvoice,
   getNewEmployees,
+  getProbationDashboardCounts,
   getProbationWithUser,
   getMonthlyFinalSummary,
   validatePayroll,
@@ -405,5 +406,10 @@ router.put("/email-templates/:id", updateEmailTemplate);
 // Delete template
 router.delete("/email-templates/:id", deleteEmailTemplate);
 
+// ================= PROBATION DASHBOARD =================
+router.get(
+  "/probation/dashboard-counts",
+  getProbationDashboardCounts
+);
 
 export default router;
