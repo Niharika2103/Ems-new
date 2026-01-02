@@ -35,6 +35,10 @@ import {
   Download,
   Add as AddIcon,
   Schedule as ScheduleIcon,
+  CalendarToday, // Add this
+  AccessTime,    // Add this
+  Timer,         // Add this
+
 } from "@mui/icons-material";
 import { DatePicker, TimePicker, LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFns";
@@ -156,17 +160,40 @@ const [rowsPerPage, setRowsPerPage] = useState(10);
     setViewDialogOpen(true);
   };
 
+  // const handleScheduleInterview = (referral, mode) => {
+  //   setSelectedReferral(referral);
+  //   setScheduleMode(mode);
+  //   setScheduleDialogOpen(true);
+  //   setSelectedPanelNames([]);
+  //   setSelectedMemberIds([]);
+  //   setRoundName(mode === "reschedule" ? referral.interviewType || "" : "");
+  //   setInterviewDate(null);
+  //   setInterviewTime(null);
+  //   setMeetingLink(referral.meetingLink || "");
+  // };
   const handleScheduleInterview = (referral, mode) => {
-    setSelectedReferral(referral);
-    setScheduleMode(mode);
-    setScheduleDialogOpen(true);
-    setSelectedPanelNames([]);
-    setSelectedMemberIds([]);
-    setRoundName(mode === "reschedule" ? referral.interviewType || "" : "");
-    setInterviewDate(null);
-    setInterviewTime(null);
-    setMeetingLink(referral.meetingLink || "");
-  };
+  setSelectedReferral(referral);
+  setScheduleMode(mode);
+  setScheduleDialogOpen(true);
+  setSelectedPanelNames([]);
+  setSelectedMemberIds([]);
+  setRoundName(mode === "reschedule" ? referral.interviewType || "" : "");
+  
+  // ✅ Set default date to current date
+  const now = new Date();
+  setInterviewDate(now);
+  
+  // ✅ Set default time to next hour (e.g., if it's 10:15, set to 11:00)
+  const nextHour = new Date(now);
+  nextHour.setHours(nextHour.getHours() + 1);
+  nextHour.setMinutes(0, 0, 0);
+  
+  // Format as HH:MM
+  const defaultTime = `${nextHour.getHours().toString().padStart(2, '0')}:${nextHour.getMinutes().toString().padStart(2, '0')}`;
+  setInterviewTime(defaultTime);
+  
+  setMeetingLink(referral.meetingLink || "");
+};
 
   const handleUpdateStatus = (referral) => {
     setSelectedReferral(referral);
@@ -535,31 +562,143 @@ const [rowsPerPage, setRowsPerPage] = useState(10);
               )}
 
               {/* ✅ FIXED DATE/TIME PICKERS */}
+                           {/* ✅ ENHANCED DATE/TIME SELECTION */}
               <Grid item xs={12} md={6}>
                 <DatePicker
-                  label="Interview Date *"
-                  value={interviewDate}
-                  onChange={setInterviewDate}
-                  minDate={new Date()}
-                  slotProps={{
-                    textField: { fullWidth: true, size: "medium" },
-                    popper: { sx: { zIndex: 1401 } },
-                  }}
-                />
+  label="Interview Date *"
+  value={interviewDate}
+  onChange={setInterviewDate}
+  minDate={new Date()}
+  // ✅ Use modal mode for desktop to show calendar in front
+  desktopModeMediaQuery="@media (min-width: 600px)"
+  // ✅ Higher z-index to appear on top
+  slotProps={{
+    textField: { 
+      fullWidth: true, 
+      size: "medium",
+      sx: {
+        '& .MuiOutlinedInput-root': {
+          backgroundColor: 'white',
+          '&:hover': {
+            backgroundColor: '#f5f5f5',
+          }
+        }
+      }
+    },
+    // ✅ Critical: Make calendar popup appear on top
+    popper: { 
+      sx: { 
+        zIndex: 9999, // Very high z-index
+        '& .MuiPaper-root': {
+          boxShadow: '0px 5px 15px rgba(0,0,0,0.3)',
+          border: '2px solid #1976d2'
+        }
+      },
+      placement: "bottom-start",
+      disablePortal: false // Allow it to break out of containers
+    },
+    // ✅ For mobile/dialog mode
+    dialog: {
+      sx: {
+        zIndex: 9999,
+        '& .MuiPaper-root': {
+          boxShadow: '0px 5px 15px rgba(0,0,0,0.3)',
+        }
+      }
+    }
+  }}
+  // ✅ Show calendar clearly
+  views={['year', 'month', 'day']}
+  openTo="day"
+  reduceAnimations={false}
+/>
               </Grid>
+              
               <Grid item xs={12} md={6}>
-                <TimePicker
-                  label="Interview Time *"
-                  value={interviewTime}
-                  onChange={setInterviewTime}
-                  slotProps={{
-                    textField: { fullWidth: true, size: "medium" },
-                    desktopPaper: { sx: { zIndex: 1401 } },
-                    mobilePaper: { sx: { zIndex: 1401 } },
-                  }}
-                />
+                <FormControl fullWidth>
+                  <InputLabel id="interview-time-label">
+                    Interview Time *
+                  </InputLabel>
+                  <Select
+                    labelId="interview-time-label"
+                    value={interviewTime}
+                    onChange={(e) => setInterviewTime(e.target.value)}
+                    label="Interview Time *"
+                    startAdornment={
+                      <AccessTime sx={{ mr: 1, color: 'action.active' }} />
+                    }
+                    MenuProps={{
+                      PaperProps: {
+                        sx: {
+                          maxHeight: 300,
+                          zIndex: 1600 // Higher z-index
+                        }
+                      }
+                    }}
+                  >
+                    <MenuItem value="">
+                      <em>Select a time</em>
+                    </MenuItem>
+                    
+                    {/* Generate time slots (9 AM to 6 PM in 30-min intervals) */}
+                    {(() => {
+                      const timeSlots = [];
+                      const startHour = 9; // 9 AM
+                      const endHour = 18; // 6 PM
+                      
+                      // Get current time
+                      const now = new Date();
+                      
+                      for (let hour = startHour; hour < endHour; hour++) {
+                        for (let minute = 0; minute < 60; minute += 30) {
+                          // Format time as HH:MM
+                          const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+                          
+                          // Create time object for comparison
+                          const slotTime = new Date();
+                          slotTime.setHours(hour, minute, 0, 0);
+                          
+                          // Check if time is in the past for today
+                          const isToday = interviewDate ? 
+                            new Date(interviewDate).toDateString() === now.toDateString() : 
+                            true;
+                          
+                          const isPastTime = isToday && slotTime < now;
+                          
+                          timeSlots.push(
+                            <MenuItem 
+                              key={timeString} 
+                              value={timeString}
+                              disabled={isPastTime}
+                            >
+                              <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
+                                <Typography>
+                                  {`${hour % 12 === 0 ? 12 : hour % 12}:${minute.toString().padStart(2, '0')} ${hour >= 12 ? 'PM' : 'AM'}`}
+                                </Typography>
+                                {isPastTime && (
+                                  <Chip 
+                                    label="Past" 
+                                    size="small" 
+                                    color="error" 
+                                    variant="outlined"
+                                    sx={{ ml: 1 }}
+                                  />
+                                )}
+                              </Box>
+                            </MenuItem>
+                          );
+                        }
+                      }
+                      return timeSlots;
+                    })()}
+                  </Select>
+                </FormControl>
+                <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'flex', alignItems: 'center' }}>
+                  <AccessTime fontSize="small" sx={{ mr: 0.5 }} />
+                  Select from 9:00 AM to 6:00 PM (30-minute intervals)
+                </Typography>
               </Grid>
-
+              
               <Grid item xs={12}>
                 <TextField
                   fullWidth
