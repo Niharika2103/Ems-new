@@ -155,13 +155,48 @@ const JobPost = () => {
   });
 
   // ================= APPLY FORM INPUT CHANGE =================
-  const handleChange = (e) => {
-    const { name, value, files } = e.target;
+  // const handleChange = (e) => {
+  //   const { name, value, files } = e.target;
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     [name]: files ? files[0] : value,
+  //   }));
+  // };
+
+const handleChange = (e) => {
+  const { name, value, files } = e.target;
+
+  // ✅ PHONE NUMBER RESTRICTION
+  if (name === "phone") {
+    const digitsOnly = value.replace(/\D/g, "");
+    if (digitsOnly.length > 10) return;
+
     setFormData((prev) => ({
       ...prev,
-      [name]: files ? files[0] : value,
+      phone: digitsOnly,
     }));
-  };
+    return;
+  }
+
+  // ✅ SKILLS RESTRICTION (handled below)
+  if (name === "skills") {
+    // Allow letters, numbers, +, #, ., commas, spaces
+    const validSkills = value.replace(/[^a-zA-Z0-9+.#,\s]/g, "");
+
+    setFormData((prev) => ({
+      ...prev,
+      skills: validSkills,
+    }));
+    return;
+  }
+
+  setFormData((prev) => ({
+    ...prev,
+    [name]: files ? files[0] : value,
+  }));
+};
+
+
 
   // ================= RESUME PARSE (AUTO FILL) =================
   const handleResumeUpload = async (e) => {
@@ -440,24 +475,34 @@ const JobPost = () => {
 
               <Grid item xs={12} sm={6}>
                 <TextField
-                  label="Phone"
-                  name="phone"
-                  fullWidth
-                  required
-                  onChange={handleChange}
-                  value={formData.phone}
-                />
+  label="Phone"
+  name="phone"
+  fullWidth
+  required
+  onChange={handleChange}
+  value={formData.phone}
+  inputProps={{
+    maxLength: 10,
+    inputMode: "numeric",
+    pattern: "[0-9]*",
+  }}
+  placeholder="Enter 10-digit mobile number"
+/>
+
               </Grid>
 
               {/* SKILLS */}
               <Grid item xs={12} sm={6}>
                 <TextField
-                  label="Skills"
-                  name="skills"
-                  fullWidth
-                  onChange={handleChange}
-                  value={formData.skills}
-                />
+  label="Skills"
+  name="skills"
+  fullWidth
+  onChange={handleChange}
+  value={formData.skills}
+  placeholder="e.g. Python3, React18, NodeJS, C++"
+  helperText="Use letters, numbers, commas. Example: Python3, React18"
+ />
+
               </Grid>
 
               {/* EXPERIENCE */}

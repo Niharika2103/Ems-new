@@ -24,6 +24,14 @@ const steps = [
   "Previous Company Docs",
   "Review & Submit",
 ];
+const FILE_SIZE_LIMITS = {
+  bankPassbook: 5 * 1024 * 1024,   // 5MB
+  aadhaarCard: 5 * 1024 * 1024,    // 5MB
+  panCard: 5 * 1024 * 1024,        // 5MB
+  educationFiles: 10 * 1024 * 1024, // 10MB per file
+  previousDocs: 10 * 1024 * 1024,   // 10MB per file
+};
+
 
 const Letters = () => {
   const [activeStep, setActiveStep] = useState(0);
@@ -101,43 +109,98 @@ const Letters = () => {
     if (activeStep > 0) setActiveStep((prev) => prev - 1);
   };
 
-  const handleFileChange = (e, key) => {
-    const files = e.target.files;
+  // const handleFileChange = (e, key) => {
+  //   const files = e.target.files;
 
-    if (!files || files.length === 0) {
-      setFormData(prev => ({
-        ...prev,
-        [key]: (key === 'educationFiles' || key === 'previousDocs') ? [] : null
-      }));
+  //   if (!files || files.length === 0) {
+  //     setFormData(prev => ({
+  //       ...prev,
+  //       [key]: (key === 'educationFiles' || key === 'previousDocs') ? [] : null
+  //     }));
       
-      // Clear validation error for this field when file is removed
-      setValidationErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[key];
-        return newErrors;
-      });
+  //     // Clear validation error for this field when file is removed
+  //     setValidationErrors(prev => {
+  //       const newErrors = { ...prev };
+  //       delete newErrors[key];
+  //       return newErrors;
+  //     });
+  //     return;
+  //   }
+
+  //   if (key === 'educationFiles' || key === 'previousDocs') {
+  //     setFormData(prev => ({
+  //       ...prev,
+  //       [key]: Array.from(files)
+  //     }));
+  //   } else {
+  //     setFormData(prev => ({
+  //       ...prev,
+  //       [key]: files[0]
+  //     }));
+  //   }
+    
+  //   // Clear validation error for this field when file is selected
+  //   setValidationErrors(prev => {
+  //     const newErrors = { ...prev };
+  //     delete newErrors[key];
+  //     return newErrors;
+  //   });
+  // };
+
+  const handleFileChange = (e, key) => {
+  const files = e.target.files;
+  const maxSize = FILE_SIZE_LIMITS[key];
+
+  if (!files || files.length === 0) {
+    setFormData(prev => ({
+      ...prev,
+      [key]: (key === "educationFiles" || key === "previousDocs") ? [] : null
+    }));
+    return;
+  }
+
+  // ✅ MULTIPLE FILE VALIDATION
+  if (key === "educationFiles" || key === "previousDocs") {
+    for (let file of files) {
+      if (file.size > maxSize) {
+        toast.error(
+          `${file.name} exceeds ${maxSize / 1024 / 1024}MB limit`,
+          { position: "top-center" }
+        );
+        return;
+      }
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      [key]: Array.from(files),
+    }));
+  } 
+  // ✅ SINGLE FILE VALIDATION
+  else {
+    const file = files[0];
+
+    if (file.size > maxSize) {
+      toast.error(
+        `${key.replace(/([A-Z])/g, " $1")} exceeds ${maxSize / 1024 / 1024}MB`,
+        { position: "top-center" }
+      );
       return;
     }
 
-    if (key === 'educationFiles' || key === 'previousDocs') {
-      setFormData(prev => ({
-        ...prev,
-        [key]: Array.from(files)
-      }));
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        [key]: files[0]
-      }));
-    }
-    
-    // Clear validation error for this field when file is selected
-    setValidationErrors(prev => {
-      const newErrors = { ...prev };
-      delete newErrors[key];
-      return newErrors;
-    });
-  };
+    setFormData(prev => ({
+      ...prev,
+      [key]: file,
+    }));
+  }
+
+  // ✅ CLEAR ERROR AFTER SUCCESSFUL SELECT
+  setValidationErrors(prev => {
+    const newErrors = { ...prev };
+    delete newErrors[key];
+    return newErrors;
+  });
+};
 
   const handleSubmit = () => {
     // Validate all steps before submission
