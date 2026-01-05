@@ -218,20 +218,30 @@ export default function CustomReports() {
             </Grid>
 
             <Grid item xs={12} md={3}>
-              <FormControl fullWidth>
-                <InputLabel>Department</InputLabel>
-                <Select
-                  value={department}
-                  onChange={(e) => setDepartment(e.target.value)}
-                >
-                  <MenuItem value="">All Departments</MenuItem>
-                  {departments.map((d) => (
-                    <MenuItem key={d.department} value={d.department}>
-                      {d.department}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+             <FormControl fullWidth size="small">
+  <InputLabel id="department-label">Department</InputLabel>
+  <Select
+    labelId="department-label"
+    value={department}
+    label="Department"
+    displayEmpty
+    renderValue={(selected) =>
+      selected ? selected : <span style={{ color: "#9e9e9e" }}>Department</span>
+    }
+    onChange={(e) => setDepartment(e.target.value)}
+  >
+    <MenuItem value="">
+      <em>All Departments</em>
+    </MenuItem>
+
+    {departments.map((d) => (
+      <MenuItem key={d.department} value={d.department}>
+        {d.department}
+      </MenuItem>
+    ))}
+  </Select>
+</FormControl>
+
             </Grid>
 
             <Grid item xs={12} md={5} textAlign="right">
@@ -254,42 +264,69 @@ export default function CustomReports() {
       {generatedReport && (
         <Box mt={4}>
           <Typography fontWeight={600}>Generated Report Preview</Typography>
-          <Card sx={{ mt: 2 }}>
-            <CardContent>
-              <table width="100%" style={{ borderCollapse: "collapse" }}>
-                <thead>
-                  <tr>
-                    {generatedReport.fields.map((f) => (
-                      <th key={f} style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>
-                        {f}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredReportData.map((row, i) => (
-                    <tr key={i}>
-                      {generatedReport.fields.map((f) => (
-                        <td key={f} style={{ padding: 8 }}>
-                          {f === "Date of Joining" && row[f]
-                            ? new Date(row[f]).toLocaleDateString()
-                            : row[f] ?? "-"}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
+         <Card sx={{ mt: 2 }}>
+  <CardContent sx={{ p: 0 }}>
+    <Box
+      sx={{
+        maxHeight: "400px",   // 👈 adjust height if needed
+        overflowY: "auto",    // 👈 vertical scroll
+        overflowX: "auto",
+      }}
+    >
+      <table
+        width="100%"
+        style={{ borderCollapse: "collapse", minWidth: "800px" }}
+      >
+        <thead>
+          <tr>
+            {generatedReport.fields.map((f) => (
+              <th
+                key={f}
+                style={{
+                  textAlign: "left",
+                  padding: 8,
+                  borderBottom: "1px solid #ddd",
+                  position: "sticky", // 👈 sticky header
+                  top: 0,
+                  backgroundColor: "#fff",
+                  zIndex: 1,
+                }}
+              >
+                {f}
+              </th>
+            ))}
+          </tr>
+        </thead>
 
-                  {filteredReportData.length === 0 && (
-                    <tr>
-                      <td colSpan={generatedReport.fields.length} style={{ textAlign: "center", padding: 16 }}>
-                        No matching records found
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </CardContent>
-          </Card>
+        <tbody>
+          {filteredReportData.map((row, i) => (
+            <tr key={i}>
+              {generatedReport.fields.map((f) => (
+                <td key={f} style={{ padding: 8 }}>
+                  {f === "Date of Joining" && row[f]
+                    ? new Date(row[f]).toLocaleDateString()
+                    : row[f] ?? "-"}
+                </td>
+              ))}
+            </tr>
+          ))}
+
+          {filteredReportData.length === 0 && (
+            <tr>
+              <td
+                colSpan={generatedReport.fields.length}
+                style={{ textAlign: "center", padding: 16 }}
+              >
+                No matching records found
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </Box>
+  </CardContent>
+</Card>
+
         </Box>
       )}
 
