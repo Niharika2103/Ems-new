@@ -3,7 +3,15 @@ import { Clock, CheckCircle, XCircle, Bell } from 'lucide-react';
 
 import { calculateDurationMonths, formatDate } from "../../utils/probationUtils";
 
- const EmployeeDetailView = ({ employee = {}, probation = {}, onCloseProbation }) => (
+//  const EmployeeDetailView = ({ employee = {}, probation = {}, onCloseProbation }) => (
+        const EmployeeDetailView = ({
+        employee = {},
+        probation = {},
+        onCloseProbation,
+        onExtend,
+        onTerminate
+      }) => (
+
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
@@ -69,14 +77,42 @@ import { calculateDurationMonths, formatDate } from "../../utils/probationUtils"
             <h3 className="font-semibold text-gray-800 mb-3">Actions</h3>
             <div className="grid grid-cols-2 gap-3">
             
-              <button className="bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition flex items-center justify-center gap-2">
+              {/* <button className="bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition flex items-center justify-center gap-2">
+                <Clock size={18} />
+                Extend Period
+              </button> */}
+              <button
+                onClick={() => onExtend()}
+                disabled={probation.status !== "active"}
+                className={`py-2 rounded-lg flex items-center justify-center gap-2
+                  ${probation.status !== "active"
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-purple-600 text-white hover:bg-purple-700"
+                  }`}
+              >
                 <Clock size={18} />
                 Extend Period
               </button>
-              <button className="bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition flex items-center justify-center gap-2">
+
+
+              {/* <button className="bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition flex items-center justify-center gap-2">
                 <XCircle size={18} />
                 Terminate
-              </button>
+              </button> */}
+              <button
+              onClick={() => onTerminate()}
+              disabled={probation.status !== "active"}
+              className={`py-2 rounded-lg flex items-center justify-center gap-2
+                ${probation.status !== "active"
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-red-600 text-white hover:bg-red-700"
+                }`}
+            >
+              <XCircle size={18} />
+              Terminate
+            </button>
+
+
             </div>
           </div>
         </div>

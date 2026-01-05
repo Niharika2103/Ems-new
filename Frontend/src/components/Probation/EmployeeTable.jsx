@@ -63,8 +63,11 @@ const EmployeeTable = ({ data, onActionClick, showAssignAction = false, getStatu
       </thead>
       <tbody>
         {data.map((item) => (
-          <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50 transition">
-            <td className="py-3 px-4 font-medium text-gray-900">{item.email}</td>
+         <tr
+            key={item.id || item.probation_id || item.employee_id}
+            className="border-b border-gray-100 hover:bg-gray-50 transition"
+          >
+             <td className="py-3 px-4 font-medium text-gray-900">{item.email}</td>
             <td className="py-3 px-4 text-gray-800">{item.name}</td>
             <td className="py-3 px-4 text-gray-600">{item.department}</td>
             <td className="py-3 px-4 text-gray-600">{item.designation}</td>

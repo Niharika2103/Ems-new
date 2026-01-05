@@ -79,6 +79,10 @@ import {
   deleteInvoice,
   getNewEmployees,
   getProbationDashboardCounts,
+  exportProbationList,
+  exportNewEmployees,
+  extendProbation,
+  terminateProbation,
   getProbationWithUser,
   getMonthlyFinalSummary,
   validatePayroll,
@@ -407,5 +411,13 @@ router.get(
   "/probation/dashboard-counts",
   getProbationDashboardCounts
 );
+
+router.get("/probation/export", exportProbationList);
+router.get("/probation/export-new-employees", exportNewEmployees);
+
+router.put("/probation/extend", extendProbation);
+router.put("/probation/terminate", terminateProbation);
+
+
 
 export default router;
