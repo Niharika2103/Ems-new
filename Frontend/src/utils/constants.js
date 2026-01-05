@@ -9,6 +9,7 @@ export const API_BASES = {
   FREELANCER: import.meta.env.VITE_FREELANCER_URL || "http://localhost:5105",
   VENDOR: import.meta.env.VITE_VENDOR_URL || "http://localhost:5006",
   SETTINGS: import.meta.env.VITE_SETTINGS_URL || "http://localhost:5009",
+  SHIFTMANAGEMENT: import.meta.env.VITE_SHIFTMANAGEMENT_URL || "http://localhost:5010",
 };
 
 
@@ -24,6 +25,7 @@ export const AUTH_API = {
   FREELANCER: `${API_BASES.FREELANCER}/freelancer`,
   VENDOR: `${API_BASES.VENDOR}/vendor` ,
   SETTINGS: `${API_BASES.SETTINGS}/api`,
+  SHIFTMANAGEMENT : `${API_BASES.SHIFTMANAGEMENT}/api`,
 };
 
 export const ROLES = {
@@ -36,6 +38,8 @@ export const ROLES = {
   FREELANCER: "freelancer",
   VENDOR: "vendor",
   SETTINGS: "settings",
+  SHIFTMANAGEMENT : "shiftmanagement",
+
 };
 
 

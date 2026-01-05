@@ -1,5 +1,5 @@
 import { superadminClient,employeeClient,adminClient,ProjectClient,AttendanceClient,
-  SalaryStructureClient, freelancerClient ,vendorClient,settingsClient } from "./axiosClient";
+  SalaryStructureClient, freelancerClient ,vendorClient,settingsClient ,shiftmanagementClient} from "./axiosClient";
 import { AUTH_API } from "../utils/constants";
 
 
@@ -970,5 +970,23 @@ export const updateSalaryCycleApi = (data) => {
 export const getSalaryCycleApi = () => {
   return settingsClient.get(
     `${AUTH_API.SETTINGS}/settings/salary-cycle`
+  );
+};
+
+//Shift Management APIs
+export const addShiftApi = (data) => {
+  return shiftmanagementClient.post(`${AUTH_API.SHIFTMANAGEMENT}/shifts/addshift`, data);
+}
+
+export const getShiftsApi = () => {
+  return shiftmanagementClient.get(
+    `${AUTH_API.SHIFTMANAGEMENT}/shifts`
+  );
+};
+
+export const updateShiftApi = (id, data) => {
+  return shiftmanagementClient.put(
+    `${AUTH_API.SHIFTMANAGEMENT}/shifts/${id}`,
+    data
   );
 };

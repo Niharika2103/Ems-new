@@ -7,8 +7,8 @@ import {
 
 const router = express.Router();
 
-router.post("/", createShift);
-router.get("/", getShifts);
-router.put("/:id", updateShift);
+router.post("/shifts/addshift", createShift);
+router.get("/shifts", getShifts);
+router.put("/shifts/:id", updateShift);
 
 export default router;

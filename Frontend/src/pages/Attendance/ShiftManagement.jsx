@@ -22,6 +22,7 @@ import {
   Divider
 } from "@mui/material";
 import AddShiftModal from "../../components/AddShiftModal";
+import { getShiftsApi, addShiftApi, updateShiftApi } from "../../api/authApi";
 
 export default function ShiftManagement() {
   const [employees, setEmployees] = useState([]);
@@ -31,10 +32,10 @@ const [openShiftModal, setOpenShiftModal] = useState(false);
 const [editShift, setEditShift] = useState(null);
   const [openModal, setOpenModal] = useState(false);
 
-  const loadShifts = async () => {
-    const res = await axios.get("/api/shifts");
-    setShifts(res.data);
-  };
+ const loadShifts = async () => {
+  const res = await getShiftsApi();
+  setShifts(res.data);
+};
   const [form, setForm] = useState({
     employee_id: "",
     shift_id: "",
@@ -48,17 +49,25 @@ const [editShift, setEditShift] = useState(null);
    useEffect(() => {
     loadShifts();
   }, []);
+  
 
-  const saveShift = async (data) => {
+
+ const saveShift = async (data) => {
+  try {
     if (editShift) {
-      await axios.put(`/api/shifts/${editShift.id}`, data);
+      await updateShiftApi(editShift.id, data);
     } else {
-      await axios.post("/api/shifts", data);
+      await addShiftApi(data);
     }
-    setOpenModal(false);
+
+    setOpenShiftModal(false);
     setEditShift(null);
     loadShifts();
-  };
+  } catch (err) {
+    console.error(err);
+  }
+};
+
   /* 🔹 Load data */
   useEffect(() => {
     // API calls (replace with real APIs)
@@ -67,10 +76,7 @@ const [editShift, setEditShift] = useState(null);
       { id: "2", name: "Anu Priya", employee_id: "EMP002" }
     ]);
 
-    setShifts([
-      { id: "1", shift_name: "General", start_time: "09:00", end_time: "18:00", is_night_shift: false },
-      { id: "2", shift_name: "Night", start_time: "22:00", end_time: "06:00", is_night_shift: true }
-    ]);
+   
 
     setHistory([]);
   }, []);
