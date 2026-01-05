@@ -55,6 +55,29 @@ const Profile = () => {
     // ❌ Removed profilePhoto from formData
   });
 
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+const [errors, setErrors] = useState({
+  email: "",
+});
+const handleEmailChange = (e) => {
+  const { value } = e.target;
+
+  setFormData((prev) => ({
+    ...prev,
+    email: value,
+  }));
+
+  if (!value) {
+    setErrors((prev) => ({ ...prev, email: "Email is required" }));
+  } else if (!EMAIL_REGEX.test(value)) {
+    setErrors((prev) => ({ ...prev, email: "Enter a valid email address" }));
+  } else {
+    setErrors((prev) => ({ ...prev, email: "" }));
+  }
+};
+
+
   const [profilePicFile, setProfilePicFile] = useState(null); // ✅ Separate file state
   const [decoded, setDecoded] = useState(null);
 
@@ -117,6 +140,16 @@ const Profile = () => {
  
   const handleSubmit = (e) => {
   e.preventDefault();
+  if (!EMAIL_REGEX.test(formData.email)) {
+  toast.error("Please enter a valid email address");
+  return;
+}
+
+if (formData.phone.length !== 10 || formData.emergency_contact.length !== 10) {
+  toast.error("Phone numbers must be 10 digits");
+  return;
+}
+
   if (!decoded?.id) return;
 
   const sendData = new FormData();
@@ -157,6 +190,19 @@ const Profile = () => {
   const photoSrc = profilePicFile
     ? URL.createObjectURL(profilePicFile)
     : profile?.profile_photo || undefined;
+
+    const handleNumberChange = (e) => {
+  const { name, value } = e.target;
+
+  // allow only digits
+  if (/^\d*$/.test(value)) {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  }
+};
+
 
   return (
     <>
@@ -280,14 +326,48 @@ const Profile = () => {
             <Paper variant="outlined" sx={{ p: 3, borderRadius: 3 }}>
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6}>
-                  <TextField fullWidth label="Email" name="email" value={formData.email} onChange={handleChange} />
+                 <TextField
+  fullWidth
+  label="Email"
+  name="email"
+  value={formData.email}
+  onChange={handleEmailChange}
+  error={Boolean(errors.email)}
+  helperText={errors.email}
+/>
+
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <TextField fullWidth label="Phone" name="phone" value={formData.phone} onChange={handleChange} />
+                 <TextField
+  fullWidth
+  label="Phone"
+  name="phone"
+  value={formData.phone}
+  onChange={handleNumberChange}
+  inputProps={{
+    maxLength: 10,
+    inputMode: "numeric",
+    pattern: "[0-9]*",
+  }}
+  helperText="Enter 10-digit mobile number"
+/>
+
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                  <TextField fullWidth label="Emergency Contact" name="emergency_contact" value={formData.emergency_contact} onChange={handleChange} />
-                </Grid>
+                  <TextField
+  fullWidth
+  label="Emergency Contact"
+  name="emergency_contact"
+  value={formData.emergency_contact}
+  onChange={handleNumberChange}
+  inputProps={{
+    maxLength: 10,
+    inputMode: "numeric",
+    pattern: "[0-9]*",
+  }}
+  helperText="Enter 10-digit emergency number"
+/>
+              </Grid>
               </Grid>
             </Paper>
 

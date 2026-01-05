@@ -928,6 +928,136 @@ const handleDownloadResume = (resumeUrl) => {
             <Button onClick={() => setViewDialogOpen(false)}>Close</Button>
           </DialogActions>
         </Dialog> */}
+        <Dialog open={viewDialogOpen} onClose={() => setViewDialogOpen(false)} maxWidth="md" fullWidth>
+  <DialogTitle sx={{ fontWeight: 600 }}>
+    Referral Details
+  </DialogTitle>
+
+  <DialogContent>
+    {selectedReferral && (
+      <Paper variant="outlined" sx={{ p: 3 }}>
+        {/* Header */}
+        <Box mb={3}>
+          <Typography variant="h6" fontWeight={600}>
+            Candidate Referral Summary
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Generated on {new Date().toLocaleDateString()}
+          </Typography>
+        </Box>
+
+        {/* Candidate Details */}
+        <Grid container spacing={2}>
+          <Grid item xs={6}>
+            <Typography variant="caption">Candidate Name</Typography>
+            <Typography fontWeight={500}>
+              {selectedReferral.candidateName}
+            </Typography>
+          </Grid>
+
+          <Grid item xs={6}>
+            <Typography variant="caption">Email</Typography>
+            <Typography fontWeight={500}>
+              {selectedReferral.candidateEmail}
+            </Typography>
+          </Grid>
+
+          <Grid item xs={6}>
+            <Typography variant="caption">Phone</Typography>
+            <Typography fontWeight={500}>
+              {selectedReferral.candidatePhone}
+            </Typography>
+          </Grid>
+
+          <Grid item xs={6}>
+            <Typography variant="caption">Position</Typography>
+            <Typography fontWeight={500}>
+              {selectedReferral.position}
+            </Typography>
+          </Grid>
+
+          <Grid item xs={6}>
+            <Typography variant="caption">Experience</Typography>
+            <Typography fontWeight={500}>
+              {selectedReferral.experience || "—"}
+            </Typography>
+          </Grid>
+
+          <Grid item xs={6}>
+            <Typography variant="caption">Referred By</Typography>
+            <Typography fontWeight={500}>
+              {selectedReferral.referredBy}
+            </Typography>
+          </Grid>
+
+          <Grid item xs={6}>
+            <Typography variant="caption">Referral Date</Typography>
+            <Typography fontWeight={500}>
+              {selectedReferral.referralDate
+                ? new Date(selectedReferral.referralDate).toLocaleDateString()
+                : "—"}
+            </Typography>
+          </Grid>
+
+          <Grid item xs={6}>
+            <Typography variant="caption">Current Status</Typography>
+            <Chip
+              label={statusLabels[selectedReferral.status]}
+              color={statusColors[selectedReferral.status]}
+              size="small"
+            />
+          </Grid>
+        </Grid>
+
+        {/* Interview Details */}
+        {selectedReferral.interviewDate && (
+          <>
+            <Box mt={4}>
+              <Typography variant="h6" fontWeight={600}>
+                Interview Details
+              </Typography>
+            </Box>
+
+            <Grid container spacing={2} mt={1}>
+              <Grid item xs={6}>
+                <Typography variant="caption">Interview Date & Time</Typography>
+                <Typography fontWeight={500}>
+                  {new Date(selectedReferral.interviewDate).toLocaleString()}
+                </Typography>
+              </Grid>
+
+              <Grid item xs={6}>
+                <Typography variant="caption">Interview Round</Typography>
+                <Typography fontWeight={500}>
+                  {selectedReferral.interviewType || "—"}
+                </Typography>
+              </Grid>
+
+              <Grid item xs={12}>
+                <Typography variant="caption">Meeting Link / Location</Typography>
+                <Typography fontWeight={500} sx={{ wordBreak: "break-word" }}>
+                  {selectedReferral.meetingLink || "—"}
+                </Typography>
+              </Grid>
+            </Grid>
+          </>
+        )}
+
+        {/* Footer */}
+        <Box mt={4} pt={2} borderTop="1px solid #eee">
+          <Typography variant="body2" color="text.secondary">
+            This document is system generated for internal recruitment use only.
+          </Typography>
+        </Box>
+      </Paper>
+    )}
+  </DialogContent>
+
+  <DialogActions>
+    <Button onClick={() => setViewDialogOpen(false)}>Close</Button>
+  </DialogActions>
+</Dialog>
+
       </Box>
     </LocalizationProvider>
   );
