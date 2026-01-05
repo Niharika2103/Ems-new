@@ -7,7 +7,10 @@ import AssignProbation from '../../components/Probation/AssignProbation';
 import { fetchassignProbation } from "../../features/Salarystructure/salaryStructureSlice";
 import EmployeeDetailView from "../../components/Probation/EmployeeDetailView";
 import { getProbationDashboardCountsApi } from "../../api/authApi";
-import { generateLetterApi } from "../../api/authApi";
+import { API_BASES } from "../../utils/constants"; 
+import { Button } from "@mui/material";
+
+
 
 
 const ProbationManagementSystem = () => {
@@ -21,14 +24,13 @@ const ProbationManagementSystem = () => {
   const [assignMode, setAssignMode] = useState('new');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [viewEmployee, setViewEmployee] = useState(null);      
+  // const [viewEmployee, setViewEmployee] = useState(null);      
   const [dashboardCounts, setDashboardCounts] = useState({
   active: 0,
   endingSoon: 0,
   completed: 0,
 });
 
-  const [recentlyGeneratedLetter, setRecentlyGeneratedLetter] = useState(null);      
   useEffect(() => {
     if (activeTab === "employees") {
       dispatch(fetchNewEmployees());
@@ -51,6 +53,12 @@ const ProbationManagementSystem = () => {
         });
     }, []);
 
+
+  const [showExtendModal, setShowExtendModal] = useState(false);
+  const [extendDays, setExtendDays] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
+  const [selectedProbation, setSelectedProbation] = useState(null);
+  const [showDetails, setShowDetails] = useState(false);
 
 
 
@@ -94,35 +102,187 @@ const ProbationManagementSystem = () => {
 
   return matchesSearch && matchesFilter;
 });
-const handleGenerateLetter = async (emp) => {
-  try {
-    const payload = {
-      employeeId: emp.employee_id || emp.user_id || emp.id,
-      letterType: "Probation Completion Letter"
-    };
 
-    const res = await generateLetterApi(payload);
 
-    // ✅ Store the generated letter info
-    const letterData = {
-      ...res.data,
-      employeeId: payload.employeeId,
-      associatedEmployee: emp // optional: keep ref to employee row
-    };
-    setRecentlyGeneratedLetter(letterData);
+// const handleExport = async () => {
+//   try {
+//     const response = await fetch(
+//       `${API_BASES.ADMIN}/admin/probation/export`,
+//       {
+//         method: "GET",
+//         headers: {
+//           Authorization: `Bearer ${localStorage.getItem("token")}`,
+//         },
+//       }
+//     );
 
-    alert("Letter generated successfully");
+//     if (!response.ok) {
+//       throw new Error("Export failed");
+//     }
 
-    if (res.data?.pdf_url) {
-      window.open(res.data.pdf_url, "_blank");
+//     // 🔥 READ AS BLOB (NOT JSON)
+//     const blob = await response.blob();
+
+//     const url = window.URL.createObjectURL(blob);
+//     const a = document.createElement("a");
+
+//     a.href = url;
+//     a.download = "probation_list.xlsx"; // Excel file
+//     document.body.appendChild(a);
+//     a.click();
+//     a.remove();
+
+//     window.URL.revokeObjectURL(url);
+//   } catch (error) {
+//     console.error("Export failed:", error);
+//   }
+// };
+
+const handleNewEmployeeExport = async () => {
+  const response = await fetch(
+    `${API_BASES.ADMIN}/admin/probation/export-new-employees`,
+    {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        Accept: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      },
     }
-  } catch (err) {
-    console.error(err);
-    alert("Failed to generate letter");
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to export new employees");
   }
+
+  const blob = await response.blob();
+  downloadBlob(blob, "new_employees.xlsx");
+};
+
+const handleProbationExport = async () => {
+  const response = await fetch(
+    `${API_BASES.ADMIN}/admin/probation/export`,
+    {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        Accept: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to export probation list");
+  }
+
+  const blob = await response.blob();
+  downloadBlob(blob, "probation_list.xlsx");
+};
+
+const downloadBlob = (blob, filename) => {
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
 };
 
 
+const handleExtendPeriod = async () => {
+  if (!extendDays || Number(extendDays) <= 0) {
+    alert("Please enter valid days");
+    return;
+  }
+
+  setActionLoading(true);
+
+  let success = false;
+
+  try {
+    const response = await fetch(
+      `${API_BASES.ADMIN}/admin/probation/extend`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          probationId: selectedProbation.probationid, // ✅ correct column
+          extendDays: Number(extendDays),
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Extend API failed");
+    }
+
+    success = true; // ✅ mark success
+  } catch (err) {
+    console.error("Extend API error:", err);
+    alert("Failed to extend probation");
+  } finally {
+    setActionLoading(false);
+  }
+
+  // ✅ EVERYTHING BELOW WILL NEVER ENTER CATCH
+  if (success) {
+  alert("Probation extended successfully");
+
+  setShowExtendModal(false);
+  setExtendDays("");
+  setShowDetails(false);
+
+  // ✅ THIS triggers re-render
+  dispatch(fetchassignProbation());
+}
+
+};
+
+
+const handleTerminate = async () => {
+  if (!window.confirm("Are you sure you want to terminate?")) return;
+
+  setActionLoading(true);
+  let success = false;
+
+  try {
+    const response = await fetch(
+      `${API_BASES.ADMIN}/admin/probation/terminate`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          probationId: selectedProbation.probationid,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Terminate API failed");
+    }
+
+    success = true;
+  } catch (err) {
+    console.error("Terminate error:", err);
+    alert("Failed to terminate probation");
+  } finally {
+    setActionLoading(false);
+  }
+
+ if (success) {
+  alert("Probation terminated successfully");
+  setShowDetails(false);
+
+  // ✅ THIS triggers re-render
+  dispatch(fetchassignProbation());
+}
+
+};
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -233,17 +393,35 @@ const handleGenerateLetter = async (emp) => {
                   </select>
                 </div>
               </div>
-              <button className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition flex items-center gap-2">
+              {/* <button className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition flex items-center gap-2">
                 <Download size={18} />
                 Export
-              </button>
-            </div>
+              </button> */}
+                {activeTab === "probation" && (
+                  <Button
+                    startIcon={<Download size={18} />}
+                    onClick={handleProbationExport}
+                  >
+                    Export
+                  </Button>
+                )}
+              </div>
 
             <EmployeeTable
               data={filteredList}
               // onActionClick={setSelectedEmployee}
-              onActionClick={(emp) => setViewEmployee(emp)}
-              onGenerateLetter={handleGenerateLetter}
+            //   onActionClick={(emp) => {
+            //   setSelectedProbation(emp);
+            //   setViewEmployee(emp);
+            //   setShowDetails(true);
+            // }}
+            onActionClick={(emp) => {
+            setSelectedProbation(emp);
+            setShowDetails(true);
+          }}
+
+
+
               showAssignAction={false}
               getStatusColor={getStatusColor}
               getStatusText={getStatusText}
@@ -261,10 +439,19 @@ const handleGenerateLetter = async (emp) => {
           <>
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-semibold text-gray-800">All Employees</h3>
-              <button className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition flex items-center gap-2">
+              {/* <button className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition flex items-center gap-2">
                 <Download size={18} />
                 Export
-              </button>
+              </button> */}
+              {activeTab === "employees" && (
+                <Button
+                  startIcon={<Download size={18} />}
+                  onClick={handleNewEmployeeExport}
+                >
+                  Export
+                </Button>
+              )}
+
             </div>
 
             <EmployeeTable
@@ -291,15 +478,52 @@ const handleGenerateLetter = async (emp) => {
       }}  />
       )}
 
-     {viewEmployee && (
-  <EmployeeDetailView
-    employee={viewEmployee}
-    probation={viewEmployee}
-    onCloseProbation={() => setViewEmployee(null)}
-  />
+   {showDetails && selectedProbation && (
+    <EmployeeDetailView
+      employee={selectedProbation}
+      probation={selectedProbation}
+      onCloseProbation={() => {
+        setShowDetails(false);
+        setSelectedProbation(null);
+      }}
+      onExtend={() => setShowExtendModal(true)}
+      onTerminate={handleTerminate}
+    />
 )}
+{showExtendModal && (
+  <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div className="bg-white rounded-lg p-6 w-96">
+      <h3 className="text-xl font-semibold mb-4">
+        Extend Probation Period
+      </h3>
 
+      <input
+        type="number"
+        placeholder="Enter days (e.g. 15)"
+        value={extendDays}
+        onChange={(e) => setExtendDays(e.target.value)}
+        className="w-full border p-2 rounded mb-4"
+      />
 
+      <div className="flex justify-end gap-3">
+        <button
+          onClick={() => setShowExtendModal(false)}
+          className="px-4 py-2 bg-gray-200 rounded"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={handleExtendPeriod}
+          className="px-4 py-2 bg-purple-600 text-white rounded"
+          disabled={actionLoading}
+        >
+          Extend
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
     </div>
   );

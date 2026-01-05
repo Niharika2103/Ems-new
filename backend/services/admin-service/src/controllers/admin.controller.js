@@ -12,7 +12,7 @@ import axios from "axios";
 import { getBrandingForContext } from "../utils/brandingHelper.js";
 import { loadTemplate } from "../utils/templateLoader.js";
 // import pdf from "html-pdf";
-
+import ExcelJS from "exceljs";
 import puppeteer from "puppeteer";
 
 //import { USER_MASTER_TABLE } from '../config/constants.js';
@@ -4393,6 +4393,196 @@ export const getProbationDashboardCounts = async (req, res) => {
   } catch (err) {
     console.error("Dashboard Count Error:", err);
     return res.status(500).json({ message: "Failed to fetch dashboard counts" });
+  } finally {
+    client.release();
+  }
+};
+
+
+/* -------------------- EXPORT PROBATION -------------------- */
+
+export const exportProbationList = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const query = `
+      SELECT 
+        u.email,
+        u.name,
+        u.department,
+        p.startdate,
+        p.enddate,
+        p.status
+      FROM probation p
+      JOIN user_employees_master u ON u.id = p.employee_id
+      ORDER BY p.startdate DESC
+    `;
+
+    const result = await client.query(query);
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Probation List");
+
+    worksheet.columns = [
+      { header: "Email", key: "email", width: 30 },
+      { header: "Name", key: "name", width: 20 },
+      { header: "Department", key: "department", width: 20 },
+      { header: "Start Date", key: "startdate", width: 15 },
+      { header: "End Date", key: "enddate", width: 15 },
+      { header: "Status", key: "status", width: 15 },
+    ];
+
+    result.rows.forEach((row) => {
+      worksheet.addRow({
+        email: row.email,
+        name: row.name,
+        department: row.department,
+        startdate: row.startdate
+          ? new Date(row.startdate).toLocaleDateString("en-GB")
+          : "",
+        enddate: row.enddate
+          ? new Date(row.enddate).toLocaleDateString("en-GB")
+          : "",
+        status: row.status,
+      });
+    });
+
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=probation_list.xlsx"
+    );
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+
+    await workbook.xlsx.write(res);
+    res.status(200).end();
+  } catch (err) {
+    console.error("Export Probation Error:", err);
+    res.status(500).json({ message: "Export failed" });
+  } finally {
+    client.release();
+  }
+};
+
+export const exportNewEmployees = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const query = `
+      SELECT email, name, department, designation
+      FROM user_employees_master
+      ORDER BY created_at DESC
+    `;
+
+    const { rows } = await client.query(query);
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("New Employees");
+
+    worksheet.columns = [
+      { header: "Email", key: "email", width: 30 },
+      { header: "Name", key: "name", width: 20 },
+      { header: "Department", key: "department", width: 20 },
+      { header: "Position", key: "designation", width: 20 },
+    ];
+
+    worksheet.addRows(rows);
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=new_employees.xlsx"
+    );
+
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (err) {
+    console.error("Export New Employees Error:", err);
+    res.status(500).json({ message: "Export failed" });
+  } finally {
+    client.release();
+  }
+};
+
+export const extendProbation = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { probationId, extendDays } = req.body;
+
+    if (!probationId || !extendDays) {
+      return res.status(400).json({ message: "probationId and extendDays required" });
+    }
+
+    const updateQuery = `
+      UPDATE probation
+      SET
+        enddate = enddate + ($1 || ' days')::interval,
+        updatedat = NOW()
+      WHERE probationid = $2
+      RETURNING *;
+    `;
+
+    const { rows } = await client.query(updateQuery, [
+      extendDays,
+      probationId,
+    ]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Probation not found" });
+    }
+
+    res.status(200).json({
+      message: "Probation extended successfully",
+      probation: rows[0],
+    });
+  } catch (err) {
+    console.error("Extend Probation Error:", err);
+    res.status(500).json({ message: "Failed to extend probation" });
+  } finally {
+    client.release();
+  }
+};
+
+
+export const terminateProbation = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { probationId } = req.body;
+
+    if (!probationId) {
+      return res.status(400).json({ message: "probationId required" });
+    }
+
+    const query = `
+      UPDATE probation
+      SET
+        status = 'terminated',
+        enddate = CURRENT_DATE,
+        updatedat = NOW()
+      WHERE probationid = $1
+      RETURNING *;
+    `;
+
+    const { rows } = await client.query(query, [probationId]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Probation not found" });
+    }
+
+    res.status(200).json({
+      message: "Probation terminated successfully",
+      probation: rows[0],
+    });
+  } catch (err) {
+    console.error("Terminate Probation Error:", err);
+    res.status(500).json({ message: "Failed to terminate probation" });
   } finally {
     client.release();
   }

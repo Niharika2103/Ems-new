@@ -1,17 +1,32 @@
-export const calculateDurationMonths = (start, end) => {
-  if (!start || !end) return 0;
+// export const calculateDurationMonths = (start, end) => {
+//   if (!start || !end) return 0;
 
-  const startDate = new Date(start);
-  const endDate = new Date(end);
+//   const startDate = new Date(start);
+//   const endDate = new Date(end);
 
-  let months =
-    (endDate.getFullYear() - startDate.getFullYear()) * 12 +
-    (endDate.getMonth() - startDate.getMonth());
+//   let months =
+//     (endDate.getFullYear() - startDate.getFullYear()) * 12 +
+//     (endDate.getMonth() - startDate.getMonth());
 
-  if (endDate.getDate() < startDate.getDate()) months--;
+//   if (endDate.getDate() < startDate.getDate()) months--;
+
+//   return months;
+// };
+export const calculateDurationMonths = (startDate, endDate) => {
+  if (!startDate || !endDate) return 0;
+
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  const diffMs = end - start;
+  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+  // Convert days → months (HR-friendly)
+  const months = Math.round(diffDays / 30);
 
   return months;
 };
+
 
 export const calculateDaysLeft = (end) => {
   if (!end) return 0;
