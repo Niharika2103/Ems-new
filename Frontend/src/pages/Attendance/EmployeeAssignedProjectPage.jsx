@@ -1,63 +1,203 @@
-import React, { useEffect, useState } from "react";
+// import React, { useEffect, useState } from "react";
+// import { decodeToken } from "../../api/decodeToekn";
+// import { useDispatch, useSelector } from "react-redux";
+// import { ProjectFetchAssign } from "../../features/Project/projectsSlice"
+// import { useNavigate } from "react-router-dom";
+
+// export default function EmployeeAssignedProjectPage() {
+//   const dispatch = useDispatch();
+//   const navigate = useNavigate();
+//   const { projects, loading, error } = useSelector((state) => state.project);
+
+//   const [data, setData] = useState(null);
+//   const [username, setUsername] = useState("");
+//   const [email, setEmail] = useState("");
+
+//   useEffect(() => {
+//     const storedUser = localStorage.getItem("user");
+//     if (storedUser) {
+//       const parsed = JSON.parse(storedUser);
+//       setUsername(parsed?.fullName || "");
+//       setEmail(parsed?.email || "");
+
+//     }
+//   }, []);
+
+
+//   useEffect(() => {
+//     const getDecoded = async () => {
+//       try {
+//         const decoded = await decodeToken();
+//         setData(decoded);
+//       } catch (error) {
+//         console.error("Error decoding token:", error);
+//         setError("Failed to decode token");
+//       }
+//     };
+
+//     getDecoded();
+//   }, []);
+
+//   useEffect(() => {
+//     if (data?.id) {
+//       dispatch(ProjectFetchAssign(data.id));
+//     }
+//   }, [data, dispatch]);
+//   const handleNavigate = () => {
+//     if (projects.length > 0) {
+//       const projectName = projects[0]?.project?.name;
+//       const projectID = projects[0]?.project?.id;
+//       const employeeId = projects[0]?.employeeId;
+
+//       const ProjectDetails = { projectName, projectID, employeeId, username, email };
+//       localStorage.setItem("ProjectDetails", JSON.stringify(ProjectDetails));
+
+
+//       navigate("/attendance/emptimesheet");
+//     } else {
+//       console.log("No projects found to save");
+//     }
+//   };
+//   if (loading) return <p>Loading...</p>;
+//   if (error) return <p className="text-red-500">Error: {error}</p>;
+
+//   return (
+//     <div className="p-6 bg-gray-50 rounded-lg shadow">
+//       <h2 className="text-xl font-bold mb-4">Assigned Projects</h2>
+
+//       <form className="flex items-end gap-4">
+//         {/* Employee Dropdown (disabled) */}
+//         {/* Employee Email (read-only) */}
+//         <div className="flex-1">
+//           <label className="block mb-2 font-semibold">Employee Email</label>
+//           <input
+//             type="text"
+//             value={email}
+//             readOnly
+//             className="w-full border rounded-lg p-2 bg-gray-100 text-gray-600"
+//           />
+//         </div>
+
+//         {/* Employee Name (read-only) */}
+//         <div className="flex-1">
+//           <label className="block mb-2 font-semibold">Employee Name</label>
+//           <input
+//             type="text"
+//             value={username}
+//             readOnly
+//             className="w-full border rounded-lg p-2 bg-gray-100 text-gray-600"
+//           />
+//         </div>
+
+
+//         {/* Project Dropdown (disabled) */}
+//         <div className="flex-1">
+//           <label className="block mb-2 font-semibold">Assigned Projects</label>
+//           {projects.length > 0 ? (
+//             <ul className="w-full border rounded-lg p-2 bg-gray-100 text-gray-600 max-h-40 overflow-y-auto">
+//               {projects.map((p) => (
+//                 <li key={p.id} className=" border-b last:border-b-0">
+//                   {p.project?.name || "Unnamed Project"}
+//                 </li>
+//               ))}
+//             </ul>
+//           ) : (
+//             <input
+//               type="text"
+//               value="No Project Assigned"
+//               readOnly
+//               className="w-full border rounded-lg p-2 bg-gray-100 text-gray-600"
+//             />
+//           )}
+//         </div>
+
+//         <div className="flex items-center">
+//           <button
+//             onClick={handleNavigate}
+//             type="button"
+//             className="bg-blue-400 text-white text-sm px-5 py-3 rounded hover:bg-blue-700 transition whitespace-nowrap"
+//           >
+//             Go to Attendance
+//           </button>
+//         </div>
+//       </form>
+//     </div>
+
+//   );
+// }
+
+import React, { useEffect, useState, useMemo } from "react";
 import { decodeToken } from "../../api/decodeToekn";
 import { useDispatch, useSelector } from "react-redux";
-import { ProjectFetchAssign } from "../../features/Project/projectsSlice"
+import { ProjectFetchAssign } from "../../features/Project/projectsSlice";
 import { useNavigate } from "react-router-dom";
 
 export default function EmployeeAssignedProjectPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { projects, loading, error } = useSelector((state) => state.project);
+
+  const { projects = [], loading, error } = useSelector(
+    (state) => state.project
+  );
 
   const [data, setData] = useState(null);
-  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
 
+  /* ================= EMAIL ================= */
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       const parsed = JSON.parse(storedUser);
-      setUsername(parsed?.fullName || "");
       setEmail(parsed?.email || "");
-
     }
   }, []);
 
-
+  /* ================= TOKEN ================= */
   useEffect(() => {
     const getDecoded = async () => {
-      try {
-        const decoded = await decodeToken();
-        setData(decoded);
-      } catch (error) {
-        console.error("Error decoding token:", error);
-        setError("Failed to decode token");
-      }
+      const decoded = await decodeToken();
+      setData(decoded);
     };
-
     getDecoded();
   }, []);
 
+  /* ================= FETCH PROJECTS ================= */
   useEffect(() => {
     if (data?.id) {
       dispatch(ProjectFetchAssign(data.id));
     }
   }, [data, dispatch]);
+
+  /* ================= ✅ ONLY IN-PROGRESS ================= */
+  const inProgressProjects = useMemo(() => {
+  return Array.isArray(projects)
+    ? projects.filter(p => p.status === "IN_PROGRESS")
+    : [];
+}, [projects]);
+console.log(inProgressProjects,"Assigned projects")
+  /* ================= NAME ================= */
+  const employeeName =
+    inProgressProjects.length > 0
+      ? inProgressProjects[0].employeeName
+      : "";
+
+  /* ================= NAVIGATE (DO NOT TOUCH) ================= */
   const handleNavigate = () => {
-    if (projects.length > 0) {
-      const projectName = projects[0]?.project?.name;
-      const projectID = projects[0]?.project?.id;
-      const employeeId = projects[0]?.employeeId;
+    if (inProgressProjects.length === 0) return;
 
-      const ProjectDetails = { projectName, projectID, employeeId, username, email };
-      localStorage.setItem("ProjectDetails", JSON.stringify(ProjectDetails));
+    const first = inProgressProjects[0];
 
+    const ProjectDetails = {
+      projectID: first.projectId,
+      employeeId: first.employeeId,
+      employeeName: first.employeeName,
+      email
+    };
 
-      navigate("/attendance/emptimesheet");
-    } else {
-      console.log("No projects found to save");
-    }
+    localStorage.setItem("ProjectDetails", JSON.stringify(ProjectDetails));
+    navigate("/attendance/emptimesheet");
   };
+
   if (loading) return <p>Loading...</p>;
   if (error) return <p className="text-red-500">Error: {error}</p>;
 
@@ -66,62 +206,47 @@ export default function EmployeeAssignedProjectPage() {
       <h2 className="text-xl font-bold mb-4">Assigned Projects</h2>
 
       <form className="flex items-end gap-4">
-        {/* Employee Dropdown (disabled) */}
-        {/* Employee Email (read-only) */}
+        {/* Email */}
         <div className="flex-1">
           <label className="block mb-2 font-semibold">Employee Email</label>
-          <input
-            type="text"
-            value={email}
-            readOnly
-            className="w-full border rounded-lg p-2 bg-gray-100 text-gray-600"
-          />
+          <input value={email} readOnly className="w-full border rounded-lg p-2 bg-gray-100" />
         </div>
 
-        {/* Employee Name (read-only) */}
+        {/* Name */}
         <div className="flex-1">
           <label className="block mb-2 font-semibold">Employee Name</label>
-          <input
-            type="text"
-            value={username}
-            readOnly
-            className="w-full border rounded-lg p-2 bg-gray-100 text-gray-600"
-          />
+          <input value={employeeName} readOnly className="w-full border rounded-lg p-2 bg-gray-100" />
         </div>
 
-
-        {/* Project Dropdown (disabled) */}
+        {/* Assigned Projects */}
         <div className="flex-1">
           <label className="block mb-2 font-semibold">Assigned Projects</label>
-          {projects.length > 0 ? (
-            <ul className="w-full border rounded-lg p-2 bg-gray-100 text-gray-600 max-h-40 overflow-y-auto">
-              {projects.map((p) => (
-                <li key={p.id} className=" border-b last:border-b-0">
-                  {p.project?.name || "Unnamed Project"}
+
+          {inProgressProjects.length > 0 ? (
+            <ul className="w-full border rounded-lg p-2 bg-gray-100 max-h-40 overflow-y-auto">
+              {inProgressProjects.map((p) => (
+                <li key={p.projectId} className="border-b last:border-b-0">
+                  {p.projectName}
                 </li>
               ))}
             </ul>
           ) : (
-            <input
-              type="text"
-              value="No Project Assigned"
-              readOnly
-              className="w-full border rounded-lg p-2 bg-gray-100 text-gray-600"
-            />
+            <input value="No In-Progress Project Assigned" readOnly className="w-full border rounded-lg p-2 bg-gray-100" />
           )}
         </div>
 
+        {/* Attendance */}
         <div className="flex items-center">
           <button
             onClick={handleNavigate}
             type="button"
-            className="bg-blue-400 text-white text-sm px-5 py-3 rounded hover:bg-blue-700 transition whitespace-nowrap"
+            className="bg-blue-400 text-white px-5 py-3 rounded hover:bg-blue-700 disabled:opacity-50"
+            disabled={inProgressProjects.length === 0}
           >
             Go to Attendance
           </button>
         </div>
       </form>
     </div>
-
   );
 }

@@ -133,8 +133,6 @@ export default function FreelancerAssignProjectpage() {
               className="w-full border rounded p-2"
             >
               <option value="">Select Type</option>
-              <option value="fulltime">Full Time</option>
-              <option value="contract">Contract</option>
               <option value="freelancer">Freelancer</option>
               
             </select>
