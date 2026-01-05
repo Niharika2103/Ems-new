@@ -32,8 +32,9 @@ public class Projects {
     private LocalDateTime endDate;
     private LocalDateTime createdAt = LocalDateTime.now();
     //private String status;
-    @Enumerated(EnumType.STRING)
-    private ProjectStatus status;
+    // ✅ REQUIRED for COMPLETED check
+    @Column(name = "status", nullable = false)
+    private String status;
     
     @Column(name = "cost_estimated")
     private Double estimatedCost;
@@ -100,14 +101,14 @@ public class Projects {
 	public void setCreatedAt(LocalDateTime createdAt) {
 		this.createdAt = createdAt;
 	}
+	public String getStatus() {
+		return status;
+	}
+	public void setStatus(String status) {
+		this.status = status;
+	}
 	
-	public ProjectStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(ProjectStatus status) {
-        this.status = status;
-    }
+	
 
 
 //	public List<ProjectAssignmentEntity> getAssignments() {

@@ -360,10 +360,10 @@ export const ProjectAssignApi = (projectId, employeeId, role = "employee",employ
     `${AUTH_API.PROJECT}/projects/${projectId}/assign?employeeId=${employeeId}&role=${role}&employee_type=${employee_type}`
   );
 }
-//assigned project 
+// assigned project (ONLY IN-PROGRESS PROJECTS)
 export const ProjectFetchAssignApi = (employeeId) => {
   return ProjectClient.get(
-    `${AUTH_API.PROJECT}/projects/employee/${employeeId}`
+    `${AUTH_API.PROJECT}/projects/employee/${employeeId}/active-projects`
   );
 };
 //fetch all project and user 
@@ -372,6 +372,15 @@ export const ProjectFetchAllDetailsApi = () => {
     `${AUTH_API.PROJECT}/projects/assignments`
   );
 };
+// =====================================================
+// FINISH PROJECT (MARK COMPLETED)
+// =====================================================
+export const ProjectFinishApi = (assignmentId) => {
+  return ProjectClient.put(
+    `${AUTH_API.PROJECT}/projects/assignments/${assignmentId}/finish`
+  );
+};
+
 // Employee Attendance
 //save all for attendance
 export const AttendanceSaveallApi = (employeename,employeeId, projectId, formData) => {
