@@ -493,6 +493,128 @@ export const verifyAdminMfaSetup = async (req, res) => {
   }
 };
 
+
+export const requestAdminPasswordReset = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { email } = req.body;
+
+    if (!email) return res.status(400).json({ error: "Email required" });
+
+    // find user
+    const userResult = await client.query(
+      `SELECT id, role FROM ${USER_MASTER_TABLE} WHERE email=$1`,
+      [email]
+    );
+
+    const user = userResult.rows[0];
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    // must be admin
+    if (!(user.role === "admin" || user.role_1 === "admin"))
+      return res.status(403).json({ error: "Not an admin account" });
+
+    // generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // expiry 10 minutes
+    const expiry = new Date(Date.now() + 10 * 60 * 1000);
+
+    // update in registrations table
+    await client.query(
+      `UPDATE registrations
+       SET reset_token=$1,
+           reset_token_expiry=$2
+       WHERE user_id=$3`,
+      [otp, expiry, user.id]
+    );
+
+    // send OTP email
+   await sendEmail(
+  email,
+  "Admin Password Reset OTP",
+  `<p>Your OTP for password reset is <b>${otp}</b>. It expires in 10 minutes.</p>`
+);
+
+
+    res.json({ message: "OTP sent to email" });
+  } catch (err) {
+    console.error("Admin forgot-password error:", err);
+    res.status(500).json({ error: "Server error" });
+  } finally {
+    client.release();
+  }
+};
+
+export const resetAdminPassword = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { email, otp, newPassword } = req.body;
+
+    if (!email || !otp || !newPassword)
+      return res.status(400).json({ error: "All fields required" });
+
+    // find user
+    const userResult = await client.query(
+      `SELECT id FROM ${USER_MASTER_TABLE} WHERE email=$1`,
+      [email]
+    );
+
+    const user = userResult.rows[0];
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    // fetch OTP record
+    const regResult = await client.query(
+      `SELECT reset_token, reset_token_expiry
+       FROM registrations
+       WHERE user_id=$1`,
+      [user.id]
+    );
+
+    const reg = regResult.rows[0];
+    if (!reg) return res.status(400).json({ error: "No registration found" });
+
+    // validate token
+    if (!reg.reset_token || !reg.reset_token_expiry)
+      return res.status(400).json({ error: "Reset not requested" });
+
+    if (reg.reset_token !== otp)
+      return res.status(400).json({ error: "Invalid OTP" });
+
+    if (new Date() > new Date(reg.reset_token_expiry))
+      return res.status(400).json({ error: "OTP expired" });
+
+    // hash password
+    const hashed = await bcrypt.hash(newPassword, 10);
+
+    // update password
+    await client.query(
+      `UPDATE ${USER_MASTER_TABLE}
+       SET password=$1
+       WHERE id=$2`,
+      [hashed, user.id]
+    );
+
+    // clear token
+    await client.query(
+      `UPDATE registrations
+       SET reset_token=NULL,
+           reset_token_expiry=NULL
+       WHERE user_id=$1`,
+      [user.id]
+    );
+
+    res.json({ message: "Password reset successful" });
+
+  } catch (err) {
+    console.error("Reset password error:", err);
+    res.status(500).json({ error: "Server error" });
+  } finally {
+    client.release();
+  }
+};
+
 // export const getAllAdmins = async (req, res) => {
 //   try {
 //  const { data, error } = await supabase
@@ -1841,6 +1963,8 @@ const templateFileMap = {
   "Warning Letter": "warningLetter.html",
   "freelancer contract": "freelancerContract.html",
   "invoice Template": "invoiceTemplate.html",
+  "Probation Completion Letter": "probationCompletionLetter.html",
+
 };
 
 // Replace {{placeholders}}
@@ -1891,6 +2015,15 @@ export const generateLetter = async (req, res) => {
       return res.status(500).json({ error: "Template file missing" });
     }
 
+    const probationResult = await client.query(
+  `SELECT * FROM probation 
+   WHERE employee_id = $1 
+   ORDER BY createdat DESC LIMIT 1`,
+  [employeeId]
+);
+
+const probation = probationResult.rows[0] || {};
+
     // ✅ Inject company_name from branding or fallback
     const data = {
       name: emp.name,
@@ -1915,6 +2048,11 @@ export const generateLetter = async (req, res) => {
       account_number: sal.account_number,
       company_name: branding?.companyName || "Zigma People Private Limited (An AI India Venture)",
       ctc: sal.gross_salary,
+      start_date: probation.startdate,
+end_date: probation.enddate,
+confirmation_date: probation.enddate,
+issue_date: new Date().toLocaleDateString(),
+
     };
 
     let filledHTML = fillTemplate(templateContent, data);
@@ -4225,6 +4363,41 @@ export const createProbation = async (req, res) => {
     client.release();
   }
 };
+
+export const getProbationDashboardCounts = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const query = `
+      SELECT
+        COUNT(*) FILTER (WHERE status = 'active') AS active_count,
+
+        COUNT(*) FILTER (
+          WHERE status = 'active'
+          AND enddate BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '5 days'
+        ) AS ending_soon_count,
+
+        COUNT(*) FILTER (WHERE status = 'completed') AS completed_count
+      FROM probation;
+    `;
+
+    const { rows } = await client.query(query);
+
+    return res.status(200).json({
+      success: true,
+      active: Number(rows[0].active_count),
+      endingSoon: Number(rows[0].ending_soon_count),
+      completed: Number(rows[0].completed_count),
+    });
+
+  } catch (err) {
+    console.error("Dashboard Count Error:", err);
+    return res.status(500).json({ message: "Failed to fetch dashboard counts" });
+  } finally {
+    client.release();
+  }
+};
+
 //Audit log -logout
 export const adminLogout = async (req, res) => {
   const client = await pool.connect();

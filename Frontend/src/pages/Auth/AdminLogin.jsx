@@ -30,6 +30,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, EffectCoverflow } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/effect-coverflow";
+import { adminForgotPasswordApi, adminResetPasswordApi } from "../../api/authApi";
 
 export default function AdminLogin() {
   const navigate = useNavigate();
@@ -43,9 +44,11 @@ export default function AdminLogin() {
   });
 
   const [forgotPasswordData, setForgotPasswordData] = useState({
-    newPassword: "",
-    confirmPassword: "",
-  });
+  otp: "",
+  newPassword: "",
+  confirmPassword: "",
+});
+
 
   const [errors, setErrors] = useState({});
   const [forgotPasswordErrors, setForgotPasswordErrors] = useState({});
@@ -54,7 +57,8 @@ export default function AdminLogin() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
-
+  const [otpSent, setOtpSent] = useState(false);
+  
   // Handle input changes for login form
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -116,41 +120,74 @@ export default function AdminLogin() {
     }
   };
 
-  // Handle forgot password submit
-  const handleForgotPasswordSubmit = (e) => {
-    e.preventDefault();
 
-    const validationErrors = {};
 
-    if (!forgotPasswordData.newPassword.trim()) {
-      validationErrors.newPassword = "New password is required";
-    } else if (forgotPasswordData.newPassword.length < 6) {
-      validationErrors.newPassword = "Password must be at least 6 characters";
-    } else if (forgotPasswordData.newPassword.length > 16) {
-      validationErrors.newPassword = "Password cannot exceed 16 characters";
-    }
+  const handleForgotPasswordSubmit = async (e) => {
+  e.preventDefault();
 
-    if (!forgotPasswordData.confirmPassword.trim()) {
-      validationErrors.confirmPassword = "Please confirm your password";
-    } else if (forgotPasswordData.newPassword !== forgotPasswordData.confirmPassword) {
-      validationErrors.confirmPassword = "Passwords do not match";
-    }
+  const validationErrors = {};
 
-    if (Object.keys(validationErrors).length === 0) {
-      setForgotPasswordLoading(true);
+  if (!forgotPasswordData.newPassword.trim()) {
+    validationErrors.newPassword = "New password is required";
+  } else if (forgotPasswordData.newPassword.length < 6) {
+    validationErrors.newPassword = "Password must be at least 6 characters";
+  } else if (forgotPasswordData.newPassword.length > 16) {
+    validationErrors.newPassword = "Password cannot exceed 16 characters";
+  }
 
-      // Simulate API call to reset password
-      setTimeout(() => {
-        toast.success("Password reset successfully!");
-        setForgotPasswordLoading(false);
-        setShowForgotPassword(false);
-        setForgotPasswordData({ newPassword: "", confirmPassword: "" });
-        setForgotPasswordErrors({});
-      }, 1500);
-    } else {
-      setForgotPasswordErrors(validationErrors);
-    }
-  };
+  if (!forgotPasswordData.confirmPassword.trim()) {
+    validationErrors.confirmPassword = "Please confirm your password";
+  } else if (forgotPasswordData.newPassword !== forgotPasswordData.confirmPassword) {
+    validationErrors.confirmPassword = "Passwords do not match";
+  }
+
+  if (!forgotPasswordData.otp.trim()) {
+    validationErrors.otp = "OTP is required";
+  }
+
+  if (Object.keys(validationErrors).length > 0) {
+    return setForgotPasswordErrors(validationErrors);
+  }
+
+  try {
+    setForgotPasswordLoading(true);
+
+    await adminResetPasswordApi({
+      email: formData.email,
+      otp: forgotPasswordData.otp,
+      newPassword: forgotPasswordData.newPassword,
+    });
+
+    toast.success("Password reset successfully");
+
+    setShowForgotPassword(false);
+    setOtpSent(false);
+
+    setForgotPasswordData({
+      otp: "",
+      newPassword: "",
+      confirmPassword: "",
+    });
+  } catch (err) {
+    toast.error(err.response?.data?.error || "Password reset failed");
+  } finally {
+    setForgotPasswordLoading(false);
+  }
+};
+
+const handleSendOtp = async () => {
+  try {
+    await adminForgotPasswordApi({ email: formData.email });
+
+    toast.success("OTP sent to email");
+    setOtpSent(true);
+  } catch (err) {
+    toast.error(
+      err?.response?.data?.error || "Failed to send OTP"
+    );
+  }
+};
+
 
   // Handle back to login
   const handleBackToLogin = () => {
@@ -371,122 +408,105 @@ export default function AdminLogin() {
               </Fade>
 
               {/* Forgot Password Form */}
-              <Fade in={showForgotPassword} timeout={300}>
-                <Box component="form" onSubmit={handleForgotPasswordSubmit} noValidate sx={{
-                  display: showForgotPassword ? 'block' : 'none'
-                }}>
+              
+<Fade in={showForgotPassword} timeout={300}>
+  <Box
+    component="form"
+    onSubmit={handleForgotPasswordSubmit}
+    noValidate
+    sx={{
+      display: showForgotPassword ? "block" : "none",
+    }}
+  >
+    {/* Email */}
+    <TextField
+      label="Registered Email"
+      name="email"
+      type="email"
+      fullWidth
+      margin="dense"
+      size="small"
+      variant="outlined"
+      value={formData.email}
+      onChange={handleChange}
+      required
+    />
 
-                  {/* New Password */}
-                  <TextField
-                    label="New Password"
-                    name="newPassword"
-                    type={showNewPassword ? "text" : "password"}
-                    fullWidth
-                    margin="dense"
-                    size="small"
-                    variant="outlined"
-                    value={forgotPasswordData.newPassword}
-                    onChange={handleForgotPasswordChange}
-                    error={!!forgotPasswordErrors.newPassword}
-                    helperText={forgotPasswordErrors.newPassword}
-                    required
-                    inputProps={{ maxLength: 16 }}
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            edge="end"
-                            size="small"
-                            onClick={() => setShowNewPassword((prev) => !prev)}
-                            aria-label={
-                              showNewPassword ? "Hide password" : "Show password"
-                            }
-                          >
-                            {showNewPassword ? (
-                              <Visibility fontSize="small" />
-                            ) : (
-                              <VisibilityOff fontSize="small" />
-                            )}
-                          </IconButton>
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
+    {/* Send OTP Button */}
+    <Button
+      fullWidth
+      variant="outlined"
+      size="small"
+      sx={{ mt: 1 }}
+      onClick={handleSendOtp}
+      disabled={!formData.email}
+    >
+      Send OTP
+    </Button>
 
-                  {/* Confirm Password */}
-                  <TextField
-                    label="Confirm Password"
-                    name="confirmPassword"
-                    type={showConfirmPassword ? "text" : "password"}
-                    fullWidth
-                    margin="dense"
-                    size="small"
-                    variant="outlined"
-                    value={forgotPasswordData.confirmPassword}
-                    onChange={handleForgotPasswordChange}
-                    error={!!forgotPasswordErrors.confirmPassword}
-                    helperText={forgotPasswordErrors.confirmPassword}
-                    required
-                    inputProps={{ maxLength: 16 }}
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            edge="end"
-                            size="small"
-                            onClick={() => setShowConfirmPassword((prev) => !prev)}
-                            aria-label={
-                              showConfirmPassword ? "Hide password" : "Show password"
-                            }
-                          >
-                            {showConfirmPassword ? (
-                              <Visibility fontSize="small" />
-                            ) : (
-                              <VisibilityOff fontSize="small" />
-                            )}
-                          </IconButton>
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
+    {/* OTP Field */}
+    {otpSent && (
+      <TextField
+        label="Enter OTP"
+        name="otp"
+        type="text"
+        fullWidth
+        margin="dense"
+        size="small"
+        variant="outlined"
+        value={forgotPasswordData.otp}
+        onChange={handleForgotPasswordChange}
+        error={!!forgotPasswordErrors.otp}
+        helperText={forgotPasswordErrors.otp}
+        required
+      />
+    )}
 
-                  {/* Password Requirements */}
-                  <Box sx={{
-                    mt: 1.5,
-                    p: 1,
-                    backgroundColor: 'grey.50',
-                    borderRadius: 1,
-                    border: '1px solid',
-                    borderColor: 'grey.200'
-                  }}>
-                    <Typography variant="caption" fontWeight="bold" color="text.primary" display="block" gutterBottom>
-                      Password Requirements:
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      • 6-16 characters
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      • Passwords must match
-                    </Typography>
-                  </Box>
+    {/* New Password */}
+    <TextField
+      label="New Password"
+      name="newPassword"
+      type={showNewPassword ? "text" : "password"}
+      fullWidth
+      margin="dense"
+      size="small"
+      variant="outlined"
+      value={forgotPasswordData.newPassword}
+      onChange={handleForgotPasswordChange}
+      required
+    />
 
-                  {/* Reset Password Button */}
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    size="small"
-                    sx={{
-                      mt: 2,
-                      fontSize: "0.9rem",
-                      py: 0.75
-                    }}
-                    type="submit"
-                    disabled={forgotPasswordLoading} // Only disable when loading
-                  >
-                    {forgotPasswordLoading ? "Resetting..." : "Reset Password"}
-                  </Button>
-                </Box>
-              </Fade>
+    {/* Confirm Password */}
+    <TextField
+      label="Confirm Password"
+      name="confirmPassword"
+      type={showConfirmPassword ? "text" : "password"}
+      fullWidth
+      margin="dense"
+      size="small"
+      variant="outlined"
+      value={forgotPasswordData.confirmPassword}
+      onChange={handleForgotPasswordChange}
+      required
+    />
+
+    {/* Reset Password Button */}
+    <Button
+      fullWidth
+      variant="contained"
+      size="small"
+      sx={{
+        mt: 2,
+        fontSize: "0.9rem",
+      }}
+      type="submit"
+      disabled={forgotPasswordLoading}
+    >
+      {forgotPasswordLoading ? "Resetting..." : "Reset Password"}
+    </Button>
+  </Box>
+</Fade>
+
             </CardContent>
           </Card>
         </div>

@@ -1,7 +1,9 @@
 import { Router } from "express";
+import path from "path";
 import {
   registerEmployee,
   employeeLogin,
+  getMyEmployeeProfile,
   requestPasswordReset,
   resetPassword,
   uploadExcel,
@@ -24,9 +26,11 @@ import {
   getFullTimeEmployees,
   //getFreelancerAssignments
   submitSelfReview,
+  getEmployeeReview
 
 
 } from "../controllers/employee.controller.js";
+
 
 
 const router = Router();
@@ -38,6 +42,9 @@ router.post("/register", registerEmployee);
 // 🚀 Employee login (with first login + OTP)
 router.post("/login", employeeLogin);
  
+// 👤 Get logged-in employee profile (FOR REFERRAL AUTO-FILL)
+router.get("/me", getMyEmployeeProfile);
+
 // 🔄 Forgot password → reset link
 router.post("/request-password-reset", requestPasswordReset);
  
@@ -98,6 +105,32 @@ router.get("/salary/:employeeId", getEmployeeSalary);
 router.get("/employees/fulltime", getFullTimeEmployees);
 router.post("/performance/submit", submitSelfReview); 
 
+router.get("/performance/:employee_uuid", getEmployeeReview);
+
+//resume download
+router.get("/download/:filename", (req, res) => {
+  const { filename } = req.params;
+
+  const filePath = path.join(
+    process.cwd(),
+    "src",
+    "uploads",
+    filename
+  );
+
+  res.setHeader("Content-Type", "application/pdf");
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename="${filename}"`
+  );
+
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      console.error("PDF download error:", err);
+      res.status(404).json({ error: "File not found" });
+    }
+  });
+});
 
 
 export default router;

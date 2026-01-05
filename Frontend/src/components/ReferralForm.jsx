@@ -12,15 +12,32 @@ import { useState, useEffect } from "react";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { useDispatch, useSelector } from "react-redux";
 import { createReferral } from "../features/auth/employeeSlice";
+import { getMyEmployeeProfileApi } from "../api/authApi";
+
 
 export default function ReferralForm() {
   const dispatch = useDispatch();
 
   
-const storedUser = JSON.parse(localStorage.getItem("user"));
+// const storedUser = JSON.parse(localStorage.getItem("user"));
+// const referrerName = storedUser?.name || storedUser?.fullName || "";
+// const employeeId   = storedUser?.employeeId || "";
 
-const referrerName = storedUser?.name || storedUser?.fullName || "";
-const employeeId   = storedUser?.employeeId || "";
+const [referrerName, setReferrerName] = useState("");
+const [employeeId, setEmployeeId] = useState("");
+
+useEffect(() => {
+  getMyEmployeeProfileApi()
+    .then((res) => {
+      const data = res.data.data;
+      setReferrerName(data.employee_name);
+      setEmployeeId(data.employee_id);
+    })
+    .catch((err) => {
+      console.error("Failed to fetch employee profile", err);
+    });
+}, []);
+
 const { referralLoading, referralError, referralSuccess } = useSelector((state) => state.employee);
 
  const EMAIL_DOMAIN_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;

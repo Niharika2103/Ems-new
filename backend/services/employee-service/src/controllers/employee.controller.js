@@ -10,6 +10,7 @@ import fs from "fs";
 import speakeasy from "speakeasy";
 import dotenv from "dotenv";
 import axios from "axios";
+
 dotenv.config();
 
 const FREELANCER_URL = `${process.env.FREELANCER_PROTOCOL}://${process.env.FREELANCER_HOST}:${process.env.FREELANCER_PORT}`;
@@ -808,7 +809,6 @@ export const getEmployees = async (req, res) => {
 };
 
 
-// ================== Get Employee by ID ==================
 // ================== Get Employee by Email (for employee profile) ==================
 export const getEmployeeById = async (req, res) => {
   const client = await pool.connect();
@@ -851,6 +851,48 @@ export const getEmployeeById = async (req, res) => {
     client.release();
   }
 };
+
+
+// ================== Get Logged-in Employee Profile (FOR REFERRAL AUTO-FILL) ==================
+export const getMyEmployeeProfile = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const decoded = getUserFromToken(req);
+    const employeeUuid = decoded.id;
+
+    const query = `
+      SELECT id, employee_id, name, email
+      FROM user_employees_master
+      WHERE id = $1
+      AND role = 'employee'
+      LIMIT 1;
+    `;
+
+    const { rows } = await client.query(query, [employeeUuid]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Employee not found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        employee_id: rows[0].employee_id,
+        employee_name: rows[0].name,
+        email: rows[0].email,
+      },
+    });
+
+  } catch (err) {
+    console.error("Get My Employee Profile Error:", err.message);
+    return res.status(401).json({ error: "Invalid or expired token" });
+  } finally {
+    client.release();
+  }
+};
+
+
 
 // ================== Fetch Employee by Email (general) ==================
 export const fetchEmployeeById = async (req, res) => {
@@ -1506,10 +1548,15 @@ export const createReferral = async (req, res) => {
     }
 
     // Create JSON for uploading resume
-    const resumeJson = {
-      resume: req.file.filename,
+    // const resumeJson = {
+    //   resume: req.file.filename,
       
-    };
+    // };
+          const resumeJson = {
+        resume: req.file.filename,
+      };
+
+
 
     // Use your referral ID generator
     const referralId = await generateReferralId(client);
@@ -1530,7 +1577,8 @@ export const createReferral = async (req, res) => {
       phone_number,
       position,
       work_exp,
-      resumeJson,
+      // resumeJson,
+      JSON.stringify(resumeJson),
       referralId,
       employee.name,
       employee.name,
@@ -1598,11 +1646,36 @@ export const getMyReferrals = async (req, res) => {
     `;
 
     const result = await client.query(query, [employeeId]);
+    const BASE_URL =
+  process.env.BASE_URL || `http://localhost:${process.env.PORT}`;
 
-    return res.status(200).json({
-      total: result.rowCount,
-      referrals: result.rows,
+const referrals = result.rows.map((row) => {
+  let resumeFile = null;
+
+  if (row.resume && typeof row.resume === "object" && row.resume.resume) {
+    resumeFile = row.resume.resume;
+  } else if (typeof row.resume === "string") {
+    resumeFile = row.resume;
+  }
+
+  return {
+    ...row,
+    resume: resumeFile
+      ? `${BASE_URL}/uploads/${resumeFile}`
+      : null,
+  };
+});
+ return res.status(200).json({
+      total: referrals.length,
+      referrals,
     });
+
+
+
+    // return res.status(200).json({
+    //   total: result.rowCount,
+    //   referrals: result.rows,
+    // });
 
   } catch (err) {
     console.error("Get My Referrals Error:", err.message);
@@ -1764,6 +1837,61 @@ export const submitSelfReview = async (req, res) => {
     client.release();
   }
 };
+
+export const getEmployeeReview = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { employee_uuid } = req.params;
+
+    if (!employee_uuid) {
+      return res.status(400).json({ error: "employee_uuid is required" });
+    }
+
+   const query = `
+  SELECT 
+    pr.id AS review_id,
+
+    -- employee info
+    ue.employee_id AS employee_code,
+    ue.name AS employee_name,
+    ue.designation,
+
+    -- self review
+    pr.self_rating,
+    pr.self_strengths,
+    pr.self_improvements,
+    pr.self_comments,
+
+    -- TL review
+    pr.tl_rating,
+    pr.tl_comments,
+
+    pr.status
+  FROM performance_reviews pr
+  JOIN user_employees_master ue
+    ON ue.id = pr.employee_id
+  WHERE pr.employee_id = $1
+  ORDER BY pr.updated_at DESC
+  LIMIT 1;
+`;
+
+
+    const { rows } = await client.query(query, [employee_uuid]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "No review found" });
+    }
+
+    res.status(200).json(rows[0]);
+
+  } catch (err) {
+    console.error("Get Employee Review Error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  } finally {
+    client.release();
+  }
+};
+
 
 export const fetchAuthSettings = async () => {
   const { data } = await axios.get(

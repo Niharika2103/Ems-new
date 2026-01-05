@@ -1,10 +1,15 @@
 import { Router } from "express";
 import webhookRoutes from "./webhook.routes.js";
+import reportRoutes from "./report.routes.js";
+
+
 
 import {
   adminRegister,
   adminLogin,
   verifyAdminMfaSetup,
+  requestAdminPasswordReset,
+  resetAdminPassword,
   getAdminById,
   updateAdminProfile,
   upload,
@@ -75,6 +80,7 @@ import {
   sendInvoiceReminder,
   deleteInvoice,
   getNewEmployees,
+  getProbationDashboardCounts,
   getProbationWithUser,
   getMonthlyFinalSummary,
   validatePayroll,
@@ -148,12 +154,15 @@ import { getEmployeeRoiReport } from "../controllers/employeeRoi.controller.js";
 
 const router = Router();
 router.use("/webhooks", webhookRoutes);
+router.use("/reports", reportRoutes);
 
 
 /* ================= Admin Register/Login ================= */
 router.post("/register", adminRegister);
 router.post("/verify-mfa", verifyAdminMfaSetup);
 router.post("/login", adminLogin);
+router.post("/forgot-password", requestAdminPasswordReset);
+router.post("/reset-password", resetAdminPassword);
 
 /* ========== AUDIT LOGS ========== */
 router.post("/logout", adminLogout);
@@ -303,6 +312,7 @@ router.put("/applications/status/:application_id", updateApplicationStatus);
 router.get("/reports/freelancer-roi", getFreelancerRoiReport);
 router.get("/reports/employee-roi", getEmployeeRoiReport);
 
+
 /* -------------------------------------------------------------------------- */
 /*                       FREELANCER CONTRACT ROUTES                           */
 /* -------------------------------------------------------------------------- */
@@ -396,5 +406,10 @@ router.put("/email-templates/:id", updateEmailTemplate);
 // Delete template
 router.delete("/email-templates/:id", deleteEmailTemplate);
 
+// ================= PROBATION DASHBOARD =================
+router.get(
+  "/probation/dashboard-counts",
+  getProbationDashboardCounts
+);
 
 export default router;

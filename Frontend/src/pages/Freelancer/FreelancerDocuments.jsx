@@ -301,7 +301,7 @@ const FreelancerDocuments = () => {
                     onChange={(e) => handleFileChange(e, "freelancerDocument")}
                   />
                 </Button>
-
+               
                 {formData.freelancerDocument && (
                   <Box
                     sx={{
@@ -332,7 +332,7 @@ const FreelancerDocuments = () => {
                     </Typography>
                   </Box>
                 )}
-
+               
                 {!formData.freelancerDocument && (
                   <Typography variant="body2" color="text.secondary">
                     No file selected

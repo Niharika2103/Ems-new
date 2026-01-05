@@ -1,12 +1,33 @@
 <html>
-<body>
-  <h2>LETTER_HEADER_PLACEHOLDER</h2>
-  <p>Dear {{name}},</p>
-  <p>You have been promoted to <b>{{designation}}</b> effective <b>{{effective_from}}</b>.</p>
-  <p>Updated Salary:</p>
-  <p>Gross Salary: ₹{{gross_salary}}</p>
-  <p>Net Salary: ₹{{net_salary}}</p>
-  <p>Keep up the great work!</p>
-  <p>Regards,<br>HR Team</p>
+<body style="font-family: Arial, sans-serif; line-height: 1.6;">
+
+  <h2 style="text-align:center;">PROMOTION LETTER</h2>
+
+  <p>Date: <b>{{issue_date}}</b></p>
+
+  <p>To,<br>
+  <b>{{name}}</b><br>
+  {{address}}</p>
+
+  <p>Dear <b>{{name}}</b>,</p>
+
+  <p>We are pleased to inform you that you have been promoted to the position of <b>{{designation}}</b>, effective from <b>{{effective_from}}</b>.</p>
+
+  <p>In recognition of your consistent performance and valuable contribution to the organization, your compensation has been revised as follows:</p>
+
+  <p>
+    <b>Revised Salary Details:</b><br>
+    Gross Salary: ₹{{gross_salary}} per month<br>
+    Net Salary: ₹{{net_salary}} per month
+  </p>
+
+  <p>Your reporting structure and other terms and conditions of employment shall remain unchanged unless communicated otherwise.</p>
+
+  <p>We congratulate you on this achievement and are confident that you will continue to perform your duties with the same level of dedication and excellence.</p>
+
+  <p>Regards,<br>
+  <b>HR Department</b><br>
+  {{company_name}}</p>
+
 </body>
 </html>

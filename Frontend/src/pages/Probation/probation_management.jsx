@@ -6,6 +6,8 @@ import EmployeeTable from "../../components/Probation/EmployeeTable";
 import AssignProbation from '../../components/Probation/AssignProbation';
 import { fetchassignProbation } from "../../features/Salarystructure/salaryStructureSlice";
 import EmployeeDetailView from "../../components/Probation/EmployeeDetailView";
+import { getProbationDashboardCountsApi } from "../../api/authApi";
+import { generateLetterApi } from "../../api/authApi";
 
 
 const ProbationManagementSystem = () => {
@@ -20,6 +22,13 @@ const ProbationManagementSystem = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [viewEmployee, setViewEmployee] = useState(null);      
+  const [dashboardCounts, setDashboardCounts] = useState({
+  active: 0,
+  endingSoon: 0,
+  completed: 0,
+});
+
+  const [recentlyGeneratedLetter, setRecentlyGeneratedLetter] = useState(null);      
   useEffect(() => {
     if (activeTab === "employees") {
       dispatch(fetchNewEmployees());
@@ -27,6 +36,22 @@ const ProbationManagementSystem = () => {
       dispatch(fetchassignProbation());
     }
   }, [activeTab, dispatch]);
+  
+    useEffect(() => {
+      getProbationDashboardCountsApi()
+        .then((res) => {
+          setDashboardCounts({
+            active: res.data.active,
+            endingSoon: res.data.endingSoon,
+            completed: res.data.completed,
+          });
+        })
+        .catch((err) => {
+          console.error("Dashboard count error", err);
+        });
+    }, []);
+
+
 
 
   const getStatusColor = (status) => {
@@ -69,8 +94,33 @@ const ProbationManagementSystem = () => {
 
   return matchesSearch && matchesFilter;
 });
+const handleGenerateLetter = async (emp) => {
+  try {
+    const payload = {
+      employeeId: emp.employee_id || emp.user_id || emp.id,
+      letterType: "Probation Completion Letter"
+    };
 
+    const res = await generateLetterApi(payload);
 
+    // ✅ Store the generated letter info
+    const letterData = {
+      ...res.data,
+      employeeId: payload.employeeId,
+      associatedEmployee: emp // optional: keep ref to employee row
+    };
+    setRecentlyGeneratedLetter(letterData);
+
+    alert("Letter generated successfully");
+
+    if (res.data?.pdf_url) {
+      window.open(res.data.pdf_url, "_blank");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Failed to generate letter");
+  }
+};
 
 
 
@@ -90,7 +140,43 @@ const ProbationManagementSystem = () => {
               </button> */}
             </div>
           </div>
-          
+          <div className="grid grid-cols-4 gap-4 mt-6">
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-gray-600 text-sm">Active Probations</p>
+                <div className="bg-blue-100 p-2 rounded-lg">
+                  <Clock className="text-blue-600" size={20} />
+                </div>
+              </div>
+              <p className="text-3xl font-bold text-gray-800">
+                {dashboardCounts.active}
+              </p>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-gray-600 text-sm">Ending Soon</p>
+                <div className="bg-red-100 p-2 rounded-lg">
+                  <Bell className="text-red-600" size={20} />
+                </div>
+              </div>
+              <p className="text-3xl font-bold text-gray-800">
+                {dashboardCounts.endingSoon}
+              </p>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-gray-600 text-sm">Completed</p>
+                <div className="bg-green-100 p-2 rounded-lg">
+                  <CheckCircle className="text-green-600" size={20} />
+                </div>
+              </div>
+              <p className="text-3xl font-bold text-gray-800">
+                {dashboardCounts.completed}
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="bg-white rounded-lg shadow-sm mb-6">
@@ -157,7 +243,7 @@ const ProbationManagementSystem = () => {
               data={filteredList}
               // onActionClick={setSelectedEmployee}
               onActionClick={(emp) => setViewEmployee(emp)}
-
+              onGenerateLetter={handleGenerateLetter}
               showAssignAction={false}
               getStatusColor={getStatusColor}
               getStatusText={getStatusText}
