@@ -115,7 +115,7 @@ export default function FreelancerApprovalTable() {
       const res = await axios.get(`${AUTH_API.FREELANCER}/sync`);
 
       if (res.data.success) {
-        toast.success("heet synced successfully!");
+        toast.success("Sheet synced successfully!");
         loadFreelancers();
       } else {
         toast.error("Sync failed: " + res.data.message);
