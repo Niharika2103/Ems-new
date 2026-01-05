@@ -25,7 +25,9 @@ const AssignProbation = ({ employee = {},modalTitle="Assign Probation", onClose 
   const joiningDate = employee?.dateOfJoining || employee?.joiningDate || employee?.date_of_joining || "";
 
   const [duration, setDuration] = useState(3);
-  const [startDate, setStartDate] = useState("");
+const today = new Date().toISOString().split("T")[0];
+const [startDate, setStartDate] = useState(today);
+
   const [reportingManager, setReportingManager] = useState("");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -135,6 +137,16 @@ useEffect(() => {
   }
 }, [created]);
 
+useEffect(() => {
+  const todayDate = new Date().toISOString().split("T")[0];
+
+  // If joining date exists and is after today, use joining date
+  if (joiningDate && joiningDate.split("T")[0] > todayDate) {
+    setStartDate(joiningDate.split("T")[0]);
+  } else {
+    setStartDate(todayDate);
+  }
+}, [employee]);
 
 
   const computedEndDate = startDate ? addMonthsToDate(startDate, duration) : "";

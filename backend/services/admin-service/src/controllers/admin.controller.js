@@ -493,6 +493,128 @@ export const verifyAdminMfaSetup = async (req, res) => {
   }
 };
 
+
+export const requestAdminPasswordReset = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { email } = req.body;
+
+    if (!email) return res.status(400).json({ error: "Email required" });
+
+    // find user
+    const userResult = await client.query(
+      `SELECT id, role FROM ${USER_MASTER_TABLE} WHERE email=$1`,
+      [email]
+    );
+
+    const user = userResult.rows[0];
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    // must be admin
+    if (!(user.role === "admin" || user.role_1 === "admin"))
+      return res.status(403).json({ error: "Not an admin account" });
+
+    // generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // expiry 10 minutes
+    const expiry = new Date(Date.now() + 10 * 60 * 1000);
+
+    // update in registrations table
+    await client.query(
+      `UPDATE registrations
+       SET reset_token=$1,
+           reset_token_expiry=$2
+       WHERE user_id=$3`,
+      [otp, expiry, user.id]
+    );
+
+    // send OTP email
+   await sendEmail(
+  email,
+  "Admin Password Reset OTP",
+  `<p>Your OTP for password reset is <b>${otp}</b>. It expires in 10 minutes.</p>`
+);
+
+
+    res.json({ message: "OTP sent to email" });
+  } catch (err) {
+    console.error("Admin forgot-password error:", err);
+    res.status(500).json({ error: "Server error" });
+  } finally {
+    client.release();
+  }
+};
+
+export const resetAdminPassword = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { email, otp, newPassword } = req.body;
+
+    if (!email || !otp || !newPassword)
+      return res.status(400).json({ error: "All fields required" });
+
+    // find user
+    const userResult = await client.query(
+      `SELECT id FROM ${USER_MASTER_TABLE} WHERE email=$1`,
+      [email]
+    );
+
+    const user = userResult.rows[0];
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    // fetch OTP record
+    const regResult = await client.query(
+      `SELECT reset_token, reset_token_expiry
+       FROM registrations
+       WHERE user_id=$1`,
+      [user.id]
+    );
+
+    const reg = regResult.rows[0];
+    if (!reg) return res.status(400).json({ error: "No registration found" });
+
+    // validate token
+    if (!reg.reset_token || !reg.reset_token_expiry)
+      return res.status(400).json({ error: "Reset not requested" });
+
+    if (reg.reset_token !== otp)
+      return res.status(400).json({ error: "Invalid OTP" });
+
+    if (new Date() > new Date(reg.reset_token_expiry))
+      return res.status(400).json({ error: "OTP expired" });
+
+    // hash password
+    const hashed = await bcrypt.hash(newPassword, 10);
+
+    // update password
+    await client.query(
+      `UPDATE ${USER_MASTER_TABLE}
+       SET password=$1
+       WHERE id=$2`,
+      [hashed, user.id]
+    );
+
+    // clear token
+    await client.query(
+      `UPDATE registrations
+       SET reset_token=NULL,
+           reset_token_expiry=NULL
+       WHERE user_id=$1`,
+      [user.id]
+    );
+
+    res.json({ message: "Password reset successful" });
+
+  } catch (err) {
+    console.error("Reset password error:", err);
+    res.status(500).json({ error: "Server error" });
+  } finally {
+    client.release();
+  }
+};
+
 // export const getAllAdmins = async (req, res) => {
 //   try {
 //  const { data, error } = await supabase
@@ -857,11 +979,11 @@ export const updateAdminProfile = async (req, res) => {
 //   }
 // };
 
-
 export const grantTempAdminAccess = async (req, res) => {
   const client = await pool.connect();
   try {
     const { email, durationHours = 24 } = req.body;
+
     if (!email) {
       return res.status(400).json({ error: "Employee email is required" });
     }
@@ -870,55 +992,77 @@ export const grantTempAdminAccess = async (req, res) => {
       `SELECT * FROM ${USER_MASTER_TABLE} WHERE email = $1 AND role = 'employee'`,
       [email]
     );
-    if (userResult.rows.length === 0) {
+
+    if (userResult.rowCount === 0) {
       return res.status(404).json({ error: "Employee not found" });
     }
+
     const user = userResult.rows[0];
 
     const regResult = await client.query(
       `SELECT is_temp_admin, temp_admin_expiry FROM ${REGISTRATIONS_TABLE} WHERE user_id = $1`,
       [user.id]
     );
+
     const reg = regResult.rows[0];
 
     if (reg?.is_temp_admin && new Date(reg.temp_admin_expiry) > new Date()) {
       return res.status(400).json({
-        error: `Employee already has temporary admin access until ${new Date(reg.temp_admin_expiry).toLocaleString()}.`,
+        error: `Employee already has temporary admin access until ${new Date(
+          reg.temp_admin_expiry
+        ).toLocaleString()}.`,
       });
     }
 
     const expiry = new Date(Date.now() + durationHours * 60 * 60 * 1000);
+
     await client.query(
-      `UPDATE ${REGISTRATIONS_TABLE} SET is_temp_admin = true, is_approved = true, temp_admin_expiry = $1 WHERE user_id = $2`,
+      `UPDATE ${REGISTRATIONS_TABLE}
+       SET is_temp_admin = true,
+           is_approved = true,
+           temp_admin_expiry = $1
+       WHERE user_id = $2`,
       [expiry, user.id]
     );
 
-    // ✅ Get branding for EMAIL
+    // Branding for email
     const branding = await getBrandingForContext("email");
 
-    let emailBody = `<p>Hello ${user.name},</p>
-      <p>You have been granted temporary admin access until ${expiry.toLocaleString()}.</p>
-      <p>Please use this privilege responsibly.</p>`;
-
-    if (branding) {
-      emailBody = `
-        <div style="text-align:center; margin-bottom:20px;">
-          ${branding.logoUrl ? `<img src="${branding.logoUrl}" style="max-height:60px;">` : ''}
-          <p style="color:${branding.primaryColor}; margin-top:8px;">${branding.companyName}</p>
-        </div>
-        ${emailBody}
-      `;
+    let logoHtml = "";
+    if (branding?.logoUrl) {
+      try {
+        const base64 = await fetchImageAsBase64(branding.logoUrl);
+        logoHtml = `<img src="${base64}" style="max-height:60px;" />`;
+      } catch {}
     }
+
+    const header = branding
+      ? `
+        <div style="text-align:center;margin-bottom:15px;">
+          ${logoHtml}
+          <div style="color:${branding.primaryColor || "#000"};font-weight:600;">
+            ${branding.companyName}
+          </div>
+        </div>`
+      : "";
+
+    const emailBody = `
+      ${header}
+      <p>Hello <strong>${user.name}</strong>,</p>
+      <p>You have been granted <strong>temporary admin access</strong>.</p>
+      <p>Valid until: <strong>${expiry.toLocaleString()}</strong></p>
+      <p>Please use this privilege responsibly.</p>
+    `;
 
     try {
       await sendEmail(user.email, "Temporary Admin Access Granted", emailBody);
-    } catch (emailErr) {
-      console.warn("Failed to send email notification:", emailErr.message);
+    } catch (err) {
+      console.warn("Email failed:", err.message);
     }
 
-    res.status(200).json({
-      message: `Temporary admin access granted to ${user.name} until ${expiry.toLocaleString()}.`,
-      employee: { id: user.id, name: user.name, email: user.email, temp_admin_expiry: expiry },
+    res.json({
+      message: "Temporary admin access granted",
+      expiry,
     });
   } catch (err) {
     console.error("Grant Temp Admin Error:", err.message);
@@ -927,6 +1071,7 @@ export const grantTempAdminAccess = async (req, res) => {
     client.release();
   }
 };
+
 /**
  * Revoke Temporary Admin Access from an Employee
  * DELETE /api/admin/revoke-temp/:email
@@ -1841,6 +1986,8 @@ const templateFileMap = {
   "Warning Letter": "warningLetter.html",
   "freelancer contract": "freelancerContract.html",
   "invoice Template": "invoiceTemplate.html",
+  "Probation Completion Letter": "probationCompletionLetter.html",
+
 };
 
 // Replace {{placeholders}}
@@ -1860,6 +2007,10 @@ async function generatePDF(htmlContent, outputPath) {
   await browser.close();
 }
 
+async function fetchImageAsBase64(url) {
+  const res = await axios.get(url, { responseType: "arraybuffer" });
+  return `data:image/png;base64,${Buffer.from(res.data).toString("base64")}`;
+}
 // ✅ FULLY UPDATED generateLetter
 export const generateLetter = async (req, res) => {
   const client = await pool.connect();
@@ -1891,6 +2042,15 @@ export const generateLetter = async (req, res) => {
       return res.status(500).json({ error: "Template file missing" });
     }
 
+    const probationResult = await client.query(
+  `SELECT * FROM probation 
+   WHERE employee_id = $1 
+   ORDER BY createdat DESC LIMIT 1`,
+  [employeeId]
+);
+
+const probation = probationResult.rows[0] || {};
+
     // ✅ Inject company_name from branding or fallback
     const data = {
       name: emp.name,
@@ -1915,31 +2075,46 @@ export const generateLetter = async (req, res) => {
       account_number: sal.account_number,
       company_name: branding?.companyName || "Zigma People Private Limited (An AI India Venture)",
       ctc: sal.gross_salary,
+      start_date: probation.startdate,
+end_date: probation.enddate,
+confirmation_date: probation.enddate,
+issue_date: new Date().toLocaleDateString(),
+
     };
 
     let filledHTML = fillTemplate(templateContent, data);
 
     // ✅ INJECT LOGO + HEADER (this was missing!)
-    if (branding) {
-      const logoHtml = branding.logoUrl
-        ? `<img src="${branding.logoUrl}" style="max-height:60px; margin-bottom:10px;" />`
-        : "";
-      const headerHtml = `
-        <div style="text-align:center; margin-bottom:20px;">
-          ${logoHtml}
-          <h2 style="color:${branding.primaryColor || '#000'}; text-decoration:underline;">
-            ${letterType.toUpperCase()}
-          </h2>
-        </div>
-      `;
-      filledHTML = filledHTML.replace('<h2>LETTER_HEADER_PLACEHOLDER</h2>', headerHtml);
-    } else {
-      // Fallback if branding is disabled
-      filledHTML = filledHTML.replace(
-        '<h2>LETTER_HEADER_PLACEHOLDER</h2>',
-        `<h2 style="text-align:center; text-decoration:underline;">${letterType.toUpperCase()}</h2>`
-      );
+       if (branding) {
+  let logoHtml = "";
+
+  if (branding.logoUrl) {
+    try {
+      const logoBase64 = await fetchImageAsBase64(branding.logoUrl);
+      logoHtml = `<img src="${logoBase64}" style="max-height:60px; margin-bottom:10px;" />`;
+    } catch (e) {
+      console.warn("Logo load failed, continuing without logo", e.message);
     }
+  }
+
+  const headerHtml = `
+    <div style="text-align:center; margin-bottom:20px;">
+      ${logoHtml}
+      <h2 style="color:${branding.primaryColor || '#000'}; text-decoration:underline;">
+        ${letterType.toUpperCase()}
+      </h2>
+      <h3>${branding.companyName}</h3>
+    </div>
+  `;
+
+  // more robust replacement (ignores spaces/newlines)
+  filledHTML = filledHTML.replace(/LETTER_HEADER_PLACEHOLDER/g, headerHtml);
+} else {
+  filledHTML = filledHTML.replace(
+    /LETTER_HEADER_PLACEHOLDER/g,
+    `<h2 style="text-align:center; text-decoration:underline;">${letterType.toUpperCase()}</h2>`
+  );
+}
 
     // Generate PDF
     const lettersDir = path.join(process.cwd(), "src/uploads/letters");
@@ -2930,8 +3105,10 @@ export const deleteLetter = async (req, res) => {
 
 export const sendLetterEmail = async (req, res) => {
   const client = await pool.connect();
+
   try {
     const { employeeId, fileName } = req.body;
+
     if (!employeeId || !fileName) {
       return res.status(400).json({ error: "employeeId and fileName are required" });
     }
@@ -2940,47 +3117,63 @@ export const sendLetterEmail = async (req, res) => {
       `SELECT name, email FROM user_employees_master WHERE id=$1`,
       [employeeId]
     );
+
     const emp = empResult.rows[0];
     if (!emp) return res.status(404).json({ error: "Employee not found" });
 
     const filePath = path.join(process.cwd(), "src/uploads/letters", fileName);
+
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({ error: "File not found on server" });
     }
 
-    // ✅ Get branding for EMAIL
     const branding = await getBrandingForContext("email");
 
-    let emailBody = `<p>Hello ${emp.name},</p>
-      <p>Please find your <strong>${fileName.split("_")[0]}</strong> attached.</p>`;
-
-    // ✅ Inject logo + company name if branding is active
-    if (branding) {
-      emailBody = `
-        <div style="text-align:center; margin-bottom:20px;">
-          ${branding.logoUrl ? `<img src="${branding.logoUrl}" style="max-height:60px;">` : ''}
-          <p style="color:${branding.primaryColor}; margin-top:8px;">${branding.companyName}</p>
-        </div>
-        ${emailBody}
-      `;
+    let logoHtml = "";
+    if (branding?.logoUrl) {
+      try {
+        const base64 = await fetchImageAsBase64(branding.logoUrl);
+        logoHtml = `<img src="${base64}" style="max-height:60px;" />`;
+      } catch {}
     }
 
-    emailBody += `<p>Regards,<br/>HR Team</p>`;
+    const header = branding
+      ? `
+      <div style="text-align:center;margin-bottom:15px;">
+        ${logoHtml}
+        <div style="color:${branding.primaryColor || "#000"};font-weight:600;">
+          ${branding.companyName}
+        </div>
+      </div>`
+      : "";
 
-    await sendEmail(emp.email, `Your ${fileName.split("_")[0]} Letter`, emailBody, filePath, fileName);
+    const emailBody = `
+      ${header}
+      <p>Hello <strong>${emp.name}</strong>,</p>
+      <p>Your <strong>${fileName.split("_")[0]}</strong> letter is attached.</p>
+      <p>Regards,<br>HR Team</p>
+    `;
 
-    return res.json({
-      message: "📧 Email sent successfully with attachment",
+    await sendEmail(
+      emp.email,
+      `Your ${fileName.split("_")[0]} Letter`,
+      emailBody,
+      filePath,
+      fileName
+    );
+
+    res.json({
+      message: "Email sent successfully",
       sent_to: emp.email,
-      file: fileName
     });
   } catch (err) {
     console.error("Send Letter Email Error:", err);
-    return res.status(500).json({ error: "Failed to send email with attachment" });
+    res.status(500).json({ error: "Failed to send email" });
   } finally {
     client.release();
   }
 };
+
 export const getAllReferralsAdmin = async (req, res) => {
   const client = await pool.connect();
 
@@ -3267,20 +3460,31 @@ export const createFreelancerContract = async (req, res) => {
     let filledHTML = fillTemplate(htmlTemplate, data);
 
     // ✅ Inject logo + header if branding is active (for "letters")
-    if (branding?.logoUrl || branding?.primaryColor) {
-      const logoHtml = branding.logoUrl
-        ? `<img src="${branding.logoUrl}" style="max-height:60px; margin-bottom:10px;">`
-        : "";
-      const headerHtml = `
-        <div style="text-align:center; margin-bottom:20px;">
-          ${logoHtml}
-          <h1 style="color:${branding.primaryColor || '#000'};">FREELANCER CONTRACT AGREEMENT</h1>
-          <h3 style="color:${branding.primaryColor || '#000'};">${contract_title}</h3>
-          <hr />
-        </div>
-      `;
-      filledHTML = filledHTML.replace(/<h1>FREELANCER CONTRACT AGREEMENT<\/h1>\s*<h3>.*?<\/h3>\s*<hr \/>/, headerHtml);
+    if (branding) {
+  let logoHtml = "";
+
+  if (branding.logoUrl) {
+    try {
+      const base64 = await fetchImageAsBase64(branding.logoUrl);
+      logoHtml = `<img src="${base64}" style="max-height:70px; margin-bottom:10px;" />`;
+    } catch (e) {
+      console.warn("Logo failed, continuing without logo:", e.message);
     }
+  }
+
+  const headerHtml = `
+    <div style="text-align:center; margin-bottom:20px;">
+      ${logoHtml}
+      <h1 style="color:${branding.primaryColor || '#000'};">FREELANCER CONTRACT AGREEMENT</h1>
+      <h3>${contract_title}</h3>
+      <h4>${branding.companyName}</h4>
+      <hr/>
+    </div>
+  `;
+
+  filledHTML = filledHTML.replace(/LETTER_HEADER_PLACEHOLDER/g, headerHtml);
+}
+
 
     const dir = path.join(process.cwd(), "src/uploads/contracts");
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -3775,18 +3979,31 @@ export const createInvoice = async (req, res) => {
       .replace(/{{net_payable}}/g, net_payable);
 
     // ✅ Inject logo and style if branding is active
-    if (branding?.logoUrl || branding?.primaryColor) {
-      const logoHtml = branding.logoUrl
-        ? `<img src="${branding.logoUrl}" style="max-height:50px; margin-bottom:10px;" />`
-        : "";
-      const headerHtml = `
-        <div style="text-align:center; margin-bottom:15px;">
-          ${logoHtml}
-          <h2 style="color:${branding.primaryColor || '#000'};">Invoice</h2>
-        </div>
-      `;
-      html = html.replace(/<h2>Invoice<\/h2>/, headerHtml);
+   // inject branding header (logo + company name + color)
+if (branding) {
+  let logoHtml = "";
+
+  if (branding.logoUrl) {
+    try {
+      const b64 = await fetchImageAsBase64(branding.logoUrl);
+      logoHtml = `<img src="${b64}" style="max-height:60px; margin-bottom:8px;" />`;
+    } catch (e) {
+      console.warn("Invoice logo load failed:", e.message);
     }
+  }
+
+  const headerHtml = `
+    <div style="text-align:center; margin-bottom:15px;">
+      ${logoHtml}
+      <h2 style="color:${branding.primaryColor || '#000'}; margin:0;">INVOICE</h2>
+      <h3 style="margin:4px 0 0 0;">${branding.companyName || 'Your Company Pvt Ltd'}</h3>
+      <hr/>
+    </div>
+  `;
+
+  html = html.replace(/LETTER_HEADER_PLACEHOLDER/g, headerHtml);
+}
+
 
     const pdfDir = "uploads/invoices";
     if (!fs.existsSync(pdfDir)) fs.mkdirSync(pdfDir, { recursive: true });
@@ -4225,6 +4442,41 @@ export const createProbation = async (req, res) => {
     client.release();
   }
 };
+
+export const getProbationDashboardCounts = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const query = `
+      SELECT
+        COUNT(*) FILTER (WHERE status = 'active') AS active_count,
+
+        COUNT(*) FILTER (
+          WHERE status = 'active'
+          AND enddate BETWEEN CURRENT_DATE AND CURRENT_DATE + INTERVAL '5 days'
+        ) AS ending_soon_count,
+
+        COUNT(*) FILTER (WHERE status = 'completed') AS completed_count
+      FROM probation;
+    `;
+
+    const { rows } = await client.query(query);
+
+    return res.status(200).json({
+      success: true,
+      active: Number(rows[0].active_count),
+      endingSoon: Number(rows[0].ending_soon_count),
+      completed: Number(rows[0].completed_count),
+    });
+
+  } catch (err) {
+    console.error("Dashboard Count Error:", err);
+    return res.status(500).json({ message: "Failed to fetch dashboard counts" });
+  } finally {
+    client.release();
+  }
+};
+
 //Audit log -logout
 export const adminLogout = async (req, res) => {
   const client = await pool.connect();

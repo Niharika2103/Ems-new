@@ -1,9 +1,26 @@
+<!DOCTYPE html>
 <html>
-<body>
+<body style="font-family: Arial, sans-serif; line-height: 1.6;">
+
   <h2>LETTER_HEADER_PLACEHOLDER</h2>
-  <p>This is to certify that <b>{{name}}</b> has been relieved from duties effective <b>{{effective_to}}</b>.</p>
-  <p>They served as <b>{{designation}}</b> during their employment.</p>
-  <p>We wish them the very best.</p>
-  <p>Regards,<br>HR Department</p>
+
+  <p><b>Date:</b> {{issue_date}}</p>
+
+  <p>To,<br>
+  <b>{{name}}</b><br>
+  {{address}}</p>
+
+  <p>Dear <b>{{name}}</b>,</p>
+
+  <p>This is to certify that <b>{{name}}</b> was employed with <b>{{company_name}}</b> as <b>{{designation}}</b>. Based on their resignation dated <b>{{resignation_date}}</b>, they have been relieved from duties with effect from <b>{{effective_to}}</b>.</p>
+
+  <p>This letter is issued after completion of all exit formalities and clearance of dues.</p>
+
+  <p>We wish them success in their future endeavors.</p>
+
+  <p>Regards,<br>
+  <b>HR Department</b><br>
+  {{company_name}}</p>
+
 </body>
 </html>

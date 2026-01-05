@@ -1,9 +1,26 @@
+<!DOCTYPE html>
 <html>
-<body>
+<body style="font-family: Arial, sans-serif; line-height: 1.6;">
+
   <h2>LETTER_HEADER_PLACEHOLDER</h2>
-  <p>This is to certify that <b>{{name}}</b> worked with our organization as <b>{{designation}}</b> 
-     from <b>{{date_of_joining}}</b> to <b>{{effective_to}}</b>.</p>
-  <p>We appreciate their contribution and wish them success.</p>
-  <p>Regards,<br>HR Department</p>
+
+  <p><b>Date:</b> {{issue_date}}</p>
+
+  <p>To whom it may concern,</p>
+
+  <p>This is to certify that <b>{{name}}</b> was employed with <b>{{company_name}}</b> as 
+  <b>{{designation}}</b> in the <b>{{department}}</b> department from 
+  <b>{{date_of_joining}}</b> to <b>{{effective_to}}</b>.</p>
+
+  <p>During their tenure with us, {{name}} exhibited professionalism, sincerity, and dedication in carrying out their responsibilities.</p>
+
+  <p>This certificate is issued upon their request for whatever purpose it may serve.</p>
+
+  <p>We appreciate their contributions to the organization and wish them every success in future endeavors.</p>
+
+  <p>Regards,<br>
+  <b>HR Department</b><br>
+  {{company_name}}</p>
+
 </body>
 </html>

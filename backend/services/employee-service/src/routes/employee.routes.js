@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   registerEmployee,
   employeeLogin,
+  getMyEmployeeProfile,
   requestPasswordReset,
   resetPassword,
   uploadExcel,
@@ -24,6 +25,7 @@ import {
   getFullTimeEmployees,
   //getFreelancerAssignments
   submitSelfReview,
+  getEmployeeReview
 
 
 } from "../controllers/employee.controller.js";
@@ -38,6 +40,9 @@ router.post("/register", registerEmployee);
 // 🚀 Employee login (with first login + OTP)
 router.post("/login", employeeLogin);
  
+// 👤 Get logged-in employee profile (FOR REFERRAL AUTO-FILL)
+router.get("/me", getMyEmployeeProfile);
+
 // 🔄 Forgot password → reset link
 router.post("/request-password-reset", requestPasswordReset);
  
@@ -97,6 +102,8 @@ router.get("/salary/:employeeId", getEmployeeSalary);
  
 router.get("/employees/fulltime", getFullTimeEmployees);
 router.post("/performance/submit", submitSelfReview); 
+
+router.get("/performance/:employee_uuid", getEmployeeReview);
 
 
 

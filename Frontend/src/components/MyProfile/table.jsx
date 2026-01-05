@@ -70,7 +70,7 @@ const EmployeeTable = ({ columns,scroll  }) => {
       />
 
       {/* Download Template */}
-      <div style={{ marginBottom: 16 }}>
+      {/* <div style={{ marginBottom: 16 }}>
         <Button
           icon={<DownloadOutlined />}
           onClick={handleDownload}
@@ -78,7 +78,7 @@ const EmployeeTable = ({ columns,scroll  }) => {
         >
           Download Excel Template
         </Button>
-      </div>
+      </div> */}
 
       {/* Data Table */}
       <Table

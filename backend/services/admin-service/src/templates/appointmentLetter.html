@@ -1,10 +1,34 @@
+<!DOCTYPE html>
 <html>
-<body>
+<body style="font-family: Arial, sans-serif; line-height: 1.6;">
+
   <h2>LETTER_HEADER_PLACEHOLDER</h2>
-  <p>Dear {{name}},</p>
-  <p>We are pleased to confirm your appointment as <b>{{designation}}</b> in the {{department}} department.</p>
-  <p>Your joining date will be <b>{{date_of_joining}}</b>.</p>
-  <p>Welcome to our organization.</p>
-  <p>Regards,<br>HR Team</p>
+
+  <p><b>Date:</b> {{issue_date}}</p>
+
+  <p>To,<br>
+  <b>{{name}}</b><br>
+  {{address}}</p>
+
+  <p>Dear <b>{{name}}</b>,</p>
+
+  <p>We are pleased to offer you the position of <b>{{designation}}</b> in the <b>{{department}}</b> department with our organization.</p>
+
+  <p>Your employment will be effective from <b>{{date_of_joining}}</b>, on which date you are expected to report to <b>{{reporting_manager}}</b> at our {{work_location}} office.</p>
+
+  <p>Your compensation and other benefits will be as per the terms discussed and mentioned in your salary structure shared separately.</p>
+
+  <p>You will be on probation for a period of <b>{{probation_period}}</b>, and your continued employment will be subject to satisfactory performance during this period.</p>
+
+  <p>You are required to maintain confidentiality of all company information and abide by the policies, rules, and regulations in force from time to time.</p>
+
+  <p>Please sign and return a copy of this letter as a token of your acceptance of the terms of appointment.</p>
+
+  <p>We welcome you to <b>{{company_name}}</b> and look forward to a mutually rewarding association.</p>
+
+  <p>Regards,<br>
+  <b>HR Department</b><br>
+  {{company_name}}</p>
+
 </body>
 </html>

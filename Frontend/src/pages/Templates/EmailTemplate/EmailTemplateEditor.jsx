@@ -23,6 +23,7 @@ import {
   TableRow,
   Paper,
   Stack,
+  TablePagination,
 } from "@mui/material";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
@@ -38,6 +39,9 @@ const EmailTemplateEditor = () => {
   const [templates, setTemplates] = useState([]);
   const [tab, setTab] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [page, setPage] = useState(0);
+const [rowsPerPage, setRowsPerPage] = useState(5);
+
   const [showDialog, setShowDialog] = useState(false);
   const [editTemplate, setEditTemplate] = useState(null);
 
@@ -251,6 +255,15 @@ toast.success(
 
     return true;
   });
+  const handleChangePage = (event, newPage) => {
+  setPage(newPage);
+};
+
+const handleChangeRowsPerPage = (event) => {
+  setRowsPerPage(parseInt(event.target.value, 10));
+  setPage(0); // reset to first page
+};
+
 
   /* ------------------------------
       UI START
@@ -330,7 +343,8 @@ toast.success(
           </TableHead>
 
           <TableBody>
-            {filtered.map((t) => (
+            {filtered.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+  .map((t) => (
               <TableRow key={t.id} sx={{ "&:hover": { background: "#fafafa" } }}>
                 <TableCell>
                   <Typography fontWeight="bold">{t.name}</Typography>
@@ -405,6 +419,20 @@ toast.success(
 
         </Table>
       </TableContainer>
+      <TablePagination
+  component="div"
+  count={filtered.length}
+  page={page}
+  onPageChange={handleChangePage}
+  rowsPerPage={rowsPerPage}
+  onRowsPerPageChange={handleChangeRowsPerPage}
+  rowsPerPageOptions={[5, 10, 25]}
+  sx={{
+    backgroundColor: "white",
+    borderTop: "1px solid #e5e7eb",
+  }}
+/>
+
 
       {/* MODAL */}
       <Dialog open={showDialog} onClose={handleCloseDialog} fullWidth maxWidth="md">

@@ -1,11 +1,29 @@
+<!DOCTYPE html>
 <html>
-<body>
+<body style="font-family: Arial, sans-serif; line-height: 1.6;">
+
   <h2>LETTER_HEADER_PLACEHOLDER</h2>
-  <p>Dear {{name}},</p>
-  <p>We are pleased to inform you that your salary has been revised effective <b>{{effective_from}}</b>.</p>
-  <p>New Gross Salary: ₹{{gross_salary}}</p>
-  <p>New Net Salary: ₹{{net_salary}}</p>
-  <p>Congratulations!</p>
-  <p>Regards,<br>HR Team</p>
+
+  <p><b>Date:</b> {{issue_date}}</p>
+
+  <p>To,<br>
+  <b>{{name}}</b><br>
+  {{address}}</p>
+
+  <p>Dear <b>{{name}}</b>,</p>
+
+  <p>Your salary has been revised with effect from <b>{{effective_from}}</b>.</p>
+
+  <p><b>Revised Salary Details:</b><br>
+  Gross Salary: ₹{{gross_salary}} per month<br>
+  Net Salary: ₹{{net_salary}} per month
+  </p>
+
+  <p>Other terms and conditions remain unchanged.</p>
+
+  <p>Regards,<br>
+  <b>HR Department</b><br>
+  {{company_name}}</p>
+
 </body>
 </html>

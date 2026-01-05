@@ -1,9 +1,27 @@
+<!DOCTYPE html>
 <html>
-<body>
+<body style="font-family: Arial, sans-serif; line-height: 1.6;">
+
   <h2>LETTER_HEADER_PLACEHOLDER</h2>
-  <p>Dear {{name}},</p>
-  <p>This letter serves as an official warning regarding your behavior as <b>{{designation}}</b>.</p>
-  <p>You are required to improve immediately to avoid disciplinary action.</p>
-  <p>Regards,<br>HR Manager</p>
+
+  <p><b>Date:</b> {{issue_date}}</p>
+
+  <p>To,<br>
+  <b>{{name}}</b><br>
+  {{department}} Department<br>
+  {{company_name}}</p>
+
+  <p>Dear <b>{{name}}</b>,</p>
+
+  <p>This letter serves as an official written warning regarding your conduct/performance in the role of <b>{{designation}}</b>.</p>
+
+  <p>It has been observed that {{misconduct_details}}. Such behavior is not in line with company policy.</p>
+
+  <p>Please treat this matter seriously and take immediate corrective action.</p>
+
+  <p>Regards,<br>
+  <b>HR Manager</b><br>
+  {{company_name}}</p>
+
 </body>
 </html>

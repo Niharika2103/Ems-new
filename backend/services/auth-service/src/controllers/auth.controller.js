@@ -345,6 +345,128 @@ export const verifyMfaSetup = async (req, res) => {
     client.release();
   }
 };
+
+
+export const superAdminRequestPasswordReset = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email)
+      return res.status(400).json({ error: "Email is required" });
+
+    // Check superadmin user
+    const { rows } = await pool.query(
+      `SELECT id, name, email FROM ${USERS_TABLE} 
+       WHERE email ILIKE $1 AND role=$2`,
+      [email, "superadmin"]
+    );
+
+    const user = rows[0];
+    if (!user)
+      return res.status(404).json({ error: "SuperAdmin not found" });
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // 10-minute expiry
+    const expiry = new Date(Date.now() + 10 * 60 * 1000);
+
+    // save in registrations table
+   // 1️⃣ Try update first
+const updateRes = await pool.query(
+  `UPDATE registrations
+   SET otp_code = $1,
+       otp_expiry = $2
+   WHERE user_id = $3`,
+  [otp, expiry, user.id]
+);
+
+// 2️⃣ If no row updated → insert new row
+if (updateRes.rowCount === 0) {
+  await pool.query(
+    `INSERT INTO registrations (user_id, otp_code, otp_expiry)
+     VALUES ($1, $2, $3)`,
+    [user.id, otp, expiry]
+  );
+}
+
+
+    // send email
+    await sendEmail(
+      user.email,
+      "EMS SuperAdmin Password Reset OTP",
+      `
+      <p>Hi ${user.name || "SuperAdmin"},</p>
+      <p>Your OTP to reset password is:</p>
+      <h2>${otp}</h2>
+      <p>This OTP will expire in 10 minutes.</p>
+      `
+    );
+
+    return res.json({ message: "OTP sent successfully" });
+
+  } catch (err) {
+    console.error("SuperAdmin forgot password error:", err.message);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+
+export const superAdminResetPassword = async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+
+    if (!email || !otp || !newPassword)
+      return res.status(400).json({ error: "All fields are required" });
+
+    // get user
+    const { rows } = await pool.query(
+      `SELECT id, password FROM ${USERS_TABLE} WHERE email ILIKE $1 AND role=$2`,
+      [email, "superadmin"]
+    );
+
+    const user = rows[0];
+    if (!user)
+      return res.status(404).json({ error: "SuperAdmin not found" });
+
+    // check OTP record
+    const { rows: reg } = await pool.query(
+      `SELECT otp_code, otp_expiry FROM registrations WHERE user_id=$1`,
+      [user.id]
+    );
+
+    if (!reg[0] || !reg[0].otp_code)
+      return res.status(400).json({ error: "OTP not generated" });
+
+    if (reg[0].otp_code !== otp)
+      return res.status(400).json({ error: "Invalid OTP" });
+
+    if (new Date(reg[0].otp_expiry) < new Date())
+      return res.status(400).json({ error: "OTP expired" });
+
+    // hash password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // update password
+    await pool.query(
+      `UPDATE ${USERS_TABLE} SET password=$1 WHERE id=$2`,
+      [hashedPassword, user.id]
+    );
+
+    // clear otp
+    await pool.query(
+      `UPDATE registrations SET otp_code=NULL, otp_expiry=NULL WHERE user_id=$1`,
+      [user.id]
+    );
+
+    return res.json({ message: "Password reset successfully" });
+
+  } catch (err) {
+    console.error("SuperAdmin password reset error:", err.message);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 //SuperAdmin Get by id
 export const getSuperadminById = async (req, res) => {
   try {

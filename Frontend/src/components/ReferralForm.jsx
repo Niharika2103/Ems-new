@@ -12,18 +12,36 @@ import { useState, useEffect } from "react";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { useDispatch, useSelector } from "react-redux";
 import { createReferral } from "../features/auth/employeeSlice";
+import { getMyEmployeeProfileApi } from "../api/authApi";
+
 
 export default function ReferralForm() {
   const dispatch = useDispatch();
 
   
-const storedUser = JSON.parse(localStorage.getItem("user"));
+// const storedUser = JSON.parse(localStorage.getItem("user"));
+// const referrerName = storedUser?.name || storedUser?.fullName || "";
+// const employeeId   = storedUser?.employeeId || "";
 
-const referrerName = storedUser?.name || storedUser?.fullName || "";
-const employeeId   = storedUser?.employeeId || "";
+const [referrerName, setReferrerName] = useState("");
+const [employeeId, setEmployeeId] = useState("");
+
+useEffect(() => {
+  getMyEmployeeProfileApi()
+    .then((res) => {
+      const data = res.data.data;
+      setReferrerName(data.employee_name);
+      setEmployeeId(data.employee_id);
+    })
+    .catch((err) => {
+      console.error("Failed to fetch employee profile", err);
+    });
+}, []);
+
 const { referralLoading, referralError, referralSuccess } = useSelector((state) => state.employee);
 
-  
+ const EMAIL_DOMAIN_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+ 
 
   const [form, setForm] = useState({
     candidate_name: "",
@@ -36,9 +54,30 @@ const { referralLoading, referralError, referralSuccess } = useSelector((state) 
   const [resumeFile, setResumeFile] = useState(null);
   const [snackbar, setSnackbar] = useState({ open: false, message: "", type: "" });
 
+  // const handleChange = (e) => {
+  //   setForm({ ...form, [e.target.name]: e.target.value });
+  // };
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const { name, value } = e.target;
+
+  // ✅ Phone number restriction
+  if (name === "phone_number") {
+    const digitsOnly = value.replace(/\D/g, "");
+    if (digitsOnly.length > 10) return;
+
+    setForm((prev) => ({
+      ...prev,
+      phone_number: digitsOnly,
+    }));
+    return;
+  }
+
+  setForm((prev) => ({
+    ...prev,
+    [name]: value,
+  }));
+};
+
 
   const handleResume = (e) => {
     const file = e.target.files[0];
@@ -152,11 +191,19 @@ const { referralLoading, referralError, referralSuccess } = useSelector((state) 
 
         <Grid item xs={12} md={6}>
           <TextField
-            fullWidth
-            label="Phone Number"
-            name="phone_number"
-            onChange={handleChange}
-          />
+  fullWidth
+  label="Phone Number"
+  name="phone_number"
+  value={form.phone_number}
+  onChange={handleChange}
+  inputProps={{
+    maxLength: 10,
+    inputMode: "numeric",
+    pattern: "[0-9]*",
+  }}
+  placeholder="Enter 10-digit mobile number"
+/>
+
         </Grid>
 
         <Grid item xs={12} md={6}>

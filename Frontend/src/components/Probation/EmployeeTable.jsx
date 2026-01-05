@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+
+
 const calculateDurationMonths = (start, end) => {
   if (!start || !end) return 0;
 
@@ -25,6 +27,7 @@ const calculateDaysLeft = (end) => {
 
   return days < 0 ? 0 : days;
 };
+
 const formatDate = (dateStr) => {
   if (!dateStr) return "";
 
@@ -38,7 +41,7 @@ const formatDate = (dateStr) => {
 };
 
 
-const EmployeeTable = ({ data, onActionClick, showAssignAction = false, getStatusColor,
+const EmployeeTable = ({ data, onActionClick, onGenerateLetter,showAssignAction = false, getStatusColor,
   getStatusText }) => (
   <div className="overflow-x-auto">
     <table className="w-full">
@@ -103,6 +106,16 @@ const EmployeeTable = ({ data, onActionClick, showAssignAction = false, getStatu
               >
                 {showAssignAction ? 'Assign Probation' : 'View Details'}
               </button>
+              {/* ✅ new button */}
+  {!showAssignAction && item.status === "completed" && (
+    <button
+      onClick={() => onGenerateLetter(item)}
+
+      className="text-green-600 hover:text-green-800 font-medium text-sm"
+    >
+      Generate Confirmation Letter
+    </button>
+  )}
             </td>
           </tr>
         ))}

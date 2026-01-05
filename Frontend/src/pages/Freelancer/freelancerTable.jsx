@@ -32,6 +32,7 @@ import { validateEmployeeEdit } from "../../utils/validation";
 import { createFreelancerContractApi, createInvoiceApi, fetchFreelancerContractsApi } from "../../api/authApi";
 const { Search } = Input;
 
+
 export default function FreelancerTable() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -39,6 +40,7 @@ export default function FreelancerTable() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
   const [loading, setLoading] = useState(false);
+  
 
   // Contract states
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
@@ -52,6 +54,7 @@ export default function FreelancerTable() {
     payment_terms: "",
     scope_of_work: ""
   });
+  
 
   // Invoice states
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
@@ -136,13 +139,39 @@ export default function FreelancerTable() {
     setIsModalOpen(true);
   };
 
+  // const handleChange = (e) => {
+  //   const { name, value } = e.target;
+  //   setFormData((prev) => ({ ...prev, [name]: value }));
+  // };
+
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  const { name, value } = e.target;
+
+  // ✅ Phone number restriction
+  if (name === "phone" || name === "emergency_contact") {
+    const digitsOnly = value.replace(/\D/g, "");
+    if (digitsOnly.length > 10) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: digitsOnly,
+    }));
+    return;
+  }
+
+  setFormData((prev) => ({
+    ...prev,
+    [name]: value,
+  }));
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!/^[6-9]\d{9}$/.test(formData.phone)) {
+  toast.error("Enter a valid 10-digit mobile number");
+  return;
+}
+
 
     const errors = validateEmployeeEdit(formData);
     if (Object.keys(errors).length > 0) {
@@ -505,13 +534,20 @@ export default function FreelancerTable() {
               {/* Phone */}
               <Grid item xs={12} sm={6}>
                 <TextField
-                  label="Phone"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  fullWidth
-                  size="small"
-                />
+  label="Phone"
+  name="phone"
+  value={formData.phone}
+  onChange={handleChange}
+  fullWidth
+  size="small"
+  inputProps={{
+    maxLength: 10,
+    inputMode: "numeric",
+    pattern: "[0-9]*",
+  }}
+  placeholder="Enter 10-digit mobile number"
+/>
+
               </Grid>
 
               {/* Emergency Contact */}

@@ -86,7 +86,9 @@ const Profile = () => {
     if (profile) {
       setFormData({
         name: profile.name || "",
-        dob: profile.dob ? profile.dob.split("T")[0] : "",
+        dob: profile.dob
+  ? profile.dob.split("T")[0]
+  : new Date().toISOString().split("T")[0],
         gender: profile.gender || "",
         email: profile.email || "",
         phone: profile.phone || "",
