@@ -74,15 +74,7 @@ const FreelancerHRAnalytics = () => {
       >
         <Typography variant="h4">Freelancer HR Analytics</Typography>
 
-        <Box sx={{ display: "flex", gap: 1 }}>
-          <Button variant="outlined" startIcon={<RefreshIcon />} onClick={fetchData}>
-            Refresh
-          </Button>
-
-          <Button variant="contained" startIcon={<DownloadIcon />}>
-            Export
-          </Button>
-        </Box>
+        
       </Box>
 
       {/* SEARCH */}

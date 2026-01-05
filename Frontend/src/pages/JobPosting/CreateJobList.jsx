@@ -554,27 +554,25 @@ const handleSubmit = async (e) => {
   fullWidth
   name="salaryMin"
   type="number"
-   autoComplete="off" 
+  autoComplete="off"
   value={form.salaryMin}
-  onChange={handleChange}
   required
   placeholder="Enter minimum salary"
   inputProps={{
-    min: 1,        // ❌ no 0
-    step: 1,       // ❌ no decimals
+    min: 1,
+    max: 99,       // ✅ LIMIT
+    step: 1,
   }}
   onKeyDown={(e) => {
-    if (e.key === "-" || e.key === "e") e.preventDefault();
+    if (["-", "e", "+", "."].includes(e.key)) e.preventDefault();
   }}
-  InputProps={{
-    endAdornment: (
-      <InputAdornment position="end">
-        <Typography variant="body2" color="#6b7280">
-          LPA
-        </Typography>
-      </InputAdornment>
-    ),
+  onChange={(e) => {
+    const value = Number(e.target.value);
+    if (value >= 1 && value <= 99) {
+      handleChange(e);
+    }
   }}
+
 />
 
                 </Grid>
@@ -587,27 +585,28 @@ const handleSubmit = async (e) => {
   fullWidth
   name="salaryMax"
   type="number"
-   autoComplete="off" 
+  autoComplete="off"
   value={form.salaryMax}
-  onChange={handleChange}
   required
   placeholder="Enter maximum salary"
   inputProps={{
-    min: form.salaryMin || 1, // ✅ max starts from min
+    min: form.salaryMin || 1,
+    max: 99,        // ✅ LIMIT
     step: 1,
   }}
   onKeyDown={(e) => {
-    if (e.key === "-" || e.key === "e") e.preventDefault();
+    if (["-", "e", "+", "."].includes(e.key)) e.preventDefault();
   }}
-  InputProps={{
-    endAdornment: (
-      <InputAdornment position="end">
-        <Typography variant="body2" color="#6b7280">
-          LPA
-        </Typography>
-      </InputAdornment>
-    ),
+  onChange={(e) => {
+    const value = Number(e.target.value);
+    if (
+      value >= (Number(form.salaryMin) || 1) &&
+      value <= 99
+    ) {
+      handleChange(e);
+    }
   }}
+
 />
 
                 </Grid>
@@ -626,9 +625,18 @@ const handleSubmit = async (e) => {
   onChange={handleChange}
   required
   inputProps={{
-    min: getCurrentDate(), // ✅ today & future allowed
+    min: getCurrentDate(),
+  }}
+  sx={{
+    "& input::-webkit-calendar-picker-indicator": {
+      display: "none",   // ✅ hides calendar icon (Chrome, Edge)
+    },
+    "& input": {
+      appearance: "none", // ✅ Firefox support
+    },
   }}
 />
+
 
                 </Grid>
 

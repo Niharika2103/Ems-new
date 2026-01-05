@@ -5,6 +5,10 @@ import {
   generateLetterApi,
   getEmployeeLettersApi,deleteLetterApi,sendLetterEmailApi
 } from "../../api/authApi";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
+
 
 const AdminLetterGenerator = () => {
   const [employees, setEmployees] = useState([]);
@@ -57,31 +61,76 @@ const AdminLetterGenerator = () => {
     fetchAll();
   }, []);
 
+  // const handleGenerateLetter = async (employeeId) => {
+  //   if (!employeeId || !selectedLetterType) return;
+
+  //   setGeneratingFor(employeeId);
+  //   try {
+  //     await generateLetterApi({
+  //       employeeId,
+  //       letterType: selectedLetterType,
+  //     });
+
+  //     // Refresh letters for this employee
+  //     const res = await getEmployeeLettersApi(employeeId);
+  //     setEmployeeLettersMap((prev) => ({
+  //       ...prev,
+  //       [employeeId]: res.data.files || [],
+  //     }));
+  //     alert(`✅ ${selectedLetterType} generated for employee!`);
+  //   } catch (err) {
+  //     console.error('Generation failed:', err);
+  //     const msg = err.response?.data?.error || 'Failed to generate letter';
+  //     alert(`❌ ${msg}`);
+  //   } finally {
+  //     setGeneratingFor(null);
+  //   }
+  // };
+
+
   const handleGenerateLetter = async (employeeId) => {
-    if (!employeeId || !selectedLetterType) return;
+  if (!employeeId || !selectedLetterType) return;
 
-    setGeneratingFor(employeeId);
-    try {
-      await generateLetterApi({
-        employeeId,
-        letterType: selectedLetterType,
-      });
+  const existingLetters = employeeLettersMap[employeeId] || [];
 
-      // Refresh letters for this employee
-      const res = await getEmployeeLettersApi(employeeId);
-      setEmployeeLettersMap((prev) => ({
-        ...prev,
-        [employeeId]: res.data.files || [],
-      }));
-      alert(`✅ ${selectedLetterType} generated for employee!`);
-    } catch (err) {
-      console.error('Generation failed:', err);
-      const msg = err.response?.data?.error || 'Failed to generate letter';
-      alert(`❌ ${msg}`);
-    } finally {
-      setGeneratingFor(null);
-    }
-  };
+  const normalize = (str) =>
+    str.toLowerCase().replace(/\s|_/g, "");
+
+  const alreadyGenerated = existingLetters.some(file =>
+    normalize(file.name).includes(normalize(selectedLetterType))
+  );
+
+  // 🚫 STOP if already generated
+  if (alreadyGenerated) {
+    toast.warning(
+      `⚠️ ${selectedLetterType} already generated for this employee`
+    );
+    return;
+  }
+
+  setGeneratingFor(employeeId);
+
+  try {
+    await generateLetterApi({
+      employeeId,
+      letterType: selectedLetterType,
+    });
+
+    const res = await getEmployeeLettersApi(employeeId);
+    setEmployeeLettersMap(prev => ({
+      ...prev,
+      [employeeId]: res.data.files || [],
+    }));
+
+    toast.success(`✅ ${selectedLetterType} generated successfully`);
+  } catch (err) {
+    console.error("Generation failed:", err);
+    const msg = err.response?.data?.error || "Failed to generate letter";
+    toast.error(`❌ ${msg}`);
+  } finally {
+    setGeneratingFor(null);
+  }
+};
 
   const handleDeleteLetter = async (employeeId, filename) => {
   if (!window.confirm(`Are you sure you want to delete "${filename}"?\nThis action cannot be undone.`)) {
@@ -135,6 +184,8 @@ const handleSend = async (employeeId, fileName) => {
 
   return (
     <div style={styles.container}>
+      <ToastContainer position="top-right" autoClose={3000} />
+
       <h1 style={styles.header}>Letter Management</h1>
 
       {/* Letter Type Selector */}
