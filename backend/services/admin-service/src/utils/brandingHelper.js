@@ -22,9 +22,9 @@ export const getBrandingForContext = async (context) => {
     // 2. White-label is OFF → use system branding ONLY if usage[context] === "true"
     if (!whiteLabel.enabled) {
       const usage = systemBranding.usage || {};
-      if (usage[context] !== "true") {
-        return null; // Branding disabled for this context
-      }
+      if (usage[context] !== true) {
+  return null;
+}
 
       return {
         companyName: systemBranding.companyName || "Zigma People Private Limited (An AI India Venture)",

@@ -979,11 +979,11 @@ export const updateAdminProfile = async (req, res) => {
 //   }
 // };
 
-
 export const grantTempAdminAccess = async (req, res) => {
   const client = await pool.connect();
   try {
     const { email, durationHours = 24 } = req.body;
+
     if (!email) {
       return res.status(400).json({ error: "Employee email is required" });
     }
@@ -992,55 +992,77 @@ export const grantTempAdminAccess = async (req, res) => {
       `SELECT * FROM ${USER_MASTER_TABLE} WHERE email = $1 AND role = 'employee'`,
       [email]
     );
-    if (userResult.rows.length === 0) {
+
+    if (userResult.rowCount === 0) {
       return res.status(404).json({ error: "Employee not found" });
     }
+
     const user = userResult.rows[0];
 
     const regResult = await client.query(
       `SELECT is_temp_admin, temp_admin_expiry FROM ${REGISTRATIONS_TABLE} WHERE user_id = $1`,
       [user.id]
     );
+
     const reg = regResult.rows[0];
 
     if (reg?.is_temp_admin && new Date(reg.temp_admin_expiry) > new Date()) {
       return res.status(400).json({
-        error: `Employee already has temporary admin access until ${new Date(reg.temp_admin_expiry).toLocaleString()}.`,
+        error: `Employee already has temporary admin access until ${new Date(
+          reg.temp_admin_expiry
+        ).toLocaleString()}.`,
       });
     }
 
     const expiry = new Date(Date.now() + durationHours * 60 * 60 * 1000);
+
     await client.query(
-      `UPDATE ${REGISTRATIONS_TABLE} SET is_temp_admin = true, is_approved = true, temp_admin_expiry = $1 WHERE user_id = $2`,
+      `UPDATE ${REGISTRATIONS_TABLE}
+       SET is_temp_admin = true,
+           is_approved = true,
+           temp_admin_expiry = $1
+       WHERE user_id = $2`,
       [expiry, user.id]
     );
 
-    // ✅ Get branding for EMAIL
+    // Branding for email
     const branding = await getBrandingForContext("email");
 
-    let emailBody = `<p>Hello ${user.name},</p>
-      <p>You have been granted temporary admin access until ${expiry.toLocaleString()}.</p>
-      <p>Please use this privilege responsibly.</p>`;
-
-    if (branding) {
-      emailBody = `
-        <div style="text-align:center; margin-bottom:20px;">
-          ${branding.logoUrl ? `<img src="${branding.logoUrl}" style="max-height:60px;">` : ''}
-          <p style="color:${branding.primaryColor}; margin-top:8px;">${branding.companyName}</p>
-        </div>
-        ${emailBody}
-      `;
+    let logoHtml = "";
+    if (branding?.logoUrl) {
+      try {
+        const base64 = await fetchImageAsBase64(branding.logoUrl);
+        logoHtml = `<img src="${base64}" style="max-height:60px;" />`;
+      } catch {}
     }
+
+    const header = branding
+      ? `
+        <div style="text-align:center;margin-bottom:15px;">
+          ${logoHtml}
+          <div style="color:${branding.primaryColor || "#000"};font-weight:600;">
+            ${branding.companyName}
+          </div>
+        </div>`
+      : "";
+
+    const emailBody = `
+      ${header}
+      <p>Hello <strong>${user.name}</strong>,</p>
+      <p>You have been granted <strong>temporary admin access</strong>.</p>
+      <p>Valid until: <strong>${expiry.toLocaleString()}</strong></p>
+      <p>Please use this privilege responsibly.</p>
+    `;
 
     try {
       await sendEmail(user.email, "Temporary Admin Access Granted", emailBody);
-    } catch (emailErr) {
-      console.warn("Failed to send email notification:", emailErr.message);
+    } catch (err) {
+      console.warn("Email failed:", err.message);
     }
 
-    res.status(200).json({
-      message: `Temporary admin access granted to ${user.name} until ${expiry.toLocaleString()}.`,
-      employee: { id: user.id, name: user.name, email: user.email, temp_admin_expiry: expiry },
+    res.json({
+      message: "Temporary admin access granted",
+      expiry,
     });
   } catch (err) {
     console.error("Grant Temp Admin Error:", err.message);
@@ -1049,6 +1071,7 @@ export const grantTempAdminAccess = async (req, res) => {
     client.release();
   }
 };
+
 /**
  * Revoke Temporary Admin Access from an Employee
  * DELETE /api/admin/revoke-temp/:email
@@ -1984,6 +2007,10 @@ async function generatePDF(htmlContent, outputPath) {
   await browser.close();
 }
 
+async function fetchImageAsBase64(url) {
+  const res = await axios.get(url, { responseType: "arraybuffer" });
+  return `data:image/png;base64,${Buffer.from(res.data).toString("base64")}`;
+}
 // ✅ FULLY UPDATED generateLetter
 export const generateLetter = async (req, res) => {
   const client = await pool.connect();
@@ -2058,26 +2085,36 @@ issue_date: new Date().toLocaleDateString(),
     let filledHTML = fillTemplate(templateContent, data);
 
     // ✅ INJECT LOGO + HEADER (this was missing!)
-    if (branding) {
-      const logoHtml = branding.logoUrl
-        ? `<img src="${branding.logoUrl}" style="max-height:60px; margin-bottom:10px;" />`
-        : "";
-      const headerHtml = `
-        <div style="text-align:center; margin-bottom:20px;">
-          ${logoHtml}
-          <h2 style="color:${branding.primaryColor || '#000'}; text-decoration:underline;">
-            ${letterType.toUpperCase()}
-          </h2>
-        </div>
-      `;
-      filledHTML = filledHTML.replace('<h2>LETTER_HEADER_PLACEHOLDER</h2>', headerHtml);
-    } else {
-      // Fallback if branding is disabled
-      filledHTML = filledHTML.replace(
-        '<h2>LETTER_HEADER_PLACEHOLDER</h2>',
-        `<h2 style="text-align:center; text-decoration:underline;">${letterType.toUpperCase()}</h2>`
-      );
+       if (branding) {
+  let logoHtml = "";
+
+  if (branding.logoUrl) {
+    try {
+      const logoBase64 = await fetchImageAsBase64(branding.logoUrl);
+      logoHtml = `<img src="${logoBase64}" style="max-height:60px; margin-bottom:10px;" />`;
+    } catch (e) {
+      console.warn("Logo load failed, continuing without logo", e.message);
     }
+  }
+
+  const headerHtml = `
+    <div style="text-align:center; margin-bottom:20px;">
+      ${logoHtml}
+      <h2 style="color:${branding.primaryColor || '#000'}; text-decoration:underline;">
+        ${letterType.toUpperCase()}
+      </h2>
+      <h3>${branding.companyName}</h3>
+    </div>
+  `;
+
+  // more robust replacement (ignores spaces/newlines)
+  filledHTML = filledHTML.replace(/LETTER_HEADER_PLACEHOLDER/g, headerHtml);
+} else {
+  filledHTML = filledHTML.replace(
+    /LETTER_HEADER_PLACEHOLDER/g,
+    `<h2 style="text-align:center; text-decoration:underline;">${letterType.toUpperCase()}</h2>`
+  );
+}
 
     // Generate PDF
     const lettersDir = path.join(process.cwd(), "src/uploads/letters");
@@ -3068,8 +3105,10 @@ export const deleteLetter = async (req, res) => {
 
 export const sendLetterEmail = async (req, res) => {
   const client = await pool.connect();
+
   try {
     const { employeeId, fileName } = req.body;
+
     if (!employeeId || !fileName) {
       return res.status(400).json({ error: "employeeId and fileName are required" });
     }
@@ -3078,47 +3117,63 @@ export const sendLetterEmail = async (req, res) => {
       `SELECT name, email FROM user_employees_master WHERE id=$1`,
       [employeeId]
     );
+
     const emp = empResult.rows[0];
     if (!emp) return res.status(404).json({ error: "Employee not found" });
 
     const filePath = path.join(process.cwd(), "src/uploads/letters", fileName);
+
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({ error: "File not found on server" });
     }
 
-    // ✅ Get branding for EMAIL
     const branding = await getBrandingForContext("email");
 
-    let emailBody = `<p>Hello ${emp.name},</p>
-      <p>Please find your <strong>${fileName.split("_")[0]}</strong> attached.</p>`;
-
-    // ✅ Inject logo + company name if branding is active
-    if (branding) {
-      emailBody = `
-        <div style="text-align:center; margin-bottom:20px;">
-          ${branding.logoUrl ? `<img src="${branding.logoUrl}" style="max-height:60px;">` : ''}
-          <p style="color:${branding.primaryColor}; margin-top:8px;">${branding.companyName}</p>
-        </div>
-        ${emailBody}
-      `;
+    let logoHtml = "";
+    if (branding?.logoUrl) {
+      try {
+        const base64 = await fetchImageAsBase64(branding.logoUrl);
+        logoHtml = `<img src="${base64}" style="max-height:60px;" />`;
+      } catch {}
     }
 
-    emailBody += `<p>Regards,<br/>HR Team</p>`;
+    const header = branding
+      ? `
+      <div style="text-align:center;margin-bottom:15px;">
+        ${logoHtml}
+        <div style="color:${branding.primaryColor || "#000"};font-weight:600;">
+          ${branding.companyName}
+        </div>
+      </div>`
+      : "";
 
-    await sendEmail(emp.email, `Your ${fileName.split("_")[0]} Letter`, emailBody, filePath, fileName);
+    const emailBody = `
+      ${header}
+      <p>Hello <strong>${emp.name}</strong>,</p>
+      <p>Your <strong>${fileName.split("_")[0]}</strong> letter is attached.</p>
+      <p>Regards,<br>HR Team</p>
+    `;
 
-    return res.json({
-      message: "📧 Email sent successfully with attachment",
+    await sendEmail(
+      emp.email,
+      `Your ${fileName.split("_")[0]} Letter`,
+      emailBody,
+      filePath,
+      fileName
+    );
+
+    res.json({
+      message: "Email sent successfully",
       sent_to: emp.email,
-      file: fileName
     });
   } catch (err) {
     console.error("Send Letter Email Error:", err);
-    return res.status(500).json({ error: "Failed to send email with attachment" });
+    res.status(500).json({ error: "Failed to send email" });
   } finally {
     client.release();
   }
 };
+
 export const getAllReferralsAdmin = async (req, res) => {
   const client = await pool.connect();
 
@@ -3405,20 +3460,31 @@ export const createFreelancerContract = async (req, res) => {
     let filledHTML = fillTemplate(htmlTemplate, data);
 
     // ✅ Inject logo + header if branding is active (for "letters")
-    if (branding?.logoUrl || branding?.primaryColor) {
-      const logoHtml = branding.logoUrl
-        ? `<img src="${branding.logoUrl}" style="max-height:60px; margin-bottom:10px;">`
-        : "";
-      const headerHtml = `
-        <div style="text-align:center; margin-bottom:20px;">
-          ${logoHtml}
-          <h1 style="color:${branding.primaryColor || '#000'};">FREELANCER CONTRACT AGREEMENT</h1>
-          <h3 style="color:${branding.primaryColor || '#000'};">${contract_title}</h3>
-          <hr />
-        </div>
-      `;
-      filledHTML = filledHTML.replace(/<h1>FREELANCER CONTRACT AGREEMENT<\/h1>\s*<h3>.*?<\/h3>\s*<hr \/>/, headerHtml);
+    if (branding) {
+  let logoHtml = "";
+
+  if (branding.logoUrl) {
+    try {
+      const base64 = await fetchImageAsBase64(branding.logoUrl);
+      logoHtml = `<img src="${base64}" style="max-height:70px; margin-bottom:10px;" />`;
+    } catch (e) {
+      console.warn("Logo failed, continuing without logo:", e.message);
     }
+  }
+
+  const headerHtml = `
+    <div style="text-align:center; margin-bottom:20px;">
+      ${logoHtml}
+      <h1 style="color:${branding.primaryColor || '#000'};">FREELANCER CONTRACT AGREEMENT</h1>
+      <h3>${contract_title}</h3>
+      <h4>${branding.companyName}</h4>
+      <hr/>
+    </div>
+  `;
+
+  filledHTML = filledHTML.replace(/LETTER_HEADER_PLACEHOLDER/g, headerHtml);
+}
+
 
     const dir = path.join(process.cwd(), "src/uploads/contracts");
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -3913,18 +3979,31 @@ export const createInvoice = async (req, res) => {
       .replace(/{{net_payable}}/g, net_payable);
 
     // ✅ Inject logo and style if branding is active
-    if (branding?.logoUrl || branding?.primaryColor) {
-      const logoHtml = branding.logoUrl
-        ? `<img src="${branding.logoUrl}" style="max-height:50px; margin-bottom:10px;" />`
-        : "";
-      const headerHtml = `
-        <div style="text-align:center; margin-bottom:15px;">
-          ${logoHtml}
-          <h2 style="color:${branding.primaryColor || '#000'};">Invoice</h2>
-        </div>
-      `;
-      html = html.replace(/<h2>Invoice<\/h2>/, headerHtml);
+   // inject branding header (logo + company name + color)
+if (branding) {
+  let logoHtml = "";
+
+  if (branding.logoUrl) {
+    try {
+      const b64 = await fetchImageAsBase64(branding.logoUrl);
+      logoHtml = `<img src="${b64}" style="max-height:60px; margin-bottom:8px;" />`;
+    } catch (e) {
+      console.warn("Invoice logo load failed:", e.message);
     }
+  }
+
+  const headerHtml = `
+    <div style="text-align:center; margin-bottom:15px;">
+      ${logoHtml}
+      <h2 style="color:${branding.primaryColor || '#000'}; margin:0;">INVOICE</h2>
+      <h3 style="margin:4px 0 0 0;">${branding.companyName || 'Your Company Pvt Ltd'}</h3>
+      <hr/>
+    </div>
+  `;
+
+  html = html.replace(/LETTER_HEADER_PLACEHOLDER/g, headerHtml);
+}
+
 
     const pdfDir = "uploads/invoices";
     if (!fs.existsSync(pdfDir)) fs.mkdirSync(pdfDir, { recursive: true });
