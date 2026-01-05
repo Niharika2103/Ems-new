@@ -13,7 +13,8 @@ import {
   Stack,
   Modal,
   TextField,
-  Tooltip
+  Tooltip,
+  TablePagination,
 } from "@mui/material";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
@@ -32,6 +33,9 @@ export default function FreelancerApprovalTable() {
   const [formUrl, setFormUrl] = useState("");
   const [sheetId, setSheetId] = useState("");
   const [savedFormUrl, setSavedFormUrl] = useState("");
+  const [page, setPage] = useState(0);
+const [rowsPerPage, setRowsPerPage] = useState(5);
+
 
   useEffect(() => {
     axios.get(`${AUTH_API.FREELANCER}/get-form`).then((res) => {
@@ -81,6 +85,16 @@ export default function FreelancerApprovalTable() {
       toast.error("Error rejecting freelancer");
     }
   };
+
+  const handleChangePage = (event, newPage) => {
+  setPage(newPage);
+};
+
+const handleChangeRowsPerPage = (event) => {
+  setRowsPerPage(parseInt(event.target.value, 10));
+  setPage(0);
+};
+
 
 
   const openModal = () => {
@@ -180,7 +194,10 @@ export default function FreelancerApprovalTable() {
             </TableHead>
 
             <TableBody>
-              {list.map((f) => (
+              {list
+  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+  .map((f) => (
+
                 <TableRow key={f.id}>
                   <TableCell>{f.name}</TableCell>
                   <TableCell>{f.email}</TableCell>
@@ -219,6 +236,17 @@ export default function FreelancerApprovalTable() {
             </TableBody>
 
           </Table>
+
+          <TablePagination
+  component="div"
+  count={list.length}
+  page={page}
+  onPageChange={handleChangePage}
+  rowsPerPage={rowsPerPage}
+  onRowsPerPageChange={handleChangeRowsPerPage}
+  rowsPerPageOptions={[5, 10, 25]}
+/>
+
         </TableContainer>
 
         {/* MODAL FOR FORM SETTINGS */}

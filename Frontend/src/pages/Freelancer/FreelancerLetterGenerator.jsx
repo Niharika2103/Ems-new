@@ -1,5 +1,7 @@
 // src/pages/Admin/FreelancerLetterGenerator.jsx
 import React, { useEffect, useState } from "react";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import {
   freelancerFetchApi,
   generateFreelancerLetterApi,
@@ -49,19 +51,57 @@ const FreelancerLetterGenerator = () => {
     load();
   }, []);
 
+  // const generateLetter = async (id) => {
+  //   setGeneratingFor(id);
+  //   try {
+  //     await generateFreelancerLetterApi({
+  //       freelancerId: id,
+  //       letterType: selectedLetterType,
+  //     });
+  //     const res = await getFreelancerLettersApi(id);
+  //     setLettersMap((p) => ({ ...p, [id]: res.data.files || [] }));
+  //   } finally {
+  //     setGeneratingFor(null);
+  //   }
+  // };
+
   const generateLetter = async (id) => {
-    setGeneratingFor(id);
-    try {
-      await generateFreelancerLetterApi({
-        freelancerId: id,
-        letterType: selectedLetterType,
-      });
-      const res = await getFreelancerLettersApi(id);
-      setLettersMap((p) => ({ ...p, [id]: res.data.files || [] }));
-    } finally {
-      setGeneratingFor(null);
-    }
-  };
+  const existingLetters = lettersMap[id] || [];
+
+  const normalize = (str) =>
+    str.toLowerCase().replace(/\s|_/g, "");
+
+  const alreadyGenerated = existingLetters.some((file) =>
+    normalize(file.name).includes(normalize(selectedLetterType))
+  );
+
+  // 🚫 Stop duplicate generation
+  if (alreadyGenerated) {
+    toast.warning(
+      `⚠️ ${selectedLetterType} already generated for this freelancer`
+    );
+    return;
+  }
+
+  setGeneratingFor(id);
+
+  try {
+    await generateFreelancerLetterApi({
+      freelancerId: id,
+      letterType: selectedLetterType,
+    });
+
+    const res = await getFreelancerLettersApi(id);
+    setLettersMap((p) => ({ ...p, [id]: res.data.files || [] }));
+
+    toast.success(`✅ ${selectedLetterType} generated successfully`);
+  } catch (err) {
+    console.error(err);
+    toast.error("❌ Failed to generate letter");
+  } finally {
+    setGeneratingFor(null);
+  }
+};
 
   const deleteLetter = async (id, file) => {
     if (!window.confirm("Delete this letter?")) return;
@@ -79,6 +119,8 @@ const FreelancerLetterGenerator = () => {
 
   return (
     <div style={styles.page}>
+      <ToastContainer position="top-right" autoClose={3000} />
+
       <h2 style={styles.title}>Freelancer Letter Management</h2>
 
       {/* LETTER TYPE */}
