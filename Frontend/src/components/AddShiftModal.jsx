@@ -138,7 +138,7 @@ export default function AddShiftModal({
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
         <Button variant="contained" onClick={handleSubmit}>
-          Save Shift
+          {editData ? "Update Shift" : "Save Shift"}
         </Button>
       </DialogActions>
     </Dialog>

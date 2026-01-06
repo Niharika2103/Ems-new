@@ -999,3 +999,35 @@ export const updateShiftApi = (id, data) => {
     data
   );
 };
+
+export const deleteShiftApi = (id) => {
+  return shiftmanagementClient.delete(
+    `${AUTH_API.SHIFTMANAGEMENT}/shifts/${id}`
+  );
+};
+
+
+export const assignShiftApi = (data) => {
+  return shiftmanagementClient.post(
+    `${AUTH_API.SHIFTMANAGEMENT}/shift-assignments`,
+    data
+  );
+};
+
+export const getShiftAssignmentHistoryApi = () => {
+  return shiftmanagementClient.get(
+    `${AUTH_API.SHIFTMANAGEMENT}/shift-assignments/history`
+  );
+};
+export const updateAssignmentApi = (id, data) => {
+  return shiftmanagementClient.put(
+    `${AUTH_API.SHIFTMANAGEMENT}/shift-assignments/${id}`,
+    data
+  );
+};
+
+export const getShiftAssignmentbyemployeeApi = (employeeId) => {
+  return shiftmanagementClient.get(
+    `${AUTH_API.SHIFTMANAGEMENT}/shift-assignments/current/${employeeId}`
+  );
+}
