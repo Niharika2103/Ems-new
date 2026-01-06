@@ -4674,15 +4674,18 @@ export const adminLogout = async (req, res) => {
   try {
     const { email } = req.body;
 
+    // 1️⃣ Validate input
     if (!email) {
       return res.status(400).json({ error: "Email is required for logout" });
     }
 
-    // 1) Get admin user from USERS table
+    // 2️⃣ Get admin user (supports role OR role_1)
     const { rows: userRows } = await client.query(
       `
-        SELECT id, email FROM ${USER_MASTER_TABLE}
-        WHERE email ILIKE $1 AND role = 'admin'
+        SELECT id, email
+        FROM ${USER_MASTER_TABLE}
+        WHERE email ILIKE $1
+          AND (role = 'admin' OR role_1 = 'admin')
       `,
       [email]
     );
@@ -4691,9 +4694,9 @@ export const adminLogout = async (req, res) => {
       return res.status(404).json({ error: "Admin not found" });
     }
 
-    const user = userRows[0]; // must match the one used at login
+    const user = userRows[0]; // SAME user used during login
 
-    // 2) Update latest login audit record for this admin
+    // 3️⃣ Update latest LOGIN audit record → mark LOGOUT
     const result = await client.query(
       `
         UPDATE audit_logs AS a
@@ -4714,15 +4717,17 @@ export const adminLogout = async (req, res) => {
     );
 
     if (result.rowCount === 0) {
-      return res
-        .status(404)
-        .json({ error: "No login session found to update" });
+      return res.status(404).json({
+        error: "No active login session found to logout",
+      });
     }
 
+    // 4️⃣ Success response
     return res.status(200).json({
       success: true,
       message: "Admin logged out successfully",
     });
+
   } catch (err) {
     console.error("Admin Logout Error:", err.message);
     return res.status(500).json({ error: err.message });
