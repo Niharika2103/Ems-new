@@ -8,6 +8,7 @@ import {
 const EmployeeTable = ({
   data,
   onActionClick,
+  onGenerateLetter, 
   showAssignAction = false,
   getStatusColor,
   getStatusText,
@@ -125,6 +126,17 @@ const EmployeeTable = ({
                     ? "Assign Probation"
                     : "View Details"}
                 </button>
+
+                              {/* ✅ new button */}
+  {!showAssignAction && item.status === "completed" && (
+    <button
+      onClick={() => onGenerateLetter(item)}
+
+      className="text-green-600 hover:text-green-800 font-medium text-sm"
+    >
+      Generate Confirmation Letter
+    </button>
+  )}
               </td>
             </tr>
           );
