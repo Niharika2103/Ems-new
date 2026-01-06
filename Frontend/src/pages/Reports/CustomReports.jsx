@@ -26,6 +26,8 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import { InputAdornment } from "@mui/material";
+
 
 /* =========================================================
    CONSTANTS
@@ -208,31 +210,50 @@ export default function CustomReports() {
         <CardContent>
           <Grid container spacing={2} alignItems="center">
             <Grid item xs={12} md={4}>
-              <TextField
-                fullWidth
-                placeholder="Search report by name"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                InputProps={{ startAdornment: <Search sx={{ mr: 1 }} /> }}
-              />
+             <TextField
+  fullWidth
+  placeholder="Search report by name"
+  value={search}
+  onChange={(e) => setSearch(e.target.value)}
+  InputProps={{
+    startAdornment: (
+      <InputAdornment position="start">
+        <Search />
+      </InputAdornment>
+    ),
+  }}
+/>
+
             </Grid>
 
             <Grid item xs={12} md={3}>
-              <FormControl fullWidth>
-                <InputLabel>Department</InputLabel>
-                <Select
-                  value={department}
-                  onChange={(e) => setDepartment(e.target.value)}
-                >
-                  <MenuItem value="">All Departments</MenuItem>
-                  {departments.map((d) => (
-                    <MenuItem key={d.department} value={d.department}>
-                      {d.department}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
+            <FormControl fullWidth size="small">
+  <InputLabel id="department-label">Department</InputLabel>
+  <Select
+    labelId="department-label"
+    value={department}
+    label="Department"
+    displayEmpty
+    renderValue={(selected) => {
+      if (!selected) {
+        return <span style={{ color: "#9e9e9e" }}>Department</span>;
+      }
+      return selected;
+    }}
+    onChange={(e) => setDepartment(e.target.value)}
+  >
+    <MenuItem value="">
+      <em>All Departments</em>
+    </MenuItem>
+
+    {departments.map((d) => (
+      <MenuItem key={d.department} value={d.department}>
+        {d.department}
+      </MenuItem>
+    ))}
+  </Select>
+</FormControl>
+  </Grid>
 
             <Grid item xs={12} md={5} textAlign="right">
               <Button onClick={downloadPDF} disabled={!generatedReport} startIcon={<Download />}>PDF</Button>
@@ -254,42 +275,69 @@ export default function CustomReports() {
       {generatedReport && (
         <Box mt={4}>
           <Typography fontWeight={600}>Generated Report Preview</Typography>
-          <Card sx={{ mt: 2 }}>
-            <CardContent>
-              <table width="100%" style={{ borderCollapse: "collapse" }}>
-                <thead>
-                  <tr>
-                    {generatedReport.fields.map((f) => (
-                      <th key={f} style={{ textAlign: "left", padding: 8, borderBottom: "1px solid #ddd" }}>
-                        {f}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredReportData.map((row, i) => (
-                    <tr key={i}>
-                      {generatedReport.fields.map((f) => (
-                        <td key={f} style={{ padding: 8 }}>
-                          {f === "Date of Joining" && row[f]
-                            ? new Date(row[f]).toLocaleDateString()
-                            : row[f] ?? "-"}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
+         <Card sx={{ mt: 2 }}>
+  <CardContent sx={{ p: 0 }}>
+    <Box
+      sx={{
+        maxHeight: "450px",   // ✅ controls table height
+        overflowY: "auto",    // ✅ vertical scroll
+        overflowX: "auto",
+      }}
+    >
+      <table
+        width="100%"
+        style={{ borderCollapse: "collapse", minWidth: "800px" }}
+      >
+        <thead>
+          <tr>
+            {generatedReport.fields.map((f) => (
+              <th
+                key={f}
+                style={{
+                  textAlign: "left",
+                  padding: 8,
+                  borderBottom: "1px solid #ddd",
+                  position: "sticky", // ✅ header sticks
+                  top: 0,
+                  background: "#fff",
+                  zIndex: 1,
+                }}
+              >
+                {f}
+              </th>
+            ))}
+          </tr>
+        </thead>
 
-                  {filteredReportData.length === 0 && (
-                    <tr>
-                      <td colSpan={generatedReport.fields.length} style={{ textAlign: "center", padding: 16 }}>
-                        No matching records found
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </CardContent>
-          </Card>
+        <tbody>
+          {filteredReportData.map((row, i) => (
+            <tr key={i}>
+              {generatedReport.fields.map((f) => (
+                <td key={f} style={{ padding: 8 }}>
+                  {f === "Date of Joining" && row[f]
+                    ? new Date(row[f]).toLocaleDateString()
+                    : row[f] ?? "-"}
+                </td>
+              ))}
+            </tr>
+          ))}
+
+          {filteredReportData.length === 0 && (
+            <tr>
+              <td
+                colSpan={generatedReport.fields.length}
+                style={{ textAlign: "center", padding: 16 }}
+              >
+                No matching records found
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </Box>
+  </CardContent>
+</Card>
+
         </Box>
       )}
 

@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Link, useLocation } from "react-router-dom";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import MailOutlineIcon from "@mui/icons-material/MailOutline";
+import ScheduleIcon from "@mui/icons-material/Schedule";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import FamilyRestroomIcon from "@mui/icons-material/FamilyRestroom";
 
@@ -9,7 +9,6 @@ const ProjectDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const pathnames = location.pathname.split("/").filter((x) => x);
-
   const secondLevel = "Attendance";
 
   const stats = [
@@ -21,6 +20,14 @@ const ProjectDashboard = () => {
       iconColor: "text-sky-700",
       onClick: () => navigate("/attendance/timesheettable"),
     },
+    {
+  title: "Shift Management",
+  message: "View and manage your work shifts",
+  icon: ScheduleIcon,
+  iconBg: "bg-gradient-to-r from-pink-100 to-rose-200",
+  iconColor: "text-pink-700",
+  onClick: () => navigate("/attendance/shift-management"),
+},
     {
       title: "Assigned Projects",
       message: "See the list of your current and past projects",

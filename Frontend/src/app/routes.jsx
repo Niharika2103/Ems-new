@@ -105,7 +105,7 @@ import PayrollVendorManagementSystem from "../pages/Vendor/PayrollVendorManageme
 import FreelancerJobPostDashboard from "../pages/Freelancer/jobposting/FreelancerJobPostDashboard";
 import FreelancerApplicationsTable from "../pages/Freelancer/jobposting/FreelancerApplicationsTable";
 import FreelancerLettersDownload from "../pages/Freelancer/FreelancerLettersDownload";
-
+import ShiftManagement from "../pages/Attendance/ShiftManagement";
 function AppRoutes() {
   return (
     <Routes>
@@ -138,6 +138,7 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      
       {/* Routes with Layout */}
       <Route element={<Layout />}>
         {/* Employee routes */}
@@ -782,6 +783,13 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route path="/attendance/shift-management"
+        element={   
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <ShiftManagement />
+          </ProtectedRoute>
+        }
+      />
 
        
       </Route>

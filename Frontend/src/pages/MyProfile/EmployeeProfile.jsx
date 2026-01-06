@@ -90,11 +90,14 @@ const EmployeeProfile = () => {
       };
 
       setFormData((prev) => ({
-        ...prev,
-        ...profile,
-        dob: formatDate(profile.dob),
-        date_of_joining: formatDate(profile.date_of_joining),
-      }));
+  ...prev,
+  ...profile,
+  dob: profile.dob ? formatDate(profile.dob) : getCurrentDate(),
+  date_of_joining: profile.date_of_joining
+    ? formatDate(profile.date_of_joining)
+    : getCurrentDate(),
+}));
+
     }
   }, [profile]);
   // Handle file upload
@@ -510,7 +513,7 @@ const handleViewResume = () => {
                   },
                 }}
               >
-                {loading ? "Updating..." : "Update Documents"}
+                {loading ? "Updating..." : "Update PROFILE"}
               </Button>
             </Box>
           </Box>
