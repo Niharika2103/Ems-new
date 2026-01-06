@@ -167,6 +167,10 @@ export const filterApplicationsApi = (filters) =>
   adminClient.get(`/admin/applications/filter`, {
     params: filters,
   });
+export const deleteJobPostApi = (jobId) =>
+  adminClient.delete(`/admin/job-posts/${jobId}`);
+
+
 
 
 // Update application status

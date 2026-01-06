@@ -281,3 +281,32 @@ export const filterApplications = async (req, res) => {
   }
 };
 
+/* ================= DELETE JOB POST ================= */
+export const deleteJobPost = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      "DELETE FROM job_posts WHERE job_id = $1 RETURNING *",
+      [id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Job not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Job deleted permanently",
+    });
+  } catch (err) {
+    console.error("DeleteJobPost Error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};

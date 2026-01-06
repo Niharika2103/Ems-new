@@ -124,6 +124,7 @@ import {
   updateJobPost,
   updateJobStatus,
   getDraftJobPosts,
+  deleteJobPost,
  
 } from "../controllers/jobPost.controller.js";
 
@@ -290,6 +291,9 @@ router.put("/admin/job-posts/:id", updateJobPost);
 router.patch("/admin/job-posts/:id/status", updateJobStatus);
 router.get("/admin/job-posts/draft", getDraftJobPosts);
 router.get("/applications/filter", filterApplications);
+router.delete("/job-posts/:id", deleteJobPost);
+
+
 
 /* ========== Job Applications ========== */
 router.post("/applications/apply", uploadResume.single("resume"), applyForJob);
