@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { downloadPayslipApi } from "../../api/authApi";
 import { decodeToken } from "../../api/decodeToekn";
+import { toast } from "react-toastify";
+
 import {
   Box,
   Typography,
@@ -127,26 +129,33 @@ const EmpPayslip = () => {
 }, []);
 
   const downloadPayslip = async () => {
-    if (!selectedDate) return;
+  if (!selectedDate) return;
 
-    const month = dayjs(selectedDate).format("MMMM").toUpperCase();
-    const year = dayjs(selectedDate).format("YYYY");
+  const month = dayjs(selectedDate).format("MMMM").toUpperCase();
+  const year = dayjs(selectedDate).format("YYYY");
 
-    try {
-      const response = await downloadPayslipApi(userId, month, year);
-      const blob = new Blob([response.data], { type: "application/pdf" });
-      const url = window.URL.createObjectURL(blob);
+  try {
+    const response = await downloadPayslipApi(userId, month, year);
 
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `Payslip-${month}-${year}.pdf`;
-      a.click();
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Payslip download failed:", error);
-      alert("Payslip not found for this month");
-    }
-  };
+    const blob = new Blob([response.data], { type: "application/pdf" });
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Payslip-${month}-${year}.pdf`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+
+    // ✅ SIMPLE SUCCESS TOAST
+    toast.success("Payslip downloaded successfully");
+  } catch (error) {
+    console.error("Payslip download failed:", error);
+
+    // ✅ SIMPLE ERROR TOAST
+    toast.error("Payslip not available for selected month");
+  }
+};
+
 
   // Calculate totals for display
   const calculateTotals = () => {

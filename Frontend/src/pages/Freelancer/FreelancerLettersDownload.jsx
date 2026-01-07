@@ -4,6 +4,8 @@ import {
   downloadFreelancerLetterApi,
 } from "../../api/authApi";
 import { decodeToken } from "../../api/decodeToekn";
+import { toast } from "react-toastify";
+
 
 const FreelancerLettersDownload = () => {
   const [letters, setLetters] = useState([]);
@@ -49,36 +51,41 @@ const FreelancerLettersDownload = () => {
 
   // ================= DOWNLOAD LETTER =================
   const handleDownload = async (fileName) => {
-    try {
-      if (!freelancerId) {
-        alert("Session expired. Please login again.");
-        return;
-      }
-
-      const res = await downloadFreelancerLetterApi(
-        freelancerId,
-        fileName
-      );
-
-      const blob = new Blob([res.data], {
-        type: "application/pdf",
-      });
-
-      const url = window.URL.createObjectURL(blob);
-
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error("❌ Download failed:", err);
-      alert("Failed to download letter");
+  try {
+    if (!freelancerId) {
+      toast.error("Session expired. Please login again.");
+      return;
     }
-  };
+
+    const res = await downloadFreelancerLetterApi(
+      freelancerId,
+      fileName
+    );
+
+    const blob = new Blob([res.data], {
+      type: "application/pdf",
+    });
+
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    // ✅ SUCCESS TOAST
+    toast.success("Letter downloaded successfully");
+  } catch (err) {
+    console.error("❌ Download failed:", err);
+
+    // ✅ ERROR TOAST
+    toast.error("Failed to download letter");
+  }
+};
 
   const getIcon = (name = "") => {
     const lower = name.toLowerCase();
