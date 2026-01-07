@@ -96,3 +96,40 @@ export const updateShift = async (req, res) => {
     res.status(500).json({ message: "Failed to update shift" });
   }
 };
+
+/* HARD DELETE SHIFT */
+export const deleteShift = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Safety check: is shift used?
+    const used = await pool.query(
+      `
+      SELECT 1
+      FROM employee_shift_assignment
+      WHERE shift_id = $1
+      LIMIT 1
+      `,
+      [id]
+    );
+
+    if (used.rowCount > 0) {
+      return res.status(400).json({
+        message: "Cannot delete. Shift already assigned to employees."
+      });
+    }
+
+    await pool.query(
+      `
+      DELETE FROM shift_master
+      WHERE id = $1
+      `,
+      [id]
+    );
+
+    res.json({ message: "Shift deleted permanently" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to delete shift" });
+  }
+};

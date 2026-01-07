@@ -16,13 +16,13 @@ export const assignShift = async (req, res) => {
     // 🔒 Prevent overlapping assignments
     const overlap = await pool.query(
       `
-      SELECT 1
-      FROM employee_shift_assignment
-      WHERE employee_id = $1
-      AND daterange(effective_from, effective_to, '[]')
-          && daterange($2, $3, '[]')
-      `,
-      [employee_id, effective_from, effective_to]
+       SELECT 1
+  FROM employee_shift_assignment
+  WHERE employee_id = $1
+  AND daterange(effective_from, effective_to, '[)')
+      && daterange($2, $3, '[)')
+  `,
+  [employee_id, effective_from, effective_to]
     );
 
     if (overlap.rowCount > 0) {
@@ -61,24 +61,134 @@ export const assignShift = async (req, res) => {
 /* ASSIGNMENT HISTORY */
 export const getAssignmentHistory = async (req, res) => {
   try {
-    const { rows } = await pool.query(
-      `
-      SELECT esa.id,
-             u.name AS employee_name,
-             s.shift_name,
-             esa.effective_from,
-             esa.effective_to,
-             esa.ot_allowed,
-             esa.max_ot_hours
+    const { rows } = await pool.query(`
+      SELECT
+        esa.id,
+        esa.employee_id,
+        esa.shift_id,
+        u.name AS employee_name,
+        s.shift_name,
+        esa.effective_from,
+        esa.effective_to,
+        esa.ot_allowed,
+        esa.max_ot_hours,
+        CASE
+          WHEN CURRENT_DATE < esa.effective_from THEN 'PENDING'
+          WHEN CURRENT_DATE BETWEEN esa.effective_from AND esa.effective_to THEN 'CURRENT'
+          ELSE 'PAST'
+        END AS status
       FROM employee_shift_assignment esa
       JOIN user_employees_master u ON u.id = esa.employee_id
       JOIN shift_master s ON s.id = esa.shift_id
-      ORDER BY esa.created_at DESC
-      `
-    );
+      ORDER BY esa.effective_from DESC
+    `);
 
     res.json(rows);
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Failed to load history" });
+  }
+};
+
+
+export const updateAssignment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      shift_id,
+      effective_from,
+      effective_to,
+      ot_allowed,
+      max_ot_hours,
+      reason
+    } = req.body;
+
+    // 1️⃣ Fetch existing assignment
+    const { rows } = await pool.query(
+      `
+      SELECT employee_id, effective_from
+      FROM employee_shift_assignment
+      WHERE id = $1
+      `,
+      [id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ message: "Assignment not found" });
+    }
+
+    const existingFrom = rows[0].effective_from;
+
+    // 2️⃣ Block edit if not PENDING
+    if (new Date(existingFrom) <= new Date()) {
+      return res
+        .status(400)
+        .json({ message: "Only PENDING shifts can be edited" });
+    }
+
+    // 3️⃣ Update allowed fields only
+    await pool.query(
+      `
+      UPDATE employee_shift_assignment
+      SET shift_id = $1,
+          effective_from = $2,
+          effective_to = $3,
+          ot_allowed = $4,
+          max_ot_hours = $5,
+          reason = $6
+      WHERE id = $7
+      `,
+      [
+        shift_id,
+        effective_from,
+        effective_to,
+        ot_allowed,
+        max_ot_hours,
+        reason,
+        id
+      ]
+    );
+
+    res.json({ message: "Shift updated successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to update assignment" });
+  }
+};
+
+/* GET CURRENT SHIFT BY EMPLOYEE ID */
+export const getCurrentShiftByEmployee = async (req, res) => {
+  try {
+    const { employee_id } = req.params;
+
+    const { rows } = await pool.query(
+      `
+      SELECT
+        esa.id,
+        esa.employee_id,
+        esa.shift_id,
+        s.shift_name,
+        esa.effective_from,
+        esa.effective_to,
+        esa.ot_allowed,
+        esa.max_ot_hours
+      FROM employee_shift_assignment esa
+      JOIN shift_master s ON s.id = esa.shift_id
+      WHERE esa.employee_id = $1
+        AND CURRENT_DATE BETWEEN esa.effective_from AND esa.effective_to
+      ORDER BY esa.effective_from DESC
+      LIMIT 1
+      `,
+      [employee_id]
+    );
+
+    if (rows.length === 0) {
+      return res.json({ message: "No active shift found" });
+    }
+
+    res.json(rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to fetch current shift" });
   }
 };

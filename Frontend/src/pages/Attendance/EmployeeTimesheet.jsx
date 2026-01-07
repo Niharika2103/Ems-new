@@ -24,6 +24,7 @@ import {
   AttendanceFetchExistingWeek,
   checkLeaveEligibility,
 } from "../../features/attendance/attendanceSlice";
+import {getShiftAssignmentbyemployeeApi} from "../../api/authApi";
 import LeaveApplicationModal from "../../components/LeaveApplicationModal";
 import { useNavigate } from "react-router-dom";
 import { AUTH_API } from "../../utils/constants";
@@ -60,6 +61,24 @@ export default function EmpTimesheet() {
   const [holidays, setHolidays] = useState([]);
   const [holidaysCache, setHolidaysCache] = useState({});
   const [isWeekReleased, setIsWeekReleased] = useState(false);
+const [currentShift, setCurrentShift] = useState(null);
+
+  useEffect(() => {
+  if (!employeeId) return;
+
+  getShiftAssignmentbyemployeeApi(employeeId)
+    .then((res) => {
+      if (res.data && !res.data.message) {
+        setCurrentShift(res.data);
+      } else {
+        setCurrentShift(null);
+      }
+    })
+    .catch((err) => {
+      console.error("Failed to fetch shift", err);
+      setCurrentShift(null);
+    });
+}, [employeeId]);
 
   //  store leave periods for multi-week leaves
   const [leavePeriods, setLeavePeriods] = useState([]);
@@ -778,7 +797,11 @@ export default function EmpTimesheet() {
 
       {/* TABLE HEADER */}
       <div className="flex justify-between font-semibold border-b pb-2 text-sm">
-        <div className="flex-1">{projectName} <span>(Shift1)</span></div>
+        <div className="flex-1">{projectName} {currentShift && (
+    <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700 font-semibold">
+      {currentShift.shift_name}
+    </span>
+  )}</div>
         <div className="flex gap-2 justify-end flex-1">
           {days.map((day, i) => {
             const currentDate = new Date(getMonday(weekStart));
