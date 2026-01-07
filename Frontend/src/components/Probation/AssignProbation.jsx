@@ -132,7 +132,10 @@ const handleSubmit = async (e) => {
 };
 useEffect(() => {
   if (created) {
-    toast.success("Probation assigned successfully!");  // 200 OK toaster
+    toast.success("Probation assigned successfully!", {
+      toastId: "probation-assigned-success", // ✅ KEY FIX
+    });
+
     onAssigned(created);
     onClose();
   }

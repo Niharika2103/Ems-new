@@ -4,15 +4,14 @@ import {
   calculateDaysLeft,
   formatDate,
 } from "../../utils/probationUtils";
-
+ 
 const EmployeeTable = ({
   data,
   onActionClick,
-  onGenerateLetter, 
   showAssignAction = false,
   getStatusColor,
   getStatusText,
-  assignedEmployeeEmails = new Set(), // ✅ REQUIRED
+  
 }) => (
   <div className="overflow-x-auto">
     <table className="w-full">
@@ -30,7 +29,7 @@ const EmployeeTable = ({
           <th className="text-left py-3 px-4 font-semibold text-gray-700">
             Position
           </th>
-
+ 
           {!showAssignAction && (
             <>
               <th className="text-left py-3 px-4 font-semibold text-gray-700">
@@ -50,38 +49,31 @@ const EmployeeTable = ({
               </th>
             </>
           )}
-
+ 
           <th className="text-left py-3 px-4 font-semibold text-gray-700">
             Actions
           </th>
         </tr>
       </thead>
-
+ 
       <tbody>
         {data.map((item) => {
           const daysLeft = calculateDaysLeft(item.enddate);
-
-          // ✅ EMAIL BASED CHECK (SAFE)
-          const email = item.email?.toLowerCase();
-          const isAssigned =
-            showAssignAction && assignedEmployeeEmails.has(email);
-
+ 
           return (
             <tr
-              key={email}
+              key={item.probationid || item.employee_id}
               className="border-b border-gray-100 hover:bg-gray-50 transition"
             >
               <td className="py-3 px-4 font-medium text-gray-900">
                 {item.email}
               </td>
               <td className="py-3 px-4 text-gray-800">{item.name}</td>
-              <td className="py-3 px-4 text-gray-600">
-                {item.department}
-              </td>
+              <td className="py-3 px-4 text-gray-600">{item.department}</td>
               <td className="py-3 px-4 text-gray-600">
                 {item.designation}
               </td>
-
+ 
               {!showAssignAction && (
                 <>
                   <td className="py-3 px-4 text-gray-600">
@@ -90,7 +82,7 @@ const EmployeeTable = ({
                   <td className="py-3 px-4 text-gray-600">
                     {formatDate(item.enddate)}
                   </td>
-
+ 
                   <td className="py-3 px-4 text-gray-600">
                     {calculateDurationMonths(
                       item.startdate,
@@ -98,7 +90,7 @@ const EmployeeTable = ({
                     )}{" "}
                     months
                   </td>
-
+ 
                   <td className="py-3 px-4">
                     <span
                       className={`font-semibold ${
@@ -112,7 +104,7 @@ const EmployeeTable = ({
                       {daysLeft} days
                     </span>
                   </td>
-
+ 
                   <td className="py-3 px-4">
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
@@ -124,36 +116,16 @@ const EmployeeTable = ({
                   </td>
                 </>
               )}
-
+ 
               <td className="py-3 px-4">
                 <button
-                  disabled={isAssigned}
-                  onClick={() => {
-                    if (!isAssigned) onActionClick(item);
-                  }}
-                  className={`font-medium text-sm ${
-                    isAssigned
-                      ? "text-gray-400 cursor-not-allowed"
-                      : "text-blue-600 hover:text-blue-800"
-                  }`}
+                  onClick={() => onActionClick(item)}
+                  className="text-blue-600 hover:text-blue-800 font-medium text-sm"
                 >
                   {showAssignAction
-                    ? isAssigned
-                      ? "Probation Assigned"
-                      : "Assign Probation"
+                    ? "Assign Probation"
                     : "View Details"}
                 </button>
-
-                              {/* ✅ new button */}
-  {!showAssignAction && item.status === "completed" && (
-    <button
-      onClick={() => onGenerateLetter(item)}
-
-      className="text-green-600 hover:text-green-800 font-medium text-sm"
-    >
-      Generate Confirmation Letter
-    </button>
-  )}
               </td>
             </tr>
           );
@@ -162,5 +134,5 @@ const EmployeeTable = ({
     </table>
   </div>
 );
-
+ 
 export default EmployeeTable;
