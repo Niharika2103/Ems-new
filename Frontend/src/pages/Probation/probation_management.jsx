@@ -11,7 +11,7 @@ import { API_BASES } from "../../utils/constants";
 import { Button } from "@mui/material";
 import { toast } from "react-toastify";
 
-
+import { generateLetterApi } from "../../api/authApi";
 
 
 const ProbationManagementSystem = () => {
@@ -37,7 +37,7 @@ const ProbationManagementSystem = () => {
   endingSoon: 0,
   completed: 0,
 });
-
+const [recentlyGeneratedLetter, setRecentlyGeneratedLetter] = useState(null); 
   useEffect(() => {
   // ✅ Always load both lists once
   dispatch(fetchNewEmployees());
@@ -301,6 +301,34 @@ const handleTerminate = async () => {
 }
 
 };
+const handleGenerateLetter = async (emp) => {
+  try {
+    const payload = {
+      employeeId: emp.employee_id || emp.user_id || emp.id,
+      letterType: "Probation Completion Letter"
+    };
+
+    const res = await generateLetterApi(payload);
+
+    // ✅ Store the generated letter info
+    const letterData = {
+      ...res.data,
+      employeeId: payload.employeeId,
+      associatedEmployee: emp // optional: keep ref to employee row
+    };
+    setRecentlyGeneratedLetter(letterData);
+
+    alert("Letter generated successfully");
+
+    if (res.data?.pdf_url) {
+      window.open(res.data.pdf_url, "_blank");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Failed to generate letter");
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -436,10 +464,11 @@ const handleTerminate = async () => {
             onActionClick={(emp) => {
             setSelectedProbation(emp);
             setShowDetails(true);
+            
           }}
 
 
-
+              onGenerateLetter={handleGenerateLetter}
               showAssignAction={false}
               getStatusColor={getStatusColor}
               getStatusText={getStatusText}
