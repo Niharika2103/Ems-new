@@ -9,6 +9,7 @@ import EmployeeDetailView from "../../components/Probation/EmployeeDetailView";
 import { getProbationDashboardCountsApi } from "../../api/authApi";
 import { API_BASES } from "../../utils/constants"; 
 import { Button } from "@mui/material";
+import { toast } from "react-toastify";
 
 
 
@@ -18,6 +19,12 @@ const ProbationManagementSystem = () => {
   const { newEmpList, loading } = useSelector((state) => state.admin);
   const { list } = useSelector((state) => state.salaryInfo);
   console.log(list, "list")
+
+  const assignedEmployeeEmails = new Set(
+  list.map(p => p.email?.toLowerCase())
+);
+
+
   const [activeTab, setActiveTab] = useState('employees');
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [showAssignModal, setShowAssignModal] = useState(false);
@@ -32,13 +39,11 @@ const ProbationManagementSystem = () => {
 });
 
   useEffect(() => {
-    if (activeTab === "employees") {
-      dispatch(fetchNewEmployees());
-    } else {
-      dispatch(fetchassignProbation());
-    }
-  }, [activeTab, dispatch]);
-  
+  // ✅ Always load both lists once
+  dispatch(fetchNewEmployees());
+  dispatch(fetchassignProbation());
+}, [dispatch]);
+
     useEffect(() => {
       getProbationDashboardCountsApi()
         .then((res) => {
@@ -139,6 +144,7 @@ const ProbationManagementSystem = () => {
 // };
 
 const handleNewEmployeeExport = async () => {
+  try{
   const response = await fetch(
     `${API_BASES.ADMIN}/admin/probation/export-new-employees`,
     {
@@ -155,9 +161,15 @@ const handleNewEmployeeExport = async () => {
 
   const blob = await response.blob();
   downloadBlob(blob, "new_employees.xlsx");
+    toast.success("New employees exported successfully!");
+  } catch (error) {
+    // ❌ ERROR TOAST
+    toast.error(error.message || "Export failed");
+  }
 };
 
 const handleProbationExport = async () => {
+  try{
   const response = await fetch(
     `${API_BASES.ADMIN}/admin/probation/export`,
     {
@@ -174,6 +186,11 @@ const handleProbationExport = async () => {
 
   const blob = await response.blob();
   downloadBlob(blob, "probation_list.xlsx");
+    toast.success("Probation list exported successfully!");
+}catch (error) {
+    // ❌ ERROR TOAST
+    toast.error(error.message || "Export failed");
+  }
 };
 
 const downloadBlob = (blob, filename) => {
@@ -221,14 +238,15 @@ const handleExtendPeriod = async () => {
     success = true; // ✅ mark success
   } catch (err) {
     console.error("Extend API error:", err);
-    alert("Failed to extend probation");
+    toast.error("Failed to extend probation");
   } finally {
     setActionLoading(false);
   }
 
   // ✅ EVERYTHING BELOW WILL NEVER ENTER CATCH
   if (success) {
-  alert("Probation extended successfully");
+  //alert("Probation extended successfully");
+    toast.success("Probation period extended successfully");
 
   setShowExtendModal(false);
   setExtendDays("");
@@ -269,13 +287,13 @@ const handleTerminate = async () => {
     success = true;
   } catch (err) {
     console.error("Terminate error:", err);
-    alert("Failed to terminate probation");
+    toast.error("Failed to terminate probation");
   } finally {
     setActionLoading(false);
   }
 
  if (success) {
-  alert("Probation terminated successfully");
+  toast.success("Probation terminated successfully");
   setShowDetails(false);
 
   // ✅ THIS triggers re-render
@@ -425,6 +443,7 @@ const handleTerminate = async () => {
               showAssignAction={false}
               getStatusColor={getStatusColor}
               getStatusText={getStatusText}
+              assignedEmployeeEmails={assignedEmployeeEmails}   // ✅ ADD THIS LINE
             />
 
 
