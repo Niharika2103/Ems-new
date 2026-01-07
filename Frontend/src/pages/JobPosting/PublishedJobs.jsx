@@ -13,6 +13,7 @@ import { DeleteOutlined, SearchOutlined } from "@ant-design/icons";
 import {
   getAdminJobPostsApi,
   updateJobStatusApi,
+  deleteJobPostApi,
 } from "../../api/authApi";
 
 const PublishedJobs = () => {
@@ -89,6 +90,22 @@ const PublishedJobs = () => {
     );
   }, [search, jobs]);
 
+const handleDelete = async (jobId) => {
+  try {
+    await deleteJobPostApi(jobId);
+
+    message.success("Job deleted permanently");
+
+    // Refresh job list from DB
+    fetchJobs();
+  } catch (error) {
+    console.error("Delete job error:", error);
+    message.error("Failed to delete job");
+  }
+};
+
+
+
   const columns = [
     { title: "Job Title", dataIndex: "title", key: "title" },
     { title: "Company", dataIndex: "company", key: "company" },
@@ -154,13 +171,13 @@ const PublishedJobs = () => {
               </Button>
             )}
 
-            <Button
+           <Button
               danger
               icon={<DeleteOutlined />}
-              onClick={() =>
-                setJobs((prev) => prev.filter((j) => j.id !== record.id))
-              }
-            />
+              onClick={() => handleDelete(record.id)}
+            >
+              Delete
+            </Button>
           </Space>
         );
       },

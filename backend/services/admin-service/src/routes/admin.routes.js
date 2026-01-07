@@ -124,6 +124,7 @@ import {
   updateJobPost,
   updateJobStatus,
   getDraftJobPosts,
+  deleteJobPost,
  
 } from "../controllers/jobPost.controller.js";
 
@@ -142,7 +143,8 @@ import {
   getInterviewsByApplication, 
   updateInterviewStatus,
   rescheduleInterview,     // <-- ADD THIS
-  cancelInterview  
+  cancelInterview,
+   sendInterviewSMS
 } from "../controllers/interview.controller.js";
 
 //panel controller
@@ -290,6 +292,9 @@ router.put("/admin/job-posts/:id", updateJobPost);
 router.patch("/admin/job-posts/:id/status", updateJobStatus);
 router.get("/admin/job-posts/draft", getDraftJobPosts);
 router.get("/applications/filter", filterApplications);
+router.delete("/job-posts/:id", deleteJobPost);
+
+
 
 /* ========== Job Applications ========== */
 router.post("/applications/apply", uploadResume.single("resume"), applyForJob);
@@ -301,6 +306,11 @@ router.put("/interviews/status/:interview_id", updateInterviewStatus);
 router.put("/interviews/reschedule/:interview_id", rescheduleInterview);
 router.put("/interviews/cancel/:interview_id", cancelInterview);
 
+// ================= INTERVIEW SMS =================
+router.post(
+  "/interviews/:interview_id/send-sms",
+  sendInterviewSMS
+);
 
 // ==================================================
 // ✅ FIXED — AI Resume Parser MUST use memory storage
