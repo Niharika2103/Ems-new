@@ -271,8 +271,8 @@ export const adminRegister = async (req, res) => {
 
       const insertUser = await client.query(
         `INSERT INTO ${USER_MASTER_TABLE} 
-         (name, email, password, role, role_1, role_2, mfa_secret, mfa_enabled, is_email_verified, access_flag, is_promoted)
-         VALUES ($1,$2,$3,'admin',NULL,'employee',$4,false,false,'y',false)
+         (name, email, password, role, role_1, role_2, employment_type,mfa_secret, mfa_enabled, is_email_verified, access_flag, is_promoted)
+         VALUES ($1,$2,$3,'admin',NULL,'employee','fulltime',$4,false,false,'y',false)
          RETURNING id`,
         [fullName, email, hashedPassword, secret.base32]
       );
@@ -306,7 +306,7 @@ export const adminRegister = async (req, res) => {
 
       await client.query(
         `UPDATE ${USER_MASTER_TABLE}
-         SET name=$1, password=$2, role='admin', role_1=NULL, role_2='employee', mfa_secret=$3
+         SET name=$1, password=$2, role='admin', role_1=NULL, role_2='employee',employment_type='fulltime', mfa_secret=$3
          WHERE id=$4`,
         [fullName, hashedPassword, secret.base32, existingUser.id]
       );

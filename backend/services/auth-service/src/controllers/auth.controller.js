@@ -81,7 +81,7 @@ export const superAdminRegister = async (req, res) => {
     // Update parent table
     const { rows: updatedRows } = await pool.query(
       `UPDATE ${USERS_TABLE} 
-       SET name=$1, password=$2, mfa_secret=$3, mfa_enabled=false, is_email_verified=false 
+       SET name=$1, password=$2, mfa_secret=$3, mfa_enabled=false, is_email_verified=false,employment_type='fulltime'
        WHERE id=$4 RETURNING *`,
       [fullName, hashedPassword, secret.base32, existingUser.id]
     );
