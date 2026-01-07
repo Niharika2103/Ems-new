@@ -308,7 +308,11 @@ if (!POSITION_REGEX.test(form.position.trim())) {
   onChange={handleChange}
   required
   placeholder="e.g., Frontend Developer"
+  InputLabelProps={{
+    shrink: true,
+  }}
 />
+
 
 </Grid>
 

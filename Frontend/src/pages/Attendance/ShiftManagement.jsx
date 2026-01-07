@@ -32,6 +32,13 @@ import {
   getShiftAssignmentHistoryApi, updateAssignmentApi
 } from "../../api/authApi";
 
+const formatDate = (dateStr) => {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  return date.toLocaleDateString("en-GB"); // dd/mm/yyyy
+};
+
+
 export default function ShiftManagement() {
   const today = new Date().toISOString().slice(0, 10);
   const assignmentFormRef = useRef(null);
@@ -499,8 +506,9 @@ export default function ShiftManagement() {
                   <TableRow key={h.id}>
                     <TableCell>{h.employee_name}</TableCell>
                     <TableCell>{h.shift_name}</TableCell>
-                    <TableCell>{h.effective_from.slice(0, 10)}</TableCell>
-                    <TableCell>{h.effective_to.slice(0, 10)}</TableCell>
+                    <TableCell>{formatDate(h.effective_from)}</TableCell>
+                    <TableCell>{formatDate(h.effective_to)}</TableCell>
+
                     <TableCell>{h.ot_allowed ? "Yes" : "No"}</TableCell>
                     <TableCell>{h.max_ot_hours}</TableCell>
                     <TableCell>
