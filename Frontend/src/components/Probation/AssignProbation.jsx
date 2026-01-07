@@ -2,7 +2,7 @@
 import React, { useState,useEffect  } from "react";
 import { XCircle } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { ToastContainer,toast } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { createProbation } from "../../features/Salarystructure/salaryStructureSlice";
 
@@ -38,6 +38,7 @@ const [startDate, setStartDate] = useState(today);
 const dispatch = useDispatch();
   const { creating, createError, created } = useSelector((s) => s.salaryInfo);
 
+  
 
   const handleBlur = (field) => {
     setTouched((prev) => ({ ...prev, [field]: true }));
@@ -131,7 +132,10 @@ const handleSubmit = async (e) => {
 };
 useEffect(() => {
   if (created) {
-    toast.success("Probation assigned successfully!");  // 200 OK toaster
+    toast.success("Probation assigned successfully!", {
+      toastId: "probation-assigned-success", // ✅ KEY FIX
+    });
+
     onAssigned(created);
     onClose();
   }
@@ -153,7 +157,7 @@ useEffect(() => {
 
   return (
     <>
-     <ToastContainer position="top-right" autoClose={3000} />
+     
    
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">

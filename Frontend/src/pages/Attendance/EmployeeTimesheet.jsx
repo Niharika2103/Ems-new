@@ -67,8 +67,12 @@ const [currentShift, setCurrentShift] = useState(null);
   if (!employeeId) return;
 
   getShiftAssignmentbyemployeeApi(employeeId)
+  
     .then((res) => {
+      alert("Hi")
+      console.log(res,"currentshift")
       if (res.data && !res.data.message) {
+        
         setCurrentShift(res.data);
       } else {
         setCurrentShift(null);

@@ -4,6 +4,8 @@ import {
   downloadEmployeeLetterApi
 } from "../../api/authApi";
 import { decodeToken } from "../../api/decodeToekn";
+import { toast } from "react-toastify";
+
 
 const LettersDownload = () => {
   const [letters, setLetters] = useState([]);
@@ -50,33 +52,38 @@ const LettersDownload = () => {
 
   // ================= DOWNLOAD LETTER =================
   const handleDownload = async (fileName) => {
-    try {
-      const decoded = decodeToken();
-      const employeeId = decoded?.id;
+  try {
+    const decoded = decodeToken();
+    const employeeId = decoded?.id;
 
-      if (!employeeId) {
-        alert("Session expired. Please login again.");
-        return;
-      }
-
-      const res = await downloadEmployeeLetterApi(employeeId, fileName);
-
-      const blob = new Blob([res.data], { type: "application/pdf" });
-      const url = window.URL.createObjectURL(blob);
-
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error("❌ Download failed:", err);
-      alert("Failed to download letter");
+    if (!employeeId) {
+      toast.error("Session expired. Please login again.");
+      return;
     }
-  };
+
+    const res = await downloadEmployeeLetterApi(employeeId, fileName);
+
+    const blob = new Blob([res.data], { type: "application/pdf" });
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    // ✅ SUCCESS TOAST
+    toast.success("Letter downloaded successfully");
+  } catch (err) {
+    console.error("❌ Download failed:", err);
+
+    // ✅ ERROR TOAST
+    toast.error("Failed to download letter");
+  }
+};
 
   return (
     <div style={styles.container}>
