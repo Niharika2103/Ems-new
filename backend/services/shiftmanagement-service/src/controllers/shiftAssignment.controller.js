@@ -1,6 +1,8 @@
 import pool from "../../config/db.js";
 
-/* ASSIGN SHIFT TO EMPLOYEE */
+
+import { sendShiftMail } from "../utils/sendMail.js";
+
 export const assignShift = async (req, res) => {
   try {
     const {
@@ -13,16 +15,16 @@ export const assignShift = async (req, res) => {
       reason
     } = req.body;
 
-    // 🔒 Prevent overlapping assignments
+    //  Prevent overlapping assignments
     const overlap = await pool.query(
       `
-       SELECT 1
-  FROM employee_shift_assignment
-  WHERE employee_id = $1
-  AND daterange(effective_from, effective_to, '[)')
-      && daterange($2, $3, '[)')
-  `,
-  [employee_id, effective_from, effective_to]
+      SELECT 1
+      FROM employee_shift_assignment
+      WHERE employee_id = $1
+      AND daterange(effective_from, effective_to, '[)')
+          && daterange($2, $3, '[)')
+      `,
+      [employee_id, effective_from, effective_to]
     );
 
     if (overlap.rowCount > 0) {
@@ -31,11 +33,11 @@ export const assignShift = async (req, res) => {
         .json({ message: "Shift already assigned for this period" });
     }
 
+    // Insert assignment
     const { rows } = await pool.query(
       `
       INSERT INTO employee_shift_assignment
-      (employee_id, shift_id,
-       effective_from, effective_to,
+      (employee_id, shift_id, effective_from, effective_to,
        ot_allowed, max_ot_hours, reason)
       VALUES ($1,$2,$3,$4,$5,$6,$7)
       RETURNING *
@@ -51,12 +53,62 @@ export const assignShift = async (req, res) => {
       ]
     );
 
-    res.status(201).json(rows[0]);
+    const assignment = rows[0];
+
+    // Get employee details
+    const emp = await pool.query(
+      `SELECT name, email FROM user_employees_master WHERE id=$1`,
+      [employee_id]
+    );
+
+    // Get shift details
+    const shift = await pool.query(
+      `SELECT shift_name FROM shift_master WHERE id=$1`,
+      [shift_id]
+    );
+
+    const empName = emp.rows[0].name;
+    const email = emp.rows[0].email;
+    const shiftName = shift.rows[0].shift_name;
+
+    // Date checks
+    const effDate = new Date(effective_from);
+    const today = new Date();
+
+    today.setHours(0, 0, 0, 0);
+    effDate.setHours(0, 0, 0, 0);
+
+    // CASE 1 — Effective today -> send email immediately
+    if (effDate.getTime() === today.getTime()) {
+      await sendShiftMail(
+        email,
+        "Shift Assigned",
+        `
+        Hi ${empName},<br/><br/>
+
+        Your shift <b>${shiftName}</b> has been assigned and is effective from <b>today</b>.<br/><br/>
+
+        <b>Shift Details</b><br/>
+        • Effective From: ${effective_from}<br/>
+        • Effective To: ${effective_to}<br/>
+        • OT Allowed: ${ot_allowed ? "Yes" : "No"}<br/>
+        • Max OT Hours: ${ot_allowed ? max_ot_hours : "Not Applicable"}<br/>
+        • Reason: ${reason || "Not Provided"}<br/><br/>
+
+        Regards,<br/>
+        HR Team
+        `
+      );
+    }
+
+    // CASE 2 — Future date, reminder email handled by cron job automatically
+    res.status(201).json(assignment);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Failed to assign shift" });
   }
 };
+
 
 /* ASSIGNMENT HISTORY */
 export const getAssignmentHistory = async (req, res) => {
