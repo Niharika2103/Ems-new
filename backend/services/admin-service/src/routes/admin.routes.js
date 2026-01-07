@@ -143,7 +143,8 @@ import {
   getInterviewsByApplication, 
   updateInterviewStatus,
   rescheduleInterview,     // <-- ADD THIS
-  cancelInterview  
+  cancelInterview,
+   sendInterviewSMS
 } from "../controllers/interview.controller.js";
 
 //panel controller
@@ -305,6 +306,11 @@ router.put("/interviews/status/:interview_id", updateInterviewStatus);
 router.put("/interviews/reschedule/:interview_id", rescheduleInterview);
 router.put("/interviews/cancel/:interview_id", cancelInterview);
 
+// ================= INTERVIEW SMS =================
+router.post(
+  "/interviews/:interview_id/send-sms",
+  sendInterviewSMS
+);
 
 // ==================================================
 // ✅ FIXED — AI Resume Parser MUST use memory storage

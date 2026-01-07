@@ -1,7 +1,8 @@
 // interview.controller.js
 import pool from "../config/db.js";
 import { sendEmail } from "../services/emailserviceadmin.js";
-import { sendSMS, cleanPhone } from "../services/smsserviceadmin.js";
+// import { sendInterviewScheduledSMS } from "../services/smsserviceadmin.js";
+// import { sendSMS, cleanPhone } from "../services/smsserviceadmin.js";
 
 /* ============================================================
    1️⃣ Schedule Interview (Email + SMS)
@@ -434,4 +435,36 @@ export const cancelInterview = async (req, res) => {
       message: "Server error",
     });
   }
+};
+
+
+// export const notifyInterviewCandidate = async (req, res) => {
+//   const { interview_id } = req.body;
+
+//   if (!interview_id) {
+//     return res.status(400).json({ error: "interview_id required" });
+//   }
+
+//   const result = await sendInterviewScheduledSMS(interview_id);
+
+//   if (!result.success) {
+//     return res.status(500).json(result);
+//   }
+
+//   res.json({ message: "Interview scheduled SMS sent successfully" });
+// };
+export const sendInterviewSMS = async (req, res) => {
+  const { interview_id } = req.params;
+
+  if (!interview_id) {
+    return res.status(400).json({ error: "interview_id is required" });
+  }
+
+  const result = await sendInterviewScheduledSMS(interview_id);
+
+  if (!result.success) {
+    return res.status(500).json(result);
+  }
+
+  res.json({ message: "Interview SMS sent successfully" });
 };
