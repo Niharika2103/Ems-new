@@ -400,12 +400,16 @@ export const adminLogin = async (req, res) => {
       regData.is_temp_admin && new Date(regData.temp_admin_expiry) > new Date();
 
     const token = issueJwt({
-      email: user.email,
-      role: user.role === "admin" ? "admin" : user.role_1,
-      id: user.id,
-      is_temp_admin: isTempAdmin,
-      name: user.name,
-    });
+  email: user.email,
+  role: user.role,            // primary role column
+  role_1: user.role_1,
+  role_2: user.role_2,
+  employment_type: user.employment_type,
+  is_temp_admin: isTempAdmin,
+  id: user.id,
+  name: user.name,
+});
+
 
     // AUDIT LOG – LOGIN ENTRY
 await client.query(
@@ -434,18 +438,28 @@ await client.query(
 
 
 
-    res.json({
-      message: "Admin login successful with MFA",
-      token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role === "admin" ? "admin" : user.role_1,
-        mfa_enabled: user.mfa_enabled,
-        is_temp_admin: isTempAdmin,
-      },
-    });
+   res.json({
+  message: "Admin login successful with MFA",
+  token,
+  user: {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+
+    // primary working role
+    role: user.role,
+
+    // 👇 important for dashboard + sidebar
+    role_1: user.role_1,
+    role_2: user.role_2,
+
+    employment_type: user.employment_type,
+
+    mfa_enabled: user.mfa_enabled,
+    is_temp_admin: isTempAdmin,
+  },
+});
+
 
   } catch (err) {
     console.error("Admin Login Error:", err.message);

@@ -81,7 +81,8 @@ export const superAdminRegister = async (req, res) => {
     // Update parent table
     const { rows: updatedRows } = await pool.query(
       `UPDATE ${USERS_TABLE} 
-       SET name=$1, password=$2, mfa_secret=$3, mfa_enabled=false, is_email_verified=false,employment_type='fulltime'
+       SET name=$1, password=$2, mfa_secret=$3, mfa_enabled=false, is_email_verified=false,employment_type='fulltime',role_1='admin',
+  role_2='employee'
        WHERE id=$4 RETURNING *`,
       [fullName, hashedPassword, secret.base32, existingUser.id]
     );
@@ -288,15 +289,19 @@ export const superAdminLogin = async (req, res) => {
     });
 
     return res.status(200).json({
-      message: "SuperAdmin login success",
-      token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role
-      }
-    });
+  message: "SuperAdmin login success",
+  token,
+  user: {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    role_1: user.role_1,
+    role_2: user.role_2,
+    employment_type: user.employment_type
+  }
+});
+
 
   } catch (err) {
     console.error("SuperAdmin Login Error:", err.message);

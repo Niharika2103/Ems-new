@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import path from "path";
 import shift from "./routes/shift.routes.js";
 import shiftAssignment from "./routes/shiftAssignment.routes.js";
+import "./shift/shiftReminderJob.js";
 
 dotenv.config();
 
