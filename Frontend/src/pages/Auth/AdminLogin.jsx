@@ -109,10 +109,22 @@ export default function AdminLogin() {
       dispatch(adminLogin(formData))
         .unwrap()
         .then((response) => {
-          toast.success(response.message);
-          setTimeout(() => navigate("/dashboard", { replace: true }), 2000);
-          window.onpopstate = null;
-        })
+
+  const user = response.user;
+
+  localStorage.setItem("role", user.role);
+  localStorage.setItem("role_1", user.role_1 || "");
+  localStorage.setItem("role_2", user.role_2 || "");
+  localStorage.setItem("employment_type", user.employment_type || "");
+  localStorage.setItem("is_temp_admin", user.is_temp_admin ? "true" : "false");
+
+  /* 🔑 FORCE ADMIN MODE */
+  localStorage.setItem("active_role", "admin");
+
+  toast.success(response.message);
+  setTimeout(() => navigate("/dashboard", { replace: true }), 2000);
+})
+
         .catch((err) => toast.error(err.error || "Login failed"));
       setErrors({});
     } else {

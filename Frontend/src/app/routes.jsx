@@ -309,7 +309,7 @@ function AppRoutes() {
         <Route
           path="/dashboard/employeeinfo/employeeprofile"
           element={
-            <ProtectedRoute allowedRoles={["employee"]}>
+            <ProtectedRoute allowedRoles={["employee","superadmin"]}>
               <EmployeeProfile />
             </ProtectedRoute>
           } />

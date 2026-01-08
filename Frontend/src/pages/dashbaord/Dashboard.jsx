@@ -1,37 +1,42 @@
 import React from "react";
-import AdminDashboard from "./AdminDashboard"
+import AdminDashboard from "./AdminDashboard";
 import SuperAdminDashboard from "./SuperAdminDashboard";
 import EmployeeDashboard from "./EmployeeDashboard";
 import { useSelector } from "react-redux";
 
-
 const Dashboard = () => {
-  const role =
-    localStorage.getItem("role")  ||
-    useSelector((state) => state.adminSlice) ||
-    useSelector((state) => state.authSlice?.role) ||
-    useSelector((state) => state.employeeSlice?.role);
-    
 
-     //  ADD THIS LINE — check if user is temp admin
-  const is_temp_admin =
+  const reduxRole = useSelector((state) => state.authSlice?.role);
+
+  const baseRole =
+    reduxRole ||
+    localStorage.getItem("role");
+
+  const role1 = localStorage.getItem("role_1");
+  const role2 = localStorage.getItem("role_2");
+
+  const isTempAdmin =
     useSelector((state) => state.employeeSlice?.is_temp_admin) ??
     (localStorage.getItem("is_temp_admin") === "true");
 
-    if (!role) {
-    return <div>Loading dashboard...</div>;
+  const activeRole =
+    localStorage.getItem("active_role") ||
+    baseRole ||
+    role1 ||
+    role2;
+
+  if (!activeRole) return <div>Loading dashboard…</div>;
+
+  // employee promoted temporarily
+  if (activeRole === "employee" && isTempAdmin) {
+    return <AdminDashboard />;
   }
 
-  if (role === "admin") {
-    return <AdminDashboard />;
-    <AssignProjectPage/> 
-  } else if (role === "superadmin") {
-    return <SuperAdminDashboard />;
-  } else if (role === "employee" && is_temp_admin) { 
-    return <AdminDashboard />;
-  } else {
-    return <EmployeeDashboard />;
-  }
+  if (activeRole === "superadmin") return <SuperAdminDashboard />;
+
+  if (activeRole === "admin") return <AdminDashboard />;
+
+  return <EmployeeDashboard />;
 };
 
 export default Dashboard;
