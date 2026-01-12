@@ -81,9 +81,13 @@ const handleEmailChange = (e) => {
   const [profilePicFile, setProfilePicFile] = useState(null); // ✅ Separate file state
   const [decoded, setDecoded] = useState(null);
 
-  const roles =
-    useSelector((state) => state.adminSlice?.role) ||
-    localStorage.getItem("role");
+  // const roles =
+  //   useSelector((state) => state.adminSlice?.role) ||
+  //   localStorage.getItem("role");
+
+  const activeRole =
+  localStorage.getItem("active_role") ||
+  localStorage.getItem("role");
 
   // 🔥 Fetch logged-in profile
   useEffect(() => {
@@ -92,11 +96,12 @@ const handleEmailChange = (e) => {
         const decodedData = await decodeToken();
         setDecoded(decodedData);
 
-        if (roles === "admin") {
+        if (activeRole === "admin") {
           dispatch(fetchAdminProfile(decodedData.id));
-        } else if (roles === "superadmin") {
+        } else if (activeRole === "superadmin") {
           dispatch(fetchSuperAdminProfile(decodedData.id));
         }
+
       } catch (err) {
         console.error("Error decoding:", err);
       }
@@ -165,7 +170,7 @@ if (formData.phone.length !== 10 || formData.emergency_contact.length !== 10) {
   }
 
   // ADMIN
-  if (roles === "admin") {
+  if (activeRole === "admin") {
     dispatch(updateAdminProfile({ data: sendData, id: decoded.id }))
       .unwrap()
       .then(() => {
@@ -175,7 +180,7 @@ if (formData.phone.length !== 10 || formData.emergency_contact.length !== 10) {
   }
 
   // SUPERADMIN
-  if (roles === "superadmin") {
+  if (activeRole === "superadmin") {
     dispatch(updateSuperAdminProfile({ data: sendData, id: decoded.id }))
       .unwrap()
       .then(() => {
@@ -239,7 +244,7 @@ if (formData.phone.length !== 10 || formData.emergency_contact.length !== 10) {
             <Box>
               <Typography variant="h5">{formData.name || "Admin User"}</Typography>
               <Typography variant="subtitle2">
-                {roles === "admin" ? "Admin Profile" : "Super Admin Profile"}
+                {activeRole=== "admin" ? "Admin Profile" : "Super Admin Profile"}
               </Typography>
             </Box>
           </Box>

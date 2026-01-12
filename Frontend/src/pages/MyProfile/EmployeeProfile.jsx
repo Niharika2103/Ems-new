@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   fetchEmployeeProfile,
   updateEmployeeProfile,
+  fetchAdminProfile
 } from "../../features/employeesDetails/employeesSlice";
 import { decodeToken } from "../../api/decodeToekn";
 import { ToastContainer, toast } from "react-toastify";
@@ -64,14 +65,24 @@ const EmployeeProfile = () => {
 
   const [resumeUploaded, setResumeUploaded] = useState(false);
   const [userId, setUserId] = useState(null);
-
+  const activeRole = localStorage.getItem("active_role");
   // Fetch employee profile
   useEffect(() => {
     const getDecoded = async () => {
       try {
         const decoded = await decodeToken();
         setUserId(decoded.id);
-        dispatch(fetchEmployeeProfile(decoded.email));
+     console.log(decoded,"decoded");   
+if (activeRole === "employee") {
+  if (decoded.role === "employee") {
+    dispatch(fetchEmployeeProfile(decoded.email));
+  } else {
+    // fallback to admin profile
+    dispatch(fetchAdminProfile(decoded.id));
+  }
+}
+
+
       } catch (error) {
         console.error("Error decoding token:", error);
       }
