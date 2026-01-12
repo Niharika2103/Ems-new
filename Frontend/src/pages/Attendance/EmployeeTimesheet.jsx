@@ -36,8 +36,10 @@ export default function EmpTimesheet() {
   const navigate = useNavigate();
   const { attendanceData, loading } = useSelector((state) => state.attendance);
   const [projectDetails, setProjectDetails] = useState(null);
+  
 
   const projectName = projectDetails?.projectName;
+  console.log("project",projectName)
   const ProjectID = projectDetails?.projectID;
   const employeeId = projectDetails?.employeeId;
 
@@ -63,26 +65,47 @@ export default function EmpTimesheet() {
   const [isWeekReleased, setIsWeekReleased] = useState(false);
 const [currentShift, setCurrentShift] = useState(null);
 
-  useEffect(() => {
-  if (!employeeId) return;
 
-  getShiftAssignmentbyemployeeApi(employeeId)
+//   useEffect(() => {
+//   if (!employeeId) return;
+
+//   getShiftAssignmentbyemployeeApi(employeeId)
   
-    .then((res) => {
-      alert("Hi")
-      console.log(res,"currentshift")
-      if (res.data && !res.data.message) {
+//     .then((res) => {
+//       //alert("Hi")
+//       console.log(res,"currentshift")
+//       if (res.data && !res.data.message) {
         
-        setCurrentShift(res.data);
-      } else {
-        setCurrentShift(null);
-      }
+//         setCurrentShift(res.data);
+//       } else {
+//         setCurrentShift(null);
+//       }
+//     })
+//     .catch((err) => {
+//       console.error("Failed to fetch shift", err);
+//       setCurrentShift(null);
+//     });
+// }, [employeeId]);
+
+useEffect(() => {
+  if (!employeeId || !weekStart) return;
+
+  const formattedDate = new Date(weekStart)
+    .toISOString()
+    .split("T")[0];
+
+  getShiftAssignmentbyemployeeApi(employeeId, formattedDate)
+    .then((res) => {
+      console.log("SHIFT DATA 👉", res.data);
+      setCurrentShift(res.data || null);
     })
     .catch((err) => {
       console.error("Failed to fetch shift", err);
       setCurrentShift(null);
     });
-}, [employeeId]);
+}, [employeeId, weekStart]);
+
+
 
   //  store leave periods for multi-week leaves
   const [leavePeriods, setLeavePeriods] = useState([]);
@@ -145,14 +168,17 @@ const [currentShift, setCurrentShift] = useState(null);
 
   // Fetch from localStorage when page loads
   useEffect(() => {
-    const storedData = localStorage.getItem("ProjectDetails");
-    if (storedData) {
-      const parsed = JSON.parse(storedData);
-      setProjectDetails(parsed);
-    } else {
-      console.log("No ProjectDetails found");
-    }
-  }, []);
+  const storedData = localStorage.getItem("ProjectDetails");
+
+  if (storedData) {
+    const parsed = JSON.parse(storedData);
+
+    setProjectDetails(parsed);   // ✅ keep this
+
+  }
+}, []);
+
+
 
   //disbale removed
   useEffect(() => {
@@ -801,28 +827,38 @@ const [currentShift, setCurrentShift] = useState(null);
 
       {/* TABLE HEADER */}
       <div className="flex justify-between font-semibold border-b pb-2 text-sm">
-        <div className="flex-1">{projectName} {currentShift && (
-    <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700 font-semibold">
-      {currentShift.shift_name}
+  <div className="flex-1 flex items-center gap-2">
+    <span className="font-semibold">
+      {projectName || ""}
     </span>
-  )}</div>
-        <div className="flex gap-2 justify-end flex-1">
-          {days.map((day, i) => {
-            const currentDate = new Date(getMonday(weekStart));
-            currentDate.setDate(weekStart.getDate() + i);
-            const formattedDate = `${currentDate.getDate().toString().padStart(2, "0")}/${(
-              currentDate.getMonth() + 1
-            ).toString().padStart(2, "0")}`;
-            return (
-              <div key={i} className="text-center w-19">
-                {day} {formattedDate}
-              </div>
-            );
-          })}
-          <div className="text-center w-16">Total</div>
-          <div className="text-center w-16">Action</div>
+
+    {currentShift?.shift_name && (
+      <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700 font-semibold">
+        {currentShift.shift_name}
+      </span>
+    )}
+  </div>
+
+  <div className="flex gap-2 justify-end flex-1">
+    {days.map((day, i) => {
+      const currentDate = new Date(getMonday(weekStart));
+      currentDate.setDate(weekStart.getDate() + i);
+      const formattedDate = `${currentDate
+        .getDate()
+        .toString()
+        .padStart(2, "0")}/${(currentDate.getMonth() + 1)
+        .toString()
+        .padStart(2, "0")}`;
+      return (
+        <div key={i} className="text-center w-19">
+          {day} {formattedDate}
         </div>
-      </div>
+      );
+    })}
+    <div className="text-center w-16">Total</div>
+    <div className="text-center w-16">Action</div>
+  </div>
+</div>
 
       {/* WORKED HOURS */}
       <div className="flex justify-between items-center py-1 text-sm">

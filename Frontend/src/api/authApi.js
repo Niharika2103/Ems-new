@@ -1112,8 +1112,11 @@ export const updateAssignmentApi = (id, data) => {
   );
 };
 
-export const getShiftAssignmentbyemployeeApi = (employeeId) => {
+export const getShiftAssignmentbyemployeeApi = (employeeId, date) => {
   return shiftmanagementClient.get(
-    `${AUTH_API.SHIFTMANAGEMENT}/shift-assignments/current/${employeeId}`
+    `${AUTH_API.SHIFTMANAGEMENT}/shift-assignments/current/${employeeId}`,
+    {
+      params: { date }
+    }
   );
-}
+};
