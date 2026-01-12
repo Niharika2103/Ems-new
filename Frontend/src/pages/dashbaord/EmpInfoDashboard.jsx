@@ -3,7 +3,6 @@ import { useSelector } from "react-redux";
 import StatCard from "../../components/StatCard";
 
 // MUI Icons
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import DescriptionIcon from "@mui/icons-material/Description";
 import MailOutlineIcon from "@mui/icons-material/MailOutline";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
@@ -14,65 +13,69 @@ import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 const EmpInfoDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const pathnames = location.pathname.split("/").filter((x) => []);
 
-  // Second-level title
-  const secondLevel = "Employee Info";
+  /* ---------------- REDUX ROLES ---------------- */
+  const adminRole = useSelector((state) => state.adminSlice?.role);
+  const authRole = useSelector((state) => state.authSlice?.role);
+  const employeeRole = useSelector((state) => state.employeeSlice?.role);
 
-  // Get user from localStorage
+  /* ---------------- LOCAL STORAGE ---------------- */
   const storedUser = JSON.parse(localStorage.getItem("user"));
 
-  // Get role from redux or localStorage
-  const role =
-    storedUser?.employment_type ||
-    localStorage.getItem("role") ||
-    useSelector((state) => state.adminSlice?.role) ||
-    useSelector((state) => state.authSlice?.role) ||
-    useSelector((state) => state.employeeSlice?.role);
-    console.log("role",role)
+  const activeRole =
+    localStorage.getItem("active_role") ||
+    adminRole ||
+    authRole ||
+    employeeRole;
+
+  const employmentType = storedUser?.employment_type; // fulltime | freelancer
+
+  /* ---------------- BREADCRUMB ---------------- */
+  const pathnames = location.pathname.split("/").filter(Boolean);
+  const secondLevel = "Employee Info";
+
   /* ---------------- PATH HELPERS ---------------- */
 
   const getDocumentPath = () => {
-    if (storedUser?.employment_type === "freelancer") {
+    if (employmentType === "freelancer")
       return "/dashboard/freelancer/documents";
-    }
-    if (role === "admin") {
+
+    if (activeRole === "admin" || activeRole === "hr")
       return "/documents/employees";
-    }
+
     return "/";
   };
-
-  
 
   const getLetterPath = () => {
-    if (storedUser?.employment_type === "fulltime") {
+    if (employmentType === "fulltime" && activeRole === "employee")
       return "/employee/letters";
-    }
-    if (storedUser?.employment_type === "freelancer") {
+
+    if (employmentType === "freelancer")
       return "/freelancer/letters-download";
-    }
-    if (role === "admin") {
+
+    if (activeRole === "admin" || activeRole === "hr")
       return "/documents/admin/letters";
-    }
-    return "/";
-  };
-  const getReferralspath = () => {
-    if (storedUser?.employment_type === "fulltime") {
-      return "/dashboard/emp_info/referral";
-    }
-    if (role === "admin") {
-      return "/admin/referrals";
-    }
+
     return "/";
   };
 
-  const getPerformancepath = () => {
-    if (storedUser?.employment_type === "fulltime") {
+  const getReferralPath = () => {
+    if (employmentType === "fulltime"  && activeRole === "employee")
+      return "/dashboard/emp_info/referral";
+
+    if (activeRole === "admin" || activeRole === "hr")
+      return "/admin/referrals";
+
+    return "/";
+  };
+
+  const getPerformancePath = () => {
+    if (employmentType === "fulltime" && activeRole === "employee")
       return "/performanceform";
-    }
-    if (role === "admin") {
+
+    if (activeRole === "admin" || activeRole === "tl")
       return "/performancetable";
-    }
+
     return "/";
   };
 
@@ -93,7 +96,7 @@ const EmpInfoDashboard = () => {
       icon: GroupAddIcon,
       iconBg: "bg-green-100",
       iconColor: "text-green-600",
-      onClick: () => navigate(getReferralspath()),
+      onClick: () => navigate(getReferralPath()),
     },
     {
       title: "Invoice",
@@ -109,14 +112,18 @@ const EmpInfoDashboard = () => {
       icon: TrendingUpIcon,
       iconBg: "bg-blue-100",
       iconColor: "text-blue-600",
-      onClick: () => navigate(getPerformancepath()),
+      onClick: () => navigate(getPerformancePath()),
     },
   ];
 
   /* ---------------- CONDITIONAL CARDS ---------------- */
 
-  // Document → Admin & Freelancer ONLY
-  if (role === "admin" || storedUser?.employment_type === "freelancer") {
+  // Document → Admin / HR / Freelancer
+  if (
+    activeRole === "admin" ||
+    activeRole === "hr" ||
+    employmentType === "freelancer"
+  ) {
     stats.unshift({
       title: "Document",
       message: "View HR announcements",
@@ -127,11 +134,11 @@ const EmpInfoDashboard = () => {
     });
   }
 
-  // Probation → Admin ONLY
-  if (role === "admin") {
+  // Probation → Admin / HR only
+  if (activeRole === "admin" || activeRole === "hr") {
     stats.push({
       title: "Probation",
-      message: "Track and manage employee probation periods",
+      message: "Track employee probation periods",
       icon: VerifiedUserIcon,
       iconBg: "bg-yellow-100",
       iconColor: "text-yellow-600",
@@ -144,15 +151,15 @@ const EmpInfoDashboard = () => {
   return (
     <>
       {/* Breadcrumb */}
-      <nav className="text-gray-600 text-sm mb-4" aria-label="breadcrumb">
-        <ol className="list-reset flex">
+      <nav className="text-gray-600 text-sm mb-4">
+        <ol className="flex">
           <li>
             <Link to="/dashboard" className="text-sky-600 hover:underline">
               Dashboard
             </Link>
           </li>
 
-          {pathnames.length > 0 && (
+          {pathnames.length > 1 && (
             <li className="flex items-center">
               <span className="mx-2">/</span>
               <span className="text-gray-400">{secondLevel}</span>
