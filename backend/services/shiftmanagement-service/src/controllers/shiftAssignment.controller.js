@@ -156,10 +156,15 @@ export const updateAssignment = async (req, res) => {
   }
 };
 
-/* GET CURRENT SHIFT BY EMPLOYEE ID */
+/* GET CURRENT SHIFT BY EMPLOYEE ID + DATE */
 export const getCurrentShiftByEmployee = async (req, res) => {
   try {
-    const { employee_id } = req.params;
+    const { employeeId } = req.params;
+    const { date } = req.query;
+
+    if (!date) {
+      return res.status(400).json({ message: "Date is required" });
+    }
 
     const { rows } = await pool.query(
       `
@@ -168,6 +173,8 @@ export const getCurrentShiftByEmployee = async (req, res) => {
         esa.employee_id,
         esa.shift_id,
         s.shift_name,
+        s.start_time,
+        s.end_time,
         esa.effective_from,
         esa.effective_to,
         esa.ot_allowed,
@@ -175,20 +182,16 @@ export const getCurrentShiftByEmployee = async (req, res) => {
       FROM employee_shift_assignment esa
       JOIN shift_master s ON s.id = esa.shift_id
       WHERE esa.employee_id = $1
-        AND CURRENT_DATE BETWEEN esa.effective_from AND esa.effective_to
+        AND $2::date BETWEEN esa.effective_from::date AND esa.effective_to::date
       ORDER BY esa.effective_from DESC
       LIMIT 1
       `,
-      [employee_id]
+      [employeeId, date]
     );
 
-    if (rows.length === 0) {
-      return res.json({ message: "No active shift found" });
-    }
-
-    res.json(rows[0]);
+    res.json(rows[0] || null);
   } catch (err) {
-    console.error(err);
+    console.error("Failed to fetch current shift", err);
     res.status(500).json({ message: "Failed to fetch current shift" });
   }
 };
