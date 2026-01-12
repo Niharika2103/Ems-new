@@ -22,20 +22,31 @@ const EmployeeTable = ({ columns,scroll  }) => {
     pageSize: 10, // default 10 rows
   });
 
-  const role =
-    useSelector((state) => state.adminSlice?.role) ||
-    useSelector((state) => state.authSlice?.role) ||
-    useSelector((state) => state.employeeSlice?.role) ||
-    localStorage.getItem("role");
+  // const role =
+  //   useSelector((state) => state.adminSlice?.role) ||
+  //   useSelector((state) => state.authSlice?.role) ||
+  //   useSelector((state) => state.employeeSlice?.role) ||
+  //   localStorage.getItem("role");
+
+  const activeRole =
+  localStorage.getItem("active_role") || localStorage.getItem("role");
 
   // Fetch employees or admins depending on role
+  // useEffect(() => {
+  //   if (role === "superadmin") {
+  //     dispatch(fetchallAdmin());
+  //   } else {
+  //     dispatch(fetchAllEmployees());
+  //   }
+  // }, [dispatch, role]);
   useEffect(() => {
-    if (role === "superadmin") {
-      dispatch(fetchallAdmin());
-    } else {
-      dispatch(fetchAllEmployees());
-    }
-  }, [dispatch, role]);
+  if (activeRole === "superadmin") {
+    dispatch(fetchallAdmin());
+  } else {
+    dispatch(fetchAllEmployees());
+  }
+}, [dispatch, activeRole]);
+
 
 
 
