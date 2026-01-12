@@ -180,30 +180,7 @@ if (activeRole === "employee") {
           className="w-12 h-12 rounded-full border-2 border-white object-cover"
         />
       </div>
-      {/* ROLE SWITCH DROPDOWN */}
-{(role1 || role2 || isTempAdmin) && (
-  <div className="px-3 mt-2">
-    <select
-      className="w-full text-black rounded px-2 py-1"
-      value={activeRole}
-      onChange={(e) => {
-        localStorage.setItem("active_role", e.target.value);
-        window.location.reload();
-      }}
-    >
-      {[baseRole, role1, role2]
-        .filter(Boolean)
-        .map((r) => (
-          <option key={r} value={r}>
-            {r}
-          </option>
-        ))}
-
-      {isTempAdmin && <option value="admin">admin</option>}
-    </select>
-  </div>
-)}
-
+  
 
       {/* MENUS */}
       <div className="flex-1 mt-6 ml-6">
