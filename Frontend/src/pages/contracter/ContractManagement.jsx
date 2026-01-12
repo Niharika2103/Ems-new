@@ -56,6 +56,13 @@ const ContractManagement = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const today = () => new Date().toISOString().split("T")[0];
+
+  const [renewDialogOpen, setRenewDialogOpen] = useState(false);
+const [renewContractId, setRenewContractId] = useState(null);
+const [renewEndDate, setRenewEndDate] = useState(
+  new Date().toISOString().split("T")[0] // ✅ default today
+);
+
   
 
 
@@ -143,18 +150,25 @@ const ContractManagement = () => {
   };
 
   // Renew contract
-  const handleRenew = async (row) => {
-    const newDate = prompt("Enter new end date (YYYY-MM-DD):");
-    if (!newDate) return;
+  // const handleRenew = async (row) => {
+  //   const newDate = prompt("Enter new end date (YYYY-MM-DD):");
+  //   if (!newDate) return;
 
-    try {
-      await renewFreelancerContractApi(row.id, newDate);
-      toast.success("Contract renewed");
-      loadContracts();
-    } catch {
-      toast.error("Failed to renew");
-    }
-  };
+  //   try {
+  //     await renewFreelancerContractApi(row.id, newDate);
+  //     toast.success("Contract renewed");
+  //     loadContracts();
+  //   } catch {
+  //     toast.error("Failed to renew");
+  //   }
+  // };
+
+  const handleRenew = (row) => {
+  setRenewContractId(row.id);
+  setRenewEndDate(new Date().toISOString().split("T")[0]); // ✅ default today
+  setRenewDialogOpen(true);
+};
+
 
   // SUBMIT (Create / Update)
   const handleSubmit = async () => {
@@ -486,6 +500,51 @@ const ContractManagement = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      {/* RENEW CONTRACT DIALOG */}
+<Dialog
+  open={renewDialogOpen}
+  onClose={() => setRenewDialogOpen(false)}
+  maxWidth="xs"
+  fullWidth
+>
+  <DialogTitle>Renew Contract</DialogTitle>
+
+  <DialogContent>
+    <TextField
+      label="New End Date"
+      type="date"
+      fullWidth
+      value={renewEndDate}
+      onChange={(e) => setRenewEndDate(e.target.value)}
+      InputLabelProps={{ shrink: true }}
+      inputProps={{
+        min: new Date().toISOString().split("T")[0], // 🚫 past dates
+      }}
+      sx={{ mt: 2 }}
+    />
+  </DialogContent>
+
+  <DialogActions>
+    <Button onClick={() => setRenewDialogOpen(false)}>Cancel</Button>
+
+    <Button
+      variant="contained"
+      onClick={async () => {
+        try {
+          await renewFreelancerContractApi(renewContractId, renewEndDate);
+          toast.success("Contract renewed");
+          setRenewDialogOpen(false);
+          loadContracts();
+        } catch {
+          toast.error("Failed to renew contract");
+        }
+      }}
+    >
+      Renew
+    </Button>
+  </DialogActions>
+</Dialog>
+
     </Box>
   );
 };
