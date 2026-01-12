@@ -13,6 +13,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { ProjectSave } from "../../features/Project/projectsSlice";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
+import { toast } from "react-toastify";
 
 const ProjectForm = () => {
   const dispatch = useDispatch();
@@ -25,7 +26,7 @@ const ProjectForm = () => {
     startDate: "",
     endDate: "",
     status: "IN_PROGRESS",
-    estimatedCost: "",     // ➕ NEW FIELD
+    estimatedCost: "",
   });
 
   const handleChange = (e) => {
@@ -35,22 +36,29 @@ const ProjectForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
       const resultAction = await dispatch(ProjectSave(formData));
+
       if (ProjectSave.fulfilled.match(resultAction)) {
-        alert("✅ Project saved successfully!");
+        toast.success("Project saved successfully!");
+
         setFormData({
           name: "",
           description: "",
           startDate: "",
           endDate: "",
           status: "IN_PROGRESS",
-          estimatedCost: "",   // RESET NEW FIELD
+          estimatedCost: "",
         });
+
         navigate("/dashboard/fetch_project");
+      } else {
+        toast.error(resultAction.payload || "Failed to save project");
       }
     } catch (err) {
       console.error("Failed to save project:", err);
+      toast.error("Something went wrong!");
     }
   };
 
@@ -85,7 +93,7 @@ const ProjectForm = () => {
           </Typography>
         </Box>
 
-        {/* Error Message */}
+        {/* Redux Error (optional) */}
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
@@ -115,33 +123,32 @@ const ProjectForm = () => {
               required
             />
 
-            {/* ➕ New Estimated Cost Field */}
             <TextField
-  label="Estimated Cost"
-  name="estimatedCost"
-  type="number"
-  value={formData.estimatedCost}
-  onChange={handleChange}
-  fullWidth
-  required
-  inputProps={{
-    min: 0,
-    step: "0.01",
-    style: { MozAppearance: "textfield" }, // Remove arrows in Firefox
-  }}
-  InputProps={{
-    sx: {
-      "input::-webkit-outer-spin-button": {
-        WebkitAppearance: "none",
-        margin: 0,
-      },
-      "input::-webkit-inner-spin-button": {
-        WebkitAppearance: "none",
-        margin: 0,
-      },
-    },
-  }}
-/>
+              label="Estimated Cost"
+              name="estimatedCost"
+              type="number"
+              value={formData.estimatedCost}
+              onChange={handleChange}
+              fullWidth
+              required
+              inputProps={{
+                min: 0,
+                step: "0.01",
+                style: { MozAppearance: "textfield" },
+              }}
+              InputProps={{
+                sx: {
+                  "input::-webkit-outer-spin-button": {
+                    WebkitAppearance: "none",
+                    margin: 0,
+                  },
+                  "input::-webkit-inner-spin-button": {
+                    WebkitAppearance: "none",
+                    margin: 0,
+                  },
+                },
+              }}
+            />
 
             <TextField
               label="Start Date"
@@ -186,7 +193,11 @@ const ProjectForm = () => {
                 color="primary"
                 size="large"
                 disabled={loading}
-                startIcon={loading && <CircularProgress size={20} color="inherit" />}
+                startIcon={
+                  loading && (
+                    <CircularProgress size={20} color="inherit" />
+                  )
+                }
                 sx={{
                   textTransform: "none",
                   borderRadius: 2,

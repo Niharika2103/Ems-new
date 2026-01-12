@@ -153,9 +153,16 @@ localStorage.setItem(
     employment_type: decoded.employment_type,
   })
 );
-
 localStorage.setItem("role", decoded.role || "employee");
-localStorage.setItem("employment_type", decoded.employment_type);
+localStorage.setItem("role_1", decoded.role_1 || "");
+localStorage.setItem("role_2", decoded.role_2 || "");
+
+localStorage.setItem("employment_type", decoded.employment_type || "");
+localStorage.setItem("is_temp_admin", decoded.is_temp_admin ? "true" : "false");
+
+// default active role
+localStorage.setItem("active_role", decoded.role || "employee");
+
 
             if (decoded.employment_type === "freelancer") {
               toast.success("Login successfully!")
@@ -208,6 +215,13 @@ localStorage.setItem(
 
 localStorage.setItem("role", decoded.role || "employee");
 localStorage.setItem("employment_type", decoded.employment_type);
+localStorage.setItem("role_1", decoded.role_1 || "");
+localStorage.setItem("role_2", decoded.role_2 || "");
+localStorage.setItem("is_temp_admin", decoded.is_temp_admin ? "true" : "false");
+
+/* 🔑 FORCE EMPLOYEE MODE */
+localStorage.setItem("active_role", "employee");
+
 
           if (decoded.employment_type === "freelancer") {
             toast.success("Login Successfully!");

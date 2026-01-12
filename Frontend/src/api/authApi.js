@@ -735,7 +735,7 @@ export const adminLogoutApi = (email) => {
   console.log("Calling backend logout with email:", email);
 
   return adminClient
-    .post(`${AUTH_API.ADMIN}/admin/logout`, { email })
+    .post(`${AUTH_API.ADMIN}/logout`, { email }) // ✅ CORRECT
     .then((res) => {
       console.log("Logout API CALLED SUCCESSFULLY", res.data);
       return res;

@@ -32,6 +32,13 @@ import {
   getShiftAssignmentHistoryApi, updateAssignmentApi
 } from "../../api/authApi";
 
+const formatDate = (dateStr) => {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  return date.toLocaleDateString("en-GB"); // dd/mm/yyyy
+};
+
+
 export default function ShiftManagement() {
   const today = new Date().toISOString().slice(0, 10);
   const assignmentFormRef = useRef(null);
@@ -200,105 +207,126 @@ export default function ShiftManagement() {
         </Typography>
 
         {/* ================= MAIN CONTENT ================= */}
-        <Grid container spacing={3}>
-          {/* ===== SHIFT MASTER ===== */}
-          <Grid item xs={12} md={4}>
-            <Card sx={{
-              height: "100%",
-              display: "flex",
-              flexDirection: "column"
-            }}>
-              <CardHeader
-                title="Shift Master"
-                action={<Button
-                  variant="contained"
-                  size="small"
-                  onClick={() => {
-                    setEditShift(null);
-                    setOpenShiftModal(true);
-                  }}
-                >
-                  Add Shift
-                </Button>}
+                {/* ================= SHIFT MASTER (FULL WIDTH) ================= */}
+        <Card sx={{ mb: 3 }}>
+          <CardHeader
+            title="Shift Master"
+            action={
+              <Button
+                variant="contained"
+                size="small"
+                onClick={() => {
+                  setEditShift(null);
+                  setOpenShiftModal(true);
+                }}
+              >
+                Add Shift
+              </Button>
+            }
+          />
+          <CardContent>
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Shift</TableCell>
+                    <TableCell>Start</TableCell>
+                    <TableCell>End</TableCell>
+                    <TableCell>Night</TableCell>
+                    <TableCell>Action</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {paginatedShifts.map(s => (
+                    <TableRow key={s.id}>
+                      <TableCell>{s.shift_name}</TableCell>
+                      <TableCell>{s.start_time}</TableCell>
+                      <TableCell>{s.end_time}</TableCell>
+                      <TableCell>
+                        <Chip
+                          label={s.is_night_shift ? "Yes" : "No"}
+                          color={s.is_night_shift ? "warning" : "default"}
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          size="small"
+                          onClick={() => {
+                            setEditShift(s);
+                            setOpenShiftModal(true);
+                          }}
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          size="small"
+                          color="error"
+                          onClick={async () => {
+                            const confirmDelete = window.confirm(
+                              "This will permanently delete the shift. Continue?"
+                            );
+                            if (!confirmDelete) return;
+
+                            try {
+                              await deleteShiftApi(s.id);
+                              toast.success("Shift deleted permanently");
+                              loadShifts();
+                            } catch (err) {
+                              toast.error(
+                                err.response?.data?.message || "Delete failed"
+                              );
+                            }
+                          }}
+                        >
+                          Delete
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <TablePagination
+                component="div"
+                count={shifts.length}
+                page={page}
+                onPageChange={handleChangePage}
+                rowsPerPage={rowsPerPage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+                rowsPerPageOptions={[5, 10, 25]}
               />
-              <CardContent  >
-                <TableContainer sx={{ flexGrow: 1 }}>
-                  <Table size="small">
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Shift</TableCell>
-                        <TableCell>Start</TableCell>
-                        <TableCell>End</TableCell>
-                        <TableCell>Night</TableCell>
-                        <TableCell>Action</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {paginatedShifts.map(s => (
-                        <TableRow key={s.id}>
-                          <TableCell>{s.shift_name}</TableCell>
-                          <TableCell>{s.start_time}</TableCell>
-                          <TableCell>{s.end_time}</TableCell>
-                          <TableCell>
-                            <Chip
-                              label={s.is_night_shift ? "Yes" : "No"}
-                              color={s.is_night_shift ? "warning" : "default"}
-                              size="small"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              size="small"
-                              onClick={() => {
-                                setEditShift(s);
-                                setOpenShiftModal(true);
-                              }}
-                            >
-                              Edit
-                            </Button>
-                            <Button
-                              size="small"
-                              color="error"
-                              onClick={async () => {
-                                const confirmDelete = window.confirm(
-                                  "This will permanently delete the shift. Continue?"
-                                );
-                                if (!confirmDelete) return;
+            </TableContainer>
+          </CardContent>
+        </Card>
 
-                                try {
-                                  await deleteShiftApi(s.id);
-                                  toast.success("Shift deleted permanently");
-                                  loadShifts();
-                                } catch (err) {
-                                  toast.error(
-                                    err.response?.data?.message || "Delete failed"
-                                  );
-                                }
-                              }}
-                            >
-                              Delete
-                            </Button>
+        {/* ================= SHIFT ASSIGNMENT SECTION ================= */}
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            {editShift && (
+              <Box
+                sx={{
+                  mb: 2,
+                  p: 1.5,
+                  borderRadius: 1,
+                  backgroundColor: "#fff3cd",
+                  border: "1px solid #ffeeba"
+                }}
+              >
+                <Typography variant="body2" fontWeight={600} color="warning.main">
+                  ⚠️ You are editing an existing shift assignment.
+                  Please update the details and click Update.
+                </Typography>
+              </Box>
+            )}
 
-                          </TableCell>
-                        </TableRow>
-
-                      ))}
-                    </TableBody>
-                  </Table>
-                  <TablePagination
-                    component="div"
-                    count={shifts.length}
-                    page={page}
-                    onPageChange={handleChangePage}
-                    rowsPerPage={rowsPerPage}
-                    onRowsPerPageChange={handleChangeRowsPerPage}
-                    rowsPerPageOptions={[5, 10, 25]}
-                  />
-                </TableContainer>
-              </CardContent>
+            <Card ref={assignmentFormRef} sx={{
+              border: editShift ? "2px solid #ff9800" : "none",
+              transition: "border 0.3s ease"
+            }}>
+              {/* ... Rest of Shift Assignment content remains the same ... */}
             </Card>
           </Grid>
-
+        </Grid>
           {/* ===== SHIFT ASSIGNMENT ===== */}
           <Grid item xs={12} md={8}>
             {editShift && (
@@ -441,7 +469,7 @@ export default function ShiftManagement() {
               </CardContent>
             </Card>
           </Grid>
-        </Grid>
+        
         <Divider sx={{ my: 3 }} />
         <Grid container spacing={2} alignItems="center" sx={{ mb: 2 }}>
           <Grid item xs={12} md={6}>
@@ -499,8 +527,9 @@ export default function ShiftManagement() {
                   <TableRow key={h.id}>
                     <TableCell>{h.employee_name}</TableCell>
                     <TableCell>{h.shift_name}</TableCell>
-                    <TableCell>{h.effective_from.slice(0, 10)}</TableCell>
-                    <TableCell>{h.effective_to.slice(0, 10)}</TableCell>
+                    <TableCell>{formatDate(h.effective_from)}</TableCell>
+                    <TableCell>{formatDate(h.effective_to)}</TableCell>
+
                     <TableCell>{h.ot_allowed ? "Yes" : "No"}</TableCell>
                     <TableCell>{h.max_ot_hours}</TableCell>
                     <TableCell>

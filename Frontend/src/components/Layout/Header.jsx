@@ -19,11 +19,13 @@ const Header = ({ isOpen, setIsOpen }) => {
   const [email, setEmail] = useState("");
   const [data, setData] = useState({});
 
-  const roleCheck =
-    useSelector((state) => state.adminSlice?.role) ||
-    useSelector((state) => state.authSlice?.role) ||
-    useSelector((state) => state.employeeSlice?.role) ||
-    localStorage.getItem("role");
+  // const roleCheck =
+  //   useSelector((state) => state.adminSlice?.role) ||
+  //   useSelector((state) => state.authSlice?.role) ||
+  //   useSelector((state) => state.employeeSlice?.role) ||
+  //   localStorage.getItem("role");
+  const activeRole = localStorage.getItem("active_role") || localStorage.getItem("role");
+
 
   // ✅ PROFILE PHOTO (Redux → localStorage → default)
   const profilePhoto =
@@ -56,13 +58,14 @@ const Header = ({ isOpen, setIsOpen }) => {
   const handleClose = () => setAnchorEl(null);
 
   const handleProfile = () => {
-    if (roleCheck === "employee") {
-      navigate("/dashboard/employeeinfo/employeeprofile");
-    } else {
-      navigate("/profile");
-    }
-    handleClose();
-  };
+  if (activeRole === "employee") {
+    navigate("/dashboard/employeeinfo/employeeprofile");
+  } else {
+    navigate("/profile");
+  }
+  handleClose();
+};
+
 
   const handlePassword = () => {
     dispatch(employeeForgotPassword(email))
@@ -80,11 +83,14 @@ const Header = ({ isOpen, setIsOpen }) => {
   const Logout = async () => {
     try {
       if (email) {
-        if (roleCheck === "superadmin") {
-          await superAdminLogoutApi(email);
-        } else if (roleCheck === "admin") {
-          await adminLogoutApi(email);
-        }
+        const realRole = localStorage.getItem("role");
+
+if (realRole === "superadmin") {
+  await superAdminLogoutApi(email);
+} else if (realRole === "admin") {
+  await adminLogoutApi(email);
+}
+
       }
     } catch (err) {
       console.error("Logout API Error:", err);
@@ -92,10 +98,11 @@ const Header = ({ isOpen, setIsOpen }) => {
 
     localStorage.clear();
 
-    if (roleCheck === "admin") window.location.replace("/#/admin/login");
-    else if (roleCheck === "superadmin")
+    if (realRole === "admin") window.location.replace("/#/admin/login");
+    else if (realRole === "superadmin")
       window.location.replace("/#/superadmin/login");
     else window.location.replace("/#/login");
+
 
     handleClose();
   };
@@ -129,7 +136,8 @@ const Header = ({ isOpen, setIsOpen }) => {
 
         {/* RIGHT */}
         <div className="flex items-center gap-4">
-          {roleCheck === "admin" && (
+          {activeRole === "admin" && (
+
             <button
               className="px-3 py-1 text-sm bg-sky-400 text-white rounded-md"
               onClick={() => navigate("/employee_register")}

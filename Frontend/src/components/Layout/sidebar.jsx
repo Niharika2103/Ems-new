@@ -32,10 +32,24 @@ const Sidebar = ({ isOpen, handleClose }) => {
     authRole ||
     employeeRole ||
     localStorage.getItem("role");
+  // ---------- MULTI-ROLE SUPPORT ----------
+const baseRole = role || localStorage.getItem("role");
 
-  const employment_type =
-    useSelector((state) => state.employeeSlice?.employment_type) ||
-    localStorage.getItem("employment_type");
+const role1 = localStorage.getItem("role_1");
+const role2 = localStorage.getItem("role_2");
+
+const isTempAdmin = localStorage.getItem("is_temp_admin") === "true";
+
+const activeRole =
+  localStorage.getItem("active_role") ||
+  baseRole;
+  
+
+  // const employment_type =
+  //   useSelector((state) => state.employeeSlice?.employment_type) ||
+  //   localStorage.getItem("employment_type");
+  const employment_type = localStorage.getItem("employment_type");
+
 
   const [email, setEmail] = useState("");
 
@@ -103,15 +117,25 @@ const Sidebar = ({ isOpen, handleClose }) => {
     ],
   };
 
-  const finalMenus =
-    role === "employee" ? employeeMenus : roleMenus[role] || [];
+  let finalMenus;
+
+if (activeRole === "employee") {
+  finalMenus = employeeMenus;
+} else if (activeRole === "admin") {
+  finalMenus = roleMenus.admin;
+} else if (activeRole === "superadmin") {
+  finalMenus = roleMenus.superadmin;
+} else {
+  finalMenus = employeeMenus;
+}
 
   /* ------------------ LOGOUT ------------------ */
   const handleLogout = async () => {
     try {
       if (email) {
-        if (role === "superadmin") await superAdminLogoutApi(email);
-        else if (role === "admin") await adminLogoutApi(email);
+       if (activeRole === "superadmin") await superAdminLogoutApi(email);
+       else if (activeRole === "admin") await adminLogoutApi(email);
+
       }
     } catch (error) {
       console.error("Logout API Error:", error);
@@ -119,14 +143,16 @@ const Sidebar = ({ isOpen, handleClose }) => {
 
     localStorage.clear();
 
-    if (role === "admin") window.location.replace("/#/admin/login");
-    else if (role === "superadmin") window.location.replace("/#/superadmin/login");
+    if (activeRole === "admin") window.location.replace("/#/admin/login");
+    else if (activeRole === "superadmin") window.location.replace("/#/superadmin/login");
     else window.location.replace("/#/login");
+
 
     if (handleClose) handleClose();
   };
 
-  let displayRole = role?.toUpperCase();
+  let displayRole = activeRole?.toUpperCase();
+
   if (role === "employee") {
     displayRole =
       employment_type === "freelancer"
@@ -154,6 +180,7 @@ const Sidebar = ({ isOpen, handleClose }) => {
           className="w-12 h-12 rounded-full border-2 border-white object-cover"
         />
       </div>
+  
 
       {/* MENUS */}
       <div className="flex-1 mt-6 ml-6">

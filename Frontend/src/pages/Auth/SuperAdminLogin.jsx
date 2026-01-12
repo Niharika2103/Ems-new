@@ -106,9 +106,22 @@ export default function SuperAdminLogin() {
     dispatch(login({ ...formData, otp }))
       .unwrap()
       .then((res) => {
-        toast.success(res.message || "Login success");
-        setTimeout(() => navigate("/dashboard", { replace: true }), 1500);
-      })
+
+  const user = res.user;
+
+  localStorage.setItem("role", user.role);
+  localStorage.setItem("role_1", user.role_1 || "");
+  localStorage.setItem("role_2", user.role_2 || "");
+  localStorage.setItem("employment_type", user.employment_type || "");
+  localStorage.setItem("is_temp_admin", user.is_temp_admin ? "true" : "false");
+
+  /* 🔑 FORCE SUPERADMIN MODE */
+  localStorage.setItem("active_role", "superadmin");
+
+  toast.success(res.message || "Login success");
+  setTimeout(() => navigate("/dashboard", { replace: true }), 1500);
+})
+
       .catch((err) => {
         toast.error(err.error || "Login failed");
       });

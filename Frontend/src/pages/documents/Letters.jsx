@@ -14,7 +14,7 @@ import {
 import { useDispatch } from "react-redux";
 import { uploadEmployeeDocuments } from "../../features/auth/adminSlice";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const steps = [
@@ -338,7 +338,6 @@ const Letters = () => {
 
   return (
     <>
-      <ToastContainer position="top-center" autoClose={2000} />
 
       <Box
         sx={{
