@@ -63,6 +63,7 @@ console.log(inProgressProjects,"Assigned projects")
       projectID: first.projectId,
       employeeId: first.employeeId,
       employeeName: first.employeeName,
+      projectName:first.projectName,
       email
     };
 
