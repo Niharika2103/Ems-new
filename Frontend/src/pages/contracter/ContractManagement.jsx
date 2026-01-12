@@ -55,13 +55,16 @@ const ContractManagement = () => {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const today = () => new Date().toISOString().split("T")[0];
+  
+
 
   const [formData, setFormData] = useState({
     id: "",
     freelancer_id: "",
     contract_title: "",
-    contract_start_date: "",
-    contract_end_date: "",
+    contract_start_date: today(), // ✅ default today
+    contract_end_date: today(),   // ✅ default today
     payment_type: "",
     payment_amount: "",
     payment_terms: "",
@@ -109,15 +112,22 @@ const ContractManagement = () => {
 
   // Edit contract
   const handleEdit = async (row) => {
-    try {
-      const res = await fetchFreelancerContractByIdApi(row.id);
-      setFormData(res.data);
-      setIsEditing(true);
-      setDialogOpen(true);
-    } catch {
-      toast.error("Cannot load contract details");
-    }
-  };
+  try {
+    const res = await fetchFreelancerContractByIdApi(row.id);
+
+    setFormData({
+      ...res.data,
+      contract_start_date: res.data.contract_start_date?.split("T")[0] || today(),
+      contract_end_date: res.data.contract_end_date?.split("T")[0] || today(),
+    });
+
+    setIsEditing(true);
+    setDialogOpen(true);
+  } catch {
+    toast.error("Cannot load contract details");
+  }
+};
+
 
   // Cancel contract
   const handleCancelContract = async (row) => {
@@ -188,6 +198,7 @@ const ContractManagement = () => {
   }
   window.open(row.pdf_url, "_blank");
 };
+
 
 
 
@@ -405,15 +416,27 @@ const ContractManagement = () => {
 
             <Grid item xs={12} sm={6}>
               <TextField
-                label="Payment Amount *"
-                fullWidth
-                type="number"
-                value={formData.payment_amount}
-                onChange={(e) =>
-                  setFormData({ ...formData, payment_amount: e.target.value })
-                }
-                error={!!errors.payment_amount}
-              />
+  label="Payment Amount *"
+  fullWidth
+  type="number"
+  value={formData.payment_amount}
+  onChange={(e) => {
+    const value = e.target.value;
+    if (value < 0) return; // 🚫 block negative
+    setFormData({ ...formData, payment_amount: value });
+  }}
+  inputProps={{
+    min: 0,
+    step: "any",
+  }}
+  onKeyDown={(e) => {
+    if (e.key === "-" || e.key === "e") {
+      e.preventDefault(); // 🚫 block - and exponential
+    }
+  }}
+  error={!!errors.payment_amount}
+/>
+
             </Grid>
 
             <Grid item xs={12}>

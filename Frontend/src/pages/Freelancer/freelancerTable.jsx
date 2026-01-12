@@ -241,6 +241,11 @@ export default function FreelancerTable() {
       toast.error("Please fill all required fields");
       return;
     }
+    if (Number(contractForm.payment_amount) <= 0) {
+  toast.error("Payment amount must be greater than 0");
+  return;
+}
+
 
     setLoading(true);
     try {
@@ -309,6 +314,11 @@ export default function FreelancerTable() {
       toast.error("Please fill all required fields");
       return;
     }
+    if (Number(invoiceForm.amount) <= 0) {
+  toast.error("Invoice amount must be greater than 0");
+  return;
+}
+
 
     setLoading(true);
 
@@ -794,18 +804,30 @@ export default function FreelancerTable() {
   {/* Payment Amount */}
   <Grid item xs={12} sm={6}>
     <TextField
-      label="Payment Amount *"
-      type="number"
-      value={contractForm.payment_amount}
-      onChange={(e) =>
-        handleContractChange("payment_amount", e.target.value)
-      }
-      fullWidth
-      sx={{
-        background: "#fafafa",
-        borderRadius: "10px",
-      }}
-    />
+  label="Payment Amount *"
+  type="number"
+  value={contractForm.payment_amount}
+  onChange={(e) => {
+    const value = e.target.value;
+    if (value < 0) return; // ❌ block negatives
+    handleContractChange("payment_amount", value);
+  }}
+  fullWidth
+  inputProps={{
+    min: 0,        // 🚫 no negative
+    step: "any",   // allows decimals
+  }}
+  onKeyDown={(e) => {
+    if (e.key === "-" || e.key === "e") {
+      e.preventDefault(); // ❌ block - and exponential input
+    }
+  }}
+  sx={{
+    background: "#fafafa",
+    borderRadius: "10px",
+  }}
+/>
+
   </Grid>
 
   {/* Payment Terms */}
@@ -929,16 +951,30 @@ export default function FreelancerTable() {
               {/* Invoice Amount */}
               <Grid item xs={12}>
                 <TextField
-                  label="Invoice Amount *"
-                  name="amount"
-                  type="number"
-                  value={invoiceForm.amount}
-                  onChange={(e) => handleInvoiceChange("amount", e.target.value)}
-                  fullWidth
-                  size="small"
-                  required
-                  placeholder="Enter amount"
-                />
+  label="Invoice Amount *"
+  name="amount"
+  type="number"
+  value={invoiceForm.amount}
+  onChange={(e) => {
+    const value = e.target.value;
+    if (value < 0) return; // ❌ block negatives
+    handleInvoiceChange("amount", value);
+  }}
+  fullWidth
+  size="small"
+  required
+  inputProps={{
+    min: 0,
+    step: "any",
+  }}
+  onKeyDown={(e) => {
+    if (e.key === "-" || e.key === "e") {
+      e.preventDefault();
+    }
+  }}
+  placeholder="Enter amount"
+/>
+
               </Grid>
 
               {/* Invoice Date */}
