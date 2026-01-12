@@ -1,22 +1,25 @@
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { addSubmission } from '../../features/vendor/formSlice';
+// import { addSubmission } from '../../features/vendor/formSlice';
 import { Upload, Users, FileText, CheckCircle, Clock } from 'lucide-react';
+import { AUTH_API } from "../../utils/constants";
+
 
 const VendorPanel = () => {
   const dispatch = useDispatch();
-  const { formConfig, submissions } = useSelector(state => state.form);
-  
+  //const { formConfig, submissions } = useSelector(state => state.form);
+  const { formConfig } = useSelector(state => state.form);
+
   const [formData, setFormData] = useState({});
   const [errors, setErrors] = useState({});
   const [currentStep, setCurrentStep] = useState(1);
 
   // Calculate vendor stats
-  const vendorStats = {
-    totalSubmissions: submissions.length,
-    approvedVendors: submissions.filter(s => s.status === "Approved").length,
-    pendingReview: submissions.filter(s => s.status === "Pending").length
-  };
+  // const vendorStats = {
+  //   totalSubmissions: submissions.length,
+  //   approvedVendors: submissions.filter(s => s.status === "Approved").length,
+  //   pendingReview: submissions.filter(s => s.status === "Pending").length
+  // };
 
   const handleChange = (id, value) => {
     setFormData(prev => ({ ...prev, [id]: value }));
@@ -25,35 +28,128 @@ const VendorPanel = () => {
     }
   };
 
-  const validateForm = () => {
-    const newErrors = {};
-    formConfig.forEach((field) => {
-      if (field.required && !formData[field.id]) {
-        newErrors[field.id] = `${field.label} is required`;
-      }
+  // const validateForm = () => {
+  //   const newErrors = {};
+  //   formConfig.forEach((field) => {
+  //     if (field.required && !formData[field.id]) {
+  //       newErrors[field.id] = `${field.label} is required`;
+  //     }
+  //   });
+  //   setErrors(newErrors);
+  //   return Object.keys(newErrors).length === 0;
+  // };
+const validateForm = () => {
+  const newErrors = {};
+
+  stepFields[currentStep].forEach((field) => {
+    if (field.required && !formData[field.id]) {
+      newErrors[field.id] = `${field.label} is required`;
+    }
+  });
+
+  setErrors(newErrors);
+  return Object.keys(newErrors).length === 0;
+};
+
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!validateForm()) return;
+
+  try {
+    /* =========================
+       STEP 1: REGISTER VENDOR
+    ========================== */
+const registerPayload = {
+  company_name: formData[1],
+  email: formData[2],
+  phone: formData[3],
+  business_type: formData[4],
+  years_in_business: formData[5],
+  company_website: formData[6] || null,
+  bank_details: formData[7] || {},
+  tax_registration: formData[8] || {},
+};
+
+const registerRes = await fetch(`${AUTH_API.VENDOR}/register`, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify(registerPayload),
+});
+
+const registerData = await registerRes.json();
+
+if (!registerRes.ok) {
+  console.error("Register error:", registerData);
+  alert(registerData.error || "Vendor registration failed");
+  return;
+}
+
+    /* =========================
+       STEP 2: SUBMIT DOCUMENTS
+    ========================== */
+    const submitPayload = new FormData();
+
+    submitPayload.append("email", formData[2]); // REQUIRED BY BACKEND
+
+    // TAX DETAILS
+    // submitPayload.append("pan", formData[8]?.pan || "");
+    // submitPayload.append("gst", formData[8]?.gst || "");
+    // submitPayload.append("tan", formData[8]?.tan || "");
+if (formData[8]?.pan) {
+  submitPayload.append("pan", formData[8].pan);
+}
+
+if (formData[8]?.gst) {
+  submitPayload.append("gst", formData[8].gst);
+}
+
+if (formData[8]?.tan) {
+  submitPayload.append("tan", formData[8].tan);
+}
+
+
+    // FILES
+    if (!formData[9]) {
+      alert("Business License is required");
+      return;
+    }
+    submitPayload.append("businessLicense", formData[9]);
+
+    if (Array.isArray(formData[10]) && formData[10].length > 0) {
+      formData[10].forEach((file) => {
+        submitPayload.append("requiredDocuments", file);
+      });
+    }
+
+    const submitRes = await fetch(`${AUTH_API.VENDOR}/submit`, {
+      method: "POST",
+      body: submitPayload,
     });
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!validateForm()) return;
+    const submitData = await submitRes.json();
 
-    const submission = {
-      id: Date.now(),
-      data: formData,
-      submittedAt: new Date().toLocaleString(),
-      status: "Pending",
-      companyName: formData[1] || "Unknown Company"
-    };
+    if (!submitRes.ok) {
+      console.error("Submit error:", submitData);
+      alert(submitData.error || "Document submission failed");
+      return;
+    }
 
-    dispatch(addSubmission(submission));
-    
-    alert("Form submitted successfully!");
+    /* =========================
+       SUCCESS
+    ========================== */
+    alert("Vendor registered successfully! Check your email for login details.");
+
     setFormData({});
     setCurrentStep(1);
-  };
+
+  } catch (err) {
+    console.error("Vendor flow failed:", err);
+    alert("Something went wrong. Please try again.");
+  }
+};
+
 
   const renderField = (field) => {
     const commonProps = {
@@ -84,16 +180,26 @@ const VendorPanel = () => {
               type="file"
               className="hidden"
               id={`file-${field.id}`}
+              // onChange={(e) =>
+              //   handleChange(field.id, e.target.files[0]?.name)
+              // }
               onChange={(e) =>
-                handleChange(field.id, e.target.files[0]?.name)
+                handleChange(field.id, e.target.files[0])
               }
+
             />
             <label htmlFor={`file-${field.id}`} className="cursor-pointer text-blue-600 hover:text-blue-700">
               Click to upload file
             </label>
-            {formData[field.id] && (
+            {/* {formData[field.id] && (
               <p className="text-sm text-green-600 mt-2">✓ {formData[field.id]}</p>
-            )}
+            )} */}
+            {formData[field.id] && (
+            <p className="text-sm text-green-600 mt-2">
+          ✓ {formData[field.id].name}
+          </p>
+          )}
+
           </div>
         );
 
@@ -109,20 +215,33 @@ const VendorPanel = () => {
               onChange={(e) =>
                 handleChange(
                   field.id,
-                  Array.from(e.target.files).map((f) => f.name)
+                  //Array.from(e.target.files).map((f) => f.name)
+                  Array.from(e.target.files)
+
                 )
               }
             />
             <label htmlFor={`multiFile-${field.id}`} className="cursor-pointer text-blue-600 hover:text-blue-700">
               Click to upload multiple files
             </label>
-            {formData[field.id] && (
+            {/* {formData[field.id] && (
               <div className="mt-2">
                 {formData[field.id].map((file, index) => (
                   <p key={index} className="text-sm text-green-600">✓ {file}</p>
                 ))}
               </div>
-            )}
+            )} */}
+
+            {Array.isArray(formData[field.id]) && (
+            <div className="mt-2">
+            {formData[field.id].map((file, index) => (
+              <p key={index} className="text-sm text-green-600">
+                ✓ {file.name}
+              </p>
+            ))}
+          </div>
+        )}
+
           </div>
         );
 
@@ -268,7 +387,7 @@ const VendorPanel = () => {
   return (
     <div className="max-w-6xl mx-auto">
       {/* Vendor Dashboard Header */}
-      <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+      {/* <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-800">Vendor Portal</h1>
@@ -283,10 +402,32 @@ const VendorPanel = () => {
               <Users className="w-6 h-6 text-blue-600" />
             </div>
           </div>
-        </div>
+        </div> */}
+        {/* Vendor Dashboard Header */}
+<div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+  <div className="flex items-center justify-between">
+    <div>
+      <h1 className="text-3xl font-bold text-gray-800">Vendor Portal</h1>
+      <p className="text-gray-600">
+        Complete your registration to become an approved vendor
+      </p>
+    </div>
+
+    <div className="flex items-center gap-4">
+      <div className="text-right">
+        <p className="text-sm text-gray-600">Welcome,</p>
+        <p className="font-semibold">New Vendor</p>
+      </div>
+      <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+        <Users className="w-6 h-6 text-blue-600" />
+      </div>
+    </div>
+  </div>
+
+
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+        {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
           <div className="bg-blue-50 p-4 rounded-lg">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
@@ -320,7 +461,7 @@ const VendorPanel = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* Registration Form */}

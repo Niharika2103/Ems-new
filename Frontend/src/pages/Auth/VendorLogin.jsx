@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { vendorResetPasswordApi,vendorLoginApi } from "../../api/authApi";
+import { vendorForgotPasswordApi,vendorLoginApi ,  vendorResetPasswordOtpApi,vendorResetPasswordAfterLoginApi } from "../../api/authApi";
 import {
   Box,
   Button,
@@ -36,9 +36,12 @@ import "swiper/css/effect-coverflow";
 export default function VendorLogin() {
   const navigate = useNavigate();
 
-  const [searchParams] = useSearchParams();
-  const token = searchParams.get("token");
+  const [resetMode, setResetMode] = useState(null); 
+  // "TEMP" | "FORGOT"
+  const [vendorId, setVendorId] = useState(null);
 
+
+  /* ===================== LOGIN STATE ===================== */
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -46,9 +49,13 @@ export default function VendorLogin() {
 
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
+
+  /* ===================== FORGOT PASSWORD STATE ===================== */
+  // LOGIN | EMAIL | OTP
+  const [forgotStep, setForgotStep] = useState("LOGIN");
 
   const [forgotPasswordData, setForgotPasswordData] = useState({
+    otp: "",
     newPassword: "",
     confirmPassword: "",
   });
@@ -56,9 +63,7 @@ export default function VendorLogin() {
   const [forgotErrors, setForgotErrors] = useState({});
   const [forgotLoading, setForgotLoading] = useState(false);
 
-  // ------------------------------
-  // Input Handling
-  // ------------------------------
+  /* ===================== INPUT HANDLERS ===================== */
   const handleChange = (e) => {
     const { name, value } = e.target;
 
@@ -73,53 +78,187 @@ export default function VendorLogin() {
 
   const handleForgotChange = (e) => {
     const { name, value } = e.target;
-
     setForgotErrors({ ...forgotErrors, [name]: "" });
     setForgotPasswordData({ ...forgotPasswordData, [name]: value });
   };
 
-  // ------------------------------
-  // Login Submit
-  // ------------------------------
- const handleLogin = async (e) => {
-  e.preventDefault();
+  /* ===================== LOGIN ===================== */
+  const handleLogin = async (e) => {
+    e.preventDefault();
 
-  let validation = {};
-  if (!formData.email.trim()) validation.email = "Email is required";
-  if (!formData.password.trim()) validation.password = "Password is required";
+    let validation = {};
+    if (!formData.email.trim()) validation.email = "Email is required";
+    if (!formData.password.trim()) validation.password = "Password is required";
 
-  if (Object.keys(validation).length > 0) {
-    setErrors(validation);
+    if (Object.keys(validation).length > 0) {
+      setErrors(validation);
+      return;
+    }
+
+    try {
+      const response = await vendorLoginApi(formData);
+
+      // 🔐 TEMP PASSWORD → FORCE RESET
+    //   if (response.data.changePasswordRequired) {
+    //   toast.info("Please change your password to continue");
+    //   setForgotStep("FORCE_RESET"); // ✅ NO OTP
+    //   return;
+    // }
+
+     if (response.data.changePasswordRequired) {
+  setResetMode("TEMP");     // 🔴 VERY IMPORTANT
+  setVendorId(response.data.vendorId);
+  setForgotStep("OTP");     // reuse same UI
+  toast.info("Please change your password to continue");
+  return;
+}
+
+
+
+
+
+
+      // ✅ NORMAL LOGIN
+      if (response.data.success) {
+        toast.success("Vendor Login Successful!");
+        localStorage.setItem("vendor", JSON.stringify(response.data.vendor));
+        setTimeout(() => navigate("/vendor"), 1200);
+      }
+
+    } catch (err) {
+      console.error(err);
+      if (err.response?.status === 403) {
+        toast.warning("Your account is pending admin approval.");
+      } else if (err.response?.status === 401) {
+        toast.error("Invalid email or password");
+      } else {
+        toast.error("Login failed. Please try again.");
+      }
+    }
+  };
+
+  /* ===================== FORGOT PASSWORD ===================== */
+  // const handleForgotClick = () => {
+  //   if (!formData.email.trim()) {
+  //     toast.error("Please enter your email first");
+  //     return;
+  //   }
+  //   setForgotStep("EMAIL");
+  // };
+
+  const handleForgotClick = () => {
+  if (!formData.email.trim()) {
+    toast.error("Please enter your email first");
     return;
   }
 
-  try {
-    const response = await vendorLoginApi(formData); // call backend
-    if (response.data.success) {
-      toast.success("Vendor Login Successful!");
-      // save vendor info in localStorage or context
-      localStorage.setItem("vendor", JSON.stringify(response.data.vendor));
-      setTimeout(() => {
-        navigate("/vendor"); // redirect to vendor dashboard
-      }, 1200);
-    }
-  } catch (err) {
-    console.error(err);
-    toast.error(err.response?.data?.error || "Login failed");
-  }
+  setResetMode("FORGOT");   // ✅ important
+  setForgotStep("EMAIL");
 };
 
-  // ------------------------------
-  // Forgot Password Submit
-  // ------------------------------
-  const handleForgotSubmit = async (e) => {
+
+  const handleSendOtp = async () => {
+    if (!formData.email.trim()) {
+      toast.error("Email is required");
+      return;
+    }
+
+    setForgotLoading(true);
+    try {
+      await vendorForgotPasswordApi({ email: formData.email });
+      toast.success("OTP sent to your email");
+      setForgotStep("OTP");
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.error || "Unable to send OTP");
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+//   const handleVerifyOtpAndReset = async (e) => {
+//   e.preventDefault();
+
+//   // 🛑 ensure this runs ONLY for forgot-password OTP flow
+//   if (forgotStep !== "OTP") {
+//     toast.error("Invalid password reset flow");
+//     return;
+//   }
+
+//   let validation = {};
+
+//   if (!forgotPasswordData.otp)
+//     validation.otp = "OTP is required";
+
+//   if (!forgotPasswordData.newPassword)
+//     validation.newPassword = "New password required";
+
+//   if (!forgotPasswordData.confirmPassword)
+//     validation.confirmPassword = "Confirm password required";
+
+//   if (
+//     forgotPasswordData.newPassword &&
+//     forgotPasswordData.confirmPassword &&
+//     forgotPasswordData.newPassword !== forgotPasswordData.confirmPassword
+//   ) {
+//     validation.confirmPassword = "Passwords do not match";
+//   }
+
+//   if (Object.keys(validation).length > 0) {
+//     setForgotErrors(validation);
+//     return;
+//   }
+
+//   setForgotLoading(true);
+
+//   try {
+//     await vendorResetPasswordOtpApi({
+//       email: formData.email,
+//       otp: forgotPasswordData.otp,
+//       newPassword: forgotPasswordData.newPassword,
+//     });
+
+//     toast.success("Password reset successful. Please login.");
+
+//     // 🔁 BACK TO LOGIN
+//     setForgotStep("LOGIN");
+//     setForgotPasswordData({
+//       otp: "",
+//       newPassword: "",
+//       confirmPassword: "",
+//     });
+//     setForgotErrors({});
+
+//   } catch (err) {
+//     console.error(err);
+//     toast.error(
+//       err.response?.data?.error || "OTP verification failed"
+//     );
+//   } finally {
+//     setForgotLoading(false);
+//   }
+// };
+const handleVerifyOtpAndReset = async (e) => {
   e.preventDefault();
 
   let validation = {};
-  if (!forgotPasswordData.newPassword)
+
+  // 🔐 FORGOT PASSWORD → OTP REQUIRED
+  if (resetMode === "FORGOT") {
+    if (!forgotPasswordData.otp) {
+      validation.otp = "OTP is required";
+    }
+  }
+
+  // 🔐 BOTH FLOWS NEED PASSWORD
+  if (!forgotPasswordData.newPassword) {
     validation.newPassword = "New password required";
-  if (!forgotPasswordData.confirmPassword)
+  }
+
+  if (!forgotPasswordData.confirmPassword) {
     validation.confirmPassword = "Confirm password required";
+  }
+
   if (
     forgotPasswordData.newPassword &&
     forgotPasswordData.confirmPassword &&
@@ -136,26 +275,50 @@ export default function VendorLogin() {
   setForgotLoading(true);
 
   try {
-    // You need to pass token as well from URL
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get("token");
+    // ===============================
+    // 🔴 TEMP PASSWORD (NO OTP)
+    // ===============================
+    if (resetMode === "TEMP") {
+      await vendorResetPasswordAfterLoginApi({
+        vendorId,                 // REQUIRED
+        newPassword: forgotPasswordData.newPassword,
+      });
 
-    const response = await vendorResetPasswordApi({
-      token,
-      newPassword: forgotPasswordData.newPassword,
+      toast.success("Password updated. Please login again.");
+    }
+
+    // ===============================
+    // 🔴 FORGOT PASSWORD (OTP)
+    // ===============================
+    if (resetMode === "FORGOT") {
+      await vendorResetPasswordOtpApi({
+        email: formData.email,
+        otp: forgotPasswordData.otp,
+        newPassword: forgotPasswordData.newPassword,
+      });
+
+      toast.success("Password reset successful. Please login.");
+    }
+
+    // 🔁 RESET UI
+    setForgotStep("LOGIN");
+    setResetMode(null);
+    setForgotPasswordData({
+      otp: "",
+      newPassword: "",
+      confirmPassword: "",
     });
 
-    if (response.data.success) {
-      toast.success(response.data.message || "Password reset successful!");
-      setShowForgotPassword(false);
-    }
   } catch (err) {
     console.error(err);
-    toast.error(err.response?.data?.error || "Reset failed");
+    toast.error(err.response?.data?.error || "Password reset failed");
   } finally {
     setForgotLoading(false);
   }
 };
+
+
+
 
   return (
     <div className="admin-page">
@@ -195,16 +358,17 @@ export default function VendorLogin() {
               width: "100%",
               maxWidth: "400px",
               margin: "0 auto",
-              minHeight: showForgotPassword ? "420px" : "auto",
+             // minHeight: showForgotPassword ? "420px" : "auto",
+             minHeight: forgotStep !== "LOGIN" ? "420px" : "auto",
               transition: "all 0.3s ease-in-out",
             }}
           >
             <CardContent sx={{ p: 2 }}>
               {/* Back button when forgot password */}
-              {showForgotPassword && (
+              {forgotStep !== "LOGIN" && (
                 <Button
                   startIcon={<ArrowBackIcon />}
-                  onClick={() => setShowForgotPassword(false)}
+                  onClick={() => setForgotStep("LOGIN")}
                   sx={{
                     mb: 1,
                     fontSize: "0.8rem",
@@ -216,155 +380,177 @@ export default function VendorLogin() {
                 </Button>
               )}
 
+
               {/* ICON + TITLE */}
               <Box textAlign="center" mb={1}>
                 <BusinessIcon sx={{ fontSize: 30 }} />
                 <Typography variant="h6" fontWeight="bold" mt={0.5}>
-                  {showForgotPassword ? "Reset Password" : "Vendor Sign In"}
+                  {/* {showForgotPassword ? "Reset Password" : "Vendor Sign In"} */}
+                  {forgotStep === "LOGIN" ? "Vendor Sign In" : "Reset Password"}
+
                 </Typography>
               </Box>
 
               <Divider sx={{ mb: 1.5 }} />
+{/* ---------------- LOGIN FORM ---------------- */}
+<Fade in={forgotStep === "LOGIN"}>
+  <Box
+    component="form"
+    onSubmit={handleLogin}
+    sx={{ display: forgotStep === "LOGIN" ? "block" : "none" }}
+  >
+    {/* Email */}
+    <TextField
+      label="Email"
+      name="email"
+      type="email"
+      fullWidth
+      size="small"
+      margin="dense"
+      value={formData.email}
+      onChange={handleChange}
+      error={!!errors.email}
+      helperText={errors.email}
+    />
 
-              {/* ---------------- LOGIN FORM ---------------- */}
-              <Fade in={!showForgotPassword}>
-                <Box
-                  component="form"
-                  onSubmit={handleLogin}
-                  sx={{ display: showForgotPassword ? "none" : "block" }}
-                >
-                  {/* Email */}
-                  <TextField
-                    label="Email"
-                    name="email"
-                    type="email"
-                    fullWidth
-                    size="small"
-                    margin="dense"
-                    value={formData.email}
-                    onChange={handleChange}
-                    error={!!errors.email}
-                    helperText={errors.email}
-                  />
+    {/* Password */}
+    <TextField
+      label="Password"
+      name="password"
+      type={showPassword ? "text" : "password"}
+      fullWidth
+      size="small"
+      margin="dense"
+      value={formData.password}
+      onChange={handleChange}
+      error={!!errors.password}
+      helperText={errors.password}
+      InputProps={{
+        endAdornment: (
+          <InputAdornment position="end">
+            <IconButton onClick={() => setShowPassword((p) => !p)}>
+              {showPassword ? <Visibility /> : <VisibilityOff />}
+            </IconButton>
+          </InputAdornment>
+        ),
+      }}
+    />
 
-                  {/* Password */}
-                  <TextField
-                    label="Password"
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    fullWidth
-                    size="small"
-                    margin="dense"
-                    value={formData.password}
-                    onChange={handleChange}
-                    error={!!errors.password}
-                    helperText={errors.password}
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">
-                          <IconButton
-                            onClick={() =>
-                              setShowPassword((prev) => !prev)
-                            }
-                          >
-                            {showPassword ? <Visibility /> : <VisibilityOff />}
-                          </IconButton>
-                        </InputAdornment>
-                      ),
-                    }}
-                  />
+    {/* Forgot Password */}
+    <Box textAlign="right">
+      <Button
+        variant="text"
+        size="small"
+        onClick={() => {
+          setResetMode("FORGOT");     // ✅ IMPORTANT
+          setForgotStep("EMAIL");
+        }}
+      >
+        Forgot Password?
+      </Button>
+    </Box>
 
-                  {/* Forgot Password */}
-                  <Box textAlign="right">
-                    <Button
-                      variant="text"
-                      size="small"
-                      onClick={() => setShowForgotPassword(true)}
-                      sx={{
-                        textTransform: "none",
-                        fontSize: "0.75rem",
-                        color: "primary.main",
-                      }}
-                    >
-                      Forgot Password?
-                    </Button>
-                  </Box>
+    {/* Register */}
+    <Typography align="center" sx={{ mt: 1.5, fontSize: "0.8rem" }}>
+      Don't have an account?{" "}
+      <span
+        onClick={() => navigate("/vendor/registration")}
+        style={{ color: "#1976d2", cursor: "pointer" }}
+      >
+        Register Here
+      </span>
+    </Typography>
 
-                  {/* Register Here */}
-                  <Typography
-                    align="center"
-                    sx={{ mt: 1.5, fontSize: "0.8rem" }}
-                  >
-                    Don't have an account?{" "}
-                    <span
-                      onClick={() => navigate("/vendor/registration")}
-                      style={{
-                        color: "#1976d2",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Register Here
-                    </span>
-                  </Typography>
+    {/* Login Button */}
+    <Button fullWidth variant="contained" sx={{ mt: 2, py: 1 }} type="submit">
+      Log In
+    </Button>
+  </Box>
+</Fade>
 
-                  {/* Login Button */}
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    sx={{ mt: 2, py: 1 }}
-                    type="submit"
-                  >
-                    Log In
-                  </Button>
-                </Box>
-              </Fade>
+{/* ---------------- RESET / FORGOT PASSWORD ---------------- */}
+<Fade in={forgotStep !== "LOGIN"}>
+  <Box
+    component="form"
+    onSubmit={handleVerifyOtpAndReset}
+    sx={{ display: forgotStep !== "LOGIN" ? "block" : "none" }}
+  >
+    {/* ===== SEND OTP STEP (FORGOT ONLY) ===== */}
+    {forgotStep === "EMAIL" && (
+      <Button
+        fullWidth
+        variant="contained"
+        sx={{ mt: 1 }}
+        onClick={handleSendOtp}
+        disabled={forgotLoading}
+      >
+        {forgotLoading ? "Sending OTP..." : "Send OTP"}
+      </Button>
+    )}
 
-              {/* ---------------- FORGOT PASSWORD FORM ---------------- */}
-              <Fade in={showForgotPassword}>
-                <Box
-                  component="form"
-                  onSubmit={handleForgotSubmit}
-                  sx={{ display: showForgotPassword ? "block" : "none" }}
-                >
-                  {/* New password */}
-                  <TextField
-                    label="New Password"
-                    name="newPassword"
-                    type="password"
-                    fullWidth
-                    size="small"
-                    margin="dense"
-                    value={forgotPasswordData.newPassword}
-                    onChange={handleForgotChange}
-                    error={!!forgotErrors.newPassword}
-                    helperText={forgotErrors.newPassword}
-                  />
+    {/* ===== PASSWORD RESET STEP ===== */}
+    {forgotStep === "OTP" && (
+      <>
+        {/* OTP — ONLY FOR FORGOT PASSWORD */}
+        {resetMode === "FORGOT" && (
+          <TextField
+            label="OTP"
+            name="otp"
+            fullWidth
+            size="small"
+            margin="dense"
+            value={forgotPasswordData.otp}
+            onChange={handleForgotChange}
+            error={!!forgotErrors.otp}
+            helperText={forgotErrors.otp}
+          />
+        )}
 
-                  {/* Confirm Password */}
-                  <TextField
-                    label="Confirm Password"
-                    name="confirmPassword"
-                    type="password"
-                    fullWidth
-                    size="small"
-                    margin="dense"
-                    value={forgotPasswordData.confirmPassword}
-                    onChange={handleForgotChange}
-                    error={!!forgotErrors.confirmPassword}
-                    helperText={forgotErrors.confirmPassword}
-                  />
+        {/* New Password */}
+        <TextField
+          label="New Password"
+          name="newPassword"
+          type="password"
+          fullWidth
+          size="small"
+          margin="dense"
+          value={forgotPasswordData.newPassword}
+          onChange={handleForgotChange}
+          error={!!forgotErrors.newPassword}
+          helperText={forgotErrors.newPassword}
+        />
 
-                  {/* Reset Button */}
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    sx={{ mt: 2, py: 1 }}
-                    type="submit"
-                  >
-                    {forgotLoading ? "Resetting..." : "Reset Password"}
-                  </Button>
-                </Box>
-              </Fade>
+        {/* Confirm Password */}
+        <TextField
+          label="Confirm Password"
+          name="confirmPassword"
+          type="password"
+          fullWidth
+          size="small"
+          margin="dense"
+          value={forgotPasswordData.confirmPassword}
+          onChange={handleForgotChange}
+          error={!!forgotErrors.confirmPassword}
+          helperText={forgotErrors.confirmPassword}
+        />
+
+        <Button
+          fullWidth
+          variant="contained"
+          sx={{ mt: 2, py: 1 }}
+          type="submit"
+          disabled={forgotLoading}
+        >
+          {forgotLoading
+            ? "Updating..."
+            : resetMode === "TEMP"
+            ? "Update Password"
+            : "Reset Password"}
+        </Button>
+      </>
+    )}
+  </Box>
+</Fade>
             </CardContent>
           </Card>
         </div>
