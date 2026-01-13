@@ -107,7 +107,7 @@ const handleEmailChange = (e) => {
       }
     };
     loadProfile();
-  }, [dispatch, roles]);
+  }, [dispatch, activeRole]);
 
   // 🔥 Sync form fields when profile updates
   useEffect(() => {
