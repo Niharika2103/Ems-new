@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, Plus, Trash2, Eye, Settings, Search, Download, Clock, CheckCircle, XCircle, GitBranch, Users, FileText, Home } from 'lucide-react';
 import { useSelector, useDispatch } from "react-redux";
-import { addField, removeField,updateSubmissions  } from "../../features/vendor/formSlice";
+//import { addField, removeField,updateSubmissions  } from "../../features/vendor/formSlice";
+import { addField, removeField } from "../../features/vendor/formSlice";
+import { API_BASES, AUTH_API } from "../../utils/constants";
+
+
 // Form configuration
 // const formConfig = [
 //   { id: 1, label: "Company Name", type: "text", required: true },
@@ -19,7 +23,9 @@ import { addField, removeField,updateSubmissions  } from "../../features/vendor/
 const AdminPanel = () => {
       const dispatch = useDispatch();
       const formConfig = useSelector((state) => state.form.formConfig);
-  const submissions = useSelector((state) => state.form.submissions);
+  //const submissions = useSelector((state) => state.form.submissions);
+  const [submissions, setSubmissions] = useState([]);
+
   const [viewMode, setViewMode] = useState("dashboard");
   const [newField, setNewField] = useState({
     label: "",
@@ -29,6 +35,20 @@ const AdminPanel = () => {
 
   // Load data from localStorage
 //   const [submissions, setSubmissions] = useState([]);
+useEffect(() => {
+  fetchVendors();
+}, []);
+
+const fetchVendors = async () => {
+  try {
+    const res = await fetch(`${AUTH_API.VENDOR}`);
+    const data = await res.json();
+    setSubmissions(data);
+  } catch (err) {
+    console.error("Failed to fetch vendors", err);
+  }
+};
+
   const [mouDocuments, setMouDocuments] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -61,6 +81,46 @@ const AdminPanel = () => {
   }
 }, []);
 
+// const updateVendorStatus = async (vendorId, status) => {
+//   try {
+//     //await fetch(`${AUTH_API.VENDOR}/admin/vendors/${vendorId}/status`, {
+//     await fetch(`${AUTH_API.VENDOR}/${vendorId}/status`, {
+//       method: "PUT",
+//       headers: {
+//         "Content-Type": "application/json",
+//       },
+//       body: JSON.stringify({ status }),
+//     });
+
+//     fetchVendors(); // refresh UI
+//   } catch (err) {
+//     console.error("Failed to update vendor status", err);
+//   }
+// };
+const updateVendorStatus = async (vendorId, status) => {
+  try {
+    const res = await fetch(`${AUTH_API.VENDOR}/${vendorId}/status`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ status }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      alert(err.error || "Failed to update status");
+      return;
+    }
+
+    await fetchVendors(); // refresh list
+  } catch (err) {
+    console.error("Failed to update vendor status", err);
+    alert("Server error while updating status");
+  }
+};
+
+
 
   
 const handleAddField = () => {
@@ -78,25 +138,25 @@ const handleRemoveField = (id) => {
 };
 
 
-  const approveSubmission = (submissionId) => {
-    const updatedSubmissions = submissions.map(sub => 
-      sub.id === submissionId 
-        ? { ...sub, status: "Approved" }
-        : sub
-    );
-    dispatch(updateSubmissions(updated));
-    localStorage.setItem('vendorSubmissions', JSON.stringify(updatedSubmissions));
-  };
+  // const approveSubmission = (submissionId) => {
+  //   const updatedSubmissions = submissions.map(sub => 
+  //     sub.id === submissionId 
+        // ? { ...sub, status: "Approved" }
+  //       : sub
+  //   );
+  //   dispatch(updateSubmissions(updated));
+  //   localStorage.setItem('vendorSubmissions', JSON.stringify(updatedSubmissions));
+  // };
 
-  const rejectSubmission = (submissionId) => {
-    const updatedSubmissions = submissions.map(sub => 
-      sub.id === submissionId 
-        ? { ...sub, status: "Rejected" }
-        : sub
-    );
-    dispatch(updateSubmissions(updated));
-    localStorage.setItem('vendorSubmissions', JSON.stringify(updatedSubmissions));
-  };
+  // const rejectSubmission = (submissionId) => {
+  //   const updatedSubmissions = submissions.map(sub => 
+  //     sub.id === submissionId 
+  //       ? { ...sub, status: "Rejected" }
+  //       : sub
+  //   );
+  //   //dispatch(updateSubmissions(updated));
+  //   localStorage.setItem('vendorSubmissions', JSON.stringify(updatedSubmissions));
+  // };
 
   // Admin Dashboard Stats
   const adminStats = {
@@ -513,8 +573,13 @@ const handleRemoveField = (id) => {
               <div key={sub.id} className="border-b py-3 last:border-b-0">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="font-medium">{sub.companyName}</p>
-                    <p className="text-sm text-gray-500">{sub.submittedAt}</p>
+                    {/* <p className="font-medium">{sub.companyName}</p>
+                    <p className="text-sm text-gray-500">{sub.submittedAt}</p> */}
+                    <p className="font-medium">{sub.company_name}</p>
+                    <p className="text-sm text-gray-500">
+                      {new Date(sub.created_at).toLocaleString()}
+                    </p>
+
                   </div>
                   <span className={`px-2 py-1 rounded text-xs ${
                     sub.status === 'Approved' ? 'bg-green-100 text-green-800' :
@@ -623,73 +688,172 @@ const handleRemoveField = (id) => {
       )}
 
       {/* SUBMISSIONS VIEW */}
-      {viewMode === "submissions" && (
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h3 className="font-semibold text-lg mb-4">Vendor Submissions ({submissions.length})</h3>
-          {submissions.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No submissions found.</p>
-          ) : (
-            <div className="space-y-4">
-              {submissions.map((sub) => (
-                <div key={sub.id} className="border rounded-lg p-6 hover:shadow-md transition-shadow">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h4 className="font-semibold text-lg">{sub.companyName}</h4>
-                      <p className="text-gray-500 text-sm">{sub.submittedAt}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        sub.status === 'Approved' ? 'bg-green-100 text-green-800' :
-                        sub.status === 'Rejected' ? 'bg-red-100 text-red-800' :
-                        'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {sub.status}
-                      </span>
-                      {sub.status === "Pending" && (
-                        <div className="flex gap-2">
-                          <button 
-                            className="px-3 py-1 bg-green-100 text-green-700 rounded text-sm hover:bg-green-200"
-                            onClick={() => approveSubmission(sub.id)}
-                          >
-                            Approve
-                          </button>
-                          <button 
-                            className="px-3 py-1 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200"
-                            onClick={() => rejectSubmission(sub.id)}
-                          >
-                            Reject
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+{viewMode === "submissions" && (
+  <div className="bg-white rounded-lg shadow-lg p-6">
+    <h3 className="font-semibold text-lg mb-4">
+      Vendor Submissions ({submissions.length})
+    </h3>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {Object.entries(sub.data).map(([key, value]) => {
-                      const field = formConfig.find(
-                        (f) => f.id === parseInt(key)
-                      );
-                      return (
-                        <div key={key} className="bg-gray-50 p-3 rounded">
-                          <strong className="text-sm text-gray-600">{field?.label}: </strong>
-                          <span className="text-sm">
-                            {typeof value === "object"
-                              ? JSON.stringify(value)
-                              : value?.toString()}
-                          </span>
-                        </div>
-                      );
-                    })}
+    {submissions.length === 0 ? (
+      <p className="text-gray-500 text-center py-8">
+        No submissions found.
+      </p>
+    ) : (
+      <div className="space-y-4">
+        {submissions.map((sub) => (
+          <div
+            key={sub.id}
+            className="border rounded-lg p-6 hover:shadow-md transition-shadow"
+          >
+            {/* HEADER */}
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <h4 className="font-semibold text-lg">
+                  {sub.company_name}
+                </h4>
+                <p className="text-gray-500 text-sm">
+                  {new Date(sub.created_at).toLocaleString()}
+                </p>
+              </div>
+
+              {/* STATUS + ACTIONS */}
+              <div className="flex flex-col items-end gap-2">
+                <span
+                  className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    sub.status === "Approved"
+                      ? "bg-green-100 text-green-800"
+                      : sub.status === "Rejected"
+                      ? "bg-red-100 text-red-800"
+                      : "bg-yellow-100 text-yellow-800"
+                  }`}
+                >
+                  {sub.status}
+                </span>
+
+                {sub.status === "Pending" && (
+                  <div className="flex gap-2">
+                    <button
+                      className="px-3 py-1 bg-green-100 text-green-700 rounded text-sm hover:bg-green-200"
+                      onClick={() =>
+                        //updateVendorStatus(sub.id, "Approved")
+                        updateVendorStatus(sub.id, "Approved")
+                      }
+                    >
+                      Approve
+                    </button>
+
+                    <button
+                      className="px-3 py-1 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200"
+                      onClick={() =>
+                       // updateVendorStatus(sub.id, "Rejected")
+                       updateVendorStatus(sub.id, "Rejected")
+                      }
+                    >
+                      Reject
+                    </button>
                   </div>
-                </div>
-              ))}
+                )}
+              </div>
+            </div>
+
+            {/* DETAILS */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div className="bg-gray-50 p-3 rounded">
+                <strong>Email:</strong> {sub.email}
+              </div>
+              <div className="bg-gray-50 p-3 rounded">
+                <strong>Phone:</strong> {sub.phone}
+              </div>
+              <div className="bg-gray-50 p-3 rounded">
+                <strong>Business Type:</strong> {sub.business_type}
+              </div>
+              <div className="bg-gray-50 p-3 rounded">
+                <strong>Years in Business:</strong> {sub.years_in_business}
+              </div>
+              <div className="bg-gray-50 p-3 rounded col-span-2">
+              <strong>Website:</strong>{" "}
+              {sub.company_website ? (
+                <a
+                  href={sub.company_website}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-blue-600 hover:underline"
+                >
+                  {sub.company_website}
+                </a>
+              ) : (
+                <span className="text-gray-500">Not provided</span>
+              )}
+            </div>
+            {sub.bank_details && (
+            <div className="bg-gray-50 p-3 rounded col-span-2">
+              <strong>Bank Details:</strong>
+              <div className="mt-1 text-sm">
+                <div>Account Holder: {sub.bank_details.holder}</div>
+                <div>Account No: {sub.bank_details.accNo}</div>
+                <div>IFSC: {sub.bank_details.ifsc}</div>
+                <div>Bank Name: {sub.bank_details.bankName}</div>
+              </div>
             </div>
           )}
-        </div>
-      )}
+          {sub.tax_registration && (
+            <div className="bg-gray-50 p-3 rounded col-span-2">
+              <strong>Tax Registration:</strong>
+              <div className="mt-1 text-sm">
+                <div>PAN: {sub.tax_registration.pan}</div>
+                <div>GST: {sub.tax_registration.gst}</div>
+                <div>TAN: {sub.tax_registration.tan}</div>
+              </div>
+            </div>
+          )}
+            </div>
 
-      {/* MOU DOCUMENTS VIEW */}
-      {viewMode === "mou" && <MouDocumentsSection />}
+            {/* DOCUMENTS */}
+            <div className="mt-4">
+              <h5 className="font-medium mb-2">Documents</h5>
+
+             {/* Business License */}
+            {sub.business_license && (
+              <div className="flex justify-between items-center border p-3 rounded mb-2">
+                <span>Business License</span>
+                <a
+                  href={`${API_BASES.VENDOR}/vendor/download/${sub.business_license}`}
+                  download
+                  className="text-blue-600 hover:underline"
+                >
+                  Download
+                </a>
+              </div>
+            )}
+
+            {/* Required Documents */}
+            {Array.isArray(sub.required_documents) &&
+              sub.required_documents.map((doc, index) => (
+                <div
+                  key={index}
+                  className="flex justify-between items-center border p-3 rounded mb-2"
+                >
+                  <span>Document {index + 1}</span>
+                  <a
+                    href={`${API_BASES.VENDOR}/vendor/download/${doc}`}   
+                    download
+                    className="text-blue-600 hover:underline"
+                  >
+                    Download
+                  </a>
+                </div>
+            ))}
+
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+)}
+
+{/* MOU DOCUMENTS VIEW */}
+{viewMode === "mou" && <MouDocumentsSection />}
     </div>
   );
 };

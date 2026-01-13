@@ -1,40 +1,60 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { adminRegisterApi, adminLoginApi, fetchNewEmployeeApi,adminVerifyOtpApi, DeleteAdminApi, uploadEmployeeDocumentsApi, getAllReferralsAdminApi, getReferralByIdAdminApi, updateReferralStatusAdminApi, } from "../../api/authApi";
+import {
+  adminRegisterApi,
+  adminLoginApi,
+  fetchNewEmployeeApi,
+  adminVerifyOtpApi,
+  DeleteAdminApi,
+  uploadEmployeeDocumentsApi,
+  getAllReferralsAdminApi,
+  getReferralByIdAdminApi,
+  updateReferralStatusAdminApi,
+} from "../../api/authApi";
 
-export const adminRegister = createAsyncThunk("admin/register", async (data, thunkAPI) => {
-  try {
-    const res = await adminRegisterApi(data);
-    return res.data;
-  } catch (err) {
-    return thunkAPI.rejectWithValue(err.response?.data || err.message);
+/* -------------------- THUNKS -------------------- */
+
+export const adminRegister = createAsyncThunk(
+  "admin/register",
+  async (data, thunkAPI) => {
+    try {
+      const res = await adminRegisterApi(data);
+      return res.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data || err.message);
+    }
   }
-});
+);
 
-export const adminLogin = createAsyncThunk("admin/login", async (data, thunkAPI) => {
-  try {
-    const res = await adminLoginApi(data);
-    return res.data;
-  } catch (err) {
-    return thunkAPI.rejectWithValue(err.response?.data || err.message);
+export const adminLogin = createAsyncThunk(
+  "admin/login",
+  async (data, thunkAPI) => {
+    try {
+      const res = await adminLoginApi(data);
+      return res.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data || err.message);
+    }
   }
-});
+);
 
-export const adminverifyOtp = createAsyncThunk("admin/mfa-verify", async (data, thunkAPI) => {
-  try {
-    const response = await adminVerifyOtpApi(data);
-    return response.data;
-  } catch (err) {
-    return thunkAPI.rejectWithValue(err.response?.data || err.message);
+export const adminverifyOtp = createAsyncThunk(
+  "admin/mfa-verify",
+  async (data, thunkAPI) => {
+    try {
+      const res = await adminVerifyOtpApi(data);
+      return res.data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.response?.data || err.message);
+    }
   }
-});
+);
 
-//deleteadmin
 export const deleteAdmin = createAsyncThunk(
   "admin/status",
   async ({ id, status }, thunkAPI) => {
     try {
-      const response = await DeleteAdminApi(id, status);
-      return id; 
+      await DeleteAdminApi(id, status);
+      return id;
     } catch (err) {
       return thunkAPI.rejectWithValue(err.response?.data || err.message);
     }
@@ -46,52 +66,49 @@ export const uploadEmployeeDocuments = createAsyncThunk(
   async ({ employeeId, data }, thunkAPI) => {
     try {
       const res = await uploadEmployeeDocumentsApi(employeeId, data);
-      return res.data; // returns { message, documents }
+      return res.data;
     } catch (err) {
       return thunkAPI.rejectWithValue(err.response?.data || err.message);
     }
   }
 );
 
-// Get all referrals (Admin)
 export const getAllReferralsAdmin = createAsyncThunk(
   "admin/getAllReferrals",
   async (_, thunkAPI) => {
     try {
-      const response = await getAllReferralsAdminApi();
-      return response.data;
+      const res = await getAllReferralsAdminApi();
+      return res.data;
     } catch (err) {
       return thunkAPI.rejectWithValue(err.response?.data || err.message);
     }
   }
 );
 
-// Get referral by ID (Admin)
 export const getReferralByIdAdmin = createAsyncThunk(
   "admin/getReferralById",
-  async (referral_id, thunkAPI) => {
+  async (id, thunkAPI) => {
     try {
-      const response = await getReferralByIdAdminApi(referral_id);
-      return response.data;
+      const res = await getReferralByIdAdminApi(id);
+      return res.data;
     } catch (err) {
       return thunkAPI.rejectWithValue(err.response?.data || err.message);
     }
   }
 );
 
-// Update referral status (Admin)
 export const updateReferralStatusAdmin = createAsyncThunk(
   "admin/updateReferralStatus",
   async ({ id, status }, thunkAPI) => {
     try {
-      const response = await updateReferralStatusAdminApi(id, status);
-      return response.data;
+      const res = await updateReferralStatusAdminApi(id, status);
+      return res.data;
     } catch (err) {
       return thunkAPI.rejectWithValue(err.response?.data || err.message);
     }
   }
 );
-//fetch
+
 export const fetchNewEmployees = createAsyncThunk(
   "admin/fetchNewEmployees",
   async (_, thunkAPI) => {
@@ -104,174 +121,184 @@ export const fetchNewEmployees = createAsyncThunk(
   }
 );
 
+/* -------------------- SLICE -------------------- */
 
 const adminSlice = createSlice({
   name: "admin",
   initialState: {
     user: null,
     token: localStorage.getItem("token") || null,
+
+    // 🔐 REAL BACKEND ROLE (DO NOT USE FOR UI)
     role: localStorage.getItem("role") || null,
+
     loading: false,
     error: null,
-    newEmpList:[],
-    allReferrals: [],          // for referral list
-  selectedReferral: null,    // for detail view
-  referralsLoading: false,   // for list/detail loading
-  referralActionLoading: false,
+
+    newEmpList: [],
+
+    allReferrals: [],
+    selectedReferral: null,
+    referralsLoading: false,
+    referralActionLoading: false,
   },
+
   reducers: {
     logout: (state) => {
       state.user = null;
       state.token = null;
+      state.role = null;
+
       localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      localStorage.removeItem("role");
+      localStorage.removeItem("active_role");
     },
   },
+
   extraReducers: (builder) => {
     builder
-      .addCase(adminRegister.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(adminRegister.fulfilled, (state) => {
-        state.loading = false;
-      })
-      .addCase(adminRegister.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
+
+      /* ---------- ADMIN LOGIN ---------- */
       .addCase(adminLogin.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
+
       .addCase(adminLogin.fulfilled, (state, action) => {
         state.loading = false;
-        state.token = action.payload.token;
-        const role = action.payload.user?.role;
-        const id = action.payload.user?.id || null;
-        state.id = id;
-        if (id) {
-          localStorage.setItem("userId", id);
+
+        const { token, user } = action.payload || {};
+        if (!user) return;
+
+        // 🔐 REAL ROLE (never changes)
+        state.role = user.role;
+        localStorage.setItem("role", user.role);
+
+        // 🧭 ACTIVE ROLE (UI mode)
+        if (!localStorage.getItem("active_role")) {
+          localStorage.setItem("active_role", user.role);
         }
-        if (role) {
-          state.role = role;
-          localStorage.setItem("role", role);
-        }
-        if (action.payload.token) {
-          localStorage.setItem("token", action.payload.token);
-        }
-        if (action.payload.user) {
-          state.user = action.payload.user;
-          localStorage.setItem("user", JSON.stringify(action.payload.user));
+
+        // 🧩 ENRICH USER OBJECT (VERY IMPORTANT)
+        const enrichedUser = {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+
+          role: user.role,
+          role_1: user.role_1 || null,
+          role_2: user.role_2 || "employee",
+
+          employment_type: user.employment_type || "fulltime",
+          is_temp_admin: user.is_temp_admin || false,
+        };
+
+        state.user = enrichedUser;
+        localStorage.setItem("user", JSON.stringify(enrichedUser));
+
+        if (token) {
+          state.token = token;
+          localStorage.setItem("token", token);
         }
       })
 
       .addCase(adminLogin.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-
       })
+
+      /* ---------- MFA VERIFY ---------- */
       .addCase(adminverifyOtp.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
+
       .addCase(adminverifyOtp.fulfilled, (state, action) => {
         state.loading = false;
         state.token = action.payload.token;
-        state.error = null;
-        if (action.payload.role) {
-          state.role = action.payload.role;
-          localStorage.setItem("role", action.payload.role);
+        if (action.payload.token) {
+          localStorage.setItem("token", action.payload.token);
         }
       })
+
       .addCase(adminverifyOtp.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload || "OTP verification failed";
+        state.error = action.payload;
       })
 
-      // Upload Employee Documents
-.addCase(uploadEmployeeDocuments.pending, (state) => {
-    state.loading = true;
-    state.error = null;
-})
-.addCase(uploadEmployeeDocuments.fulfilled, (state, action) => {
-    state.loading = false;
-    state.error = null;
+      /* ---------- DOCUMENT UPLOAD ---------- */
+      .addCase(uploadEmployeeDocuments.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(uploadEmployeeDocuments.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(uploadEmployeeDocuments.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
 
-    // success → store uploaded documents if needed
-    state.uploadedDocuments = action.payload.documents;
-})
-.addCase(uploadEmployeeDocuments.rejected, (state, action) => {
-    state.loading = false;
-    state.error = action.payload || "Document upload failed";
-})
+      /* ---------- REFERRALS ---------- */
+      .addCase(getAllReferralsAdmin.pending, (state) => {
+        state.referralsLoading = true;
+      })
+      .addCase(getAllReferralsAdmin.fulfilled, (state, action) => {
+        state.referralsLoading = false;
+        state.allReferrals = action.payload?.referrals || [];
+      })
+      .addCase(getAllReferralsAdmin.rejected, (state, action) => {
+        state.referralsLoading = false;
+        state.error = action.payload;
+      })
 
-// Get All Referrals
-.addCase(getAllReferralsAdmin.pending, (state) => {
-  state.referralsLoading = true;
-  state.error = null;
-})
-.addCase(getAllReferralsAdmin.fulfilled, (state, action) => {
-  state.referralsLoading = false;
-  state.allReferrals = action.payload.referrals || [];
-})
-.addCase(getAllReferralsAdmin.rejected, (state, action) => {
-  state.referralsLoading = false;
-  state.error = action.payload;
-})
+      .addCase(getReferralByIdAdmin.pending, (state) => {
+        state.referralsLoading = true;
+        state.selectedReferral = null;
+      })
+      .addCase(getReferralByIdAdmin.fulfilled, (state, action) => {
+        state.referralsLoading = false;
+        state.selectedReferral = action.payload;
+      })
+      .addCase(getReferralByIdAdmin.rejected, (state, action) => {
+        state.referralsLoading = false;
+        state.error = action.payload;
+      })
 
-// Get Referral By ID
-.addCase(getReferralByIdAdmin.pending, (state) => {
-  state.referralsLoading = true;
-  state.error = null;
-  state.selectedReferral = null;
-})
-.addCase(getReferralByIdAdmin.fulfilled, (state, action) => {
-  state.referralsLoading = false;
-  state.selectedReferral = action.payload;
-})
-.addCase(getReferralByIdAdmin.rejected, (state, action) => {
-  state.referralsLoading = false;
-  state.error = action.payload;
-})
+      .addCase(updateReferralStatusAdmin.pending, (state) => {
+        state.referralActionLoading = true;
+      })
+      .addCase(updateReferralStatusAdmin.fulfilled, (state, action) => {
+        state.referralActionLoading = false;
+        const updated = action.payload?.updated_referral;
+        if (updated) {
+          state.allReferrals = state.allReferrals.map((r) =>
+            r.id === updated.id ? updated : r
+          );
+          if (state.selectedReferral?.id === updated.id) {
+            state.selectedReferral = updated;
+          }
+        }
+      })
+      .addCase(updateReferralStatusAdmin.rejected, (state, action) => {
+        state.referralActionLoading = false;
+        state.error = action.payload;
+      })
 
-// Update Referral Status
-.addCase(updateReferralStatusAdmin.pending, (state) => {
-  state.referralActionLoading = true;
-  state.error = null;
-})
-.addCase(updateReferralStatusAdmin.fulfilled, (state, action) => {
-  state.referralActionLoading = false;
-  // ✅ Optimistically update the list
-  const updatedReferral = action.payload.updated_referral;
-  state.allReferrals = state.allReferrals.map(ref =>
-    ref.id === updatedReferral.id ? updatedReferral : ref
-  );
-  // ✅ Also update selectedReferral if open
-  if (state.selectedReferral && state.selectedReferral.id === updatedReferral.id) {
-    state.selectedReferral = updatedReferral;
-  }
-})
-.addCase(updateReferralStatusAdmin.rejected, (state, action) => {
-  state.referralActionLoading = false;
-  state.error = action.payload;
-})
-.addCase(fetchNewEmployees.pending, (state) => {
-  state.loading = true;
-  state.error = null;
-})
-.addCase(fetchNewEmployees.fulfilled, (state, action) => {
-  state.newEmpList = action.payload.data || [];   // your API returns data:[...]
-  state.loading = false;
-})
-.addCase(fetchNewEmployees.rejected, (state, action) => {
-  state.loading = false;
-  state.error = action.payload;
-})
-
-
+      /* ---------- NEW EMPLOYEES ---------- */
+      .addCase(fetchNewEmployees.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchNewEmployees.fulfilled, (state, action) => {
+        state.loading = false;
+        state.newEmpList = action.payload?.data || [];
+      })
+      .addCase(fetchNewEmployees.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
   },
-})
-
-
+});
 
 export const { logout } = adminSlice.actions;
 export default adminSlice.reducer;

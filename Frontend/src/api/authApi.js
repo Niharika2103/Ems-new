@@ -791,17 +791,99 @@ export const deleteInvoiceApi = (invoiceId) =>
 
 
 // ================= Vendor Auth =================
-export const vendorRegisterApi = (data) =>
-  vendorClient.post(`${AUTH_API.VENDOR}/vendor/register`, data); // backend route
+// export const vendorRegisterApi = (data) =>
+//   vendorClient.post(`${AUTH_API.VENDOR}/register`, data); // backend route
 
-export const vendorLoginApi = (data) =>
-  vendorClient.post(`${AUTH_API.VENDOR}/vendor/login`, data);
+// export const vendorLoginApi = (data) =>
+//   vendorClient.post(`${AUTH_API.VENDOR}/login`, data);
 
-export const vendorForgotPasswordApi = (data) =>
-  vendorClient.post(`${AUTH_API.VENDOR}/vendor/forgot-password`, data);
+// export const vendorForgotPasswordApi = (data) =>
+//   vendorClient.post(`${AUTH_API.VENDOR}/forgot-password`, data);
 
-export const vendorResetPasswordApi = (data) =>
-  vendorClient.post(`${AUTH_API.VENDOR}/vendor/reset-password`, data);
+// export const vendorResetPasswordApi = (data) =>
+//   vendorClient.post(`${AUTH_API.VENDOR}/reset-password`, data);
+
+// // 🔐 Verify OTP & reset password
+// export const vendorResetPasswordOtpApi = (data) =>
+//   vendorClient.post(`${AUTH_API.VENDOR}/reset-password-otp`, data);
+
+// export const vendorResetPasswordAfterLoginApi = (data) =>
+//   vendorClient.post(
+//     `${AUTH_API.VENDOR}/reset-password-after-login`,
+//     data
+//   );
+
+
+
+// export const vendorRegisterApi = (data) =>
+//   vendorClient.post(`${AUTH_API.VENDOR}/register`, data);
+
+// export const vendorLoginApi = (data) =>
+//   vendorClient.post(`${AUTH_API.VENDOR}/login`, data);
+
+// /* 🔐 Forgot password → Send OTP */
+// export const vendorForgotPasswordApi = (data) =>
+//   vendorClient.post(`${AUTH_API.VENDOR}/forgot-password`, data);
+
+// /* 🔐 Verify OTP & reset password */
+// export const vendorResetPasswordOtpApi = (data) =>
+//   vendorClient.post(`${AUTH_API.VENDOR}/reset-password-otp`, data);
+
+// /* 🔐 Reset password after temp login (NO OTP) */
+// export const vendorResetPasswordAfterLoginApi = (data) =>
+//   vendorClient.post(
+//     `${AUTH_API.VENDOR}/reset-password-after-login`,
+//     data
+//   );
+
+
+
+/* 📝 Vendor Registration */
+export const vendorRegisterApi = (data) => {
+  return vendorClient.post(`${AUTH_API.VENDOR}/register`, data);
+};
+
+/* 🔐 Vendor Login */
+export const vendorLoginApi = (data) => {
+  return vendorClient.post(`${AUTH_API.VENDOR}/login`, data);
+};
+
+/* ======================================================
+   FORGOT PASSWORD (OTP FLOW)
+====================================================== */
+
+/* 📩 Send OTP to vendor email */
+export const vendorForgotPasswordApi = (data) => {
+  // data = { email }
+  return vendorClient.post(
+    `${AUTH_API.VENDOR}/forgot-password`,
+    data
+  );
+};
+
+/* 🔐 Verify OTP + Reset Password */
+export const vendorResetPasswordOtpApi = (data) => {
+  // data = { email, otp, newPassword }
+  return vendorClient.post(
+    `${AUTH_API.VENDOR}/reset-password-otp`,
+    data
+  );
+};
+
+/* ======================================================
+   TEMP PASSWORD RESET (NO OTP)
+====================================================== */
+
+/* 🔁 Reset password after temp login */
+export const vendorResetPasswordAfterLoginApi = (data) => {
+  // data = { vendorId, newPassword }
+  return vendorClient.post(
+    `${AUTH_API.VENDOR}/reset-password-after-login`,
+    data
+  );
+};
+
+
 
 // Fetch freelancer project assignments
 export const fetchFreelancerAssignmentsApi = () =>
@@ -1030,8 +1112,11 @@ export const updateAssignmentApi = (id, data) => {
   );
 };
 
-export const getShiftAssignmentbyemployeeApi = (employeeId) => {
+export const getShiftAssignmentbyemployeeApi = (employeeId, date) => {
   return shiftmanagementClient.get(
-    `${AUTH_API.SHIFTMANAGEMENT}/shift-assignments/current/${employeeId}`
+    `${AUTH_API.SHIFTMANAGEMENT}/shift-assignments/current/${employeeId}`,
+    {
+      params: { date }
+    }
   );
-}
+};
