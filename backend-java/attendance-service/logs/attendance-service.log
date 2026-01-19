@@ -22,3 +22,7 @@ LOG4J2 2026-01-19 13:12:11 INFO  com.example.attendance_service.AttendanceServic
 LOG4J2 2026-01-19 13:12:11 DEBUG com.example.attendance_service.AttendanceServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
 LOG4J2 2026-01-19 13:12:12 INFO  com.example.attendance_service.AttendanceServiceApplication - No active profile set, falling back to 1 default profile: "default"
 LOG4J2 2026-01-19 13:12:26 INFO  com.example.attendance_service.AttendanceServiceApplication - Started AttendanceServiceApplication in 15.033 seconds (process running for 18.073)
+LOG4J2 2026-01-19 15:12:42 DEBUG com.example.attendance_service.controller.AttendanceController - Fetching weekly attendance | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | projectId=da2952de-33cc-4afd-8aed-06c79bede1bb | weekStart=2026-01-19
+LOG4J2 2026-01-19 16:14:20 DEBUG com.example.attendance_service.controller.AttendanceController - Fetching weekly attendance | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | projectId=da2952de-33cc-4afd-8aed-06c79bede1bb | weekStart=2026-01-19
+LOG4J2 2026-01-19 16:14:50 INFO  com.example.attendance_service.controller.AttendanceController - Saving weekly attendance | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | projectId=da2952de-33cc-4afd-8aed-06c79bede1bb | employeeName=undefined
+LOG4J2 2026-01-19 16:14:50 INFO  com.example.attendance_service.service.AttendanceService - Save/Update attendance → employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2, projectId=da2952de-33cc-4afd-8aed-06c79bede1bb, employeeName=undefined
