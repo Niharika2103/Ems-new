@@ -15,6 +15,8 @@ import java.util.Collections;
 import java.util.stream.Collectors;
 import java.time.temporal.TemporalAdjusters;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.example.attendance_service.model.AttendanceEntity;
@@ -29,362 +31,350 @@ import com.example.attendance_service.repository.UserEmployeeMasterRepository;
 import com.example.attendance_service.requestdto.AttendanceRequestDTO;
 import com.example.attendance_service.responsedto.AttendanceResponseDTO;
 
-
 import jakarta.transaction.Transactional;
 
 @Service
 public class AttendanceService {
 
-	private final AttendanceRepository attendanceRepository;
-	private final ProjectRepository projectRepository;
-	private final UserEmployeeMasterRepository userRepository;
-	private final ProbationRepository probationRepository;
+    private static final Logger log =
+            LoggerFactory.getLogger(AttendanceService.class);
 
-	private final LeaveTypeRepository leaveTypeRepository;
+    private final AttendanceRepository attendanceRepository;
+    private final ProjectRepository projectRepository;
+    private final UserEmployeeMasterRepository userRepository;
+    private final ProbationRepository probationRepository;
+    private final LeaveTypeRepository leaveTypeRepository;
 
-	public AttendanceService(
-	        AttendanceRepository attendanceRepository,
-	        ProjectRepository projectRepository,
-	        UserEmployeeMasterRepository userRepository,
-	        ProbationRepository probationRepository,
-	        LeaveTypeRepository leaveTypeRepository
-	) {
-	    this.attendanceRepository = attendanceRepository;
-	    this.projectRepository = projectRepository;
-	    this.userRepository = userRepository;
-	    this.probationRepository = probationRepository;
-	    this.leaveTypeRepository = leaveTypeRepository;
-	}
-
-
-
-	public boolean isInProbation(UUID employeeId, LocalDate date) {
-	    return probationRepository
-	            .findProbationForDate(employeeId, "active", date)
-	            .isPresent();
-	}
-
-
-	public List<AttendanceResponseDTO> getAllAttendance() {
-		List<AttendanceEntity> entities = attendanceRepository.findAllByOrderByDateAsc();
-
-		return entities.stream()
-				.map(a -> new AttendanceResponseDTO(
-						a.getId(),
-						a.getDate(),
-						a.getWorkedHours(),
-						a.getTotalWorkedHours(),
-						a.getStatus(),
-						a.getLeaveType(),
-						a.getYear(),
-						a.getGender(),
-
-						// Employee details
-						a.getEmployee() != null ? a.getEmployee().getId() : null,
-						a.getEmployee() != null ? a.getEmployee().getEmployeeName() : null,
-						a.getEmployee() != null ? a.getEmployee().getGender() : null,
-
-						// Project details
-						a.getProject() != null ? a.getProject().getId() : null,
-						a.getProject() != null ? a.getProject().getProjectName() : null,
-								 a.getEl(),
-							        a.getSl(),
-							        a.getExtraMilar(),
-							        a.getWorkFromHome(),
-							        a.getPaternityLeave(),
-							        a.getMaternityLeave(),
-							        a.getRemainingLeaves()		
-						))
-				.collect(Collectors.toList());
-	}
-
-	
-	@Transactional
-	public List<AttendanceEntity> saveOrUpdateAttendance(
-	        UUID employeeId, UUID projectId, List<AttendanceRequestDTO> attendanceList, String employeename) {
-
-	    if (employeeId == null || projectId == null) {
-	        return Collections.emptyList();
-	    }
-
-	    UserEmployeeMasterEntity employee = userRepository.findById(employeeId)
-	            .orElseThrow(() -> new RuntimeException("Employee not found"));
-	    ProjectEntity project = projectRepository.findById(projectId)
-	            .orElseThrow(() -> new RuntimeException("Project not found"));
-
-	    double cumulativeTotal = 0.0;
-	    List<AttendanceEntity> allRecords = new ArrayList<>();
-
-	    if (attendanceList != null && !attendanceList.isEmpty()) {
-
-	        attendanceList.sort(Comparator.comparing(AttendanceRequestDTO::getDate));
-
-	        for (AttendanceRequestDTO dto : attendanceList) {
-	            LocalDate date = dto.getDate();
-	            if (date == null) continue;
-
-	            AttendanceEntity existing = attendanceRepository
-	                    .findByEmployee_IdAndProject_IdAndDate(employeeId, projectId, date)
-	                    .orElse(null);
-
-	            if (existing == null) {
-	                existing = new AttendanceEntity();
-	                existing.setEmployee(employee);
-	                existing.setProject(project);
-	                existing.setGender(employee.getGender());
-	                existing.setDate(date);
-	                existing.setYear(date.getYear());
-
-	                existing.setWorkingDays(0);
-	                existing.setWorkFromHome(0);
-	                existing.setHolidays(0);
-	                existing.setOptionalHolidays(0);
-	                existing.setEl(0);
-	                existing.setSl(0);
-	                existing.setExtraMilar(0);
-	                existing.setMaternityLeave(0);
-	                existing.setPaternityLeave(0);
-	                existing.setRemainingLeaves(0);
-	            }
-
-	            existing.setLeaveType(dto.getLeaveType());
-
-	            if (dto.getLeaveType() == null || dto.getLeaveType().isEmpty()) {
-	                existing.setWorkedHours(dto.getWorkedHours() != null ? dto.getWorkedHours() : 0.0);
-	            } else {
-	                existing.setWorkedHours(0.0);
-	            }
-
-	            existing.setStatus("draft");
-	            existing.setMonthlyStatus("draft");
-
-	            cumulativeTotal += existing.getWorkedHours();
-	            existing.setTotalWorkedHours(cumulativeTotal);
-
-	            // ----------------------------------------------------
-	            //            📌 WORKING DAYS CALCULATION LOGIC
-	            // ----------------------------------------------------
-	            LocalDate currentDate = existing.getDate();
-	            YearMonth currentMonth = YearMonth.from(currentDate);
-
-	            AttendanceEntity lastMonthlyRecord = attendanceRepository
-	                    .findTopByEmployee_IdAndProject_IdAndDateBeforeOrderByDateDesc(
-	                            employeeId, projectId, currentDate)
-	                    .orElse(null);
-
-	            int workingDays = 0;
-
-	            if (lastMonthlyRecord != null) {
-	                YearMonth lastRecordMonth = YearMonth.from(lastMonthlyRecord.getDate());
-
-	                if (lastRecordMonth.equals(currentMonth)) {
-	                    workingDays = safeGetOrDefault(lastMonthlyRecord.getWorkingDays(), 0);
-
-	                    if ((dto.getLeaveType() == null || dto.getLeaveType().isEmpty()) &&
-	                        dto.getWorkedHours() != null &&
-	                        dto.getWorkedHours() >= 9) {
-
-	                        workingDays += 1;
-	                    }
-	                }
-	            }
-
-	            existing.setWorkingDays(workingDays);
-	            // ----------------------------------------------------
-
-	            attendanceRepository.save(existing);
-	            allRecords.add(existing);
-	        }
-	    }
-
-	    return allRecords.stream()
-	            .sorted(Comparator.comparing(AttendanceEntity::getDate))
-	            .collect(Collectors.toList());
-	}
-
-	private int safeGetOrDefault(Integer val, int defaultVal) {
-	    return val != null ? val : defaultVal;
-	}
-
-
-
-
-	// ✅ Optional: fetch for any week
-public List<AttendanceEntity> getAttendanceForWeek(UUID employeeId, UUID projectId, LocalDate weekStart) {
-    if (employeeId == null || projectId == null || weekStart == null) {
-        return Collections.emptyList();
+    public AttendanceService(
+            AttendanceRepository attendanceRepository,
+            ProjectRepository projectRepository,
+            UserEmployeeMasterRepository userRepository,
+            ProbationRepository probationRepository,
+            LeaveTypeRepository leaveTypeRepository
+    ) {
+        this.attendanceRepository = attendanceRepository;
+        this.projectRepository = projectRepository;
+        this.userRepository = userRepository;
+        this.probationRepository = probationRepository;
+        this.leaveTypeRepository = leaveTypeRepository;
     }
 
-    // ✅ Ensure Monday–Sunday week
-    LocalDate startOfWeek = weekStart.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-    LocalDate endOfWeek = weekStart.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+    public boolean isInProbation(UUID employeeId, LocalDate date) {
+        boolean result = probationRepository
+                .findProbationForDate(employeeId, "active", date)
+                .isPresent();
 
-    return attendanceRepository.findByEmployee_IdAndProject_IdAndDateBetween(
-            employeeId, projectId, startOfWeek, endOfWeek);
-}
+        log.debug("Probation check → employeeId={}, date={}, result={}",
+                employeeId, date, result);
 
-    
-public List<AttendanceEntity> getAttendanceForMonthRange(UUID employeeId, LocalDate start, LocalDate end) {
-    if (employeeId == null || start == null || end == null) {
-        return Collections.emptyList();
+        return result;
     }
 
-    return attendanceRepository.findByEmployee_IdAndDateBetween(employeeId, start, end);
-}
+    public List<AttendanceResponseDTO> getAllAttendance() {
+        log.info("Fetching all attendance records");
 
-@Transactional
-public void releaseWeeklyAttendance(UUID employeeId, LocalDate weekStart, LocalDate weekEnd, String employeeName) {
-    
-	
-	List<AttendanceEntity> attendanceList =
-            attendanceRepository.findByEmployee_IdAndDateBetween(employeeId, weekStart, weekEnd);
-	
-	
-   // Fetch all attendance records for this week
-	List<AttendanceEntity> validRecords = attendanceList.stream()
-            .filter(a -> a.getProject() != null)
-            .collect(Collectors.toList());
+        List<AttendanceEntity> entities =
+                attendanceRepository.findAllByOrderByDateAsc();
 
-    for (AttendanceEntity attendance : validRecords) {
-        attendance.setStatus("Pending_approval");
-        attendance.setCreatedBy(employeeName);        // Who released
-        attendance.setCreatedAt(LocalDateTime.now());
+        return entities.stream()
+                .map(a -> new AttendanceResponseDTO(
+                        a.getId(),
+                        a.getDate(),
+                        a.getWorkedHours(),
+                        a.getTotalWorkedHours(),
+                        a.getStatus(),
+                        a.getLeaveType(),
+                        a.getYear(),
+                        a.getGender(),
+                        a.getEmployee() != null ? a.getEmployee().getId() : null,
+                        a.getEmployee() != null ? a.getEmployee().getEmployeeName() : null,
+                        a.getEmployee() != null ? a.getEmployee().getGender() : null,
+                        a.getProject() != null ? a.getProject().getId() : null,
+                        a.getProject() != null ? a.getProject().getProjectName() : null,
+                        a.getEl(),
+                        a.getSl(),
+                        a.getExtraMilar(),
+                        a.getWorkFromHome(),
+                        a.getPaternityLeave(),
+                        a.getMaternityLeave(),
+                        a.getRemainingLeaves()
+                ))
+                .collect(Collectors.toList());
     }
- 
-    
-    // Save updates without touching monthlyStatus
-    attendanceRepository.saveAll(validRecords);
-}
 
-@Transactional
-public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate monthStart, LocalDate monthEnd, String employeeName) {
-    // ✅ Fetch all attendance records for this employee + project + month
-    List<AttendanceEntity> attendanceList =
-            attendanceRepository.findByEmployee_IdAndProject_IdAndDateBetween(
-                    employeeId, projectId, monthStart, monthEnd
+    @Transactional
+    public List<AttendanceEntity> saveOrUpdateAttendance(
+            UUID employeeId,
+            UUID projectId,
+            List<AttendanceRequestDTO> attendanceList,
+            String employeename) {
+
+        log.info("Save/Update attendance → employeeId={}, projectId={}, employeeName={}",
+                employeeId, projectId, employeename);
+
+        if (employeeId == null || projectId == null) {
+            log.warn("EmployeeId or ProjectId is null");
+            return Collections.emptyList();
+        }
+
+        UserEmployeeMasterEntity employee = userRepository.findById(employeeId)
+                .orElseThrow(() -> {
+                    log.error("Employee not found: {}", employeeId);
+                    return new RuntimeException("Employee not found");
+                });
+
+        ProjectEntity project = projectRepository.findById(projectId)
+                .orElseThrow(() -> {
+                    log.error("Project not found: {}", projectId);
+                    return new RuntimeException("Project not found");
+                });
+
+        double cumulativeTotal = 0.0;
+        List<AttendanceEntity> allRecords = new ArrayList<>();
+
+        if (attendanceList != null && !attendanceList.isEmpty()) {
+
+            attendanceList.sort(Comparator.comparing(AttendanceRequestDTO::getDate));
+
+            for (AttendanceRequestDTO dto : attendanceList) {
+
+                LocalDate date = dto.getDate();
+                if (date == null) continue;
+
+                AttendanceEntity existing = attendanceRepository
+                        .findByEmployee_IdAndProject_IdAndDate(employeeId, projectId, date)
+                        .orElse(null);
+
+                if (existing == null) {
+                    existing = new AttendanceEntity();
+                    existing.setEmployee(employee);
+                    existing.setProject(project);
+                    existing.setGender(employee.getGender());
+                    existing.setDate(date);
+                    existing.setYear(date.getYear());
+                }
+
+                existing.setLeaveType(dto.getLeaveType());
+
+                if (dto.getLeaveType() == null || dto.getLeaveType().isEmpty()) {
+                    existing.setWorkedHours(
+                            dto.getWorkedHours() != null ? dto.getWorkedHours() : 0.0
+                    );
+                } else {
+                    existing.setWorkedHours(0.0);
+                }
+
+                existing.setStatus("draft");
+                existing.setMonthlyStatus("draft");
+
+                cumulativeTotal += existing.getWorkedHours();
+                existing.setTotalWorkedHours(cumulativeTotal);
+
+                attendanceRepository.save(existing);
+                allRecords.add(existing);
+            }
+        }
+
+        log.info("Attendance saved successfully → records={}", allRecords.size());
+
+        return allRecords.stream()
+                .sorted(Comparator.comparing(AttendanceEntity::getDate))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void releaseMonthlyAttendance(
+            UUID employeeId,
+            UUID projectId,
+            LocalDate monthStart,
+            LocalDate monthEnd,
+            String employeeName) {
+
+        log.info("Release monthly attendance → employeeId={}, projectId={}, from={}, to={}",
+                employeeId, projectId, monthStart, monthEnd);
+
+        List<AttendanceEntity> attendanceList =
+                attendanceRepository.findByEmployee_IdAndProject_IdAndDateBetween(
+                        employeeId, projectId, monthStart, monthEnd
+                );
+
+        log.debug("Monthly attendance records found: {}", attendanceList.size());
+
+        for (AttendanceEntity attendance : attendanceList) {
+            attendance.setMonthlyStatus("Pending_approval");
+            attendance.setCreatedBy(employeeName);
+            attendance.setCreatedAt(LocalDateTime.now());
+        }
+
+        attendanceRepository.saveAll(attendanceList);
+    }
+
+
+ // ✅ Get by employee
+    public List<AttendanceEntity> getAttendanceByEmployee(UUID employeeId) {
+
+        log.info("Fetching attendance by employeeId={}", employeeId);
+
+        List<AttendanceEntity> result =
+                attendanceRepository.findByEmployee_IdOrderByDateAsc(employeeId);
+
+        log.debug("Attendance records found for employeeId={} → {}",
+                employeeId, result.size());
+
+        return result;
+    }
+
+    // ✅ Get by project
+    public List<AttendanceEntity> getAttendanceByProject(UUID projectId) {
+
+        log.info("Fetching attendance by projectId={}", projectId);
+
+        List<AttendanceEntity> result =
+                attendanceRepository.findByProject_IdOrderByDateAsc(projectId);
+
+        log.debug("Attendance records found for projectId={} → {}",
+                projectId, result.size());
+
+        return result;
+    }
+
+    // ✅ Get by both employee + project
+    public List<AttendanceEntity> getAttendanceByEmployeeAndProject(
+            UUID employeeId, UUID projectId) {
+
+        log.info("Fetching attendance by employeeId={} and projectId={}",
+                employeeId, projectId);
+
+        List<AttendanceEntity> result =
+                attendanceRepository
+                        .findByEmployee_IdAndProject_IdOrderByDateAsc(employeeId, projectId);
+
+        log.debug("Attendance records found → {}", result.size());
+
+        return result;
+    }
+
+    @Transactional
+    public List<AttendanceResponseDTO> getApprovalSummary(
+            LocalDate startDate, LocalDate endDate, String periodType) {
+
+        log.info("Approval summary request → startDate={}, endDate={}, periodType={}",
+                startDate, endDate, periodType);
+
+        List<AttendanceEntity> allRecords =
+                attendanceRepository.findAllByOrderByDateAsc();
+
+        if (allRecords == null) {
+            log.warn("No attendance records found in database");
+            allRecords = Collections.emptyList();
+        }
+
+        List<AttendanceEntity> recordsInRange = allRecords.stream()
+                .filter(a -> a.getDate() != null &&
+                        !a.getDate().isBefore(startDate) &&
+                        !a.getDate().isAfter(endDate))
+                .filter(a -> a.getEmployee() != null &&
+                        a.getEmployee().getId() != null &&
+                        a.getProject() != null)
+                .collect(Collectors.toList());
+
+        log.debug("Records in range after filter → {}", recordsInRange.size());
+
+        Map<String, List<AttendanceEntity>> grouped;
+
+        if ("weekly".equalsIgnoreCase(periodType)) {
+            grouped = recordsInRange.stream()
+                    .collect(Collectors.groupingBy(a -> {
+                        UUID empId = a.getEmployee().getId();
+                        UUID projectId = a.getProject().getId();
+                        LocalDate weekStart =
+                                a.getDate().with(java.time.DayOfWeek.MONDAY);
+                        return empId + "_" + projectId + "_" + weekStart;
+                    }));
+        } else {
+            grouped = recordsInRange.stream()
+                    .collect(Collectors.groupingBy(a -> {
+                        UUID empId = a.getEmployee().getId();
+                        UUID projectId = a.getProject().getId();
+                        return empId + "_" + projectId + "_" + startDate + "_" + endDate;
+                    }));
+        }
+
+        log.debug("Grouped approval records → {}", grouped.size());
+
+        return grouped.entrySet().stream().map(entry -> {
+
+            List<AttendanceEntity> records = entry.getValue();
+            AttendanceEntity first = records.get(0);
+
+            double totalWorkedHours = records.stream()
+                    .mapToDouble(r -> r.getWorkedHours() != null ? r.getWorkedHours() : 0.0)
+                    .sum();
+
+            AttendanceEntity latest = records.stream()
+                    .max(Comparator.comparing(AttendanceEntity::getDate))
+                    .orElse(first);
+
+            UUID employeeId = first.getEmployee().getId();
+            String employeeName = first.getEmployee().getEmployeeName();
+            String gender = first.getEmployee().getGender();
+            Integer year = first.getYear();
+            UUID projectId = first.getProject().getId();
+            String projectName = first.getProject().getProjectName();
+
+            LocalDate periodStartDate =
+                    "weekly".equalsIgnoreCase(periodType)
+                            ? first.getDate().with(java.time.DayOfWeek.MONDAY)
+                            : startDate;
+
+            return new AttendanceResponseDTO(
+                    null,
+                    periodStartDate,
+                    null,
+                    totalWorkedHours,
+                    null,
+                    null,
+                    year,
+                    gender,
+                    employeeId,
+                    employeeName,
+                    null,
+                    projectId,
+                    projectName,
+                    latest.getEl(),
+                    latest.getSl(),
+                    latest.getExtraMilar(),
+                    latest.getWorkFromHome(),
+                    latest.getPaternityLeave(),
+                    latest.getMaternityLeave(),
+                    latest.getRemainingLeaves()
             );
-
-    System.out.println("@115: " + attendanceList);
-
-    // ✅ Update monthly status safely
-    for (AttendanceEntity attendance : attendanceList) {
-        attendance.setMonthlyStatus("Pending_approval");
-        attendance.setCreatedBy(employeeName);        // Who released
-        attendance.setCreatedAt(LocalDateTime.now());
+        })
+        .sorted(Comparator.comparing(
+                AttendanceResponseDTO::getEmployeeName,
+                Comparator.nullsLast(String::compareToIgnoreCase)))
+        .collect(Collectors.toList());
     }
 
-    // ✅ Save back
-    attendanceRepository.saveAll(attendanceList);
-}
+    @Transactional
+    public boolean canApplyLeave(
+            UUID employeeId, String leaveType, int requestedDays) {
 
+        log.info("Checking leave eligibility → employeeId={}, leaveType={}, requestedDays={}",
+                employeeId, leaveType, requestedDays);
 
+        long takenLeaves =
+                attendanceRepository.countByEmployee_IdAndLeaveType(employeeId, leaveType);
 
-	// ✅ Get by employee
-	public List<AttendanceEntity> getAttendanceByEmployee(UUID employeeId) {
-		return attendanceRepository.findByEmployee_IdOrderByDateAsc(employeeId);
-	}
+        int allowed = getMaxBalance(leaveType);
 
-	// ✅ Get by project
-	public List<AttendanceEntity> getAttendanceByProject(UUID projectId) {
-		return attendanceRepository.findByProject_IdOrderByDateAsc(projectId);
-	}
+        boolean result = (takenLeaves + requestedDays) <= allowed;
 
-	// ✅ Get by both employee + project
-	public List<AttendanceEntity> getAttendanceByEmployeeAndProject(UUID employeeId, UUID projectId) {
-		return attendanceRepository.findByEmployee_IdAndProject_IdOrderByDateAsc(employeeId, projectId);
-	}
-	@Transactional
-	public List<AttendanceResponseDTO> getApprovalSummary(LocalDate startDate, LocalDate endDate, String periodType) {
-	    List<AttendanceEntity> allRecords = attendanceRepository.findAllByOrderByDateAsc();
-	    if (allRecords == null) allRecords = Collections.emptyList();
+        log.debug("Leave check result → taken={}, allowed={}, result={}",
+                takenLeaves, allowed, result);
 
-	    List<AttendanceEntity> recordsInRange = allRecords.stream()
-	        .filter(a -> a.getDate() != null && !a.getDate().isBefore(startDate) && !a.getDate().isAfter(endDate))
-	        .filter(a -> a.getEmployee() != null && a.getEmployee().getId() != null && a.getProject() != null)
-	        .collect(Collectors.toList());
-
-	    Map<String, List<AttendanceEntity>> grouped;
-	    if ("weekly".equalsIgnoreCase(periodType)) {
-	        grouped = recordsInRange.stream()
-	            .collect(Collectors.groupingBy(a -> {
-	                UUID empId = a.getEmployee().getId();
-	                UUID projectId = a.getProject().getId();
-	                LocalDate weekStart = a.getDate().with(java.time.DayOfWeek.MONDAY);
-	                return empId + "_" + projectId + "_" + weekStart;
-	            }));
-	    } else {
-	        grouped = recordsInRange.stream()
-	            .collect(Collectors.groupingBy(a -> {
-	                UUID empId = a.getEmployee().getId();
-	                UUID projectId = a.getProject().getId();
-	                return empId + "_" + projectId + "_" + startDate + "_" + endDate;
-	            }));
-	    }
-
-	    return grouped.entrySet().stream().map(entry -> {
-	        List<AttendanceEntity> records = entry.getValue();
-	        AttendanceEntity first = records.get(0);
-
-	        double totalWorkedHours = records.stream()
-	            .mapToDouble(r -> r.getWorkedHours() != null ? r.getWorkedHours() : 0.0)
-	            .sum();
-
-	        // ✅ Use the LATEST record for leave balances (most accurate)
-	        AttendanceEntity latest = records.stream()
-	            .max(Comparator.comparing(AttendanceEntity::getDate))
-	            .orElse(first);
-
-	        UUID employeeId = first.getEmployee().getId();
-	        String employeeName = first.getEmployee().getEmployeeName();
-	        String gender = first.getEmployee().getGender();
-	        Integer year = first.getYear();
-	        UUID projectId = first.getProject().getId();
-	        String projectName = first.getProject().getProjectName();
-
-	        LocalDate periodStartDate = "weekly".equalsIgnoreCase(periodType)
-	                ? first.getDate().with(java.time.DayOfWeek.MONDAY)
-	                : startDate;
-
-	        return new AttendanceResponseDTO(
-	            null,
-	            periodStartDate,
-	            null,
-	            totalWorkedHours,
-	            null,
-	            null,
-	            year,
-	            gender,
-	            employeeId,
-	            employeeName,
-	            null,
-	            projectId,
-	            projectName,
-	            // ➕ ADD LEAVE BALANCES FROM latest record
-	            latest.getEl(),
-	            latest.getSl(),
-	            latest.getExtraMilar(),
-	            latest.getWorkFromHome(),
-	            latest.getPaternityLeave(),
-	            latest.getMaternityLeave(),
-	            latest.getRemainingLeaves()
-	        );
-	    })
-	    .sorted(Comparator.comparing(AttendanceResponseDTO::getEmployeeName,
-	            Comparator.nullsLast(String::compareToIgnoreCase)))
-	    .collect(Collectors.toList());
-	}
-	
-	@Transactional
-	public boolean canApplyLeave(UUID employeeId, String leaveType, int requestedDays) {
-
-	    long takenLeaves =
-	            attendanceRepository.countByEmployee_IdAndLeaveType(employeeId, leaveType);
-
-	    int allowed = getMaxBalance(leaveType);
-
-
-	    return (takenLeaves + requestedDays) <= allowed;
-	}
+        return result;
+    }
 
 //	@Transactional
 //	public boolean canApplyLeave(UUID employeeId, String leaveType, int requestedDays) {
@@ -600,174 +590,204 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 //	    attendanceRepository.saveAll(records);
 //	}
 
-	@Transactional
-	public void updateApprovedRecordsWithDefaultLeaves(UUID employeeId, LocalDate from, LocalDate to, String adminName) {
+    @Transactional
+    public void updateApprovedRecordsWithDefaultLeaves(
+            UUID employeeId, LocalDate from, LocalDate to, String adminName) {
 
-	    List<AttendanceEntity> records =
-	            attendanceRepository.findByEmployee_IdAndDateBetween(employeeId, from, to);
+        log.info("Updating approved records with default leaves → employeeId={}, from={}, to={}, admin={}",
+                employeeId, from, to, adminName);
 
-	    if (records.isEmpty()) return;
+        List<AttendanceEntity> records =
+                attendanceRepository.findByEmployee_IdAndDateBetween(employeeId, from, to);
 
-	    // ALWAYS SORT BY DATE ASC
-	    records.sort(Comparator.comparing(AttendanceEntity::getDate));
+        if (records.isEmpty()) {
+            log.warn("No attendance records found for employeeId={} between {} and {}",
+                    employeeId, from, to);
+            return;
+        }
 
-	    UserEmployeeMasterEntity employee = records.get(0).getEmployee();
-	    LocalDate joiningDate = employee.getDateOfJoining();
+        // ALWAYS SORT BY DATE ASC
+        records.sort(Comparator.comparing(AttendanceEntity::getDate));
 
-	    if (joiningDate == null)
-	        throw new RuntimeException("Employee joining date missing!");
+        UserEmployeeMasterEntity employee = records.get(0).getEmployee();
+        LocalDate joiningDate = employee.getDateOfJoining();
 
-	    // BALANCES
-	    int slBalance = 0;
-	    int elBalance = 0;
+        if (joiningDate == null) {
+            log.error("Joining date missing for employeeId={}", employeeId);
+            throw new RuntimeException("Employee joining date missing!");
+        }
 
-	    // TRACK EARNED SL/EL THIS YEAR
-	    int slEarnedThisYear = 0;
-	    int elEarnedThisYear = 0;
+        // BALANCES
+        int slBalance = 0;
+        int elBalance = 0;
 
-	    int currentLOP = 0;
+        // TRACK EARNED SL/EL THIS YEAR
+        int slEarnedThisYear = 0;
+        int elEarnedThisYear = 0;
 
-	    // YEARLY LIMITS
-	    int slYearLimit = 0;
-	    int elYearLimit = 0;
+        int currentLOP = 0;
 
-	    // TRACK MONTH/YEAR
-	    YearMonth lastMonth = null;
-	    int lastYear = -1;
+        // YEARLY LIMITS
+        int slYearLimit = 0;
+        int elYearLimit = 0;
 
-	    for (AttendanceEntity rec : records) {
+        // TRACK MONTH/YEAR
+        YearMonth lastMonth = null;
+        int lastYear = -1;
 
-	        LocalDate recDate = rec.getDate();
-	        int recYear = recDate.getYear();
-	        YearMonth currMonth = YearMonth.from(recDate);
+        for (AttendanceEntity rec : records) {
 
-	        boolean inProbation = isInProbation(employeeId, recDate);
+            LocalDate recDate = rec.getDate();
+            int recYear = recDate.getYear();
+            YearMonth currMonth = YearMonth.from(recDate);
 
-	        // ================================
-	        // YEAR CHANGE (NOT in PROBATION)
-	        // ================================
-	        if (!inProbation && lastYear != -1 && recYear > lastYear) {
+            boolean inProbation = isInProbation(employeeId, recDate);
 
-	            // Carry forward EL → max 10
-	            int carry = Math.min(elBalance, 10);
+            log.debug("Processing date={} | year={} | month={} | probation={}",
+                    recDate, recYear, currMonth, inProbation);
 
-	            // Reset SL yearly
-	            slBalance = 0;
+            // ================================
+            // YEAR CHANGE (NOT in PROBATION)
+            // ================================
+            if (!inProbation && lastYear != -1 && recYear > lastYear) {
 
-	            // New year EL = carry
-	            elBalance = carry;
+                log.info("Year change detected → previousYear={}, newYear={}",
+                        lastYear, recYear);
 
-	            slEarnedThisYear = 0;
-	            elEarnedThisYear = 0;
+                int carry = Math.min(elBalance, 10);
 
-	            // New yearly limits
-	            Map<String, Integer> limits = calculateYearlyLimits(joiningDate, recYear);
-	            slYearLimit = limits.get("SL_LIMIT");
-	            elYearLimit = limits.get("EL_LIMIT");
+                slBalance = 0;
+                elBalance = carry;
 
-	            lastMonth = null; // force monthly reset
-	        }
+                slEarnedThisYear = 0;
+                elEarnedThisYear = 0;
 
-	        // First-time yearly limit setup
-	        if (lastYear == -1) {
-	            Map<String, Integer> limits = calculateYearlyLimits(joiningDate, recYear);
-	            slYearLimit = limits.get("SL_LIMIT");
-	            elYearLimit = limits.get("EL_LIMIT");
-	        }
+                Map<String, Integer> limits =
+                        calculateYearlyLimits(joiningDate, recYear);
 
-	        // ================================
-	        // MONTH RESET SECTION
-	        // ================================
-	        if (lastMonth == null || !currMonth.equals(lastMonth)) {
+                slYearLimit = limits.get("SL_LIMIT");
+                elYearLimit = limits.get("EL_LIMIT");
 
-	            currentLOP = 0; // LOP resets every month
+                log.debug("New yearly limits → SL={}, EL={}",
+                        slYearLimit, elYearLimit);
 
-	            if (inProbation) {
-	                // Probation rules:
-	                slBalance = 1;
-	                elBalance = 0;
-	            } else {
-	                // NORMAL RULES → MONTHLY ACCRUAL
+                lastMonth = null;
+            }
 
-	                // SL accrues 1 per month, up to SL yearly limit
-	                if (slEarnedThisYear < slYearLimit) {
-	                    int addSL = Math.min(1, slYearLimit - slEarnedThisYear);
-	                    slBalance += addSL;
-	                    slEarnedThisYear += addSL;
-	                }
+            // First-time yearly limit setup
+            if (lastYear == -1) {
 
-	                // EL accrues 2 per month, up to EL yearly limit
-	                if (elEarnedThisYear < elYearLimit) {
-	                    int addEL = Math.min(2, elYearLimit - elEarnedThisYear);
-	                    elBalance += addEL;
-	                    elEarnedThisYear += addEL;
-	                }
-	            }
-	        }
+                Map<String, Integer> limits =
+                        calculateYearlyLimits(joiningDate, recYear);
 
-	        // ================================
-	        // LEAVE TYPE DEDUCTION LOGIC
-	        // ================================
-	        String lt = rec.getLeaveType() == null ? "" : rec.getLeaveType().trim().toLowerCase();
+                slYearLimit = limits.get("SL_LIMIT");
+                elYearLimit = limits.get("EL_LIMIT");
 
-	        switch (lt) {
+                log.debug("Initial yearly limits → SL={}, EL={}",
+                        slYearLimit, elYearLimit);
+            }
 
-	            case "sl":
-	                if (slBalance > 0) {
-	                    slBalance--; // first SL is free
-	                } else {
-	                    currentLOP++; // more SL → LOP
-	                }
-	                break;
+            // ================================
+            // MONTH RESET SECTION
+            // ================================
+            if (lastMonth == null || !currMonth.equals(lastMonth)) {
 
-	            case "el":
-	                if (!inProbation && elBalance > 0) {
-	                    elBalance--;
-	                } else {
-	                    currentLOP++; // no EL in probation OR EL insufficient
-	                }
-	                break;
+                log.debug("Month reset detected → {}", currMonth);
 
-	            default:
-	                // Holidays / Optional / Extra Milar → NO LOP
-	                break;
-	        }
+                currentLOP = 0;
 
-	        // ================================
-	        // SAVE BACK TO ENTITY
-	        // ================================
-	        rec.setSl(slBalance);
-	        rec.setEl(elBalance);
-	        rec.setLop(currentLOP);
+                if (inProbation) {
+                    slBalance = 1;
+                    elBalance = 0;
+                } else {
 
-	        if (inProbation) {
-	            rec.setRemainingLeaves(slBalance);
-	        } else {
-	            rec.setRemainingLeaves(slBalance + elBalance);
-	        }
+                    if (slEarnedThisYear < slYearLimit) {
+                        int addSL = Math.min(1, slYearLimit - slEarnedThisYear);
+                        slBalance += addSL;
+                        slEarnedThisYear += addSL;
+                    }
 
-	        rec.setStatus("approved");
-	        rec.setUpdatedBy(adminName);
-	        rec.setUpdatedAt(LocalDateTime.now());
+                    if (elEarnedThisYear < elYearLimit) {
+                        int addEL = Math.min(2, elYearLimit - elEarnedThisYear);
+                        elBalance += addEL;
+                        elEarnedThisYear += addEL;
+                    }
+                }
+            }
 
-	        // UPDATE TRACKERS
-	        lastMonth = currMonth;
-	        lastYear = recYear;
-	    }
+            // ================================
+            // LEAVE TYPE DEDUCTION LOGIC
+            // ================================
+            String lt = rec.getLeaveType() == null
+                    ? ""
+                    : rec.getLeaveType().trim().toLowerCase();
 
-	    attendanceRepository.saveAll(records);
-	}
+            log.debug("Leave deduction → date={}, leaveType={}, SL={}, EL={}, LOP={}, probation={}",
+                    rec.getDate(), lt, slBalance, elBalance, currentLOP, inProbation);
 
+            switch (lt) {
 
+                case "sl":
+                    if (slBalance > 0) {
+                        slBalance--;
+                    } else {
+                        currentLOP++;
+                    }
+                    break;
 
+                case "el":
+                    if (!inProbation && elBalance > 0) {
+                        elBalance--;
+                    } else {
+                        currentLOP++;
+                    }
+                    break;
+
+                default:
+                    break;
+            }
+
+            // ================================
+            // SAVE BACK TO ENTITY
+            // ================================
+            rec.setSl(slBalance);
+            rec.setEl(elBalance);
+            rec.setLop(currentLOP);
+
+            if (inProbation) {
+                rec.setRemainingLeaves(slBalance);
+            } else {
+                rec.setRemainingLeaves(slBalance + elBalance);
+            }
+
+            rec.setStatus("approved");
+            rec.setUpdatedBy(adminName);
+            rec.setUpdatedAt(LocalDateTime.now());
+
+            log.debug("Record updated → date={}, SL={}, EL={}, LOP={}, remaining={}",
+                    rec.getDate(),
+                    rec.getSl(),
+                    rec.getEl(),
+                    rec.getLop(),
+                    rec.getRemainingLeaves());
+
+            lastMonth = currMonth;
+            lastYear = recYear;
+        }
+
+ attendanceRepository.saveAll(records);
+
+ log.info("Approved records saved successfully → employeeId={}, totalRecords={}",
+         employeeId, records.size());
+    }
 //	private int safeGet(Integer value, int defaultValue) {
 //	    return value != null ? value : defaultValue;
 //	}
 	
-	private Map<String, Integer> calculateYearlyLimits(LocalDate joiningDate, int year) {
-		int FULL_SL = getMaxBalance("SL");
-		int FULL_EL = getMaxBalance("EL");
+ private Map<String, Integer> calculateYearlyLimits(LocalDate joiningDate, int year) {
 
+	    int FULL_SL = getMaxBalance("SL");
+	    int FULL_EL = getMaxBalance("EL");
 
 	    int slLimit;
 	    int elLimit;
@@ -784,6 +804,9 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 	        elLimit = FULL_EL;
 	    }
 
+	    log.debug("Yearly limits calculated → year={}, SL_LIMIT={}, EL_LIMIT={}",
+	            year, slLimit, elLimit);
+
 	    Map<String, Integer> map = new HashMap<>();
 	    map.put("SL_LIMIT", slLimit);
 	    map.put("EL_LIMIT", elLimit);
@@ -791,89 +814,121 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 	}
 
 
-	private int getMaxBalance(String leaveCode) {
-	    return leaveTypeRepository
+ private int getMaxBalance(String leaveCode) {
+
+	    int balance = leaveTypeRepository
 	            .findByCodeIgnoreCaseAndIsActiveTrue(leaveCode)
 	            .map(LeaveTypeEntity::getMaxBalance)
 	            .orElse(0);
+
+	    log.debug("Max balance fetched → leaveCode={}, maxBalance={}", leaveCode, balance);
+
+	    return balance;
 	}
+ @Transactional
+ public Map<String, Integer> getEmployeeLeaves(UUID employeeId) {
 
-	@Transactional
-	public Map<String, Integer> getEmployeeLeaves(UUID employeeId) {
+     log.info("Fetching employee leave balances → employeeId={}", employeeId);
 
-	    if (employeeId == null)
-	        return Collections.emptyMap();
+     if (employeeId == null) {
+         log.warn("EmployeeId is null, returning empty leave map");
+         return Collections.emptyMap();
+     }
 
-	    // Fetch all records
-	    List<AttendanceEntity> records =
-	            attendanceRepository.findByEmployee_IdOrderByDateAsc(employeeId);
+     // Fetch all records
+     List<AttendanceEntity> records =
+             attendanceRepository.findByEmployee_IdOrderByDateAsc(employeeId);
 
-	    if (records.isEmpty())
-	        return Collections.emptyMap();
+     if (records.isEmpty()) {
+         log.warn("No attendance records found for employeeId={}", employeeId);
+         return Collections.emptyMap();
+     }
 
-	    // Latest entry
-	    AttendanceEntity latest = records.get(records.size() - 1);
+     // Latest entry
+     AttendanceEntity latest = records.get(records.size() - 1);
 
-	    // Default company totals
-	    final int TOTAL_EL = 25;
-	    final int TOTAL_SL = 10;
-	    final int TOTAL_HOLIDAYS = 10;
-	    final int TOTAL_OPTIONAL = 2;
-	    final int TOTAL_EXTRA_MILAR = 2;
-	    final int TOTAL_MATERNITY = 180;
-	    final int TOTAL_PATERNITY = 7;
+     // Default company totals
+     final int TOTAL_EL = 25;
+     final int TOTAL_SL = 10;
+     final int TOTAL_HOLIDAYS = 10;
+     final int TOTAL_OPTIONAL = 2;
+     final int TOTAL_EXTRA_MILAR = 2;
+     final int TOTAL_MATERNITY = 180;
+     final int TOTAL_PATERNITY = 7;
 
-	    // "Used" values taken directly from existing AttendanceEntity columns
-	    int usedEL = safe(latest.getEl());
-	    int usedSL = safe(latest.getSl());
-	    int usedHolidays = safe(latest.getHolidays());
-	    int usedOptional = safe(latest.getOptionalHolidays());
-	    int usedExtra = safe(latest.getExtraMilar());
-	    int usedMat = safe(latest.getMaternityLeave());
-	    int usedPat = safe(latest.getPaternityLeave());
+     // "Used" values taken directly from existing AttendanceEntity columns
+     int usedEL = safe(latest.getEl());
+     int usedSL = safe(latest.getSl());
+     int usedHolidays = safe(latest.getHolidays());
+     int usedOptional = safe(latest.getOptionalHolidays());
+     int usedExtra = safe(latest.getExtraMilar());
+     int usedMat = safe(latest.getMaternityLeave());
+     int usedPat = safe(latest.getPaternityLeave());
 
-	    Map<String, Integer> map = new HashMap<>();
+     log.debug(
+         "Used leaves → EL={}, SL={}, Holidays={}, Optional={}, Extra={}, Maternity={}, Paternity={}",
+         usedEL, usedSL, usedHolidays, usedOptional, usedExtra, usedMat, usedPat
+     );
 
-	    // Holidays
-	    map.put("holidays", TOTAL_HOLIDAYS);
-	    map.put("holidays_used", usedHolidays);
-	    map.put("holidays_remaining", TOTAL_HOLIDAYS - usedHolidays);
+     Map<String, Integer> map = new HashMap<>();
 
-	    // Optional
-	    map.put("optional_holidays", TOTAL_OPTIONAL);
-	    map.put("optional_holidays_used", usedOptional);
-	    map.put("optional_holidays_remaining", TOTAL_OPTIONAL - usedOptional);
+     // Holidays
+     map.put("holidays", TOTAL_HOLIDAYS);
+     map.put("holidays_used", usedHolidays);
+     map.put("holidays_remaining", TOTAL_HOLIDAYS - usedHolidays);
 
-	    // EL
-	    map.put("el", TOTAL_EL);
-	    map.put("el_used", usedEL);
-	    map.put("el_remaining", TOTAL_EL - usedEL);
+     // Optional
+     map.put("optional_holidays", TOTAL_OPTIONAL);
+     map.put("optional_holidays_used", usedOptional);
+     map.put("optional_holidays_remaining", TOTAL_OPTIONAL - usedOptional);
 
-	    // SL
-	    map.put("sl", TOTAL_SL);
-	    map.put("sl_used", usedSL);
-	    map.put("sl_remaining", TOTAL_SL - usedSL);
+     // EL
+     map.put("el", TOTAL_EL);
+     map.put("el_used", usedEL);
+     map.put("el_remaining", TOTAL_EL - usedEL);
 
-	    // Extra Milar
-	    map.put("extra_milar", TOTAL_EXTRA_MILAR);
-	    map.put("extra_milar_used", usedExtra);
-	    map.put("extra_milar_remaining", TOTAL_EXTRA_MILAR - usedExtra);
+     // SL
+     map.put("sl", TOTAL_SL);
+     map.put("sl_used", usedSL);
+     map.put("sl_remaining", TOTAL_SL - usedSL);
 
-	    // Maternity
-	    map.put("maternity_leave", TOTAL_MATERNITY);
-	    map.put("maternity_leave_used", usedMat);
-	    map.put("maternity_leave_remaining", TOTAL_MATERNITY - usedMat);
+     // Extra Milar
+     map.put("extra_milar", TOTAL_EXTRA_MILAR);
+     map.put("extra_milar_used", usedExtra);
+     map.put("extra_milar_remaining", TOTAL_EXTRA_MILAR - usedExtra);
 
-	    // Paternity
-	    map.put("paternity_leave", TOTAL_PATERNITY);
-	    map.put("paternity_leave_used", usedPat);
-	    map.put("paternity_leave_remaining", TOTAL_PATERNITY - usedPat);
+     // Maternity
+     map.put("maternity_leave", TOTAL_MATERNITY);
+     map.put("maternity_leave_used", usedMat);
+     map.put("maternity_leave_remaining", TOTAL_MATERNITY - usedMat);
 
-	    return map;
-	}
+     // Paternity
+     map.put("paternity_leave", TOTAL_PATERNITY);
+     map.put("paternity_leave_used", usedPat);
+     map.put("paternity_leave_remaining", TOTAL_PATERNITY - usedPat);
+
+     log.info("Leave balance calculation completed → employeeId={}", employeeId);
+
+     return map;
+ }
 
 	private int safe(Integer v) {
 	    return v != null ? v : 0;
+	}
+
+	public void releaseWeeklyAttendance(UUID employeeId, LocalDate weekStart, LocalDate weekEnd, String employeeName) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public List<AttendanceEntity> getAttendanceForMonthRange(UUID employeeId, LocalDate start, LocalDate end) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public List<AttendanceEntity> getAttendanceForWeek(UUID employeeId, UUID projectId, LocalDate weekStart) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+
+    <Appenders>
+
+        <!-- CONSOLE APPENDER -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout
+                pattern="LOG4J2 %d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %c - %msg%n"/>
+        </Console>
+
+        <!-- FILE APPENDER -->
+        <File name="FileLogger"
+              fileName="logs/project-service.log"
+              append="true">
+            <PatternLayout
+                pattern="LOG4J2 %d{yyyy-MM-dd HH:mm:ss} %-5level %c - %msg%n"/>
+        </File>
+
+    </Appenders>
+
+    <Loggers>
+
+        <!-- APPLICATION LOGS -->
+        <Logger name="com.example.project_service"
+                level="debug"
+                additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="FileLogger"/>
+        </Logger>
+
+        <!-- ROOT LOGGER -->
+        <Root level="info">
+            <AppenderRef ref="Console"/>
+        </Root>
+
+    </Loggers>
+
+</Configuration>

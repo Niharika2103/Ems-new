@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN">
+
+    <Appenders>
+
+        <!-- CONSOLE -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout
+                pattern="LOG4J2 %d{yyyy-MM-dd HH:mm:ss} [%t] %-5level %c - %msg%n"/>
+        </Console>
+
+        <!-- FILE -->
+        <File name="FileLogger"
+              fileName="logs/salary-structure.log"
+              append="true">
+            <PatternLayout
+                pattern="LOG4J2 %d{yyyy-MM-dd HH:mm:ss} %-5level %c - %msg%n"/>
+        </File>
+
+    </Appenders>
+
+    <Loggers>
+
+        <!-- APPLICATION LOGS -->
+        <Logger name="com.example.salary_structure"
+                level="DEBUG"
+                additivity="false">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="FileLogger"/>
+        </Logger>
+
+        <!-- ROOT -->
+        <Root level="INFO">
+            <AppenderRef ref="Console"/>
+        </Root>
+
+    </Loggers>
+
+</Configuration>
