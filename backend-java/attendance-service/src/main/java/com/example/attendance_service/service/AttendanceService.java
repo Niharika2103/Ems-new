@@ -375,6 +375,103 @@ public void releaseMonthlyAttendance(UUID employeeId, UUID projectId, LocalDate 
 	}
 	
 	@Transactional
+	public List<AttendanceResponseDTO> getFreelancerApprovalSummary(
+	        LocalDate startDate, LocalDate endDate, String periodType) {
+
+	    List<AttendanceEntity> allRecords = attendanceRepository.findAllByOrderByDateAsc();
+
+	    if (allRecords == null) allRecords = Collections.emptyList();
+
+	    List<AttendanceEntity> recordsInRange = allRecords.stream()
+	        .filter(a -> a.getDate() != null 
+	                && !a.getDate().isBefore(startDate) 
+	                && !a.getDate().isAfter(endDate))
+	        .filter(a -> a.getEmployee() != null 
+	                && a.getEmployee().getId() != null 
+	                && a.getProject() != null)
+	        // 🔴 MAIN FILTER FOR FREELANCERS
+	        .filter(a -> a.getEmployee().getEmploymentType() != null &&
+	                     a.getEmployee().getEmploymentType().equalsIgnoreCase("freelancer"))
+	        .collect(Collectors.toList());
+
+	    Map<String, List<AttendanceEntity>> grouped;
+
+	    if ("weekly".equalsIgnoreCase(periodType)) {
+
+	        grouped = recordsInRange.stream()
+	            .collect(Collectors.groupingBy(a -> {
+	                UUID empId = a.getEmployee().getId();
+	                UUID projectId = a.getProject().getId();
+	                LocalDate weekStart = a.getDate().with(java.time.DayOfWeek.MONDAY);
+	                return empId + "_" + projectId + "_" + weekStart;
+	            }));
+
+	    } else {
+
+	        grouped = recordsInRange.stream()
+	            .collect(Collectors.groupingBy(a -> {
+	                UUID empId = a.getEmployee().getId();
+	                UUID projectId = a.getProject().getId();
+	                return empId + "_" + projectId + "_" + startDate + "_" + endDate;
+	            }));
+	    }
+
+	    return grouped.entrySet().stream().map(entry -> {
+
+	        List<AttendanceEntity> records = entry.getValue();
+	        AttendanceEntity first = records.get(0);
+
+	        double totalWorkedHours = records.stream()
+	            .mapToDouble(r -> r.getWorkedHours() != null ? r.getWorkedHours() : 0.0)
+	            .sum();
+
+	        AttendanceEntity latest = records.stream()
+	            .max(Comparator.comparing(AttendanceEntity::getDate))
+	            .orElse(first);
+
+	        UUID employeeId = first.getEmployee().getId();
+	        String employeeName = first.getEmployee().getEmployeeName();
+	        String gender = first.getEmployee().getGender();
+	        Integer year = first.getYear();
+	        UUID projectId = first.getProject().getId();
+	        String projectName = first.getProject().getProjectName();
+
+	        LocalDate periodStartDate = "weekly".equalsIgnoreCase(periodType)
+	                ? first.getDate().with(java.time.DayOfWeek.MONDAY)
+	                : startDate;
+
+	        return new AttendanceResponseDTO(
+	            null,
+	            periodStartDate,
+	            null,
+	            totalWorkedHours,
+	            null,
+	            null,
+	            year,
+	            gender,
+	            employeeId,
+	            employeeName,
+	            null,
+	            projectId,
+	            projectName,
+
+	            latest.getEl(),
+	            latest.getSl(),
+	            latest.getExtraMilar(),
+	            latest.getWorkFromHome(),
+	            latest.getPaternityLeave(),
+	            latest.getMaternityLeave(),
+	            latest.getRemainingLeaves()
+	        );
+
+	    })
+	    .sorted(Comparator.comparing(AttendanceResponseDTO::getEmployeeName,
+	            Comparator.nullsLast(String::compareToIgnoreCase)))
+	    .collect(Collectors.toList());
+	}
+
+	
+	@Transactional
 	public boolean canApplyLeave(UUID employeeId, String leaveType, int requestedDays) {
 
 	    long takenLeaves =

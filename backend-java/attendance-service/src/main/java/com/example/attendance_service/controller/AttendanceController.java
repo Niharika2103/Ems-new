@@ -149,6 +149,19 @@ System.out.println("@45::"+employeename);
          return ResponseEntity.ok(result);
      }
      
+     @GetMapping("/attendance/freelancer/approval-summary")
+     public ResponseEntity<List<AttendanceResponseDTO>> getFreelancerApprovalSummary(
+             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+             @RequestParam(defaultValue = "monthly") String periodType) {
+
+         List<AttendanceResponseDTO> result =
+                 attendanceService.getFreelancerApprovalSummary(startDate, endDate, periodType);
+
+         return ResponseEntity.ok(result);
+     }
+
+     
      @GetMapping("/attendance/check-leave-eligibility")
      public ResponseEntity<Map<String, Object>> checkLeaveEligibility(
     		 
