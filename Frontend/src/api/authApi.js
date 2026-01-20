@@ -486,6 +486,21 @@ export const AttendanceFetchAllbasedonMonthApi = (periodType, from, to) => {
   );
 };
 
+// ================= Freelancer Attendance Approval Summary =================
+export const AttendanceFetchFreelancerApprovalSummaryApi = (periodType, startDate, endDate) => {
+  return AttendanceClient.get(
+    `${AUTH_API.ATTENDANCE}/attendance/freelancer/approval-summary`,
+    {
+      params: {
+        periodType,
+        startDate,
+        endDate
+      }
+    }
+  );
+};
+
+
   // Apply parental leave (employee)
 export const applyParentalLeaveApi = (data) =>
   AttendanceClient.post(`${AUTH_API.EMPLOYEE}/attendance/apply-parental`, data);

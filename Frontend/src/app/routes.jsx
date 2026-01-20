@@ -47,6 +47,8 @@ import FreelancerHolidayList from "../pages/Freelancer/FreelancerHolidayList";
 import FreelancerProjectTable from "../pages/Freelancer/FreelancerProjectTable";
 import FreelancerDocuments from "../pages/Freelancer/FreelancerDocuments";
 import FreelancerAssignProjectpage from "../pages/Freelancer/FreelancerAssignProjectpage";
+import VendorDashboard from "../pages/dashbaord/VendorDashboard";
+import VendorMoU from "../pages/dashbaord/VendorMoU";
 import TimesheetApprovalList from '../pages/Freelancer/Attendance/TimesheetApprovalList';
 import ReferCandidatePage from "../pages/Referral/ReferCandidatePage";
 import AdminReferralDashboard from '../pages/Referral/AdminReferralDashboard';
@@ -216,6 +218,17 @@ function AppRoutes() {
         />
 
         <Route
+          path="/dashboard/vendor"
+          element={
+           // <ProtectedRoute allowedRoles={["vendor"]}>
+           <ProtectedRoute allowedRoles={["vendor", "Vendor"]}>
+              <VendorDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+
+        <Route
           path="/accounts/salary-structure"
           element={
             <ProtectedRoute allowedRoles={["admin"]}>
@@ -299,6 +312,16 @@ function AppRoutes() {
 
         {/* Dashboard & profile (accessible to all logged-in users) */}
         <Route path="/dashboard" element={<Dashboard />} />
+       <Route
+        path="/dashboard/vendor/mou"
+        element={
+          <ProtectedRoute allowedRoles={["vendor", "Vendor"]}>
+            <VendorMoU />
+          </ProtectedRoute>
+        }
+      />
+
+
         <Route path="/profile"
           element={
             <ProtectedRoute allowedRoles={["admin","superadmin"]}>

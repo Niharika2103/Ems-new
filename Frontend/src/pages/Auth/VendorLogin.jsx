@@ -119,11 +119,21 @@ export default function VendorLogin() {
 
 
       // ✅ NORMAL LOGIN
+      // if (response.data.success) {
+      //   toast.success("Vendor Login Successful!");
+      //   localStorage.setItem("vendor", JSON.stringify(response.data.vendor));
+      //   setTimeout(() => navigate("/vendor"), 1200);
+      //  setTimeout(() => navigate("/dashboard/vendor"), 1200);
+
+      // }
       if (response.data.success) {
         toast.success("Vendor Login Successful!");
         localStorage.setItem("vendor", JSON.stringify(response.data.vendor));
-        setTimeout(() => navigate("/vendor"), 1200);
+        localStorage.setItem("role", "vendor");   // 👈 FORCE VENDOR ROLE
+        setTimeout(() => navigate("/dashboard/vendor"), 1200);
       }
+
+
 
     } catch (err) {
       console.error(err);

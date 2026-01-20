@@ -1,7 +1,8 @@
-// src/pages/Freelancer/Attendance/timesheetapprovallist.jsx
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
 import {
+  Box,
+  Button,
+  IconButton,
   Table,
   TableBody,
   TableCell,
@@ -9,278 +10,321 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Box,
+  FormControl,
+  Select,
+  MenuItem,
   Typography,
-  Card,
-  CardContent,
-  Button,
-  Chip
-} from '@mui/material';
-import { Check, Close, Visibility } from '@mui/icons-material';
+  Chip,
+  Tooltip,
+  TablePagination,
+} from "@mui/material";
+
+import { ChevronLeft, ChevronRight } from "@mui/icons-material";
+import dayjs from "dayjs";
+import { useNavigate } from "react-router-dom";
+
+import { AttendanceFetchFreelancerApprovalSummaryApi } from "../../../api/authApi";
 
 const TimesheetApprovalList = () => {
-  const [timesheets, setTimesheets] = useState(mockTimesheets);
   const navigate = useNavigate();
 
-  const handleApprove = (timesheetId) => {
-    setTimesheets(prev => prev.map(ts => 
-      ts.id === timesheetId ? { ...ts, status: 'approved' } : ts
-    ));
-    console.log(`Approved timesheet: ${timesheetId}`);
+  const [timesheets, setTimesheets] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  // pagination
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+
+  const [viewType, setViewType] = useState("weekly");
+
+  // ================= DATE RANGE LOGIC (SAME AS YOUR PAGE) =================
+
+  const getCurrentWeek = () => {
+    const today = dayjs();
+    const dayOfWeek = today.day();
+
+    const start = today.subtract(dayOfWeek === 0 ? 6 : dayOfWeek - 1, "day");
+    const end = start.add(6, "day");
+
+    return { start, end };
   };
 
-  const handleReject = (timesheetId) => {
-    setTimesheets(prev => prev.map(ts => 
-      ts.id === timesheetId ? { ...ts, status: 'rejected' } : ts
-    ));
-    console.log(`Rejected timesheet: ${timesheetId}`);
+  const getDefaultDateRange = (type) => {
+    if (type === "weekly") {
+      return getCurrentWeek();
+    } else {
+      const today = dayjs();
+      return {
+        start: today.startOf("month"),
+        end: today.endOf("month"),
+      };
+    }
   };
 
-  const getStatusChip = (status) => {
-    const chipConfig = {
-      pending: { color: 'warning', label: 'Pending' },
-      approved: { color: 'success', label: 'Approved' },
-      rejected: { color: 'error', label: 'Rejected' }
-    };
-    
-    const config = chipConfig[status];
-    return <Chip label={config.label} color={config.color} size="small" />;
+  const defaultRange = getDefaultDateRange(viewType);
+
+  const [dateRange, setDateRange] = useState([
+    defaultRange.start,
+    defaultRange.end,
+  ]);
+
+  const MAX_PAST_WEEKS = 4;
+  const MAX_PAST_MONTHS = 3;
+
+  // ================= FETCH DATA =================
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+
+      const startDate = dateRange[0].format("YYYY-MM-DD");
+      const endDate = dateRange[1].format("YYYY-MM-DD");
+
+      const response = await AttendanceFetchFreelancerApprovalSummaryApi(
+        viewType,
+        startDate,
+        endDate
+      );
+
+      const formatted = response.data.map((item, index) => ({
+        id: index + 1,
+        employeeId: item.employeeId,
+        projectId: item.projectId,
+        employeeName: item.employeeName,
+        projectName: item.projectName,
+        totalHours: item.totalWorkedHours,
+        status: "Pending",
+      }));
+
+      setTimesheets(formatted);
+    } catch (err) {
+      console.error("Error fetching freelancer timesheets", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleViewTimesheet = (timesheet) => {
-    navigate("/attendance/timesheet", { 
-      state: { 
-        employeeId: timesheet.employee.id,
-        employeeName: timesheet.employee.name,
-        viewType: "weekly",
-        employeeType: "freelancer", // This is the key change
-        currentStartDate: new Date().toISOString(),
-        projectName: timesheet.project.name,
-        shifts: timesheet.shifts
-      }
+  useEffect(() => {
+    fetchData();
+  }, [dateRange, viewType]);
+
+  // ================= NAVIGATION LOGIC =================
+
+  const handlePrevPeriod = () => {
+    if (viewType === "weekly") {
+      setDateRange([
+        dateRange[0].subtract(1, "week"),
+        dateRange[1].subtract(1, "week"),
+      ]);
+    } else {
+      setDateRange([
+        dateRange[0].subtract(1, "month").startOf("month"),
+        dateRange[0].subtract(1, "month").endOf("month"),
+      ]);
+    }
+  };
+
+  const handleNextPeriod = () => {
+    if (viewType === "weekly") {
+      setDateRange([
+        dateRange[0].add(1, "week"),
+        dateRange[1].add(1, "week"),
+      ]);
+    } else {
+      setDateRange([
+        dateRange[0].add(1, "month").startOf("month"),
+        dateRange[0].add(1, "month").endOf("month"),
+      ]);
+    }
+  };
+
+  const handleViewTypeChange = (type) => {
+    setViewType(type);
+
+    const newRange = getDefaultDateRange(type);
+    setDateRange([newRange.start, newRange.end]);
+
+    setPage(0);
+  };
+
+  const getStatusColor = () => "warning";
+
+  const now = dayjs();
+  const currentWeek = getCurrentWeek();
+
+  const nextDisabled = () => {
+    if (viewType === "weekly") {
+      return dateRange[0]
+        .add(1, "week")
+        .isAfter(currentWeek.start, "day");
+    } else {
+      return dateRange[0]
+        .add(1, "month")
+        .startOf("month")
+        .isAfter(now.startOf("month"), "day");
+    }
+  };
+
+  const prevDisabled = () => {
+    if (viewType === "weekly") {
+      const allowed = currentWeek.start.subtract(
+        MAX_PAST_WEEKS - 1,
+        "week"
+      );
+      return dateRange[0].isBefore(allowed, "day");
+    } else {
+      const allowed = now
+        .startOf("month")
+        .subtract(MAX_PAST_MONTHS - 1, "month");
+      return dateRange[0].isBefore(allowed, "day");
+    }
+  };
+
+  const handleViewTimesheet = (t) => {
+    navigate("/attendance/timesheet", {
+      state: {
+        employeeId: t.employeeId,
+        projectId: t.projectId,
+        from: dateRange[0].format("YYYY-MM-DD"),
+        to: dateRange[1].format("YYYY-MM-DD"),
+        viewType: viewType,
+      },
     });
   };
 
+  // ================= UI =================
+
   return (
-    <Box sx={{ p: 3 }}>
-      <Card>
-        <CardContent>
-          {/* Header */}
-          <Box sx={{ mb: 3 }}>
-            <Typography variant="h4" component="h1" fontWeight="bold">
-              Timesheet Approval
-            </Typography>
-            <Typography variant="subtitle1" color="text.secondary">
-              Freelancer Timesheets
-            </Typography>
-          </Box>
+    <Box sx={{ maxWidth: 1200, mx: "auto", mt: 5, p: 3 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 3,
+        }}
+      >
+        <Typography variant="h6">
+          Freelancer Timesheet Approval
+        </Typography>
 
-          {/* Table */}
-          <TableContainer component={Paper} elevation={2}>
-            <Table sx={{ minWidth: 650 }}>
-              <TableHead sx={{ backgroundColor: 'primary.main' }}>
-                <TableRow>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold', width: '25%' }}>Employee</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold', width: '25%' }}>Project</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold', width: '15%' }}>Shifts</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold', width: '15%' }}>Status</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold', width: '20%' }} align="center">Actions</TableCell>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <FormControl size="small" sx={{ minWidth: 140 }}>
+            <Select
+              value={viewType}
+              onChange={(e) =>
+                handleViewTypeChange(e.target.value)
+              }
+            >
+              <MenuItem value="weekly">Weekly</MenuItem>
+              <MenuItem value="monthly">Monthly</MenuItem>
+            </Select>
+          </FormControl>
+
+          <Tooltip title="Previous">
+            <span>
+              <IconButton
+                onClick={handlePrevPeriod}
+                disabled={prevDisabled()}
+              >
+                <ChevronLeft />
+              </IconButton>
+            </span>
+          </Tooltip>
+
+          <Typography>
+            {`${dateRange[0].format(
+              "DD MMM YYYY"
+            )} → ${dateRange[1].format("DD MMM YYYY")}`}
+          </Typography>
+
+          <Tooltip title="Next">
+            <span>
+              <IconButton
+                onClick={handleNextPeriod}
+                disabled={nextDisabled()}
+              >
+                <ChevronRight />
+              </IconButton>
+            </span>
+          </Tooltip>
+        </Box>
+      </Box>
+
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead sx={{ bgcolor: "primary.main" }}>
+            <TableRow>
+              <TableCell sx={{ color: "white" }}>
+                Employee
+              </TableCell>
+              <TableCell sx={{ color: "white" }}>
+                Project
+              </TableCell>
+              <TableCell sx={{ color: "white" }}>
+                Total Hours
+              </TableCell>
+              <TableCell sx={{ color: "white" }}>
+                Status
+              </TableCell>
+              <TableCell sx={{ color: "white" }}>
+                Actions
+              </TableCell>
+            </TableRow>
+          </TableHead>
+
+          <TableBody>
+            {timesheets
+              .slice(
+                page * rowsPerPage,
+                page * rowsPerPage + rowsPerPage
+              )
+              .map((t) => (
+                <TableRow key={t.id}>
+                  <TableCell>{t.employeeName}</TableCell>
+                  <TableCell>{t.projectName}</TableCell>
+                  <TableCell>
+                    {t.totalHours} hrs
+                  </TableCell>
+                  <TableCell>
+                    <Chip
+                      label={t.status}
+                      color={getStatusColor()}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="contained"
+                      onClick={() =>
+                        handleViewTimesheet(t)
+                      }
+                    >
+                      View
+                    </Button>
+                  </TableCell>
                 </TableRow>
-              </TableHead>
-              <TableBody>
-                {timesheets.map((timesheet) => (
-                  <TableRow 
-                    key={timesheet.id}
-                    sx={{ 
-                      '&:last-child td, &:last-child th': { border: 0 },
-                      '&:hover': { backgroundColor: 'action.hover' }
-                    }}
-                  >
-                    {/* Employee Column */}
-                    <TableCell>
-                      <Typography variant="subtitle1" fontWeight="medium">
-                        {timesheet.employee.name}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        ID: {timesheet.employee.id}
-                      </Typography>
-                    </TableCell>
+              ))}
+          </TableBody>
+        </Table>
 
-                    {/* Project Column */}
-                    <TableCell>
-                      <Typography variant="subtitle1">
-                        {timesheet.project.name}
-                      </Typography>
-                    </TableCell>
-
-                    {/* Shifts Column */}
-                    <TableCell>
-                      <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                        {timesheet.shifts.map((_, index) => (
-                          <Chip
-                            key={index}
-                            label={`Shift ${index + 1}`}
-                            variant="outlined"
-                            size="small"
-                            color="primary"
-                          />
-                        ))}
-                      </Box>
-                      {/* <Typography variant="caption" color="text.secondary">
-                        {timesheet.shifts.length} shift(s)
-                      </Typography> */}
-                    </TableCell>
-
-                    {/* Status Column */}
-                    <TableCell>
-                      {getStatusChip(timesheet.status)}
-                    </TableCell>
-
-                    {/* Actions Column - All buttons side by side */}
-                    <TableCell align="center">
-                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-                        {/* Approve/Reject Buttons - Only for pending status */}
-                        {timesheet.status === 'pending' && (
-                          <>
-                            <Button
-                              onClick={() => handleApprove(timesheet.id)}
-                              size="small"
-                              startIcon={<Check />}
-                              variant="contained"
-                              sx={{ 
-                                backgroundColor: '#4caf50',
-                                '&:hover': {
-                                  backgroundColor: '#388e3c'
-                                },
-                                minWidth: 100
-                              }}
-                            >
-                              Approve
-                            </Button>
-                            <Button
-                              onClick={() => handleReject(timesheet.id)}
-                              size="small"
-                              startIcon={<Close />}
-                              variant="contained"
-                              sx={{ 
-                                backgroundColor: '#b8130bff',
-                                '&:hover': {
-                                  backgroundColor: '#d32f2f'
-                                },
-                                minWidth: 100
-                              }}
-                            >
-                              Reject
-                            </Button>
-                          </>
-                        )}
-
-                        {/* View Button - Updated to use handleViewTimesheet */}
-                        <Button
-                          color="primary"
-                          onClick={() => handleViewTimesheet(timesheet)}
-                          size="small"
-                          startIcon={<Visibility />}
-                          variant="contained"
-                          sx={{ 
-                            backgroundColor: '#1976d2',
-                            '&:hover': {
-                              backgroundColor: '#1565c0'
-                            },
-                            minWidth: 100
-                          }}
-                        >
-                          View
-                        </Button>
-
-                        {/* Status Display for non-pending timesheets */}
-                        {timesheet.status !== 'pending' && (
-                          <Chip
-                            label={timesheet.status === 'approved' ? 'Approved' : 'Rejected'}
-                            size="small"
-                            sx={{
-                              backgroundColor: timesheet.status === 'approved' ? '#4caf50' : '#770d05ff',
-                              color: 'white',
-                              fontWeight: 'bold',
-                              minWidth: 100,
-                              height: '32px'
-                            }}
-                          />
-                        )}
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-
-          {timesheets.length === 0 && (
-            <Box sx={{ textAlign: 'center', py: 4 }}>
-              <Typography variant="h6" color="text.secondary">
-                No timesheets pending approval
-              </Typography>
-            </Box>
-          )}
-        </CardContent>
-      </Card>
+        <TablePagination
+          component="div"
+          count={timesheets.length}
+          page={page}
+          onPageChange={(e, newPage) =>
+            setPage(newPage)
+          }
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={(e) => {
+            setRowsPerPage(
+              parseInt(e.target.value, 10)
+            );
+            setPage(0);
+          }}
+        />
+      </TableContainer>
     </Box>
   );
 };
-
-// Updated Mock Data with employee IDs
-const mockTimesheets = [
-  {
-    id: 1,
-    employee: { 
-      id: 'FREELANCER_001', // Added employee ID
-      name: 'John Doe'
-    },
-    project: { 
-      name: 'Website Redesign'
-    },
-    status: 'pending',
-    shifts: [
-      { 
-        date: '2024-01-15', 
-        startTime: '09:00', 
-        endTime: '17:00', 
-        hours: 8, 
-        breakMinutes: 60,
-        notes: 'Completed homepage components and fixed responsive issues'
-      },
-      { 
-        date: '2024-01-16', 
-        startTime: '09:00', 
-        endTime: '18:00', 
-        hours: 9, 
-        breakMinutes: 60,
-        notes: 'Worked on mobile optimization and performance improvements'
-      }
-    ]
-  },
-  {
-    id: 2,
-    employee: { 
-      id: 'FREELANCER_002', // Added employee ID
-      name: 'Jane Smith'
-    },
-    project: { 
-      name: 'Mobile App Development'
-    },
-    status: 'pending',
-    shifts: [
-      { 
-        date: '2024-01-15', 
-        startTime: '08:00', 
-        endTime: '16:00', 
-        hours: 8, 
-        breakMinutes: 45,
-        notes: 'Created user interface wireframes and design prototypes'
-      }
-    ]
-  },
-  
-];
 
 export default TimesheetApprovalList;

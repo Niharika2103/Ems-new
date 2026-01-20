@@ -10,8 +10,13 @@ import {
   updateVendorStatus,
   requestPasswordReset,
   resetPassword,
-  resetPasswordAfterLogin
+  resetPasswordAfterLogin,
+  uploadVendorMoU,
+  getVendorMoU,
+  acceptVendorMoU
 } from "../controllers/vendorController.js";
+
+
 
 const router = express.Router();
 
@@ -50,5 +55,29 @@ router.get("/download/*", (req, res) => {
     res.status(404).json({ error: "File not found" });
   }
 });
+
+/* ===================== MoU APIs ===================== */
+
+/* 📤 ADMIN UPLOAD MoU */
+router.post(
+  "/upload-mou",
+  upload.fields([
+    { name: "mou_file", maxCount: 1 }
+  ]),
+  uploadVendorMoU
+);
+
+/* 📄 VENDOR GET MoU */
+router.get(
+  "/:id/mou",
+  getVendorMoU
+);
+
+/* ✅ VENDOR ACCEPT MoU */
+router.post(
+  "/:id/mou/accept",
+  acceptVendorMoU
+);
+
 
 export default router;

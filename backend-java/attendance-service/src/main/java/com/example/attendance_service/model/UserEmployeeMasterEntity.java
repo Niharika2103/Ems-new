@@ -40,7 +40,19 @@ public class UserEmployeeMasterEntity {
     
     @Column(name = "date_of_joining")
     private LocalDate dateOfJoining;
+    
+    @Column(name = "employment_type")
+    private String employmentType;
 
+
+
+	public String getEmploymentType() {
+		return employmentType;
+	}
+
+	public void setEmploymentType(String employmentType) {
+		this.employmentType = employmentType;
+	}
 
 	public LocalDate getDateOfJoining() {
 		return dateOfJoining;
