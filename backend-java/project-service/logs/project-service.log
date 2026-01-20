@@ -1,0 +1,93 @@
+2026-01-16 11:09:17 INFO  com.example.project_service.ProjectServiceApplication - Starting ProjectServiceApplication using Java 24 with PID 22416 (C:\Users\DELL\Desktop\EMSPROJECT1.O\EMSPROJECT1.NEW\backend-java\project-service\target\classes started by DELL in C:\Users\DELL\Desktop\EMSPROJECT1.O\EMSPROJECT1.NEW\backend-java\project-service)
+2026-01-16 11:09:17 DEBUG com.example.project_service.ProjectServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
+2026-01-16 11:09:17 INFO  com.example.project_service.ProjectServiceApplication - No active profile set, falling back to 1 default profile: "default"
+2026-01-16 11:09:27 INFO  com.example.project_service.service.ProjectAssignmentService - ProjectAssignmentService initialized
+2026-01-16 11:09:27 INFO  com.example.project_service.service.ProjectService - ProjectService initialized
+2026-01-16 11:09:27 INFO  com.example.project_service.controller.ProjectController - ProjectController initialized
+2026-01-16 11:09:28 INFO  com.example.project_service.ProjectServiceApplication - Started ProjectServiceApplication in 12.454 seconds (process running for 15.08)
+2026-01-16 11:12:25 INFO  com.example.project_service.ProjectServiceApplication - Starting ProjectServiceApplication using Java 24 with PID 20952 (C:\Users\DELL\Desktop\EMSPROJECT1.O\EMSPROJECT1.NEW\backend-java\project-service\target\classes started by DELL in C:\Users\DELL\Desktop\EMSPROJECT1.O\EMSPROJECT1.NEW\backend-java\project-service)
+2026-01-16 11:12:25 DEBUG com.example.project_service.ProjectServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
+2026-01-16 11:12:25 INFO  com.example.project_service.ProjectServiceApplication - No active profile set, falling back to 1 default profile: "default"
+2026-01-16 11:12:34 INFO  com.example.project_service.service.ProjectAssignmentService - ProjectAssignmentService initialized
+2026-01-16 11:12:34 INFO  com.example.project_service.service.ProjectService - ProjectService initialized
+2026-01-16 11:12:34 INFO  com.example.project_service.controller.ProjectController - ProjectController initialized
+2026-01-16 11:12:35 INFO  com.example.project_service.ProjectServiceApplication - Started ProjectServiceApplication in 11.522 seconds (process running for 14.548)
+LOG4J2 2026-01-16 11:31:29 INFO  com.example.project_service.ProjectServiceApplication - Starting ProjectServiceApplication using Java 24 with PID 7404 (C:\Users\DELL\Desktop\EMSPROJECT1.O\EMSPROJECT1.NEW\backend-java\project-service\target\classes started by DELL in C:\Users\DELL\Desktop\EMSPROJECT1.O\EMSPROJECT1.NEW\backend-java\project-service)
+LOG4J2 2026-01-16 11:31:29 DEBUG com.example.project_service.ProjectServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
+LOG4J2 2026-01-16 11:31:29 INFO  com.example.project_service.ProjectServiceApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-01-16 11:31:38 INFO  com.example.project_service.service.ProjectAssignmentService - ProjectAssignmentService initialized
+LOG4J2 2026-01-16 11:31:38 INFO  com.example.project_service.service.ProjectService - ProjectService initialized
+LOG4J2 2026-01-16 11:31:38 INFO  com.example.project_service.controller.ProjectController - ProjectController initialized
+LOG4J2 2026-01-16 11:31:39 INFO  com.example.project_service.ProjectServiceApplication - Started ProjectServiceApplication in 11.126 seconds (process running for 14.623)
+LOG4J2 2026-01-16 11:54:32 INFO  com.example.project_service.ProjectServiceApplication - Starting ProjectServiceApplication using Java 24 with PID 6644 (C:\Users\DELL\Desktop\EMSPROJECT1.O\EMSPROJECT1.NEW\backend-java\project-service\target\classes started by DELL in C:\Users\DELL\Desktop\EMSPROJECT1.O\EMSPROJECT1.NEW\backend-java\project-service)
+LOG4J2 2026-01-16 11:54:32 DEBUG com.example.project_service.ProjectServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
+LOG4J2 2026-01-16 11:54:32 INFO  com.example.project_service.ProjectServiceApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-01-16 11:54:40 INFO  com.example.project_service.service.ProjectAssignmentService - ProjectAssignmentService initialized
+LOG4J2 2026-01-16 11:54:41 INFO  com.example.project_service.service.ProjectService - ProjectService initialized
+LOG4J2 2026-01-16 11:54:41 INFO  com.example.project_service.controller.ProjectController - ProjectController initialized
+LOG4J2 2026-01-16 11:54:42 INFO  com.example.project_service.ProjectServiceApplication - Started ProjectServiceApplication in 11.174 seconds (process running for 14.301)
+LOG4J2 2026-01-16 11:55:04 INFO  com.example.project_service.ProjectServiceApplication - Starting ProjectServiceApplication using Java 24 with PID 10624 (C:\Users\DELL\Desktop\EMSPROJECT1.O\EMSPROJECT1.NEW\backend-java\project-service\target\classes started by DELL in C:\Users\DELL\Desktop\EMSPROJECT1.O\EMSPROJECT1.NEW\backend-java\project-service)
+LOG4J2 2026-01-16 11:55:04 DEBUG com.example.project_service.ProjectServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
+LOG4J2 2026-01-16 11:55:04 INFO  com.example.project_service.ProjectServiceApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-01-16 11:55:13 INFO  com.example.project_service.service.ProjectAssignmentService - ProjectAssignmentService initialized
+LOG4J2 2026-01-16 11:55:13 INFO  com.example.project_service.service.ProjectService - ProjectService initialized
+LOG4J2 2026-01-16 11:55:13 INFO  com.example.project_service.controller.ProjectController - ProjectController initialized
+LOG4J2 2026-01-16 11:55:14 INFO  com.example.project_service.ProjectServiceApplication - Started ProjectServiceApplication in 11.028 seconds (process running for 13.736)
+LOG4J2 2026-01-19 09:36:55 INFO  com.example.project_service.ProjectServiceApplication - Starting ProjectServiceApplication using Java 24 with PID 2580 (C:\Users\DELL\Desktop\EMSPROJECT1.O\EMSPROJECT1.NEW\backend-java\project-service\target\classes started by DELL in C:\Users\DELL\Desktop\EMSPROJECT1.O\EMSPROJECT1.NEW\backend-java\project-service)
+LOG4J2 2026-01-19 09:36:55 DEBUG com.example.project_service.ProjectServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
+LOG4J2 2026-01-19 09:36:55 INFO  com.example.project_service.ProjectServiceApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-01-19 09:37:22 INFO  com.example.project_service.service.ProjectAssignmentService - ProjectAssignmentService initialized
+LOG4J2 2026-01-19 09:37:22 INFO  com.example.project_service.service.ProjectService - ProjectService initialized
+LOG4J2 2026-01-19 09:37:22 INFO  com.example.project_service.controller.ProjectController - ProjectController initialized
+LOG4J2 2026-01-19 09:37:25 INFO  com.example.project_service.ProjectServiceApplication - Started ProjectServiceApplication in 32.518 seconds (process running for 40.272)
+LOG4J2 2026-01-19 09:52:52 INFO  com.example.project_service.ProjectServiceApplication - Starting ProjectServiceApplication using Java 24 with PID 18672 (C:\Users\DELL\Desktop\EMSPROJECT1.O\EMSPROJECT1.NEW\backend-java\project-service\target\classes started by DELL in C:\Users\DELL\Desktop\EMSPROJECT1.O\EMSPROJECT1.NEW\backend-java\project-service)
+LOG4J2 2026-01-19 09:52:52 DEBUG com.example.project_service.ProjectServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
+LOG4J2 2026-01-19 09:52:52 INFO  com.example.project_service.ProjectServiceApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-01-19 09:53:01 INFO  com.example.project_service.service.ProjectAssignmentService - ProjectAssignmentService initialized
+LOG4J2 2026-01-19 09:53:01 INFO  com.example.project_service.service.ProjectService - ProjectService initialized
+LOG4J2 2026-01-19 09:53:01 INFO  com.example.project_service.controller.ProjectController - ProjectController initialized
+LOG4J2 2026-01-19 09:53:02 INFO  com.example.project_service.ProjectServiceApplication - Started ProjectServiceApplication in 11.276 seconds (process running for 14.176)
+LOG4J2 2026-01-19 12:22:40 INFO  com.example.project_service.service.ProjectAssignmentService - Fetching all project assignments
+LOG4J2 2026-01-19 12:22:40 INFO  com.example.project_service.service.ProjectAssignmentService - Fetching all project assignments
+LOG4J2 2026-01-19 12:22:44 INFO  com.example.project_service.service.ProjectAssignmentService - Project ae15fb45-f038-45c4-912e-bab38af9f79f marked as COMPLETED
+LOG4J2 2026-01-19 12:22:44 INFO  com.example.project_service.service.ProjectAssignmentService - Project ae15fb45-f038-45c4-912e-bab38af9f79f marked as COMPLETED
+LOG4J2 2026-01-19 12:22:44 INFO  com.example.project_service.service.ProjectAssignmentService - Project 3e939d96-1a08-46f7-8a32-f33eacb0edc4 marked as COMPLETED
+LOG4J2 2026-01-19 12:22:44 INFO  com.example.project_service.service.ProjectAssignmentService - Project 3e939d96-1a08-46f7-8a32-f33eacb0edc4 marked as COMPLETED
+LOG4J2 2026-01-19 12:22:44 INFO  com.example.project_service.service.ProjectAssignmentService - Project 00c9bea1-a104-4205-bd08-1d32613e7fd4 marked as COMPLETED
+LOG4J2 2026-01-19 12:22:44 INFO  com.example.project_service.service.ProjectAssignmentService - Project 00c9bea1-a104-4205-bd08-1d32613e7fd4 marked as COMPLETED
+LOG4J2 2026-01-19 12:23:11 INFO  com.example.project_service.service.ProjectAssignmentService - Fetching active projects for employee 8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+LOG4J2 2026-01-19 12:23:19 INFO  com.example.project_service.service.ProjectAssignmentService - Fetching active projects for employee 8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+LOG4J2 2026-01-19 12:24:43 INFO  com.example.project_service.service.ProjectAssignmentService - Fetching all project assignments
+LOG4J2 2026-01-19 12:24:43 INFO  com.example.project_service.service.ProjectAssignmentService - Fetching all project assignments
+LOG4J2 2026-01-19 12:24:46 INFO  com.example.project_service.service.ProjectAssignmentService - Project ae15fb45-f038-45c4-912e-bab38af9f79f marked as COMPLETED
+LOG4J2 2026-01-19 12:24:46 INFO  com.example.project_service.service.ProjectAssignmentService - Project ae15fb45-f038-45c4-912e-bab38af9f79f marked as COMPLETED
+LOG4J2 2026-01-19 12:24:46 INFO  com.example.project_service.service.ProjectAssignmentService - Project 3e939d96-1a08-46f7-8a32-f33eacb0edc4 marked as COMPLETED
+LOG4J2 2026-01-19 12:24:46 INFO  com.example.project_service.service.ProjectAssignmentService - Project 3e939d96-1a08-46f7-8a32-f33eacb0edc4 marked as COMPLETED
+LOG4J2 2026-01-19 12:24:47 INFO  com.example.project_service.service.ProjectAssignmentService - Project 00c9bea1-a104-4205-bd08-1d32613e7fd4 marked as COMPLETED
+LOG4J2 2026-01-19 12:24:47 INFO  com.example.project_service.service.ProjectAssignmentService - Project 00c9bea1-a104-4205-bd08-1d32613e7fd4 marked as COMPLETED
+LOG4J2 2026-01-19 12:24:48 INFO  com.example.project_service.controller.ProjectController - Fetching all projects
+LOG4J2 2026-01-19 12:24:48 INFO  com.example.project_service.controller.ProjectController - Fetching all projects
+LOG4J2 2026-01-19 12:24:48 INFO  com.example.project_service.service.ProjectService - Fetching all projects
+LOG4J2 2026-01-19 12:24:48 INFO  com.example.project_service.service.ProjectService - Fetching all projects
+LOG4J2 2026-01-19 12:25:05 INFO  com.example.project_service.service.ProjectAssignmentService - Assigning project 65a3bec3-9123-4cdd-86d5-8a1f80be1807 to employee 8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+LOG4J2 2026-01-19 12:25:05 WARN  com.example.project_service.service.ProjectAssignmentService - Employee 8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 is already assigned to another project
+LOG4J2 2026-01-19 15:13:44 INFO  com.example.project_service.service.ProjectAssignmentService - Fetching active projects for employee 8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+LOG4J2 2026-01-19 18:03:24 INFO  com.example.project_service.ProjectServiceApplication - Starting ProjectServiceApplication using Java 24 with PID 15516 (C:\Users\DELL\Desktop\EMSPROJECT1.O\EMSPROJECT1.NEW\backend-java\project-service\target\classes started by DELL in C:\Users\DELL\Desktop\EMSPROJECT1.O\EMSPROJECT1.NEW\backend-java\project-service)
+LOG4J2 2026-01-19 18:03:24 DEBUG com.example.project_service.ProjectServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
+LOG4J2 2026-01-19 18:03:24 INFO  com.example.project_service.ProjectServiceApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-01-19 18:03:36 INFO  com.example.project_service.service.ProjectAssignmentService - ProjectAssignmentService initialized
+LOG4J2 2026-01-19 18:03:37 INFO  com.example.project_service.service.ProjectService - ProjectService initialized
+LOG4J2 2026-01-19 18:03:37 INFO  com.example.project_service.controller.ProjectController - ProjectController initialized
+LOG4J2 2026-01-19 18:03:38 INFO  com.example.project_service.ProjectServiceApplication - Started ProjectServiceApplication in 15.478 seconds (process running for 19.45)
+LOG4J2 2026-01-19 18:04:53 INFO  com.example.project_service.controller.ProjectController - Fetching all projects
+LOG4J2 2026-01-19 18:04:53 INFO  com.example.project_service.controller.ProjectController - Fetching all projects
+LOG4J2 2026-01-19 18:04:53 INFO  com.example.project_service.service.ProjectService - Fetching all projects
+LOG4J2 2026-01-19 18:04:53 INFO  com.example.project_service.service.ProjectService - Fetching all projects
+LOG4J2 2026-01-19 18:05:08 INFO  com.example.project_service.service.ProjectAssignmentService - Assigning project 65a3bec3-9123-4cdd-86d5-8a1f80be1807 to employee 8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+LOG4J2 2026-01-19 18:05:08 WARN  com.example.project_service.service.ProjectAssignmentService - Employee 8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 is already assigned to another project
+LOG4J2 2026-01-19 18:05:43 INFO  com.example.project_service.service.ProjectAssignmentService - Assigning project 65a3bec3-9123-4cdd-86d5-8a1f80be1807 to employee 8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+LOG4J2 2026-01-19 18:05:43 WARN  com.example.project_service.service.ProjectAssignmentService - Employee 8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 is already assigned to another project
+LOG4J2 2026-01-19 19:01:56 INFO  com.example.project_service.controller.ProjectController - Fetching all projects
+LOG4J2 2026-01-19 19:01:56 INFO  com.example.project_service.service.ProjectService - Fetching all projects
+LOG4J2 2026-01-19 19:01:56 INFO  com.example.project_service.controller.ProjectController - Fetching all projects
+LOG4J2 2026-01-19 19:01:56 INFO  com.example.project_service.service.ProjectService - Fetching all projects
