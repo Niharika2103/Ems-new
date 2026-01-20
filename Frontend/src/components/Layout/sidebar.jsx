@@ -102,9 +102,27 @@ const Sidebar = ({ isOpen, handleClose }) => {
       // { name: "Settings", icon: <Settings size={20} />, path: "/settings" },
     ],
   };
+   
+    /* ------------------ VENDOR MENUS ------------------ */
+  const vendorMenus = [
+    { name: "Dashboard", icon: <Home size={20} />, path: "/dashboard/vendor" },
+    { name: "Vendor Info", icon: <Users size={20} />, path: "/dashboard/vendor/info" },
+    { name: "Attendance", icon: <Calendar size={20} />, path: "/dashboard/vendor/attendance" },
+    { name: "Projects", icon: <Briefcase size={20} />, path: "/dashboard/vendor/projects" },
+    { name: "Payments", icon: <BarChart3 size={20} />, path: "/dashboard/vendor/payments" },
+    { name: "MoU", icon: <CheckSquare size={20} />, path: "/dashboard/vendor/mou" },
+  ];
 
-  const finalMenus =
-    role === "employee" ? employeeMenus : roleMenus[role] || [];
+  // const finalMenus =
+  //   role === "employee" ? employeeMenus : roleMenus[role] || [];
+
+    const finalMenus =
+    role === "employee"
+      ? employeeMenus
+      : role === "vendor"
+      ? vendorMenus
+      : roleMenus[role] || [];
+
 
   /* ------------------ LOGOUT ------------------ */
   const handleLogout = async () => {

@@ -1,5 +1,11 @@
-import React, { useState, useRef } from 'react';
+// import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+
 import { FileText, Download, Upload, CheckCircle, Edit, Save, Send } from 'lucide-react';
+import axios from "axios";
+
+import { toast } from "react-toastify";
+
 
 const MoUGenerationSystem = () => {
   const [activeView, setActiveView] = useState('template'); // 'template', 'generate', 'preview', 'sign'
@@ -20,21 +26,40 @@ const MoUGenerationSystem = () => {
   });
 
   // Vendor Data
-  const [vendorData, setVendorData] = useState({
-    vendor_name: "Tech Solutions Pvt Ltd",
-    vendor_address: "123 Business Park, Mumbai, Maharashtra",
-    vendor_representative: "Mr. Rajesh Kumar",
-    company_name: "ABC Corporation",
-    company_address: "456 Corporate Tower, Pune, Maharashtra",
-    company_representative: "Ms. Priya Sharma",
-    date: new Date().toLocaleDateString('en-IN'),
-    purpose: "Software Development and IT Services",
-    scope_of_work: "Web application development, Mobile app development, Cloud infrastructure management",
-    duration: "12 months from the date of signing",
-    payment_terms: "Net 30 days from invoice date",
-    delivery_schedule: "As per project milestones agreed separately",
-    notice_period: "30"
-  });
+  // const [vendorData, setVendorData] = useState({
+  //   vendor_name: "Tech Solutions Pvt Ltd",
+  //   vendor_address: "123 Business Park, Mumbai, Maharashtra",
+  //   vendor_representative: "Mr. Rajesh Kumar",
+  //   company_name: "ABC Corporation",
+  //   company_address: "456 Corporate Tower, Pune, Maharashtra",
+  //   company_representative: "Ms. Priya Sharma",
+  //   date: new Date().toLocaleDateString('en-IN'),
+  //   purpose: "Software Development and IT Services",
+  //   scope_of_work: "Web application development, Mobile app development, Cloud infrastructure management",
+  //   duration: "12 months from the date of signing",
+  //   payment_terms: "Net 30 days from invoice date",
+  //   delivery_schedule: "As per project milestones agreed separately",
+  //   notice_period: "30"
+  // });
+
+
+const [vendors, setVendors] = useState([]);
+const [selectedVendor, setSelectedVendor] = useState("");
+const [mouFile, setMouFile] = useState(null);
+const [effectiveFrom, setEffectiveFrom] = useState("");
+const [expiresAt, setExpiresAt] = useState("");
+
+
+useEffect(() => {
+  axios.get("/vendor")
+    .then(res => setVendors(res.data))
+    .catch(err => {
+      console.error("Vendor fetch error", err);
+      toast.error("Failed to load vendors");
+    });
+}, []);
+
+
 
   const [generatedMoU, setGeneratedMoU] = useState('');
   const [signature, setSignature] = useState(null);
@@ -71,6 +96,8 @@ const MoUGenerationSystem = () => {
     setGeneratedMoU(document);
     setActiveView('preview');
   };
+
+  
 
   // Template Editor View
   const TemplateEditor = () => (
@@ -130,54 +157,104 @@ const MoUGenerationSystem = () => {
   );
 
   // Data Input View
+  // const DataInputView = () => (
+  //   <div className="max-w-5xl mx-auto bg-white rounded-lg shadow-lg p-8">
+  //     <h2 className="text-3xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+  //       <Edit className="w-8 h-8 text-blue-600" />
+  //       Enter Vendor-Specific Data
+  //     </h2>
+
+  //     <div className="grid grid-cols-2 gap-6 mb-6">
+  //       {Object.keys(vendorData).map(key => (
+  //         <div key={key}>
+  //           <label className="block text-sm font-medium text-gray-700 mb-2 capitalize">
+  //             {key.replace(/_/g, ' ')}
+  //           </label>
+  //           {key === 'scope_of_work' ? (
+  //             <textarea
+  //               value={vendorData[key]}
+  //               onChange={(e) => setVendorData(prev => ({ ...prev, [key]: e.target.value }))}
+  //               rows="3"
+  //               className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+  //             />
+  //           ) : (
+  //             <input
+  //               type="text"
+  //               value={vendorData[key]}
+  //               onChange={(e) => setVendorData(prev => ({ ...prev, [key]: e.target.value }))}
+  //               className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+  //             />
+  //           )}
+  //         </div>
+  //       ))}
+  //     </div>
+
+  //     <div className="flex gap-4">
+  //       <button
+  //         onClick={() => setActiveView('template')}
+  //         className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-300 transition font-medium"
+  //       >
+  //         Back to Template
+  //       </button>
+  //       <button
+  //         onClick={generateMoU}
+  //         className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-medium"
+  //       >
+  //         Generate MoU Document
+  //       </button>
+  //     </div>
+  //   </div>
+  // );
+
+
+
+
   const DataInputView = () => (
-    <div className="max-w-5xl mx-auto bg-white rounded-lg shadow-lg p-8">
-      <h2 className="text-3xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-        <Edit className="w-8 h-8 text-blue-600" />
-        Enter Vendor-Specific Data
-      </h2>
+  <div className="max-w-5xl mx-auto bg-white rounded-lg shadow-lg p-8">
+    <h2 className="text-3xl font-bold mb-6">Upload New MoU Document</h2>
 
-      <div className="grid grid-cols-2 gap-6 mb-6">
-        {Object.keys(vendorData).map(key => (
-          <div key={key}>
-            <label className="block text-sm font-medium text-gray-700 mb-2 capitalize">
-              {key.replace(/_/g, ' ')}
-            </label>
-            {key === 'scope_of_work' ? (
-              <textarea
-                value={vendorData[key]}
-                onChange={(e) => setVendorData(prev => ({ ...prev, [key]: e.target.value }))}
-                rows="3"
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
-            ) : (
-              <input
-                type="text"
-                value={vendorData[key]}
-                onChange={(e) => setVendorData(prev => ({ ...prev, [key]: e.target.value }))}
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-              />
-            )}
-          </div>
-        ))}
-      </div>
+    <select
+      value={selectedVendor}
+      onChange={(e) => setSelectedVendor(e.target.value)}
+      className="w-full border rounded p-3 mb-4"
+    >
+      <option value="">Select Vendor</option>
+      {vendors.map(v => (
+        <option key={v.id} value={v.id}>
+          {v.company_name} ({v.email})
+        </option>
+      ))}
+    </select>
 
-      <div className="flex gap-4">
-        <button
-          onClick={() => setActiveView('template')}
-          className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-300 transition font-medium"
-        >
-          Back to Template
-        </button>
-        <button
-          onClick={generateMoU}
-          className="flex-1 bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-medium"
-        >
-          Generate MoU Document
-        </button>
-      </div>
-    </div>
-  );
+    <input
+      type="date"
+      value={effectiveFrom}
+      onChange={(e) => setEffectiveFrom(e.target.value)}
+      className="w-full border rounded p-3 mb-4"
+    />
+
+    <input
+      type="date"
+      value={expiresAt}
+      onChange={(e) => setExpiresAt(e.target.value)}
+      className="w-full border rounded p-3 mb-4"
+    />
+
+    <input
+      type="file"
+      onChange={(e) => setMouFile(e.target.files[0])}
+      className="w-full border rounded p-3 mb-6"
+    />
+
+    <button
+      onClick={handleUploadMoU}
+      className="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700"
+    >
+      Upload MoU
+    </button>
+  </div>
+);
+
 
   // Preview View
   const PreviewView = () => (
@@ -275,6 +352,34 @@ const MoUGenerationSystem = () => {
       alert('Document signed successfully!');
       setActiveView('signed');
     };
+   
+
+  const handleUploadMoU = async () => {
+  if (!selectedVendor || !mouFile || !effectiveFrom || !expiresAt) {
+    toast.error("All fields are required");
+    return;
+  }
+
+  try {
+    const formData = new FormData();
+    formData.append("vendor_id", selectedVendor);
+    formData.append("mou_effective_from", effectiveFrom);
+    formData.append("mou_expires_at", expiresAt);
+    formData.append("mou_file", mouFile);
+
+    await axios.post("/vendor/upload-mou", formData);
+
+    toast.success("MoU uploaded successfully");
+
+    setSelectedVendor("");
+    setMouFile(null);
+    setEffectiveFrom("");
+    setExpiresAt("");
+  } catch (err) {
+    console.error("Upload error", err);
+    toast.error("MoU upload failed");
+  }
+};
 
     return (
       <div className="max-w-5xl mx-auto bg-white rounded-lg shadow-lg p-8">
@@ -422,11 +527,13 @@ const MoUGenerationSystem = () => {
         </div>
       </div>
 
-      {activeView === 'template' && <TemplateEditor />}
+      {/* {activeView === 'template' && <TemplateEditor />}
       {activeView === 'generate' && <DataInputView />}
       {activeView === 'preview' && <PreviewView />}
       {activeView === 'sign' && <SignatureView />}
-      {activeView === 'signed' && <SignedDocumentsView />}
+      {activeView === 'signed' && <SignedDocumentsView />} */}
+      {activeView === 'generate' && <DataInputView />}
+
     </div>
   );
 };
