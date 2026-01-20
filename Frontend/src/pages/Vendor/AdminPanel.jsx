@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import axios from "axios";
+import { toast } from "react-toastify";
 import { Upload, Plus, Trash2, Eye, Settings, Search, Download, Clock, CheckCircle, XCircle, GitBranch, Users, FileText, Home } from 'lucide-react';
 import { useSelector, useDispatch } from "react-redux";
 //import { addField, removeField,updateSubmissions  } from "../../features/vendor/formSlice";
@@ -160,19 +162,30 @@ const handleRemoveField = (id) => {
 
   // Admin Dashboard Stats
   const adminStats = {
-    totalSubmissions: submissions.length,
-    pendingReview: submissions.filter(s => s.status === "Pending").length,
-    approvedVendors: submissions.filter(s => s.status === "Approved").length,
-    totalDocuments: mouDocuments.length,
-    pendingApprovals: mouDocuments.filter(d => d.status === "pending").length
-  };
+  totalSubmissions: (submissions || []).length,
+  pendingReview: (submissions || []).filter(s => s.status === "Pending").length,
+  approvedVendors: (submissions || []).filter(s => s.status === "Approved").length,
+  totalDocuments: (mouDocuments || []).length,
+  pendingApprovals: (mouDocuments || []).filter(d => d.status === "pending").length
+};
+
 
   // MoU Documents Functions
+  // const [uploadData, setUploadData] = useState({
+  //   title: "",
+  //   description: "",
+  //   file: null
+  // });
+
   const [uploadData, setUploadData] = useState({
-    title: "",
-    description: "",
-    file: null
-  });
+  vendorId: "",
+  title: "",
+  description: "",
+  validFrom: "",
+  validTill: "",
+  file: null
+});
+
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
@@ -208,7 +221,12 @@ const handleRemoveField = (id) => {
     const updatedDocuments = [newDocument, ...mouDocuments];
     setMouDocuments(updatedDocuments);
     localStorage.setItem('mouDocuments', JSON.stringify(updatedDocuments));
-    setUploadData({ title: "", description: "", file: null });
+   setUploadData(prev => ({
+  ...prev,
+  title: "",
+  description: ""
+}));
+
     alert(`New version ${newVersion.toFixed(1)} uploaded for review`);
   };
 
@@ -261,14 +279,25 @@ const handleRemoveField = (id) => {
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "approved": return "bg-green-100 text-green-800";
-      case "pending": return "bg-yellow-100 text-yellow-800";
-      case "rejected": return "bg-red-100 text-red-800";
-      default: return "bg-gray-100 text-gray-800";
-    }
-  };
+  // const getStatusColor = (status) => {
+  //   switch (status) {
+  //     case "approved": return "bg-green-100 text-green-800";
+  //     case "pending": return "bg-yellow-100 text-yellow-800";
+  //     case "rejected": return "bg-red-100 text-red-800";
+  //     default: return "bg-gray-100 text-gray-800";
+  //   }
+  // };
+
+      const getStatusColor = (status) => {
+      switch (status) {
+        case "ACTIVE": return "bg-green-100 text-green-800";
+        case "PENDING_ACCEPTANCE": return "bg-yellow-100 text-yellow-800";
+        case "REJECTED": return "bg-red-100 text-red-800";
+        case "EXPIRED": return "bg-gray-100 text-gray-800";
+        default: return "bg-gray-100 text-gray-800";
+      }
+    };
+
 
   const MouDocumentsSection = () => (
     <div className="space-y-6">
@@ -290,76 +319,161 @@ const handleRemoveField = (id) => {
       <div className="bg-white rounded-lg p-6">
         <h3 className="font-semibold mb-4 text-lg">Upload New MoU Document</h3>
         <div className="grid grid-cols-1 gap-4">
+
+          <select
+      className="px-3 py-2 border rounded-lg"
+      value={uploadData.vendorId}
+      onChange={(e) =>
+        setUploadData(prev => ({ ...prev, vendorId: e.target.value }))
+      }
+    >
+      <option value="">Select Vendor</option>
+      {(submissions || [])
+        .filter(v => v.status === "Approved")
+        .map(v => (
+          <option key={v.id} value={v.id}>
+            {v.company_name}
+          </option>
+        ))}
+    </select>
+
+    
           <input
             type="text"
             placeholder="Document Title"
-            className="px-3 py-2 border rounded-lg"
             value={uploadData.title}
-            onChange={(e) => setUploadData(prev => ({ ...prev, title: e.target.value }))}
+            onChange={(e) =>
+              setUploadData({ ...uploadData, title: e.target.value })
+            }
+            className="border p-3 rounded-lg w-full"
           />
+
           <textarea
-            placeholder="Document Description"
+          placeholder="Document Description"
+          value={uploadData.description}
+          onChange={(e) =>
+            setUploadData({ ...uploadData, description: e.target.value })
+          }
+          className="border p-3 rounded-lg w-full"
+        />
+
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <input
+            type="date"
             className="px-3 py-2 border rounded-lg"
-            rows="3"
-            value={uploadData.description}
-            onChange={(e) => setUploadData(prev => ({ ...prev, description: e.target.value }))}
+            value={uploadData.validFrom}
+            onChange={(e) =>
+              setUploadData(prev => ({ ...prev, validFrom: e.target.value }))
+            }
           />
+
+          <input
+            type="date"
+            className="px-3 py-2 border rounded-lg"
+            value={uploadData.validTill}
+            onChange={(e) =>
+              setUploadData(prev => ({ ...prev, validTill: e.target.value }))
+            }
+          />
+        </div>
           <div className="flex items-center gap-4">
-            <input
-              type="file"
+            
+
+          <input
+               type="file"
+              name="mou_file"   // ✅ REQUIRED for Multer
               accept=".pdf,.doc,.docx"
-              onChange={handleFileUpload}
+              onChange={(e) =>
+                setUploadData({ ...uploadData, file: e.target.files[0] })
+              }
               className="flex-1 border rounded-lg p-2"
-            />
-            <button
-              className="bg-blue-600 text-white px-6 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700"
-              onClick={() => {
-                if (!uploadData.title || !uploadData.file) {
-                  alert("Please fill all fields and select a file");
-                  return;
-                }
-                
-                const newDoc = {
-                  id: Date.now(),
-                  title: uploadData.title,
-                  fileName: uploadData.file.name,
-                  version: "1.0",
-                  status: "pending",
-                  uploadedBy: "Admin",
-                  uploadedDate: new Date().toISOString().split('T')[0],
-                  effectiveDate: "",
-                  fileSize: `${(uploadData.file.size / (1024 * 1024)).toFixed(1)} MB`,
-                  description: uploadData.description,
-                  approvalHistory: []
-                };
-                
-                const updatedDocuments = [newDoc, ...mouDocuments];
-                setMouDocuments(updatedDocuments);
-                localStorage.setItem('mouDocuments', JSON.stringify(updatedDocuments));
-                setUploadData({ title: "", description: "", file: null });
-                alert("Document uploaded for approval");
-              }}
-            >
-              <Upload className="w-4 h-4" /> Upload New
-            </button>
+            />`
+
+
+
+           <button
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700"
+            onClick={async () => {
+
+  if (!uploadData.file) {
+    fileInputRef.current?.click();   // ✅ open file chooser
+    return;
+  }
+
+  if (
+    !uploadData.vendorId ||
+    !uploadData.title ||
+    !uploadData.file ||
+    !uploadData.validFrom ||
+    !uploadData.validTill
+  ) {
+    alert("Please fill all fields and select a file");
+    return;
+  }
+
+  try {
+    const formData = new FormData();
+
+    formData.append("vendor_id", uploadData.vendorId);
+    formData.append("mou_effective_from", uploadData.validFrom);
+    formData.append("mou_expires_at", uploadData.validTill);
+    formData.append("mou_file", uploadData.file);
+
+    const res = await axios.post(
+      "http://localhost:5006/vendor/upload-mou",
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } }
+    );
+
+    if (res.data.success) {
+      toast.success("MoU uploaded successfully");
+
+      setUploadData({
+        vendorId: "",
+        title: "",
+        description: "",
+        file: null,
+        validFrom: "",
+        validTill: "",
+      });
+    }
+
+  } catch (err) {
+    console.error("MoU upload failed:", err);
+    toast.error("MoU upload failed");
+  }
+}}
+
+          >
+            <Upload className="w-4 h-4" /> Upload New
+          </button>
+
           </div>
         </div>
       </div>
 
       {/* Documents List */}
       <div className="bg-white rounded-lg p-6">
-        <h3 className="font-semibold mb-4 text-lg">MoU Documents ({filteredDocuments.length})</h3>
+       <h3 className="font-semibold mb-4 text-lg">
+        MoU Documents ({(filteredDocuments || []).length})
+      </h3>
+
         
-        {filteredDocuments.length === 0 ? (
+        {(filteredDocuments || []).length === 0 ? (
           <p className="text-gray-500 text-center py-8">No documents found</p>
         ) : (
           <div className="space-y-4">
-            {filteredDocuments.map((doc) => (
+            {(filteredDocuments || []).map((doc) => (
               <div key={doc.id} className="border rounded-lg p-6 hover:shadow-md transition-shadow">
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex-1">
                     <h4 className="font-semibold text-lg text-gray-800">{doc.title}</h4>
                     <p className="text-gray-600 mt-1">{doc.description}</p>
+                    <p className="text-sm text-gray-500">
+                      Vendor: {doc.vendorName}
+                    </p>
+
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(doc.status)} flex items-center gap-1`}>
@@ -391,7 +505,7 @@ const handleRemoveField = (id) => {
                 <div className="mb-4">
                   <h5 className="font-semibold mb-2 text-gray-700">Approval History:</h5>
                   <div className="space-y-2">
-                    {doc.approvalHistory.map((approval, index) => (
+                    {(doc.approvalHistory || []).map((approval, index) => (
                       <div key={index} className="flex items-center gap-2 text-sm">
                         <CheckCircle className="w-4 h-4 text-green-500" />
                         <span className="font-medium">{approval.approvedBy}</span>
@@ -401,7 +515,7 @@ const handleRemoveField = (id) => {
                         </span>
                       </div>
                     ))}
-                    {doc.approvalHistory.length === 0 && (
+                    {(doc.approvalHistory || []).length === 0 && (
                       <p className="text-gray-500 text-sm">No approval history</p>
                     )}
                   </div>
@@ -413,7 +527,7 @@ const handleRemoveField = (id) => {
                     <Download className="w-4 h-4" /> Download
                   </button>
                   
-                  {doc.status === "pending" && (
+                  {/* {doc.status === "pending" && (
                     <>
                       <button 
                         className="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm hover:bg-green-200 transition-colors"
@@ -428,7 +542,7 @@ const handleRemoveField = (id) => {
                         <XCircle className="w-4 h-4" /> Reject
                       </button>
                     </>
-                  )}
+                  )} */}
                   
                   <button 
                     className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition-colors"
@@ -550,7 +664,8 @@ const handleRemoveField = (id) => {
               viewMode === "submissions" ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700"
             }`}
           >
-            <Eye className="w-4 h-4" /> Submissions ({submissions.length})
+           <Eye className="w-4 h-4" /> Submissions ({(submissions || []).length})
+
           </button>
           <button
             onClick={() => setViewMode("mou")}
@@ -591,7 +706,7 @@ const handleRemoveField = (id) => {
                 </div>
               </div>
             ))}
-            {submissions.length === 0 && (
+            {(submissions || []).length === 0 && (
               <p className="text-gray-500 text-center py-4">No submissions yet</p>
             )}
           </div>
@@ -599,7 +714,7 @@ const handleRemoveField = (id) => {
           {/* Recent MoU Documents */}
           <div className="bg-white rounded-lg shadow-lg p-6">
             <h3 className="font-semibold text-lg mb-4">Recent MoU Documents</h3>
-            {mouDocuments.slice(0, 5).map((doc) => (
+            {(mouDocuments || []).slice(0, 5).map((doc) => (
               <div key={doc.id} className="border-b py-3 last:border-b-0">
                 <div className="flex justify-between items-start">
                   <div>
@@ -729,6 +844,20 @@ const handleRemoveField = (id) => {
                 >
                   {sub.status}
                 </span>
+
+                { sub.status === "Approved" && (
+  <>
+                { !(mouDocuments || []).some(m => 
+                m.vendorId == sub.id && m.status === "ACTIVE"
+              ) && (
+
+                  <span className="text-red-600 text-sm">
+                    ⚠ No Active MoU
+                  </span>
+                )}
+              </>
+            )}
+
 
                 {sub.status === "Pending" && (
                   <div className="flex gap-2">

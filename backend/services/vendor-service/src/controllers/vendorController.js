@@ -735,3 +735,149 @@ export const resetPasswordAfterLogin = async (req, res) => {
   res.json({ success: true });
 };
 
+
+/* ===================================================================
+   ADMIN UPLOAD MoU
+=================================================================== */
+export const uploadVendorMoU = async (req, res) => {
+  try {
+    const { vendor_id, mou_effective_from, mou_expires_at } = req.body;
+
+    if (!vendor_id) {
+      return res.status(400).json({
+        success: false,
+        message: "vendor_id is required",
+      });
+    }
+
+    if (!req.files || !req.files.mou_file) {
+      return res.status(400).json({
+        success: false,
+        message: "No MoU file uploaded",
+      });
+    }
+
+    const mouFilePath = req.files.mou_file[0].path;
+
+    const result = await pool.query(
+      `
+      UPDATE vendors
+      SET
+        mou_file = $1,
+        mou_uploaded_at = NOW(),
+        mou_effective_from = $2,
+        mou_expires_at = $3,
+        mou_accepted = false,
+        mou_accepted_at = NULL,
+        mou_status = 'pending'
+      WHERE id = $4
+      RETURNING *
+      `,
+      [mouFilePath, mou_effective_from, mou_expires_at, vendor_id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Vendor not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "MoU uploaded successfully",
+      vendor: result.rows[0],
+    });
+
+  } catch (err) {
+    console.error("MoU upload error:", err);
+    res.status(500).json({
+      success: false,
+      message: err.message || "MoU upload failed",
+    });
+  }
+};
+
+/* ===================================================================
+   VENDOR GET MoU
+=================================================================== */
+export const getVendorMoU = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `
+      SELECT
+        mou_file,
+        mou_uploaded_at,
+        mou_effective_from,
+        mou_expires_at,
+        mou_accepted,
+        mou_accepted_at,
+        mou_status
+      FROM vendors
+      WHERE id = $1
+      `,
+      [id]
+    );
+
+    if (!result.rows.length) {
+      return res.status(404).json({ error: "Vendor not found" });
+    }
+
+    res.json({ success: true, mou: result.rows[0] });
+
+  } catch (err) {
+    console.error("Get MoU Error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+/* ===================================================================
+   VENDOR ACCEPT MoU
+=================================================================== */
+export const acceptVendorMoU = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `
+      SELECT mou_status, mou_expires_at
+      FROM vendors
+      WHERE id = $1
+      `,
+      [id]
+    );
+
+    if (!result.rows.length) {
+      return res.status(404).json({ error: "Vendor not found" });
+    }
+
+    const mou = result.rows[0];
+
+    if (mou.mou_status?.toLowerCase() !== "pending") {
+      return res.status(400).json({ error: "MoU not in pending state" });
+    }
+
+    if (new Date(mou.mou_expires_at) < new Date()) {
+      return res.status(400).json({ error: "MoU already expired" });
+    }
+
+    await pool.query(
+      `
+      UPDATE vendors
+      SET mou_accepted = true,
+          mou_accepted_at = NOW(),
+          mou_status = 'active'
+      WHERE id = $1
+      `,
+      [id]
+    );
+
+    res.json({ success: true, message: "MoU accepted successfully" });
+
+  } catch (err) {
+    console.error("Accept MoU Error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
