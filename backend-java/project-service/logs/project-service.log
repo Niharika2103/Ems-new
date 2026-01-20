@@ -87,3 +87,7 @@ LOG4J2 2026-01-19 18:05:08 INFO  com.example.project_service.service.ProjectAssi
 LOG4J2 2026-01-19 18:05:08 WARN  com.example.project_service.service.ProjectAssignmentService - Employee 8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 is already assigned to another project
 LOG4J2 2026-01-19 18:05:43 INFO  com.example.project_service.service.ProjectAssignmentService - Assigning project 65a3bec3-9123-4cdd-86d5-8a1f80be1807 to employee 8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
 LOG4J2 2026-01-19 18:05:43 WARN  com.example.project_service.service.ProjectAssignmentService - Employee 8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 is already assigned to another project
+LOG4J2 2026-01-19 19:01:56 INFO  com.example.project_service.controller.ProjectController - Fetching all projects
+LOG4J2 2026-01-19 19:01:56 INFO  com.example.project_service.service.ProjectService - Fetching all projects
+LOG4J2 2026-01-19 19:01:56 INFO  com.example.project_service.controller.ProjectController - Fetching all projects
+LOG4J2 2026-01-19 19:01:56 INFO  com.example.project_service.service.ProjectService - Fetching all projects
