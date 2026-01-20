@@ -40,8 +40,17 @@ export const applyForJob = async (req, res) => {
 
     const resume_url = req.file ? req.file.filename : null;
 
+    // 1) Get next application_id manually
+    const idResult = await pool.query(
+      "SELECT COALESCE(MAX(application_id), 0) + 1 AS next_id FROM applications"
+    );
+
+    const nextId = idResult.rows[0].next_id;
+
+    // 2) Insert using that ID
     const query = `
       INSERT INTO applications (
+        application_id,
         job_id,
         candidate_name,
         email,
@@ -52,11 +61,12 @@ export const applyForJob = async (req, res) => {
         status,
         applied_date
       )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, 'APPLIED', NOW())
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'applied', NOW())
       RETURNING *
     `;
 
     const values = [
+      nextId,
       job_id,
       candidate_name,
       email,
@@ -76,6 +86,16 @@ export const applyForJob = async (req, res) => {
 
   } catch (error) {
     console.error("Apply Job Error:", error);
+
+    if (error.code === "23505") {
+      if (error.constraint === "uq_applications_job_email") {
+        return res.status(409).json({
+          success: false,
+          message: "You have already applied for this job",
+        });
+      }
+    }
+
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
@@ -172,16 +192,28 @@ export const updateApplicationStatus = async (req, res) => {
       });
     }
 
-    status = status.toUpperCase();
+    // status = status.toUpperCase();
+
+    // const allowedStatuses = [
+    //   "APPLIED",
+    //   "SCREENING",
+    //   "INTERVIEW",
+    //   "DECISION",
+    //   "HIRED",
+    //   "REJECTED",
+    // ];
+
+    status = status.toLowerCase();
 
     const allowedStatuses = [
-      "APPLIED",
-      "SCREENING",
-      "INTERVIEW",
-      "DECISION",
-      "HIRED",
-      "REJECTED",
+      "applied",
+      "screening",
+      "interview",
+      "decision",
+      "hired",
+      "rejected",
     ];
+
 
     if (!allowedStatuses.includes(status)) {
       return res.status(400).json({
@@ -264,10 +296,16 @@ export const filterApplications = async (req, res) => {
     let values = [];
     let i = 1;
 
+    // if (status) {
+    //   query += ` AND a.status = $${i++}`;
+    //   values.push(status.toUpperCase());
+    // }
+
     if (status) {
-      query += ` AND a.status = $${i++}`;
-      values.push(status.toUpperCase());
-    }
+    query += ` AND a.status = $${i++}`;
+    values.push(status.toLowerCase());
+  }
+
 
     if (experience) {
       const expNum = Number(experience);
