@@ -176,12 +176,17 @@ const styles = {
     fontSize: "40px",
     marginBottom: "10px",
   },
-  cardTitle: {
-    fontSize: "15px",
-    color: "#2c3e50",
-    fontWeight: "600",
-    marginBottom: "12px",
-  },
+ cardTitle: {
+  fontSize: "15px",
+  color: "#2c3e50",
+  fontWeight: "600",
+  marginBottom: "12px",
+  whiteSpace: "nowrap",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  maxWidth: "100%",
+},
+
   button: {
     padding: "8px 14px",
     background: "#3498db",
