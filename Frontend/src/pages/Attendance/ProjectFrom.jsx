@@ -1,3 +1,224 @@
+// import React, { useState } from "react";
+// import { useDispatch, useSelector } from "react-redux";
+// import {
+//   TextField,
+//   Button,
+//   Box,
+//   Typography,
+//   CircularProgress,
+//   Alert,
+//   MenuItem,
+//   Paper,
+// } from "@mui/material";
+// import { useNavigate } from "react-router-dom";
+// import { ProjectSave } from "../../features/Project/projectsSlice";
+// import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
+// import { toast } from "react-toastify";
+
+// const ProjectForm = () => {
+//   const dispatch = useDispatch();
+//   const { loading, error } = useSelector((state) => state.project);
+//   const navigate = useNavigate();
+
+//   const [formData, setFormData] = useState({
+//     name: "",
+//     description: "",
+//     startDate: "",
+//     endDate: "",
+//     status: "IN_PROGRESS",
+//     estimatedCost: "",
+//   });
+
+//   const handleChange = (e) => {
+//     const { name, value } = e.target;
+//     setFormData((prev) => ({ ...prev, [name]: value }));
+//   };
+
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+
+//     try {
+//       const resultAction = await dispatch(ProjectSave(formData));
+
+//       if (ProjectSave.fulfilled.match(resultAction)) {
+//         toast.success("Project saved successfully!");
+
+//         setFormData({
+//           name: "",
+//           description: "",
+//           startDate: "",
+//           endDate: "",
+//           status: "IN_PROGRESS",
+//           estimatedCost: "",
+//         });
+
+//         navigate("/dashboard/fetch_project");
+//       } else {
+//         toast.error(resultAction.payload || "Failed to save project");
+//       }
+//     } catch (err) {
+//       console.error("Failed to save project:", err);
+//       toast.error("Something went wrong!");
+//     }
+//   };
+
+//   return (
+//     <Box
+//       sx={{
+//         minHeight: "100vh",
+//         display: "flex",
+//         justifyContent: "center",
+//         alignItems: "center",
+//         p: 2,
+//         overflowY: "auto",
+//       }}
+//     >
+//       <Paper
+//         elevation={4}
+//         sx={{
+//           width: "100%",
+//           maxWidth: 500,
+//           p: { xs: 3, sm: 4 },
+//           borderRadius: 3,
+//         }}
+//       >
+//         {/* Header */}
+//         <Box textAlign="center" mb={3}>
+//           <WorkOutlineIcon sx={{ fontSize: 40, color: "primary.main", mb: 1 }} />
+//           <Typography variant="h5" fontWeight={600}>
+//             Add New Project
+//           </Typography>
+//           <Typography variant="body2" color="text.secondary">
+//             Fill in the details to create a new project
+//           </Typography>
+//         </Box>
+
+//         {/* Redux Error (optional) */}
+//         {error && (
+//           <Alert severity="error" sx={{ mb: 2 }}>
+//             {error}
+//           </Alert>
+//         )}
+
+//         {/* Form */}
+//         <form onSubmit={handleSubmit}>
+//           <Box display="flex" flexDirection="column" gap={2}>
+//             <TextField
+//               label="Project Name"
+//               name="name"
+//               value={formData.name}
+//               onChange={handleChange}
+//               fullWidth
+//               required
+//             />
+
+//             <TextField
+//               label="Description"
+//               name="description"
+//               value={formData.description}
+//               onChange={handleChange}
+//               fullWidth
+//               multiline
+//               rows={3}
+//               required
+//             />
+
+//             <TextField
+//               label="Estimated Cost"
+//               name="estimatedCost"
+//               type="number"
+//               value={formData.estimatedCost}
+//               onChange={handleChange}
+//               fullWidth
+//               required
+//               inputProps={{
+//                 min: 0,
+//                 step: "0.01",
+//                 style: { MozAppearance: "textfield" },
+//               }}
+//               InputProps={{
+//                 sx: {
+//                   "input::-webkit-outer-spin-button": {
+//                     WebkitAppearance: "none",
+//                     margin: 0,
+//                   },
+//                   "input::-webkit-inner-spin-button": {
+//                     WebkitAppearance: "none",
+//                     margin: 0,
+//                   },
+//                 },
+//               }}
+//             />
+
+//             <TextField
+//               label="Start Date"
+//               name="startDate"
+//               type="datetime-local"
+//               value={formData.startDate}
+//               onChange={handleChange}
+//               fullWidth
+//               InputLabelProps={{ shrink: true }}
+//               required
+//             />
+
+//             <TextField
+//               label="End Date"
+//               name="endDate"
+//               type="datetime-local"
+//               value={formData.endDate}
+//               onChange={handleChange}
+//               fullWidth
+//               InputLabelProps={{ shrink: true }}
+//               required
+//             />
+
+//             <TextField
+//               select
+//               label="Status"
+//               name="status"
+//               value={formData.status}
+//               onChange={handleChange}
+//               fullWidth
+//               required
+//             >
+//               <MenuItem value="IN_PROGRESS">In Progress</MenuItem>
+//               <MenuItem value="COMPLETED">Completed</MenuItem>
+//               <MenuItem value="NOT_STARTED">Not Started</MenuItem>
+//             </TextField>
+
+//             <Box textAlign="right" mt={2}>
+//               <Button
+//                 type="submit"
+//                 variant="contained"
+//                 color="primary"
+//                 size="large"
+//                 disabled={loading}
+//                 startIcon={
+//                   loading && (
+//                     <CircularProgress size={20} color="inherit" />
+//                   )
+//                 }
+//                 sx={{
+//                   textTransform: "none",
+//                   borderRadius: 2,
+//                   px: 3,
+//                   py: 1,
+//                   fontWeight: 600,
+//                 }}
+//               >
+//                 {loading ? "Saving..." : "Save Project"}
+//               </Button>
+//             </Box>
+//           </Box>
+//         </form>
+//       </Paper>
+//     </Box>
+//   );
+// };
+
+// export default ProjectForm;
+
+
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -13,7 +234,8 @@ import {
 import { useNavigate } from "react-router-dom";
 import { ProjectSave } from "../../features/Project/projectsSlice";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutline";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const ProjectForm = () => {
   const dispatch = useDispatch();
@@ -37,182 +259,133 @@ const ProjectForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    try {
-      const resultAction = await dispatch(ProjectSave(formData));
+    const resultAction = await dispatch(ProjectSave(formData));
 
-      if (ProjectSave.fulfilled.match(resultAction)) {
-        toast.success("Project saved successfully!");
+    if (ProjectSave.fulfilled.match(resultAction)) {
+      // ✅ show toast
+      toast.success("Project saved successfully");
 
-        setFormData({
-          name: "",
-          description: "",
-          startDate: "",
-          endDate: "",
-          status: "IN_PROGRESS",
-          estimatedCost: "",
-        });
+      setFormData({
+        name: "",
+        description: "",
+        startDate: "",
+        endDate: "",
+        status: "IN_PROGRESS",
+        estimatedCost: "",
+      });
 
+      // ✅ IMPORTANT FIX: delay navigation
+      setTimeout(() => {
         navigate("/dashboard/fetch_project");
-      } else {
-        toast.error(resultAction.payload || "Failed to save project");
-      }
-    } catch (err) {
-      console.error("Failed to save project:", err);
-      toast.error("Something went wrong!");
+      }, 800);
+    } else {
+      toast.error(resultAction.payload || "Failed to save project");
     }
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        p: 2,
-        overflowY: "auto",
-      }}
-    >
-      <Paper
-        elevation={4}
+    <>
+      <ToastContainer position="top-right" autoClose={3000} />
+
+      <Box
         sx={{
-          width: "100%",
-          maxWidth: 500,
-          p: { xs: 3, sm: 4 },
-          borderRadius: 3,
+          minHeight: "100vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          p: 2,
         }}
       >
-        {/* Header */}
-        <Box textAlign="center" mb={3}>
-          <WorkOutlineIcon sx={{ fontSize: 40, color: "primary.main", mb: 1 }} />
-          <Typography variant="h5" fontWeight={600}>
-            Add New Project
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Fill in the details to create a new project
-          </Typography>
-        </Box>
+        <Paper elevation={4} sx={{ maxWidth: 500, p: 4 }}>
+          <Box textAlign="center" mb={3}>
+            <WorkOutlineIcon sx={{ fontSize: 40 }} />
+            <Typography variant="h5" fontWeight={600}>
+              Add New Project
+            </Typography>
+          </Box>
 
-        {/* Redux Error (optional) */}
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
+          {error && <Alert severity="error">{error}</Alert>}
 
-        {/* Form */}
-        <form onSubmit={handleSubmit}>
-          <Box display="flex" flexDirection="column" gap={2}>
-            <TextField
-              label="Project Name"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              fullWidth
-              required
-            />
+          <form onSubmit={handleSubmit}>
+            <Box display="flex" flexDirection="column" gap={2}>
+              <TextField
+                label="Project Name"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                fullWidth
+                required
+              />
 
-            <TextField
-              label="Description"
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              fullWidth
-              multiline
-              rows={3}
-              required
-            />
+              <TextField
+                label="Description"
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                fullWidth
+                multiline
+                rows={3}
+                required
+              />
 
-            <TextField
-              label="Estimated Cost"
-              name="estimatedCost"
-              type="number"
-              value={formData.estimatedCost}
-              onChange={handleChange}
-              fullWidth
-              required
-              inputProps={{
-                min: 0,
-                step: "0.01",
-                style: { MozAppearance: "textfield" },
-              }}
-              InputProps={{
-                sx: {
-                  "input::-webkit-outer-spin-button": {
-                    WebkitAppearance: "none",
-                    margin: 0,
-                  },
-                  "input::-webkit-inner-spin-button": {
-                    WebkitAppearance: "none",
-                    margin: 0,
-                  },
-                },
-              }}
-            />
+              <TextField
+                label="Estimated Cost"
+                name="estimatedCost"
+                type="number"
+                value={formData.estimatedCost}
+                onChange={handleChange}
+                fullWidth
+                required
+              />
 
-            <TextField
-              label="Start Date"
-              name="startDate"
-              type="datetime-local"
-              value={formData.startDate}
-              onChange={handleChange}
-              fullWidth
-              InputLabelProps={{ shrink: true }}
-              required
-            />
+              <TextField
+                label="Start Date"
+                name="startDate"
+                type="datetime-local"
+                value={formData.startDate}
+                onChange={handleChange}
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+                required
+              />
 
-            <TextField
-              label="End Date"
-              name="endDate"
-              type="datetime-local"
-              value={formData.endDate}
-              onChange={handleChange}
-              fullWidth
-              InputLabelProps={{ shrink: true }}
-              required
-            />
+              <TextField
+                label="End Date"
+                name="endDate"
+                type="datetime-local"
+                value={formData.endDate}
+                onChange={handleChange}
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+                required
+              />
 
-            <TextField
-              select
-              label="Status"
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-              fullWidth
-              required
-            >
-              <MenuItem value="IN_PROGRESS">In Progress</MenuItem>
-              <MenuItem value="COMPLETED">Completed</MenuItem>
-              <MenuItem value="NOT_STARTED">Not Started</MenuItem>
-            </TextField>
+              <TextField
+                select
+                label="Status"
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                fullWidth
+              >
+                <MenuItem value="IN_PROGRESS">In Progress</MenuItem>
+                <MenuItem value="COMPLETED">Completed</MenuItem>
+                <MenuItem value="NOT_STARTED">Not Started</MenuItem>
+              </TextField>
 
-            <Box textAlign="right" mt={2}>
               <Button
                 type="submit"
                 variant="contained"
-                color="primary"
-                size="large"
                 disabled={loading}
-                startIcon={
-                  loading && (
-                    <CircularProgress size={20} color="inherit" />
-                  )
-                }
-                sx={{
-                  textTransform: "none",
-                  borderRadius: 2,
-                  px: 3,
-                  py: 1,
-                  fontWeight: 600,
-                }}
+                startIcon={loading && <CircularProgress size={20} />}
               >
                 {loading ? "Saving..." : "Save Project"}
               </Button>
             </Box>
-          </Box>
-        </form>
-      </Paper>
-    </Box>
+          </form>
+        </Paper>
+      </Box>
+    </>
   );
 };
 
