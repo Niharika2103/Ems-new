@@ -116,3 +116,11 @@ LOG4J2 2026-01-22 09:47:17 INFO  com.example.salary_structure.SalaryStructureApp
 LOG4J2 2026-01-22 09:47:39 INFO  com.example.salary_structure.Controller.SalaryStructureController - Creating salary structure for employeeId=b3af8f32-7a76-42d9-bd3c-b692c2dc6c8c
 LOG4J2 2026-01-22 09:47:39 INFO  com.example.salary_structure.Services.SalaryStructureService - Creating salary structure for employeeId=b3af8f32-7a76-42d9-bd3c-b692c2dc6c8c
 LOG4J2 2026-01-22 09:47:40 INFO  com.example.salary_structure.Services.SalaryStructureService - Salary structure saved successfully for employeeId=b3af8f32-7a76-42d9-bd3c-b692c2dc6c8c
+LOG4J2 2026-01-22 12:42:58 INFO  com.example.salary_structure.SalaryStructureApplication - Starting SalaryStructureApplication using Java 21.0.8 with PID 4168 (C:\Users\Admin\EMSNEW\EMSProject\backend-java\salary_structure\target\classes started by Admin in C:\Users\Admin\EMSNEW\EMSProject\backend-java\salary_structure)
+LOG4J2 2026-01-22 12:42:58 DEBUG com.example.salary_structure.SalaryStructureApplication - Running with Spring Boot v3.5.7, Spring v6.2.12
+LOG4J2 2026-01-22 12:42:58 INFO  com.example.salary_structure.SalaryStructureApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-01-22 12:43:07 INFO  com.example.salary_structure.SalaryStructureApplication - Started SalaryStructureApplication in 8.825 seconds (process running for 9.904)
+LOG4J2 2026-01-23 15:09:56 INFO  com.example.salary_structure.SalaryStructureApplication - Starting SalaryStructureApplication using Java 21.0.8 with PID 3296 (C:\Users\Admin\EMSNEW\EMSProject\backend-java\salary_structure\target\classes started by Admin in C:\Users\Admin\EMSNEW\EMSProject\backend-java\salary_structure)
+LOG4J2 2026-01-23 15:09:56 DEBUG com.example.salary_structure.SalaryStructureApplication - Running with Spring Boot v3.5.7, Spring v6.2.12
+LOG4J2 2026-01-23 15:09:56 INFO  com.example.salary_structure.SalaryStructureApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-01-23 15:10:01 INFO  com.example.salary_structure.SalaryStructureApplication - Started SalaryStructureApplication in 5.414 seconds (process running for 6.346)
