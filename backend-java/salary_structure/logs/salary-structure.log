@@ -120,3 +120,14 @@ LOG4J2 2026-01-27 14:53:44 INFO  com.example.salary_structure.SalaryStructureApp
 LOG4J2 2026-01-27 15:23:50 INFO  com.example.salary_structure.SalaryStructureApplication - Starting SalaryStructureApplication using Java 21.0.8 with PID 19896 (C:\Users\Admin\EMSNEW\EMSProject\backend-java\salary_structure\target\classes started by Admin in C:\Users\Admin\EMSNEW\EMSProject\backend-java\salary_structure)
 LOG4J2 2026-01-27 15:23:50 DEBUG com.example.salary_structure.SalaryStructureApplication - Running with Spring Boot v3.5.7, Spring v6.2.12
 LOG4J2 2026-01-27 15:23:50 INFO  com.example.salary_structure.SalaryStructureApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-01-27 16:01:43 INFO  com.example.salary_structure.SalaryStructureApplication - Starting SalaryStructureApplication using Java 21.0.8 with PID 10564 (C:\Users\Admin\EMSNEW\EMSProject\backend-java\salary_structure\target\classes started by Admin in C:\Users\Admin\EMSNEW\EMSProject\backend-java\salary_structure)
+LOG4J2 2026-01-27 16:01:43 DEBUG com.example.salary_structure.SalaryStructureApplication - Running with Spring Boot v3.5.7, Spring v6.2.12
+LOG4J2 2026-01-27 16:01:43 INFO  com.example.salary_structure.SalaryStructureApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-01-27 16:01:50 INFO  com.example.salary_structure.SalaryStructureApplication - Started SalaryStructureApplication in 7.557 seconds (process running for 10.148)
+LOG4J2 2026-01-27 16:02:00 INFO  com.example.salary_structure.Controller.SalaryStructureController - Fetching last salary for employeeId=68484508-7658-466f-bf1b-bbdd7db6faf0
+LOG4J2 2026-01-27 16:02:00 INFO  com.example.salary_structure.Controller.SalaryStructureController - Fetching last salary for employeeId=68484508-7658-466f-bf1b-bbdd7db6faf0
+LOG4J2 2026-01-27 16:02:00 INFO  com.example.salary_structure.Services.SalaryStructureService - Fetching last salary for employeeId=68484508-7658-466f-bf1b-bbdd7db6faf0
+LOG4J2 2026-01-27 16:02:00 INFO  com.example.salary_structure.Services.SalaryStructureService - Fetching last salary for employeeId=68484508-7658-466f-bf1b-bbdd7db6faf0
+LOG4J2 2026-01-27 16:03:08 INFO  com.example.salary_structure.Controller.SalaryStructureController - Creating salary structure for employeeId=68484508-7658-466f-bf1b-bbdd7db6faf0
+LOG4J2 2026-01-27 16:03:08 INFO  com.example.salary_structure.Services.SalaryStructureService - Creating salary structure for employeeId=68484508-7658-466f-bf1b-bbdd7db6faf0
+LOG4J2 2026-01-27 16:03:09 INFO  com.example.salary_structure.Services.SalaryStructureService - Salary structure saved successfully for employeeId=68484508-7658-466f-bf1b-bbdd7db6faf0
