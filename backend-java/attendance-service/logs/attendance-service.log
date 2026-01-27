@@ -332,3 +332,34 @@ LOG4J2 2026-01-27 11:02:44 INFO  com.example.attendance_service.AttendanceServic
 LOG4J2 2026-01-27 11:02:44 DEBUG com.example.attendance_service.AttendanceServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
 LOG4J2 2026-01-27 11:02:44 INFO  com.example.attendance_service.AttendanceServiceApplication - No active profile set, falling back to 1 default profile: "default"
 LOG4J2 2026-01-27 11:02:55 INFO  com.example.attendance_service.AttendanceServiceApplication - Started AttendanceServiceApplication in 12.59 seconds (process running for 14.794)
+LOG4J2 2026-01-27 12:03:39 INFO  com.example.attendance_service.AttendanceServiceApplication - Starting AttendanceServiceApplication using Java 21.0.8 with PID 404 (C:\Users\Admin\EMSNEW\EMSProject\backend-java\attendance-service\target\classes started by Admin in C:\Users\Admin\EMSNEW\EMSProject\backend-java\attendance-service)
+LOG4J2 2026-01-27 12:03:39 DEBUG com.example.attendance_service.AttendanceServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
+LOG4J2 2026-01-27 12:03:39 INFO  com.example.attendance_service.AttendanceServiceApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-01-27 12:03:46 INFO  com.example.attendance_service.AttendanceServiceApplication - Started AttendanceServiceApplication in 7.084 seconds (process running for 8.118)
+LOG4J2 2026-01-27 13:21:00 INFO  com.example.attendance_service.AttendanceServiceApplication - Starting AttendanceServiceApplication using Java 21.0.8 with PID 668 (C:\Users\Admin\EMSNEW\EMSProject\backend-java\attendance-service\target\classes started by Admin in C:\Users\Admin\EMSNEW\EMSProject\backend-java\attendance-service)
+LOG4J2 2026-01-27 13:21:00 DEBUG com.example.attendance_service.AttendanceServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
+LOG4J2 2026-01-27 13:21:00 INFO  com.example.attendance_service.AttendanceServiceApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-01-27 13:23:10 INFO  com.example.attendance_service.AttendanceServiceApplication - Starting AttendanceServiceApplication using Java 21.0.8 with PID 15296 (C:\Users\Admin\EMSNEW\EMSProject\backend-java\attendance-service\target\classes started by Admin in C:\Users\Admin\EMSNEW\EMSProject\backend-java\attendance-service)
+LOG4J2 2026-01-27 13:23:10 DEBUG com.example.attendance_service.AttendanceServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
+LOG4J2 2026-01-27 13:23:10 INFO  com.example.attendance_service.AttendanceServiceApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-01-27 13:23:18 INFO  com.example.attendance_service.AttendanceServiceApplication - Started AttendanceServiceApplication in 7.966 seconds (process running for 9.019)
+LOG4J2 2026-01-27 14:58:54 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-26 | to=2026-02-01
+LOG4J2 2026-01-27 14:58:54 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-26 | to=2026-02-01
+LOG4J2 2026-01-27 14:58:54 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-26, endDate=2026-02-01, periodType=weekly
+LOG4J2 2026-01-27 14:58:54 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-26, endDate=2026-02-01, periodType=weekly
+LOG4J2 2026-01-27 14:58:55 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-19 | to=2026-01-25
+LOG4J2 2026-01-27 14:58:55 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-19, endDate=2026-01-25, periodType=weekly
+LOG4J2 2026-01-27 14:58:56 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 0
+LOG4J2 2026-01-27 14:58:56 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 0
+LOG4J2 2026-01-27 14:58:56 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 0
+LOG4J2 2026-01-27 14:58:56 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 0
+LOG4J2 2026-01-27 14:58:56 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 7
+LOG4J2 2026-01-27 14:58:56 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 1
+LOG4J2 2026-01-27 14:59:03 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-26 | to=2026-02-01
+LOG4J2 2026-01-27 14:59:03 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-26 | to=2026-02-01
+LOG4J2 2026-01-27 14:59:03 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-26, endDate=2026-02-01, periodType=weekly
+LOG4J2 2026-01-27 14:59:03 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-26, endDate=2026-02-01, periodType=weekly
+LOG4J2 2026-01-27 14:59:04 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 0
+LOG4J2 2026-01-27 14:59:04 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 0
+LOG4J2 2026-01-27 14:59:04 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 0
+LOG4J2 2026-01-27 14:59:04 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 0

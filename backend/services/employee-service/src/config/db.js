@@ -9,9 +9,9 @@ const pool = new Pool({
   database: process.env.PG_DATABASE,
   password: process.env.PG_PASSWORD,
   port: process.env.PG_PORT || 6432,
-   max: 10, 
+   max: 3, 
   idleTimeoutMillis: 30000, 
-  connectionTimeoutMillis: 2000, 
+  connectionTimeoutMillis: 15000,
   ssl: false,
 });
 
