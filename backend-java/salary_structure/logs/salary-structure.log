@@ -102,3 +102,7 @@ LOG4J2 2026-01-20 10:04:34 INFO  com.example.salary_structure.Controller.SalaryS
 LOG4J2 2026-01-20 10:04:34 INFO  com.example.salary_structure.Services.SalaryStructureService - Fetching last salary for employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
 LOG4J2 2026-01-20 10:04:35 INFO  com.example.salary_structure.Controller.SalaryStructureController - Fetching last salary for employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
 LOG4J2 2026-01-20 10:04:35 INFO  com.example.salary_structure.Services.SalaryStructureService - Fetching last salary for employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+LOG4J2 2026-01-23 15:33:05 INFO  com.example.salary_structure.SalaryStructureApplication - Starting SalaryStructureApplication using Java 21.0.8 with PID 4748 (C:\Users\Admin\EMSNEW\EMSProject\backend-java\salary_structure\target\classes started by Admin in C:\Users\Admin\EMSNEW\EMSProject\backend-java\salary_structure)
+LOG4J2 2026-01-23 15:33:05 DEBUG com.example.salary_structure.SalaryStructureApplication - Running with Spring Boot v3.5.7, Spring v6.2.12
+LOG4J2 2026-01-23 15:33:05 INFO  com.example.salary_structure.SalaryStructureApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-01-23 15:33:10 INFO  com.example.salary_structure.SalaryStructureApplication - Started SalaryStructureApplication in 5.775 seconds (process running for 6.771)
