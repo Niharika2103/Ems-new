@@ -113,3 +113,10 @@ LOG4J2 2026-01-27 11:03:23 INFO  com.example.salary_structure.SalaryStructureApp
 LOG4J2 2026-01-27 11:03:23 DEBUG com.example.salary_structure.SalaryStructureApplication - Running with Spring Boot v3.5.7, Spring v6.2.12
 LOG4J2 2026-01-27 11:03:23 INFO  com.example.salary_structure.SalaryStructureApplication - No active profile set, falling back to 1 default profile: "default"
 LOG4J2 2026-01-27 11:03:30 INFO  com.example.salary_structure.SalaryStructureApplication - Started SalaryStructureApplication in 7.337 seconds (process running for 8.726)
+LOG4J2 2026-01-27 13:17:35 INFO  com.example.salary_structure.SalaryStructureApplication - Starting SalaryStructureApplication using Java 21.0.8 with PID 21264 (D:\Niharika\ems1.o\EMSPROJECT1.O\backend-java\salary_structure\target\classes started by nagab in D:\Niharika\ems1.o\EMSPROJECT1.O\backend-java\salary_structure)
+LOG4J2 2026-01-27 13:17:35 DEBUG com.example.salary_structure.SalaryStructureApplication - Running with Spring Boot v3.5.7, Spring v6.2.12
+LOG4J2 2026-01-27 13:17:35 INFO  com.example.salary_structure.SalaryStructureApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-01-27 13:18:46 INFO  com.example.salary_structure.SalaryStructureApplication - Starting SalaryStructureApplication using Java 21.0.8 with PID 5056 (D:\Niharika\ems1.o\EMSPROJECT1.O\backend-java\salary_structure\target\classes started by nagab in D:\Niharika\ems1.o\EMSPROJECT1.O\backend-java\salary_structure)
+LOG4J2 2026-01-27 13:18:46 DEBUG com.example.salary_structure.SalaryStructureApplication - Running with Spring Boot v3.5.7, Spring v6.2.12
+LOG4J2 2026-01-27 13:18:46 INFO  com.example.salary_structure.SalaryStructureApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-01-27 13:18:52 INFO  com.example.salary_structure.SalaryStructureApplication - Started SalaryStructureApplication in 7.029 seconds (process running for 8.797)
