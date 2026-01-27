@@ -430,3 +430,40 @@ LOG4J2 2026-01-27 13:12:13 INFO  com.example.attendance_service.AttendanceServic
 LOG4J2 2026-01-27 13:12:13 DEBUG com.example.attendance_service.AttendanceServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
 LOG4J2 2026-01-27 13:12:13 INFO  com.example.attendance_service.AttendanceServiceApplication - No active profile set, falling back to 1 default profile: "default"
 LOG4J2 2026-01-27 13:12:21 INFO  com.example.attendance_service.AttendanceServiceApplication - Started AttendanceServiceApplication in 8.023 seconds (process running for 9.982)
+LOG4J2 2026-01-27 14:39:19 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-26 | to=2026-02-01
+LOG4J2 2026-01-27 14:39:19 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-26 | to=2026-02-01
+LOG4J2 2026-01-27 14:39:22 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-26 | to=2026-02-01
+LOG4J2 2026-01-27 14:39:22 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-26 | to=2026-02-01
+LOG4J2 2026-01-27 14:40:07 INFO  com.example.attendance_service.AttendanceServiceApplication - Starting AttendanceServiceApplication using Java 21.0.8 with PID 22800 (D:\Niharika\ems1.o\EMSPROJECT1.O\backend-java\attendance-service\target\classes started by nagab in D:\Niharika\ems1.o\EMSPROJECT1.O\backend-java\attendance-service)
+LOG4J2 2026-01-27 14:40:07 DEBUG com.example.attendance_service.AttendanceServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
+LOG4J2 2026-01-27 14:40:07 INFO  com.example.attendance_service.AttendanceServiceApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-01-27 14:40:14 INFO  com.example.attendance_service.AttendanceServiceApplication - Started AttendanceServiceApplication in 7.747 seconds (process running for 9.289)
+LOG4J2 2026-01-27 14:40:24 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-26 | to=2026-02-01
+LOG4J2 2026-01-27 14:40:24 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-26 | to=2026-02-01
+LOG4J2 2026-01-27 14:40:31 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-26 | to=2026-02-01
+LOG4J2 2026-01-27 14:40:31 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-26 | to=2026-02-01
+LOG4J2 2026-01-27 14:47:31 INFO  com.example.attendance_service.AttendanceServiceApplication - Starting AttendanceServiceApplication using Java 21.0.8 with PID 11064 (D:\Niharika\ems1.o\EMSPROJECT1.O\backend-java\attendance-service\target\classes started by nagab in D:\Niharika\ems1.o\EMSPROJECT1.O\backend-java\attendance-service)
+LOG4J2 2026-01-27 14:47:31 DEBUG com.example.attendance_service.AttendanceServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
+LOG4J2 2026-01-27 14:47:31 INFO  com.example.attendance_service.AttendanceServiceApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-01-27 14:47:38 INFO  com.example.attendance_service.AttendanceServiceApplication - Started AttendanceServiceApplication in 7.567 seconds (process running for 9.121)
+LOG4J2 2026-01-27 14:47:55 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-26 | to=2026-02-01
+LOG4J2 2026-01-27 14:47:55 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-26 | to=2026-02-01
+LOG4J2 2026-01-27 14:47:59 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-26 | to=2026-02-01
+LOG4J2 2026-01-27 14:47:59 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-26 | to=2026-02-01
+LOG4J2 2026-01-27 15:20:39 INFO  com.example.attendance_service.AttendanceServiceApplication - Starting AttendanceServiceApplication using Java 21.0.8 with PID 20984 (D:\Niharika\ems1.o\EMSPROJECT1.O\backend-java\attendance-service\target\classes started by nagab in D:\Niharika\ems1.o\EMSPROJECT1.O\backend-java\attendance-service)
+LOG4J2 2026-01-27 15:20:39 DEBUG com.example.attendance_service.AttendanceServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
+LOG4J2 2026-01-27 15:20:39 INFO  com.example.attendance_service.AttendanceServiceApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-01-27 15:20:49 INFO  com.example.attendance_service.AttendanceServiceApplication - Started AttendanceServiceApplication in 10.786 seconds (process running for 13.671)
+LOG4J2 2026-01-27 15:22:53 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-26 | to=2026-02-01
+LOG4J2 2026-01-27 15:22:53 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-26 | to=2026-02-01
+LOG4J2 2026-01-27 15:23:04 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-26 | to=2026-02-01
+LOG4J2 2026-01-27 15:23:04 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-26 | to=2026-02-01
+LOG4J2 2026-01-27 15:23:07 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-19 | to=2026-01-25
+LOG4J2 2026-01-27 15:23:08 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-12 | to=2026-01-18
+LOG4J2 2026-01-27 15:23:17 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-19 | to=2026-01-25
+LOG4J2 2026-01-27 16:04:21 INFO  com.example.attendance_service.AttendanceServiceApplication - Starting AttendanceServiceApplication using Java 21.0.8 with PID 10896 (D:\Niharika\ems1.o\EMSPROJECT1.O\backend-java\attendance-service\target\classes started by nagab in D:\Niharika\ems1.o\EMSPROJECT1.O\backend-java\attendance-service)
+LOG4J2 2026-01-27 16:04:21 DEBUG com.example.attendance_service.AttendanceServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
+LOG4J2 2026-01-27 16:04:21 INFO  com.example.attendance_service.AttendanceServiceApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-01-27 16:04:29 INFO  com.example.attendance_service.AttendanceServiceApplication - Started AttendanceServiceApplication in 8.693 seconds (process running for 10.337)
+LOG4J2 2026-01-27 16:13:01 DEBUG com.example.attendance_service.controller.AttendanceController - Fetching leave balance for employeeId=df28f7b4-702d-4e75-a72c-78604a2402c7
+LOG4J2 2026-01-27 16:13:01 DEBUG com.example.attendance_service.controller.AttendanceController - Fetching leave balance for employeeId=df28f7b4-702d-4e75-a72c-78604a2402c7
