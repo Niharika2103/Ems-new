@@ -487,74 +487,147 @@ const fromThousands = (value) => {
   };
 
 
-  const handleSave = async () => {
-    const allErrors = validateAll();
-    if (Object.keys(allErrors).length > 0) {
-      setErrors(allErrors);
+  // const handleSave = async () => {
+  //   const allErrors = validateAll();
+  //   if (Object.keys(allErrors).length > 0) {
+  //     setErrors(allErrors);
 
-      if (Object.keys(validateStep(0)).length > 0) setActiveStep(0);
-      else if (Object.keys(validateStep(1)).length > 0) setActiveStep(1);
-      else if (Object.keys(validateStep(2)).length > 0) setActiveStep(2);
+  //     if (Object.keys(validateStep(0)).length > 0) setActiveStep(0);
+  //     else if (Object.keys(validateStep(1)).length > 0) setActiveStep(1);
+  //     else if (Object.keys(validateStep(2)).length > 0) setActiveStep(2);
 
-      return;
-    }
+  //     return;
+  //   }
 
-    const payload = {
-      employeeId: formData1.id,
-      location: formData.location,
+  //   const payload = {
+  //     employeeId: formData1.id,
+  //     location: formData.location,
 
-      panNumber: formData.panNumber,
-      pfNumber: formData.pfNumber,
-      uanNumber: formData.uanNumber,
-      esi: formData.esiNumber,  // ✔ correct key name
+  //     panNumber: formData.panNumber,
+  //     pfNumber: formData.pfNumber,
+  //     uanNumber: formData.uanNumber,
+  //     esi: formData.esiNumber,  // ✔ correct key name
 
-      bankName: formData.bankName,
-      accountNumber: formData.accountNumber,
-      ifscCode: formData.ifscCode,
-      paymentMethod: formData.paymentMethod,
+  //     bankName: formData.bankName,
+  //     accountNumber: formData.accountNumber,
+  //     ifscCode: formData.ifscCode,
+  //     paymentMethod: formData.paymentMethod,
 
-      effectiveFrom: formData.effectiveFrom,
-      effectiveTo: formData.effectiveTo,
+  //     effectiveFrom: formData.effectiveFrom,
+  //     effectiveTo: formData.effectiveTo,
 
-      // Earnings
-      basicPay: formData.basicPay,
-      hra: formData.houseRentAllowance,
-      da: formData.driftAllowance,
-      conveyanceAllowance: formData.conveyanceAllowance,
-      medicalAllowance: formData.medicalAllowance,
-      specialAllowance: formData.specialAllowance,
-      otherAllowances: formData.otherAllowance,
+  //     // Earnings
+  //     basicPay: formData.basicPay,
+  //     hra: formData.houseRentAllowance,
+  //     da: formData.driftAllowance,
+  //     conveyanceAllowance: formData.conveyanceAllowance,
+  //     medicalAllowance: formData.medicalAllowance,
+  //     specialAllowance: formData.specialAllowance,
+  //     otherAllowances: formData.otherAllowance,
 
-      // Deductions
-      pfEmployee: formData.providentFund,
-      pfEmployer: 0,
-      professionalTax: formData.professionalTax,
-      incomeTax: formData.incomeTax,
-      loanDeduction: formData.loanDeductions,
-      esi: formData.esiNumber,
-      otherDeductions: formData.otherAllowance,
-      // Days
-      lossOfDays: formData.lossofDaysDays,
-      lossOfPayReversalDays: formData.lossofpayreversalDays,
-      payableDays: formData.payableDays,
-    };
+  //     // Deductions
+  //     pfEmployee: formData.providentFund,
+  //     pfEmployer: 0,
+  //     professionalTax: formData.professionalTax,
+  //     incomeTax: formData.incomeTax,
+  //     loanDeduction: formData.loanDeductions,
+  //     esi: formData.esiNumber,
+  //     otherDeductions: formData.otherAllowance,
+  //     // Days
+  //     lossOfDays: formData.lossofDaysDays,
+  //     lossOfPayReversalDays: formData.lossofpayreversalDays,
+  //     payableDays: formData.payableDays,
+  //   };
 
 
-    try {
-      const res = await dispatch(saveSalaryStructure(payload));
-      console.log("dispatch result:", res);
+  //   try {
+  //     const res = await dispatch(saveSalaryStructure(payload));
+  //     console.log("dispatch result:", res);
 
-      if (res?.payload?.id) {
-        toast.success("Salary Structure Saved Successfully!");
-         setTimeout(() => navigate("/dashboard/emp_requestTable", { replace: true }), 2000);
-      } else {
-        toast.error("Failed to save salary structure");
-      }
-    } catch (err) {
-      toast.error("Error while saving");
-    }
+  //     if (res?.payload?.id) {
+  //       toast.success("Salary Structure Saved Successfully!");
+  //        setTimeout(() => navigate("/dashboard/emp_requestTable", { replace: true }), 2000);
+  //     } else {
+  //       toast.error("Failed to save salary structure");
+  //     }
+  //   } catch (err) {
+  //     toast.error("Error while saving");
+  //   }
+  // };
+
+const handleSave = async () => {
+  const allErrors = validateAll();
+  if (Object.keys(allErrors).length > 0) {
+    setErrors(allErrors);
+
+    if (Object.keys(validateStep(0)).length > 0) setActiveStep(0);
+    else if (Object.keys(validateStep(1)).length > 0) setActiveStep(1);
+    else if (Object.keys(validateStep(2)).length > 0) setActiveStep(2);
+
+    return;
+  }
+
+  const payload = {
+    employeeId: formData1.id,
+    location: formData.location,
+
+    panNumber: formData.panNumber,
+    pfNumber: formData.pfNumber,
+    uanNumber: formData.uanNumber,
+    esi: formData.esiNumber,
+
+    bankName: formData.bankName,
+    accountNumber: formData.accountNumber,
+    ifscCode: formData.ifscCode,
+    paymentMethod: formData.paymentMethod,
+
+    effectiveFrom: formData.effectiveFrom,
+    effectiveTo: formData.effectiveTo,
+
+    // Earnings
+    basicPay: formData.basicPay,
+    hra: formData.houseRentAllowance,
+    da: formData.driftAllowance,
+    conveyanceAllowance: formData.conveyanceAllowance,
+    medicalAllowance: formData.medicalAllowance,
+    specialAllowance: formData.specialAllowance,
+    otherAllowances: formData.otherAllowance,
+
+    // Deductions
+    pfEmployee: formData.providentFund,
+    pfEmployer: 0,
+    professionalTax: formData.professionalTax,
+    incomeTax: formData.incomeTax,
+    loanDeduction: formData.loanDeductions,
+    esi: formData.esiNumber,
+    otherDeductions: formData.otherAllowance,
+
+    // Days
+    lossOfDays: formData.lossofDaysDays,
+    lossOfPayReversalDays: formData.lossofpayreversalDays,
+    payableDays: formData.payableDays,
   };
 
+  try {
+    // ✅ IMPORTANT FIX
+    const res = await dispatch(saveSalaryStructure(payload)).unwrap();
+
+    toast.success("Salary Structure Saved Successfully!");
+
+    // ✅ allow toast to show before navigation
+    setTimeout(() => {
+      navigate("/dashboard/emp_requestTable", { replace: true });
+    }, 1500);
+
+  } catch (err) {
+    // ✅ BACKEND MESSAGE SHOWN HERE
+    toast.error(
+      typeof err === "string"
+        ? err
+        : err?.message || "Failed to save salary structure"
+    );
+  }
+};
 
 
   // STEP CONTENT

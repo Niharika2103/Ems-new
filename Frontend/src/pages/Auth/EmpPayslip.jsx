@@ -128,7 +128,36 @@ const EmpPayslip = () => {
   fetchData();
 }, []);
 
-  const downloadPayslip = async () => {
+//   const downloadPayslip = async () => {
+//   if (!selectedDate) return;
+
+//   const month = dayjs(selectedDate).format("MMMM").toUpperCase();
+//   const year = dayjs(selectedDate).format("YYYY");
+
+//   try {
+//     const response = await downloadPayslipApi(userId, month, year);
+
+//     const blob = new Blob([response.data], { type: "application/pdf" });
+//     const url = window.URL.createObjectURL(blob);
+
+//     const a = document.createElement("a");
+//     a.href = url;
+//     a.download = `Payslip-${month}-${year}.pdf`;
+//     a.click();
+//     window.URL.revokeObjectURL(url);
+
+//     // ✅ SIMPLE SUCCESS TOAST
+//     toast.success("Payslip downloaded successfully");
+//   } catch (error) {
+//     console.error("Payslip download failed:", error);
+
+//     // ✅ SIMPLE ERROR TOAST
+//     toast.error("Payslip not available for selected month");
+//   }
+// };
+
+
+const downloadPayslip = async () => {
   if (!selectedDate) return;
 
   const month = dayjs(selectedDate).format("MMMM").toUpperCase();
@@ -137,6 +166,7 @@ const EmpPayslip = () => {
   try {
     const response = await downloadPayslipApi(userId, month, year);
 
+    // ✅ SUCCESS → PDF DOWNLOAD
     const blob = new Blob([response.data], { type: "application/pdf" });
     const url = window.URL.createObjectURL(blob);
 
@@ -144,15 +174,32 @@ const EmpPayslip = () => {
     a.href = url;
     a.download = `Payslip-${month}-${year}.pdf`;
     a.click();
+
     window.URL.revokeObjectURL(url);
 
-    // ✅ SIMPLE SUCCESS TOAST
     toast.success("Payslip downloaded successfully");
   } catch (error) {
     console.error("Payslip download failed:", error);
 
-    // ✅ SIMPLE ERROR TOAST
-    toast.error("Payslip not available for selected month");
+    // ✅ IMPORTANT: READ BACKEND ERROR MESSAGE FROM BLOB
+    if (error.response?.data) {
+      try {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const message =
+            typeof reader.result === "string"
+              ? reader.result
+              : "Payslip not available for selected month";
+
+          toast.error(message);
+        };
+        reader.readAsText(error.response.data);
+      } catch {
+        toast.error("Payslip not available for selected month");
+      }
+    } else {
+      toast.error("Payslip not available for selected month");
+    }
   }
 };
 
