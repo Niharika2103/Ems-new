@@ -526,3 +526,7 @@ LOG4J2 2026-01-27 16:13:44 DEBUG com.example.attendance_service.controller.Atten
 LOG4J2 2026-01-27 16:14:09 INFO  com.example.attendance_service.controller.AttendanceController - Saving weekly attendance | employeeId=79813636-6baf-42d6-bcf5-3caa14c0a6bf | projectId=da2952de-33cc-4afd-8aed-06c79bede1bb | employeeName=undefined
 LOG4J2 2026-01-27 16:14:09 INFO  com.example.attendance_service.service.AttendanceService - Save/Update attendance → employeeId=79813636-6baf-42d6-bcf5-3caa14c0a6bf, projectId=da2952de-33cc-4afd-8aed-06c79bede1bb, employeeName=undefined
 LOG4J2 2026-01-27 16:14:10 INFO  com.example.attendance_service.service.AttendanceService - Attendance saved successfully → records=7
+LOG4J2 2026-01-27 16:52:10 INFO  com.example.attendance_service.AttendanceServiceApplication - Starting AttendanceServiceApplication using Java 21.0.8 with PID 25032 (D:\Niharika\ems1.o\EMSPROJECT1.O\backend-java\attendance-service\target\classes started by nagab in D:\Niharika\ems1.o\EMSPROJECT1.O\backend-java\attendance-service)
+LOG4J2 2026-01-27 16:52:10 DEBUG com.example.attendance_service.AttendanceServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
+LOG4J2 2026-01-27 16:52:10 INFO  com.example.attendance_service.AttendanceServiceApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-01-27 16:52:23 INFO  com.example.attendance_service.AttendanceServiceApplication - Started AttendanceServiceApplication in 13.987 seconds (process running for 16.321)
