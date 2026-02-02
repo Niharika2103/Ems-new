@@ -1,0 +1,12 @@
+2026-01-30 10:41:42 [INFO] Update Shift API called | shiftId=012934eb-0e00-4f3b-ac0d-e5e8fc10bcd0
+2026-01-30 10:41:42 [INFO] Shift updated successfully | shiftId=012934eb-0e00-4f3b-ac0d-e5e8fc10bcd0
+2026-01-30 10:41:42 [INFO] Get Shifts API called
+2026-01-30 10:41:42 [INFO] Shifts fetched | count=2
+2026-01-30 10:41:57 [INFO] Get Current Shift API | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | date=2026-01-26
+2026-01-30 10:41:58 [INFO] Current shift fetched | found=false
+2026-01-30 10:42:03 [INFO] Get Current Shift API | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | date=2026-01-26
+2026-01-30 10:42:03 [INFO] Current shift fetched | found=false
+2026-01-30 10:42:18 [INFO] Get Current Shift API | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | date=2026-01-26
+2026-01-30 10:42:19 [INFO] Current shift fetched | found=false
+2026-01-30 10:42:20 [INFO] Get Current Shift API | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | date=2026-02-02
+2026-01-30 10:42:20 [INFO] Current shift fetched | found=true

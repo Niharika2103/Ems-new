@@ -77,15 +77,20 @@ const FreelancerLettersDownload = () => {
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
 
-    // ✅ SUCCESS TOAST
-    toast.success("Letter downloaded successfully");
+    // ✅ BACKEND MESSAGE (if any)
+    toast.success(
+      res?.data?.message || "Letter downloaded successfully"
+    );
   } catch (err) {
     console.error("❌ Download failed:", err);
 
-    // ✅ ERROR TOAST
-    toast.error("Failed to download letter");
+    // ✅ BACKEND ERROR
+    toast.error(
+      err?.response?.data?.error || "Failed to download letter"
+    );
   }
 };
+
 
   const getIcon = (name = "") => {
     const lower = name.toLowerCase();

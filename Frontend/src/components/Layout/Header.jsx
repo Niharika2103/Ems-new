@@ -19,15 +19,10 @@ const Header = ({ isOpen, setIsOpen }) => {
   const [email, setEmail] = useState("");
   const [data, setData] = useState({});
 
-  // const roleCheck =
-  //   useSelector((state) => state.adminSlice?.role) ||
-  //   useSelector((state) => state.authSlice?.role) ||
-  //   useSelector((state) => state.employeeSlice?.role) ||
-  //   localStorage.getItem("role");
-  const activeRole = localStorage.getItem("active_role") || localStorage.getItem("role");
+  const activeRole =
+    localStorage.getItem("active_role") || localStorage.getItem("role");
 
-
-  // ✅ PROFILE PHOTO (Redux → localStorage → default)
+  // ✅ PROFILE PHOTO
   const profilePhoto =
     useSelector((state) => state.employeeDetails?.profile?.profile_photo) ||
     JSON.parse(localStorage.getItem("user"))?.profile_photo ||
@@ -58,14 +53,13 @@ const Header = ({ isOpen, setIsOpen }) => {
   const handleClose = () => setAnchorEl(null);
 
   const handleProfile = () => {
-  if (activeRole === "employee") {
-    navigate("/dashboard/employeeinfo/employeeprofile");
-  } else {
-    navigate("/profile");
-  }
-  handleClose();
-};
-
+    if (activeRole === "employee") {
+      navigate("/dashboard/employeeinfo/employeeprofile");
+    } else {
+      navigate("/profile");
+    }
+    handleClose();
+  };
 
   const handlePassword = () => {
     dispatch(employeeForgotPassword(email))
@@ -79,21 +73,21 @@ const Header = ({ isOpen, setIsOpen }) => {
     handleClose();
   };
 
-  /* -------------------- LOGOUT -------------------- */
+  /* -------------------- LOGOUT (FIXED) -------------------- */
   const Logout = async () => {
+    const realRole = localStorage.getItem("role"); // ✅ FIXED
+
     try {
       if (email) {
-        const realRole = localStorage.getItem("role");
-
-if (realRole === "superadmin") {
-  await superAdminLogoutApi(email);
-} else if (realRole === "admin") {
-  await adminLogoutApi(email);
-}
-
+        if (realRole === "superadmin") {
+          await superAdminLogoutApi(email);
+        } else if (realRole === "admin") {
+          await adminLogoutApi(email);
+        }
       }
     } catch (err) {
       console.error("Logout API Error:", err);
+      toast.error("Logout failed. Please try again.");
     }
 
     localStorage.clear();
@@ -103,13 +97,13 @@ if (realRole === "superadmin") {
       window.location.replace("/#/superadmin/login");
     else window.location.replace("/#/login");
 
-
     handleClose();
   };
 
   return (
     <>
       <header className="flex font-robo font-semibold justify-between items-center px-4 sm:px-6 py-2 bg-white shadow-md">
+
         {/* LEFT */}
         <div className="flex items-center gap-2">
           <button
@@ -136,8 +130,8 @@ if (realRole === "superadmin") {
 
         {/* RIGHT */}
         <div className="flex items-center gap-4">
-          {activeRole === "admin" && (
 
+          {activeRole === "admin" && (
             <button
               className="px-3 py-1 text-sm bg-sky-400 text-white rounded-md"
               onClick={() => navigate("/employee_register")}
@@ -187,6 +181,7 @@ if (realRole === "superadmin") {
                   {data?.email}
                 </p>
               </div>
+
               <MenuItem onClick={handleProfile}>My Profile</MenuItem>
               <MenuItem onClick={handlePassword}>Change Password</MenuItem>
               <MenuItem onClick={Logout}>Logout</MenuItem>

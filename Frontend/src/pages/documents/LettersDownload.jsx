@@ -63,6 +63,12 @@ const LettersDownload = () => {
 
     const res = await downloadEmployeeLetterApi(employeeId, fileName);
 
+    // 🛑 Safety check (in case backend sends empty response)
+    if (!res || !res.data) {
+      toast.error("No file received from server");
+      return;
+    }
+
     const blob = new Blob([res.data], { type: "application/pdf" });
     const url = window.URL.createObjectURL(blob);
 
@@ -77,11 +83,17 @@ const LettersDownload = () => {
 
     // ✅ SUCCESS TOAST
     toast.success("Letter downloaded successfully");
+
   } catch (err) {
     console.error("❌ Download failed:", err);
 
-    // ✅ ERROR TOAST
-    toast.error("Failed to download letter");
+    // ✅ SHOW BACKEND ERROR IF AVAILABLE
+    const msg =
+      err.response?.data?.error ||
+      err.message ||
+      "Failed to download letter";
+
+    toast.error(msg);
   }
 };
 

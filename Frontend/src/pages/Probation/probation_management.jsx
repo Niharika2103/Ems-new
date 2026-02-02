@@ -54,8 +54,13 @@ const [recentlyGeneratedLetter, setRecentlyGeneratedLetter] = useState(null);
           });
         })
         .catch((err) => {
-          console.error("Dashboard count error", err);
-        });
+  toast.error(
+    err.response?.data?.message ||
+    err.response?.data?.error ||
+    err.message
+  );
+});
+
     }, []);
 
 
@@ -169,27 +174,34 @@ const handleNewEmployeeExport = async () => {
 };
 
 const handleProbationExport = async () => {
-  try{
-  const response = await fetch(
-    `${API_BASES.ADMIN}/admin/probation/export`,
-    {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-        Accept: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      },
+  try {
+    const response = await fetch(
+      `${API_BASES.ADMIN}/admin/probation/export`,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Accept: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      // ✅ read backend error message
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(
+        errData.message || errData.error || "Failed to export probation list"
+      );
     }
-  );
 
-  if (!response.ok) {
-    throw new Error("Failed to export probation list");
-  }
+    const blob = await response.blob();
+    downloadBlob(blob, "probation_list.xlsx");
 
-  const blob = await response.blob();
-  downloadBlob(blob, "probation_list.xlsx");
     toast.success("Probation list exported successfully!");
-}catch (error) {
-    // ❌ ERROR TOAST
-    toast.error(error.message || "Export failed");
+  } catch (error) {
+    // ✅ now terminal/logger message will show in UI
+    toast.error(
+      error.message || "Export failed"
+    );
   }
 };
 
@@ -225,37 +237,41 @@ const handleExtendPeriod = async () => {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({
-          probationId: selectedProbation.probationid, // ✅ correct column
+          probationId: selectedProbation.probationid,
           extendDays: Number(extendDays),
         }),
       }
     );
 
     if (!response.ok) {
-      throw new Error("Extend API failed");
+      // ✅ read backend error message
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(
+        errData.message || errData.error || "Extend API failed"
+      );
     }
 
-    success = true; // ✅ mark success
+    success = true;
   } catch (err) {
     console.error("Extend API error:", err);
-    toast.error("Failed to extend probation");
+
+    // ✅ show terminal/backend message in UI
+    toast.error(
+      err.message || "Failed to extend probation"
+    );
   } finally {
     setActionLoading(false);
   }
 
-  // ✅ EVERYTHING BELOW WILL NEVER ENTER CATCH
   if (success) {
-  //alert("Probation extended successfully");
     toast.success("Probation period extended successfully");
 
-  setShowExtendModal(false);
-  setExtendDays("");
-  setShowDetails(false);
+    setShowExtendModal(false);
+    setExtendDays("");
+    setShowDetails(false);
 
-  // ✅ THIS triggers re-render
-  dispatch(fetchassignProbation());
-}
-
+    dispatch(fetchassignProbation());
+  }
 };
 
 
@@ -281,26 +297,33 @@ const handleTerminate = async () => {
     );
 
     if (!response.ok) {
-      throw new Error("Terminate API failed");
+      // ✅ get backend error message
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(
+        errData.message || errData.error || "Terminate API failed"
+      );
     }
 
     success = true;
   } catch (err) {
     console.error("Terminate error:", err);
-    toast.error("Failed to terminate probation");
+
+    // ✅ show terminal/backend message in frontend
+    toast.error(
+      err.message || "Failed to terminate probation"
+    );
   } finally {
     setActionLoading(false);
   }
 
- if (success) {
-  toast.success("Probation terminated successfully");
-  setShowDetails(false);
+  if (success) {
+    toast.success("Probation terminated successfully");
+    setShowDetails(false);
 
-  // ✅ THIS triggers re-render
-  dispatch(fetchassignProbation());
-}
-
+    dispatch(fetchassignProbation());
+  }
 };
+
 const handleGenerateLetter = async (emp) => {
   try {
     const payload = {
@@ -310,22 +333,30 @@ const handleGenerateLetter = async (emp) => {
 
     const res = await generateLetterApi(payload);
 
-    // ✅ Store the generated letter info
     const letterData = {
       ...res.data,
       employeeId: payload.employeeId,
-      associatedEmployee: emp // optional: keep ref to employee row
+      associatedEmployee: emp
     };
+
     setRecentlyGeneratedLetter(letterData);
 
-    alert("Letter generated successfully");
+    toast.success("Letter generated successfully");
 
     if (res.data?.pdf_url) {
       window.open(res.data.pdf_url, "_blank");
     }
+
   } catch (err) {
-    console.error(err);
-    alert("Failed to generate letter");
+    console.error("Generate letter error:", err);
+
+    // ✅ show backend/terminal message in UI
+    toast.error(
+      err.response?.data?.message ||
+      err.response?.data?.error ||
+      err.message ||
+      "Failed to generate letter"
+    );
   }
 };
 

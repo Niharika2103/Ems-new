@@ -12,47 +12,36 @@ import {
 import { useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 
-// ✅ BOTH LOGOUT APIs
 import { adminLogoutApi, superAdminLogoutApi } from "../../api/authApi";
 import { decodeToken } from "../../api/decodeToekn";
 
 const Sidebar = ({ isOpen, handleClose }) => {
+
   const adminRole = useSelector((state) => state.adminSlice?.role);
   const authRole = useSelector((state) => state.authSlice?.role);
   const employeeRole = useSelector((state) => state.employeeSlice?.role);
 
-  // ✅ PROFILE PHOTO FROM REDUX
   const profilePhoto =
     useSelector((state) => state.employeeDetails?.profile?.profile_photo) ||
     JSON.parse(localStorage.getItem("user"))?.profile_photo ||
-    null;
+    "/default-user.jpg";
 
   const role =
     adminRole ||
     authRole ||
     employeeRole ||
     localStorage.getItem("role");
-  // ---------- MULTI-ROLE SUPPORT ----------
-const baseRole = role || localStorage.getItem("role");
 
-const role1 = localStorage.getItem("role_1");
-const role2 = localStorage.getItem("role_2");
+  const baseRole = role || localStorage.getItem("role");
 
-const isTempAdmin = localStorage.getItem("is_temp_admin") === "true";
+  const activeRole =
+    localStorage.getItem("active_role") || baseRole;
 
-const activeRole =
-  localStorage.getItem("active_role") ||
-  baseRole;
-  
-
-  // const employment_type =
-  //   useSelector((state) => state.employeeSlice?.employment_type) ||
-  //   localStorage.getItem("employment_type");
   const employment_type = localStorage.getItem("employment_type");
-
 
   const [email, setEmail] = useState("");
 
+  /* ------------------ LOAD USER EMAIL ------------------ */
   useEffect(() => {
     const loadUser = async () => {
       try {
@@ -88,12 +77,11 @@ const activeRole =
       { name: "Dashboard", icon: <Home size={20} />, path: "/dashboard" },
       { name: "Job Posting", icon: <Briefcase size={20} />, path: "/JobPostDashboard" },
       { name: "Attendance", icon: <Calendar size={20} />, path: "/dashboard/emp_attendance" },
-      // { name: "HR", icon: <CheckSquare size={20} />, path: "/hr" },
       { name: "Payslip", icon: <Users size={20} />, path: "/payslip" },
     ];
   }
 
-  /* ------------------ ADMIN / SUPERADMIN MENUS ------------------ */
+  /* ------------------ ADMIN MENUS ------------------ */
   const roleMenus = {
     admin: [
       { name: "Dashboard", icon: <Home size={20} />, path: "/dashboard" },
@@ -107,55 +95,28 @@ const activeRole =
     ],
     superadmin: [
       { name: "Dashboard", icon: <Home size={20} />, path: "/dashboard" },
-      // { name: "Job Posting", icon: <Briefcase size={20} />, path: "/jobs" },
       { name: "Manage Admins", icon: <Users size={20} />, path: "/dashboard/superadmin_requestTable" },
-      // { name: "System Config", icon: <Settings size={20} />, path: "/system-config" },
       { name: "Audit Logs", icon: <CheckSquare size={20} />, path: "/audit-logs" },
-      // { name: "Accounts", icon: <Calendar size={20} />, path: "/dashboard/accounts" },
-      // { name: "Reports", icon: <BarChart3 size={20} />, path: "/reports" },
-      // { name: "Settings", icon: <Settings size={20} />, path: "/settings" },
     ],
   };
-   
-    /* ------------------ VENDOR MENUS ------------------ */
-  const vendorMenus = [
-    { name: "Dashboard", icon: <Home size={20} />, path: "/dashboard/vendor" },
-    { name: "Vendor Info", icon: <Users size={20} />, path: "/dashboard/vendor/info" },
-    { name: "Attendance", icon: <Calendar size={20} />, path: "/dashboard/vendor/attendance" },
-    { name: "Projects", icon: <Briefcase size={20} />, path: "/dashboard/vendor/projects" },
-    { name: "Payments", icon: <BarChart3 size={20} />, path: "/dashboard/vendor/payments" },
-    { name: "MoU", icon: <CheckSquare size={20} />, path: "/dashboard/vendor/mou" },
-  ];
 
-  // const finalMenus =
-  //   role === "employee" ? employeeMenus : roleMenus[role] || [];
-
-    // const finalMenus =
-    // role === "employee"
-    //   ? employeeMenus
-    //   : role === "vendor"
-    //   ? vendorMenus
-    //   : roleMenus[role] || [];
-
+  /* ------------------ FINAL MENU PICK ------------------ */
   let finalMenus;
 
-if (activeRole === "employee") {
-  finalMenus = employeeMenus;
-} else if (activeRole === "admin") {
-  finalMenus = roleMenus.admin;
-} else if (activeRole === "superadmin") {
-  finalMenus = roleMenus.superadmin;
-} else {
-  finalMenus = employeeMenus;
-}
+  if (activeRole === "employee") finalMenus = employeeMenus;
+  else if (activeRole === "admin") finalMenus = roleMenus.admin;
+  else if (activeRole === "superadmin") finalMenus = roleMenus.superadmin;
+  else finalMenus = employeeMenus;
 
-  /* ------------------ LOGOUT ------------------ */
+  /* ------------------ LOGOUT (FIXED) ------------------ */
   const handleLogout = async () => {
     try {
       if (email) {
-       if (activeRole === "superadmin") await superAdminLogoutApi(email);
-       else if (activeRole === "admin") await adminLogoutApi(email);
-
+        if (activeRole === "superadmin") {
+          await superAdminLogoutApi(email);
+        } else if (activeRole === "admin") {
+          await adminLogoutApi(email);
+        }
       }
     } catch (error) {
       console.error("Logout API Error:", error);
@@ -163,17 +124,18 @@ if (activeRole === "employee") {
 
     localStorage.clear();
 
-    if (activeRole === "admin") window.location.replace("/#/admin/login");
-    else if (activeRole === "superadmin") window.location.replace("/#/superadmin/login");
+    if (activeRole === "admin")
+      window.location.replace("/#/admin/login");
+    else if (activeRole === "superadmin")
+      window.location.replace("/#/superadmin/login");
     else window.location.replace("/#/login");
-
 
     if (handleClose) handleClose();
   };
 
   let displayRole = activeRole?.toUpperCase();
 
-  if (role === "employee") {
+  if (activeRole === "employee") {
     displayRole =
       employment_type === "freelancer"
         ? "FREELANCER"
@@ -185,22 +147,22 @@ if (activeRole === "employee") {
   return (
     <aside
       className={`font-robo font-medium bg-[#51b4f2] text-white transition-all duration-300 
-        flex flex-col ${isOpen ? "w-56" : "w-16"}`}
+      flex flex-col ${isOpen ? "w-56" : "w-16"}`}
     >
+
       {/* ROLE */}
       <div className="flex items-center justify-center py-4">
         {isOpen && <span className="ml-3 text-lg font-bold">{displayRole}</span>}
       </div>
 
-      {/* PROFILE IMAGE */}
+      {/* PROFILE */}
       <div className="flex items-center justify-center py-2">
         <img
-          src={profilePhoto || "/default-user.jpg"}
+          src={profilePhoto}
           alt="User"
           className="w-12 h-12 rounded-full border-2 border-white object-cover"
         />
       </div>
-  
 
       {/* MENUS */}
       <div className="flex-1 mt-6 ml-6">
@@ -210,19 +172,19 @@ if (activeRole === "employee") {
               <NavLink
                 to={item.path}
                 className={({ isActive }) =>
-                  `group flex items-center p-2 rounded-l-full cursor-pointer transition-all duration-300
-                   ${
-                     isActive
-                       ? "bg-white text-[#51b4f2] font-semibold shadow-md"
-                       : "text-white hover:bg-white hover:text-[#51b4f2]"
-                   }`
+                  `group flex items-center p-2 rounded-l-full transition-all duration-300
+                  ${
+                    isActive
+                      ? "bg-white text-[#51b4f2] font-semibold shadow-md"
+                      : "text-white hover:bg-white hover:text-[#51b4f2]"
+                  }`
                 }
               >
                 {({ isActive }) => (
                   <>
                     <span
-                      className={`${isOpen ? "mr-3" : ""} transition-colors duration-300
-                        ${isActive ? "text-[#51b4f2]" : "group-hover:text-[#51b4f2]"}`}
+                      className={`${isOpen ? "mr-3" : ""} 
+                      ${isActive ? "text-[#51b4f2]" : "group-hover:text-[#51b4f2]"}`}
                     >
                       {item.icon}
                     </span>
@@ -237,10 +199,10 @@ if (activeRole === "employee") {
           <li>
             <button
               onClick={handleLogout}
-              className="w-full text-left group flex items-center p-2 
-              rounded-l-full cursor-pointer hover:bg-white hover:scale-105 text-white"
+              className="w-full text-left group flex items-center p-2 rounded-l-full
+              hover:bg-white hover:text-[#51b4f2] transition-all"
             >
-              <span className={`${isOpen ? "mr-3" : ""} group-hover:text-sky-600`}>
+              <span className={`${isOpen ? "mr-3" : ""}`}>
                 <LogOut size={20} />
               </span>
               {isOpen && <span>Logout</span>}

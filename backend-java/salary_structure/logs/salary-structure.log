@@ -142,3 +142,7 @@ LOG4J2 2026-01-22 12:22:19 INFO  com.example.salary_structure.Controller.SalaryS
 LOG4J2 2026-01-22 12:22:19 INFO  com.example.salary_structure.Services.SalaryStructureService - Fetching last salary for employeeId=d8f99fcf-3032-4cee-a7fa-f1f58722098b
 LOG4J2 2026-01-22 12:22:19 INFO  com.example.salary_structure.Controller.SalaryStructureController - Fetching last salary for employeeId=d8f99fcf-3032-4cee-a7fa-f1f58722098b
 LOG4J2 2026-01-22 12:22:19 INFO  com.example.salary_structure.Services.SalaryStructureService - Fetching last salary for employeeId=d8f99fcf-3032-4cee-a7fa-f1f58722098b
+LOG4J2 2026-01-28 11:42:38 INFO  com.example.salary_structure.SalaryStructureApplication - Starting SalaryStructureApplication using Java 24 with PID 2720 (C:\Users\DELL\Desktop\EMSPROJECT1.O\EMSPROJECT1.NEW\backend-java\salary_structure\target\classes started by DELL in C:\Users\DELL\Desktop\EMSPROJECT1.O\EMSPROJECT1.NEW\backend-java\salary_structure)
+LOG4J2 2026-01-28 11:42:38 DEBUG com.example.salary_structure.SalaryStructureApplication - Running with Spring Boot v3.5.7, Spring v6.2.12
+LOG4J2 2026-01-28 11:42:38 INFO  com.example.salary_structure.SalaryStructureApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-01-28 11:42:54 INFO  com.example.salary_structure.SalaryStructureApplication - Started SalaryStructureApplication in 19.457 seconds (process running for 25.726)

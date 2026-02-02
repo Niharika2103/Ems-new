@@ -14,6 +14,8 @@ import { loadTemplate } from "../utils/templateLoader.js";
 // import pdf from "html-pdf";
 import ExcelJS from "exceljs";
 import puppeteer from "puppeteer";
+import logger from "../config/logger.js";
+
 
 //import { USER_MASTER_TABLE } from '../config/constants.js';
 
@@ -352,28 +354,47 @@ export const adminRegister = async (req, res) => {
 
 export const adminLogin = async (req, res) => {
   const client = await pool.connect();
+
   try {
     const { email, password, otp } = req.body;
+
+    logger.info(`Admin login attempt | email=${email}`);
 
     const userResult = await client.query(
       `SELECT * FROM ${USER_MASTER_TABLE} WHERE email=$1`,
       [email]
     );
+
     const user = userResult.rows[0];
 
-    if (!user) return res.status(401).json({ error: "Invalid email or password" });
+    if (!user) {
+      logger.warn(`Login failed — user not found | email=${email}`);
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ error: "Invalid password" });
+
+    if (!isMatch) {
+      logger.warn(`Login failed — wrong password | email=${email}`);
+      return res.status(401).json({ error: "Invalid password" });
+    }
 
     if (!(user.role === "admin" || user.role_1 === "admin")) {
+      logger.warn(`Unauthorized admin access | userId=${user.id}`);
       return res.status(403).json({ error: "Not authorized as Admin" });
     }
 
-    if (!user.mfa_enabled)
-      return res.status(403).json({ error: "MFA setup not completed. Please verify OTP first." });
+    if (!user.mfa_enabled) {
+      logger.warn(`MFA not completed | userId=${user.id}`);
+      return res.status(403).json({
+        error: "MFA setup not completed. Please verify OTP first.",
+      });
+    }
 
-    if (!otp) return res.status(400).json({ error: "OTP required for login" });
+    if (!otp) {
+      logger.warn(`OTP missing | userId=${user.id}`);
+      return res.status(400).json({ error: "OTP required for login" });
+    }
 
     const verified = speakeasy.totp.verify({
       secret: user.mfa_secret,
@@ -382,87 +403,86 @@ export const adminLogin = async (req, res) => {
       window: 1,
     });
 
-    if (!verified) return res.status(401).json({ error: "Invalid OTP" });
+    if (!verified) {
+      logger.warn(`Invalid OTP | userId=${user.id}`);
+      return res.status(401).json({ error: "Invalid OTP" });
+    }
 
     const regDataResult = await client.query(
       `SELECT is_temp_admin, temp_admin_expiry, is_approved 
        FROM ${REGISTRATIONS_TABLE} WHERE user_id=$1`,
       [user.id]
     );
+
     const regData = regDataResult.rows[0];
 
-    if (!regData?.is_approved)
+    if (!regData?.is_approved) {
+      logger.warn(`Admin not approved by SuperAdmin | userId=${user.id}`);
       return res.status(403).json({
-        error: "Access denied. Permission not granted by SuperAdmin."
+        error: "Access denied. Permission not granted by SuperAdmin.",
       });
+    }
 
     const isTempAdmin =
-      regData.is_temp_admin && new Date(regData.temp_admin_expiry) > new Date();
+      regData.is_temp_admin &&
+      new Date(regData.temp_admin_expiry) > new Date();
 
     const token = issueJwt({
-  email: user.email,
-  role: user.role,            // primary role column
-  role_1: user.role_1,
-  role_2: user.role_2,
-  employment_type: user.employment_type,
-  is_temp_admin: isTempAdmin,
-  id: user.id,
-  name: user.name,
-});
+      email: user.email,
+      role: user.role,
+      role_1: user.role_1,
+      role_2: user.role_2,
+      employment_type: user.employment_type,
+      is_temp_admin: isTempAdmin,
+      id: user.id,
+      name: user.name,
+    });
 
+    // ✅ AUDIT LOG ENTRY
+    await client.query(
+      `
+        INSERT INTO audit_logs (
+          id,
+          super_admin_id,
+          employee_id,
+          created_by,
+          created_at,
+          updated_by,
+          updated_at
+        )
+        VALUES (
+          gen_random_uuid(),
+          NULL,
+          $1,
+          'login',
+          NOW(),
+          NULL,
+          NULL
+        )
+      `,
+      [user.id]
+    );
 
-    // AUDIT LOG – LOGIN ENTRY
-await client.query(
-  `
-    INSERT INTO audit_logs (
-      id,
-      super_admin_id,
-      employee_id,
-      created_by,
-      created_at,
-      updated_by,
-      updated_at
-    )
-    VALUES (
-      gen_random_uuid(),
-      NULL,
-      $1,
-      'login',
-      NOW(),
-      NULL,
-      NULL
-    )
-  `,
-  [user.id]          // MUST be the same "id" used in adminLogout
-);
+    logger.info(`Admin login successful | userId=${user.id}`);
 
-
-
-   res.json({
-  message: "Admin login successful with MFA",
-  token,
-  user: {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-
-    // primary working role
-    role: user.role,
-
-    // 👇 important for dashboard + sidebar
-    role_1: user.role_1,
-    role_2: user.role_2,
-
-    employment_type: user.employment_type,
-
-    mfa_enabled: user.mfa_enabled,
-    is_temp_admin: isTempAdmin,
-  },
-});
-
+    res.json({
+      message: "Admin login successful with MFA",
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        role_1: user.role_1,
+        role_2: user.role_2,
+        employment_type: user.employment_type,
+        mfa_enabled: user.mfa_enabled,
+        is_temp_admin: isTempAdmin,
+      },
+    });
 
   } catch (err) {
-    console.error("Admin Login Error:", err.message);
+    logger.error(`Admin Login Error | ${err.message}`);
     res.status(500).json({ error: err.message });
   } finally {
     client.release();
@@ -2028,44 +2048,63 @@ async function fetchImageAsBase64(url) {
 // ✅ FULLY UPDATED generateLetter
 export const generateLetter = async (req, res) => {
   const client = await pool.connect();
+
   try {
     const { employeeId, letterType } = req.body;
+
+    logger.info(`GenerateLetter API called | empId=${employeeId} | type=${letterType}`);
+
     if (!employeeId || !letterType) {
+      logger.warn("GenerateLetter validation failed: missing employeeId or letterType");
       return res.status(400).json({ error: "employeeId and letterType are required" });
     }
+
     const empResult = await client.query(
       `SELECT * FROM user_employees_master WHERE id = $1`,
       [employeeId]
     );
+
     const emp = empResult.rows[0];
-    if (!emp) return res.status(404).json({ error: "Employee not found" });
+    if (!emp) {
+      logger.warn(`Employee not found | empId=${employeeId}`);
+      return res.status(404).json({ error: "Employee not found" });
+    }
+
     const salResult = await client.query(
       `SELECT * FROM salary_structure WHERE employee_id = $1 ORDER BY created_at DESC LIMIT 1`,
       [employeeId]
     );
+
     const sal = salResult.rows[0] || {};
 
-    // ✅ GET BRANDING (this was missing!)
+    logger.info(`Employee & salary data fetched | empId=${employeeId}`);
+
+    // ✅ GET BRANDING
     const branding = await getBrandingForContext("letters");
+    logger.info(`Branding loaded for letters | empId=${employeeId}`);
 
     const selectedTemplate = templateFileMap[letterType];
-    if (!selectedTemplate)
+    if (!selectedTemplate) {
+      logger.warn(`Invalid letter type selected | type=${letterType}`);
       return res.status(400).json({ error: "Invalid letter type selected" });
+    }
+
     const templateContent = loadTemplate(selectedTemplate);
     if (!templateContent) {
+      logger.error(`Template file missing | type=${letterType}`);
       return res.status(500).json({ error: "Template file missing" });
     }
 
     const probationResult = await client.query(
-  `SELECT * FROM probation 
-   WHERE employee_id = $1 
-   ORDER BY createdat DESC LIMIT 1`,
-  [employeeId]
-);
+      `SELECT * FROM probation 
+       WHERE employee_id = $1 
+       ORDER BY createdat DESC LIMIT 1`,
+      [employeeId]
+    );
 
-const probation = probationResult.rows[0] || {};
+    const probation = probationResult.rows[0] || {};
 
-    // ✅ Inject company_name from branding or fallback
+    // Inject data
     const data = {
       name: emp.name,
       designation: emp.designation,
@@ -2087,80 +2126,89 @@ const probation = probationResult.rows[0] || {};
       bank_name: sal.bank_name,
       ifsc_code: sal.ifsc_code,
       account_number: sal.account_number,
-      company_name: branding?.companyName || "Zigma People Private Limited (An AI India Venture)",
+      company_name:
+        branding?.companyName ||
+        "Zigma People Private Limited (An AI India Venture)",
       ctc: sal.gross_salary,
       start_date: probation.startdate,
-end_date: probation.enddate,
-confirmation_date: probation.enddate,
-issue_date: new Date().toLocaleDateString(),
-
+      end_date: probation.enddate,
+      confirmation_date: probation.enddate,
+      issue_date: new Date().toLocaleDateString(),
     };
 
     let filledHTML = fillTemplate(templateContent, data);
 
-    // ✅ INJECT LOGO + HEADER (this was missing!)
-       if (branding) {
-  let logoHtml = "";
+    // Inject logo + header
+    if (branding) {
+      let logoHtml = "";
 
-  if (branding.logoUrl) {
-    try {
-      const logoBase64 = await fetchImageAsBase64(branding.logoUrl);
-      logoHtml = `<img src="${logoBase64}" style="max-height:60px; margin-bottom:10px;" />`;
-    } catch (e) {
-      console.warn("Logo load failed, continuing without logo", e.message);
+      if (branding.logoUrl) {
+        try {
+          const logoBase64 = await fetchImageAsBase64(branding.logoUrl);
+          logoHtml = `<img src="${logoBase64}" style="max-height:60px; margin-bottom:10px;" />`;
+        } catch (e) {
+          logger.warn(`Logo load failed | empId=${employeeId} | ${e.message}`);
+        }
+      }
+
+      const headerHtml = `
+        <div style="text-align:center; margin-bottom:20px;">
+          ${logoHtml}
+          <h2 style="color:${branding.primaryColor || "#000"}; text-decoration:underline;">
+            ${letterType.toUpperCase()}
+          </h2>
+          <h3>${branding.companyName}</h3>
+        </div>
+      `;
+
+      filledHTML = filledHTML.replace(/LETTER_HEADER_PLACEHOLDER/g, headerHtml);
+    } else {
+      filledHTML = filledHTML.replace(
+        /LETTER_HEADER_PLACEHOLDER/g,
+        `<h2 style="text-align:center; text-decoration:underline;">${letterType.toUpperCase()}</h2>`
+      );
     }
-  }
-
-  const headerHtml = `
-    <div style="text-align:center; margin-bottom:20px;">
-      ${logoHtml}
-      <h2 style="color:${branding.primaryColor || '#000'}; text-decoration:underline;">
-        ${letterType.toUpperCase()}
-      </h2>
-      <h3>${branding.companyName}</h3>
-    </div>
-  `;
-
-  // more robust replacement (ignores spaces/newlines)
-  filledHTML = filledHTML.replace(/LETTER_HEADER_PLACEHOLDER/g, headerHtml);
-} else {
-  filledHTML = filledHTML.replace(
-    /LETTER_HEADER_PLACEHOLDER/g,
-    `<h2 style="text-align:center; text-decoration:underline;">${letterType.toUpperCase()}</h2>`
-  );
-}
 
     // Generate PDF
     const lettersDir = path.join(process.cwd(), "src/uploads/letters");
     if (!fs.existsSync(lettersDir)) fs.mkdirSync(lettersDir, { recursive: true });
+
     const fileName = `${letterType.replace(/ /g, "_")}_${Date.now()}.pdf`;
     const filePath = path.join(lettersDir, fileName);
+
     await generatePDF(filledHTML, filePath);
+    logger.info(`PDF generated | empId=${employeeId} | file=${fileName}`);
 
     // Save to DB
     const docResult = await client.query(
       `SELECT document_url FROM user_employees_master WHERE id=$1`,
       [employeeId]
     );
+
     let existingDocs = docResult.rows[0]?.document_url || [];
     if (!Array.isArray(existingDocs)) existingDocs = [];
+
     existingDocs.push(fileName);
+
     await client.query(
       `UPDATE user_employees_master
-         SET document_url = $1::jsonb,
-             updated_at = NOW()
-         WHERE id = $2`,
+       SET document_url = $1::jsonb,
+           updated_at = NOW()
+       WHERE id = $2`,
       [JSON.stringify(existingDocs), employeeId]
     );
+
+    logger.info(`Letter saved to DB | empId=${employeeId} | file=${fileName}`);
 
     return res.json({
       message: "Letter generated successfully",
       pdf_url: `/uploads/letters/${fileName}`,
       file_name: fileName,
-      documents: existingDocs
+      documents: existingDocs,
     });
+
   } catch (err) {
-    console.error("Generate Letter Error:", err.message);
+    logger.error(`Generate Letter Error | empId=${req.body?.employeeId} | ${err.message}`);
     return res.status(500).json({ error: "Failed to generate letter" });
   } finally {
     client.release();
@@ -2210,8 +2258,11 @@ export const getEmployeeLetters = async (req, res) => {
   try {
     const { employeeId } = req.params;
 
+    logger.info(`GetEmployeeLetters API called | empId=${employeeId}`);
+
     // 1️⃣ Validate input
     if (!employeeId) {
+      logger.warn("GetEmployeeLetters validation failed: missing employeeId");
       return res.status(400).json({
         error: "Employee ID is required"
       });
@@ -2226,6 +2277,7 @@ export const getEmployeeLetters = async (req, res) => {
     );
 
     if (result.rows.length === 0) {
+      logger.warn(`Employee not found | empId=${employeeId}`);
       return res.status(404).json({
         error: "Employee not found"
       });
@@ -2237,11 +2289,8 @@ export const getEmployeeLetters = async (req, res) => {
     let letterFiles = [];
 
     if (Array.isArray(docs)) {
-      // letters stored as array
       letterFiles = docs;
-    } 
-    else if (docs && typeof docs === "object") {
-      // ignore non-letter documents
+    } else if (docs && typeof docs === "object") {
       letterFiles = [];
     }
 
@@ -2255,6 +2304,10 @@ export const getEmployeeLetters = async (req, res) => {
       url: `${BASE_URL}/uploads/letters/${file}`
     }));
 
+    logger.info(
+      `Employee letters fetched | empId=${employeeId} | count=${files.length}`
+    );
+
     // 5️⃣ Success response
     return res.status(200).json({
       success: true,
@@ -2263,7 +2316,9 @@ export const getEmployeeLetters = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("Get Employee Letters Error:", err);
+    logger.error(
+      `GetEmployeeLetters Error | empId=${req.params?.employeeId} | ${err.message}`
+    );
     return res.status(500).json({
       error: "Failed to fetch employee letters"
     });
@@ -2279,7 +2334,14 @@ export const downloadEmployeeLetter = async (req, res) => {
   try {
     const { employeeId, fileName } = req.params;
 
+    logger.info(
+      `DownloadEmployeeLetter API called | empId=${employeeId} | file=${fileName}`
+    );
+
     if (!employeeId || !fileName) {
+      logger.warn(
+        "DownloadEmployeeLetter validation failed: missing employeeId or fileName"
+      );
       return res.status(400).json({
         error: "Employee ID and file name are required"
       });
@@ -2294,6 +2356,7 @@ export const downloadEmployeeLetter = async (req, res) => {
     );
 
     if (result.rows.length === 0) {
+      logger.warn(`Employee not found | empId=${employeeId}`);
       return res.status(404).json({
         error: "Employee not found"
       });
@@ -2302,6 +2365,9 @@ export const downloadEmployeeLetter = async (req, res) => {
     const docs = result.rows[0].document_url || [];
 
     if (!Array.isArray(docs) || !docs.includes(fileName)) {
+      logger.warn(
+        `Unauthorized letter access attempt | empId=${employeeId} | file=${fileName}`
+      );
       return res.status(403).json({
         error: "You are not authorized to access this file"
       });
@@ -2315,10 +2381,17 @@ export const downloadEmployeeLetter = async (req, res) => {
     );
 
     if (!fs.existsSync(filePath)) {
+      logger.warn(
+        `Letter file missing on server | empId=${employeeId} | file=${fileName}`
+      );
       return res.status(404).json({
         error: "File not found on server"
       });
     }
+
+    logger.info(
+      `Letter download started | empId=${employeeId} | file=${fileName}`
+    );
 
     // 3️⃣ Send file for download
     res.setHeader(
@@ -2330,7 +2403,9 @@ export const downloadEmployeeLetter = async (req, res) => {
     return res.sendFile(filePath);
 
   } catch (err) {
-    console.error("Download Letter Error:", err);
+    logger.error(
+      `DownloadEmployeeLetter Error | empId=${req.params?.employeeId} | ${err.message}`
+    );
     return res.status(500).json({
       error: "Failed to download letter"
     });
@@ -2478,13 +2553,17 @@ export const generateFreelancerLetter = async (req, res) => {
   try {
     const { freelancerId, letterType } = req.body;
 
+    logger.info(
+      `GenerateFreelancerLetter API called | freelancerId=${freelancerId} | type=${letterType}`
+    );
+
     if (!freelancerId || !letterType) {
+      logger.warn("GenerateFreelancerLetter validation failed");
       return res.status(400).json({
         error: "freelancerId and letterType are required"
       });
     }
 
-    // Fetch freelancer
     const empResult = await client.query(
       `SELECT *
        FROM user_employees_master
@@ -2495,12 +2574,12 @@ export const generateFreelancerLetter = async (req, res) => {
     const emp = empResult.rows[0];
 
     if (!emp) {
+      logger.warn(`Freelancer not found | freelancerId=${freelancerId}`);
       return res.status(404).json({
         error: "Freelancer not found"
       });
     }
 
-    // Fetch latest salary record
     const salResult = await client.query(
       `SELECT *
        FROM salary_structure
@@ -2512,12 +2591,12 @@ export const generateFreelancerLetter = async (req, res) => {
 
     const sal = salResult.rows[0] || {};
 
-    // ✅ ADD: GET BRANDING (same as employee)
     const branding = await getBrandingForContext("letters");
+    logger.info(`Branding loaded for freelancer letters | freelancerId=${freelancerId}`);
 
-    // Select template file
     const selectedTemplate = templateFileMap[letterType];
     if (!selectedTemplate) {
+      logger.warn(`Invalid freelancer letter type | type=${letterType}`);
       return res.status(400).json({
         error: "Invalid letter type selected"
       });
@@ -2525,12 +2604,12 @@ export const generateFreelancerLetter = async (req, res) => {
 
     const templateContent = loadTemplate(selectedTemplate);
     if (!templateContent) {
+      logger.error(`Freelancer template missing | type=${letterType}`);
       return res.status(500).json({
         error: "Template file missing"
       });
     }
 
-    // ✅ ADD: company_name + ctc (same as employee)
     const data = {
       name: emp.name,
       designation: emp.designation,
@@ -2552,18 +2631,14 @@ export const generateFreelancerLetter = async (req, res) => {
       bank_name: sal.bank_name,
       ifsc_code: sal.ifsc_code,
       account_number: sal.account_number,
-
-      // 🔽 NEW (ADDED)
       company_name:
         branding?.companyName ||
         "Zigma People Private Limited (An AI India Venture)",
       ctc: sal.gross_salary,
     };
 
-    // Fill HTML
     let filledHTML = fillTemplate(templateContent, data);
 
-    // ✅ ADD: LOGO + HEADER (same as employee)
     if (branding) {
       const logoHtml = branding.logoUrl
         ? `<img src="${branding.logoUrl}" style="max-height:60px; margin-bottom:10px;" />`
@@ -2583,7 +2658,6 @@ export const generateFreelancerLetter = async (req, res) => {
         headerHtml
       );
     } else {
-      // fallback (same as employee)
       filledHTML = filledHTML.replace(
         "<h2>LETTER_HEADER_PLACEHOLDER</h2>",
         `<h2 style="text-align:center; text-decoration:underline;">
@@ -2592,7 +2666,6 @@ export const generateFreelancerLetter = async (req, res) => {
       );
     }
 
-    // Generate PDF
     const lettersDir = path.join(process.cwd(), "src/uploads/letters");
     if (!fs.existsSync(lettersDir)) {
       fs.mkdirSync(lettersDir, { recursive: true });
@@ -2602,8 +2675,10 @@ export const generateFreelancerLetter = async (req, res) => {
     const filePath = path.join(lettersDir, fileName);
 
     await generatePDF(filledHTML, filePath);
+    logger.info(
+      `Freelancer PDF generated | freelancerId=${freelancerId} | file=${fileName}`
+    );
 
-    // Save documents
     const docResult = await client.query(
       `SELECT document_url
        FROM user_employees_master
@@ -2624,6 +2699,10 @@ export const generateFreelancerLetter = async (req, res) => {
       [JSON.stringify(existingDocs), freelancerId]
     );
 
+    logger.info(
+      `Freelancer letter saved to DB | freelancerId=${freelancerId} | file=${fileName}`
+    );
+
     return res.json({
       message: "Freelancer letter generated successfully",
       pdf_url: `/uploads/letters/${fileName}`,
@@ -2632,7 +2711,9 @@ export const generateFreelancerLetter = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("Generate Freelancer Letter Error:", err.message);
+    logger.error(
+      `GenerateFreelancerLetter Error | freelancerId=${req.body?.freelancerId} | ${err.message}`
+    );
     return res.status(500).json({
       error: "Failed to generate freelancer letter"
     });
@@ -2647,6 +2728,8 @@ export const getFreelancerLetters = async (req, res) => {
   try {
     const { freelancerId } = req.params;
 
+    logger.info(`GetFreelancerLetters API called | freelancerId=${freelancerId}`);
+
     const result = await client.query(
       `SELECT document_url
        FROM user_employees_master
@@ -2655,6 +2738,7 @@ export const getFreelancerLetters = async (req, res) => {
     );
 
     if (result.rows.length === 0) {
+      logger.warn(`Freelancer not found | freelancerId=${freelancerId}`);
       return res.status(404).json({
         error: "Freelancer not found"
       });
@@ -2672,6 +2756,10 @@ export const getFreelancerLetters = async (req, res) => {
         }))
       : [];
 
+    logger.info(
+      `Freelancer letters fetched | freelancerId=${freelancerId} | count=${files.length}`
+    );
+
     return res.json({
       success: true,
       total: files.length,
@@ -2679,7 +2767,9 @@ export const getFreelancerLetters = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("Get Freelancer Letters Error:", err);
+    logger.error(
+      `GetFreelancerLetters Error | freelancerId=${req.params?.freelancerId} | ${err.message}`
+    );
     return res.status(500).json({
       error: "Failed to fetch freelancer letters"
     });
@@ -2693,8 +2783,15 @@ export const downloadFreelancerLetter = async (req, res) => {
   try {
     const { freelancerId, fileName } = req.params;
 
+    logger.info(
+      `DownloadFreelancerLetter API called | freelancerId=${freelancerId} | file=${fileName}`
+    );
+
     // ✅ Validate input
     if (!freelancerId || !fileName) {
+      logger.warn(
+        "DownloadFreelancerLetter validation failed: missing freelancerId or fileName"
+      );
       return res.status(400).json({
         error: "Freelancer ID and file name are required"
       });
@@ -2709,6 +2806,7 @@ export const downloadFreelancerLetter = async (req, res) => {
     );
 
     if (result.rows.length === 0) {
+      logger.warn(`Freelancer not found | freelancerId=${freelancerId}`);
       return res.status(404).json({
         error: "Freelancer not found"
       });
@@ -2717,6 +2815,9 @@ export const downloadFreelancerLetter = async (req, res) => {
     const docs = result.rows[0].document_url || [];
 
     if (!Array.isArray(docs) || !docs.includes(fileName)) {
+      logger.warn(
+        `Unauthorized freelancer letter access | freelancerId=${freelancerId} | file=${fileName}`
+      );
       return res.status(403).json({
         error: "You are not authorized to access this file"
       });
@@ -2730,10 +2831,17 @@ export const downloadFreelancerLetter = async (req, res) => {
     );
 
     if (!fs.existsSync(filePath)) {
+      logger.warn(
+        `Freelancer letter file missing on server | freelancerId=${freelancerId} | file=${fileName}`
+      );
       return res.status(404).json({
         error: "File not found on server"
       });
     }
+
+    logger.info(
+      `Freelancer letter download started | freelancerId=${freelancerId} | file=${fileName}`
+    );
 
     // 3️⃣ Send file for download
     res.setHeader(
@@ -2745,7 +2853,9 @@ export const downloadFreelancerLetter = async (req, res) => {
     return res.sendFile(filePath);
 
   } catch (err) {
-    console.error("Download Freelancer Letter Error:", err);
+    logger.error(
+      `DownloadFreelancerLetter Error | freelancerId=${req.params?.freelancerId} | ${err.message}`
+    );
     return res.status(500).json({
       error: "Failed to download freelancer letter"
     });
@@ -2758,8 +2868,15 @@ export const deleteFreelancerLetter = async (req, res) => {
   const { freelancerId, filename } = req.params;
 
   try {
+    logger.info(
+      `DeleteFreelancerLetter API called | freelancerId=${freelancerId} | file=${filename}`
+    );
+
     // 1️⃣ Validate input
     if (!freelancerId || !filename) {
+      logger.warn(
+        "DeleteFreelancerLetter validation failed: missing freelancerId or filename"
+      );
       return res.status(400).json({
         error: "freelancerId and filename are required"
       });
@@ -2774,6 +2891,7 @@ export const deleteFreelancerLetter = async (req, res) => {
     );
 
     if (docResult.rows.length === 0) {
+      logger.warn(`Freelancer not found | freelancerId=${freelancerId}`);
       return res.status(404).json({
         error: "Freelancer not found"
       });
@@ -2782,6 +2900,9 @@ export const deleteFreelancerLetter = async (req, res) => {
     const existingDocs = docResult.rows[0].document_url || [];
 
     if (!Array.isArray(existingDocs) || !existingDocs.includes(filename)) {
+      logger.warn(
+        `Freelancer letter not found | freelancerId=${freelancerId} | file=${filename}`
+      );
       return res.status(404).json({
         error: "Letter not found"
       });
@@ -2798,6 +2919,10 @@ export const deleteFreelancerLetter = async (req, res) => {
       [JSON.stringify(updatedDocs), freelancerId]
     );
 
+    logger.info(
+      `Freelancer letter removed from DB | freelancerId=${freelancerId} | file=${filename}`
+    );
+
     // 4️⃣ Delete file from filesystem
     const filePath = path.join(
       process.cwd(),
@@ -2807,6 +2932,9 @@ export const deleteFreelancerLetter = async (req, res) => {
 
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
+      logger.info(
+        `Freelancer letter file deleted from filesystem | file=${filename}`
+      );
     }
 
     return res.json({
@@ -2815,7 +2943,9 @@ export const deleteFreelancerLetter = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("Delete Freelancer Letter Error:", err);
+    logger.error(
+      `DeleteFreelancerLetter Error | freelancerId=${req.params?.freelancerId} | ${err.message}`
+    );
     return res.status(500).json({
       error: "Failed to delete freelancer letter"
     });
@@ -2823,13 +2953,21 @@ export const deleteFreelancerLetter = async (req, res) => {
     client.release();
   }
 };
+
 export const sendFreelancerLetterEmail = async (req, res) => {
   const client = await pool.connect();
 
   try {
     const { freelancerId, fileName } = req.body;
 
+    logger.info(
+      `SendFreelancerLetterEmail API called | freelancerId=${freelancerId} | file=${fileName}`
+    );
+
     if (!freelancerId || !fileName) {
+      logger.warn(
+        "SendFreelancerLetterEmail validation failed: missing freelancerId or fileName"
+      );
       return res.status(400).json({
         error: "freelancerId and fileName are required"
       });
@@ -2846,6 +2984,7 @@ export const sendFreelancerLetterEmail = async (req, res) => {
     const freelancer = empResult.rows[0];
 
     if (!freelancer) {
+      logger.warn(`Freelancer not found | freelancerId=${freelancerId}`);
       return res.status(404).json({
         error: "Freelancer not found"
       });
@@ -2859,10 +2998,17 @@ export const sendFreelancerLetterEmail = async (req, res) => {
     );
 
     if (!fs.existsSync(filePath)) {
+      logger.warn(
+        `Freelancer letter file not found | freelancerId=${freelancerId} | file=${fileName}`
+      );
       return res.status(404).json({
         error: "File not found on server"
       });
     }
+
+    logger.info(
+      `Sending freelancer letter email | freelancerId=${freelancerId} | email=${freelancer.email}`
+    );
 
     // 3️⃣ Send email
     await sendEmail(
@@ -2875,6 +3021,10 @@ export const sendFreelancerLetterEmail = async (req, res) => {
       fileName
     );
 
+    logger.info(
+      `Freelancer letter email sent successfully | freelancerId=${freelancerId} | file=${fileName}`
+    );
+
     return res.json({
       message: "📧 Freelancer email sent successfully",
       sent_to: freelancer.email,
@@ -2882,7 +3032,9 @@ export const sendFreelancerLetterEmail = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("Send Freelancer Letter Email Error:", err);
+    logger.error(
+      `SendFreelancerLetterEmail Error | freelancerId=${req.body?.freelancerId} | ${err.message}`
+    );
     return res.status(500).json({
       error: "Failed to send freelancer email"
     });
@@ -2890,13 +3042,27 @@ export const sendFreelancerLetterEmail = async (req, res) => {
     client.release();
   }
 };
+
 export const getAllFreelancers = async (req, res) => {
-  const result = await pool.query(
-    `SELECT *
-     FROM user_employees_master
-     WHERE role='employee' AND employment_type = 'freelancer'`
-  );
-  res.json(result.rows);
+  try {
+    logger.info("GetAllFreelancers API called");
+
+    const result = await pool.query(
+      `SELECT *
+       FROM user_employees_master
+       WHERE role='employee' AND employment_type = 'freelancer'`
+    );
+
+    logger.info(`Freelancers fetched | count=${result.rowCount}`);
+
+    res.json(result.rows);
+
+  } catch (err) {
+    logger.error(`GetAllFreelancers Error | ${err.message}`);
+    res.status(500).json({
+      error: "Failed to fetch freelancers"
+    });
+  }
 };
 
 
@@ -3068,12 +3234,15 @@ export const deleteLetter = async (req, res) => {
   const { employeeId, filename } = req.params;
 
   try {
+    logger.info(`DeleteLetter API called | empId=${employeeId} | file=${filename}`);
+
     // Validate input
     if (!employeeId || !filename) {
+      logger.warn("DeleteLetter validation failed: missing employeeId or filename");
       return res.status(400).json({ error: "employeeId and filename are required" });
     }
 
-    //  Fetch current document list
+    // Fetch current document list
     const docResult = await client.query(
       `SELECT document_url FROM user_employees_master WHERE id = $1`,
       [employeeId]
@@ -3082,13 +3251,14 @@ export const deleteLetter = async (req, res) => {
     const existingDocs = docResult.rows[0]?.document_url || [];
 
     if (!Array.isArray(existingDocs) || !existingDocs.includes(filename)) {
+      logger.warn(`Letter not found | empId=${employeeId} | file=${filename}`);
       return res.status(404).json({ error: "Letter not found" });
     }
 
-    //  Remove filename from array
+    // Remove filename from array
     const updatedDocs = existingDocs.filter((file) => file !== filename);
 
-    //  Update DB
+    // Update DB
     await client.query(
       `UPDATE user_employees_master
        SET document_url = $1::jsonb,
@@ -3097,10 +3267,13 @@ export const deleteLetter = async (req, res) => {
       [JSON.stringify(updatedDocs), employeeId]
     );
 
-    //  Delete file from filesystem
+    logger.info(`DB updated after letter delete | empId=${employeeId}`);
+
+    // Delete file from filesystem
     const filePath = path.join(process.cwd(), "src/uploads/letters", filename);
     if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath); // Synchronous delete (or use fs.promises.unlink for async)
+      fs.unlinkSync(filePath);
+      logger.info(`Letter file deleted from filesystem | file=${filename}`);
     }
 
     return res.json({
@@ -3109,7 +3282,7 @@ export const deleteLetter = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("Delete Letter Error:", err.message);
+    logger.error(`DeleteLetter Error | empId=${employeeId} | ${err.message}`);
     return res.status(500).json({ error: "Failed to delete letter" });
   } finally {
     client.release();
@@ -3123,7 +3296,10 @@ export const sendLetterEmail = async (req, res) => {
   try {
     const { employeeId, fileName } = req.body;
 
+    logger.info(`SendLetterEmail API called | empId=${employeeId} | file=${fileName}`);
+
     if (!employeeId || !fileName) {
+      logger.warn("SendLetterEmail validation failed: missing employeeId or fileName");
       return res.status(400).json({ error: "employeeId and fileName are required" });
     }
 
@@ -3133,22 +3309,29 @@ export const sendLetterEmail = async (req, res) => {
     );
 
     const emp = empResult.rows[0];
-    if (!emp) return res.status(404).json({ error: "Employee not found" });
+    if (!emp) {
+      logger.warn(`Employee not found while sending email | empId=${employeeId}`);
+      return res.status(404).json({ error: "Employee not found" });
+    }
 
     const filePath = path.join(process.cwd(), "src/uploads/letters", fileName);
 
     if (!fs.existsSync(filePath)) {
+      logger.warn(`Letter file not found | empId=${employeeId} | file=${fileName}`);
       return res.status(404).json({ error: "File not found on server" });
     }
 
     const branding = await getBrandingForContext("email");
+    logger.info(`Email branding loaded | empId=${employeeId}`);
 
     let logoHtml = "";
     if (branding?.logoUrl) {
       try {
         const base64 = await fetchImageAsBase64(branding.logoUrl);
         logoHtml = `<img src="${base64}" style="max-height:60px;" />`;
-      } catch {}
+      } catch (e) {
+        logger.warn(`Email logo load failed | empId=${employeeId} | ${e.message}`);
+      }
     }
 
     const header = branding
@@ -3176,12 +3359,15 @@ export const sendLetterEmail = async (req, res) => {
       fileName
     );
 
+    logger.info(`Letter email sent successfully | to=${emp.email} | file=${fileName}`);
+
     res.json({
       message: "Email sent successfully",
       sent_to: emp.email,
     });
+
   } catch (err) {
-    console.error("Send Letter Email Error:", err);
+    logger.error(`SendLetterEmail Error | ${err.message}`);
     res.status(500).json({ error: "Failed to send email" });
   } finally {
     client.release();
@@ -3892,8 +4078,11 @@ export const createInvoice = async (req, res) => {
       freelancer_email
     } = req.body;
 
+    logger.info("Create invoice API called");
+
     const GST_PERCENT = 18;
     const TDS_PERCENT = 10;
+
     const tax_amount = (amount * GST_PERCENT) / 100;
     const tds_amount = (amount * TDS_PERCENT) / 100;
     const net_payable = amount + tax_amount - tds_amount;
@@ -3901,20 +4090,26 @@ export const createInvoice = async (req, res) => {
     /* -----------------------------------------------------
        A. Generate Invoice Number (Local EMS)
     ----------------------------------------------------- */
+
     const dateObj = new Date(invoice_date);
     const ym = `${dateObj.getFullYear()}${String(dateObj.getMonth() + 1).padStart(2, "0")}`;
+
     const seqQuery = await pool.query(
       `SELECT COUNT(*) + 1 AS seq 
        FROM invoices 
        WHERE to_char(invoice_date, 'YYYYMM') = $1`,
       [ym]
     );
+
     const seq = seqQuery.rows[0].seq;
     const invoice_number = `INV-${ym}-${String(seq).padStart(4, "0")}`;
+
+    logger.info(`Invoice number generated: ${invoice_number}`);
 
     /* -----------------------------------------------------
        B. Insert into EMS Database
     ----------------------------------------------------- */
+
     const insertQuery = `
       INSERT INTO invoices (
         freelancer_id, contract_id, invoice_number,
@@ -3924,6 +4119,7 @@ export const createInvoice = async (req, res) => {
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'pending',$10)
       RETURNING *
     `;
+
     const result = await pool.query(insertQuery, [
       freelancer_id,
       contract_id,
@@ -3936,51 +4132,60 @@ export const createInvoice = async (req, res) => {
       due_date,
       created_by,
     ]);
+
     const localInvoice = result.rows[0];
+
+    logger.info(`Invoice saved in EMS DB | id=${localInvoice.id}`);
 
     /* -----------------------------------------------------
        C. Create Invoice in Zoho (if configured)
     ----------------------------------------------------- */
+
     const ZOHO_CUSTOMER_ID = process.env.DEFAULT_ZOHO_CUSTOMER_ID;
-    let zohoInvoiceId = null, zohoInvoiceNumber = null, zohoInvoiceUrl = null;
+    let zohoInvoiceId = null,
+      zohoInvoiceNumber = null,
+      zohoInvoiceUrl = null;
 
     if (ZOHO_CUSTOMER_ID) {
-      const zohoInvoicePayload = {
-        customer_id: ZOHO_CUSTOMER_ID,
-        date: invoice_date,
-        due_date: due_date,
-        reference_number: invoice_number,
-        line_items: [
-          {
-            item_name: "Freelancer Payment",
-            rate: amount,
-            quantity: 1
-          }
-        ]
-      };
       try {
+        const zohoInvoicePayload = {
+          customer_id: ZOHO_CUSTOMER_ID,
+          date: invoice_date,
+          due_date: due_date,
+          reference_number: invoice_number,
+          line_items: [
+            {
+              item_name: "Freelancer Payment",
+              rate: amount,
+              quantity: 1
+            }
+          ]
+        };
+
         const zohoResp = await createZohoInvoice(zohoInvoicePayload);
+
         zohoInvoiceId = zohoResp.invoice?.invoice_id || null;
         zohoInvoiceNumber = zohoResp.invoice?.invoice_number || null;
         zohoInvoiceUrl = zohoResp.invoice?.invoice_url || null;
+
+        logger.info(`Zoho invoice created | zoho_id=${zohoInvoiceId}`);
       } catch (err) {
-        console.error("Zoho Invoice ERROR:", err.response?.data || err);
+        logger.error(`Zoho Invoice ERROR | ${err.response?.data || err.message}`);
       }
     }
 
     /* -----------------------------------------------------
        D. Generate Branded PDF
     ----------------------------------------------------- */
-    // ✅ Get branding for "letters" context (used in PDF)
+
     const branding = await getBrandingForContext("letters");
 
     const templatePath = path.join(process.cwd(), "src/templates/invoiceTemplate.html");
     let html = fs.readFileSync(templatePath, "utf-8");
 
-    // Replace placeholders
     html = html
       .replace(/{{company_name}}/g, branding?.companyName || "Your Company Pvt Ltd")
-      .replace(/{{company_address}}/g, "Hyderabad, Telangana, India") // ⚠️ Consider making dynamic if needed
+      .replace(/{{company_address}}/g, "Hyderabad, Telangana, India")
       .replace(/{{company_email}}/g, "contact@company.com")
       .replace(/{{invoice_number}}/g, invoice_number)
       .replace(/{{invoice_date}}/g, invoice_date)
@@ -3992,35 +4197,33 @@ export const createInvoice = async (req, res) => {
       .replace(/{{tds_amount}}/g, tds_amount)
       .replace(/{{net_payable}}/g, net_payable);
 
-    // ✅ Inject logo and style if branding is active
-   // inject branding header (logo + company name + color)
-if (branding) {
-  let logoHtml = "";
+    if (branding) {
+      let logoHtml = "";
 
-  if (branding.logoUrl) {
-    try {
-      const b64 = await fetchImageAsBase64(branding.logoUrl);
-      logoHtml = `<img src="${b64}" style="max-height:60px; margin-bottom:8px;" />`;
-    } catch (e) {
-      console.warn("Invoice logo load failed:", e.message);
+      if (branding.logoUrl) {
+        try {
+          const b64 = await fetchImageAsBase64(branding.logoUrl);
+          logoHtml = `<img src="${b64}" style="max-height:60px; margin-bottom:8px;" />`;
+        } catch (e) {
+          logger.warn(`Invoice logo load failed | ${e.message}`);
+        }
+      }
+
+      const headerHtml = `
+        <div style="text-align:center; margin-bottom:15px;">
+          ${logoHtml}
+          <h2 style="color:${branding.primaryColor || "#000"}; margin:0;">INVOICE</h2>
+          <h3 style="margin:4px 0 0 0;">${branding.companyName || "Your Company Pvt Ltd"}</h3>
+          <hr/>
+        </div>
+      `;
+
+      html = html.replace(/LETTER_HEADER_PLACEHOLDER/g, headerHtml);
     }
-  }
-
-  const headerHtml = `
-    <div style="text-align:center; margin-bottom:15px;">
-      ${logoHtml}
-      <h2 style="color:${branding.primaryColor || '#000'}; margin:0;">INVOICE</h2>
-      <h3 style="margin:4px 0 0 0;">${branding.companyName || 'Your Company Pvt Ltd'}</h3>
-      <hr/>
-    </div>
-  `;
-
-  html = html.replace(/LETTER_HEADER_PLACEHOLDER/g, headerHtml);
-}
-
 
     const pdfDir = "uploads/invoices";
     if (!fs.existsSync(pdfDir)) fs.mkdirSync(pdfDir, { recursive: true });
+
     const fileName = `Invoice_${invoice_number}.pdf`;
     const filePath = path.join(pdfDir, fileName);
 
@@ -4028,10 +4231,13 @@ if (branding) {
       headless: "new",
       args: ["--no-sandbox"],
     });
+
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: "networkidle0" });
     await page.pdf({ path: filePath, format: "A4", printBackground: true });
     await browser.close();
+
+    logger.info(`Invoice PDF generated | ${fileName}`);
 
     await pool.query(
       `UPDATE invoices SET pdf_file=$1 WHERE id=$2`,
@@ -4039,8 +4245,9 @@ if (branding) {
     );
 
     /* -----------------------------------------------------
-       E. Save Zoho Info (if applicable)
+       E. Save Zoho Info
     ----------------------------------------------------- */
+
     await pool.query(
       `UPDATE invoices
        SET zoho_invoice_id=$1,
@@ -4051,41 +4258,33 @@ if (branding) {
     );
 
     /* -----------------------------------------------------
-       F. Send Branded Email with Attachment
+       F. Send Email
     ----------------------------------------------------- */
-    const emailBranding = await getBrandingForContext("email");
-    let emailBody = `
-      <p>Hello <strong>${freelancer_name}</strong>,</p>
-      <p>Your invoice <strong>${invoice_number}</strong> has been generated.</p>
-      <p><strong>Net Payable:</strong> ₹${net_payable}</p>
-      <p>Please find the attached PDF for your records.</p>
-    `;
-
-    if (emailBranding) {
-      emailBody = `
-        <div style="text-align:center; margin-bottom:20px;">
-          ${emailBranding.logoUrl ? `<img src="${emailBranding.logoUrl}" style="max-height:60px;">` : ''}
-          <p style="color:${emailBranding.primaryColor}; margin-top:8px;">${emailBranding.companyName}</p>
-        </div>
-        ${emailBody}
-      `;
-    }
 
     try {
       await sendEmail(
         freelancer_email,
         `Invoice ${invoice_number}`,
-        emailBody,
+        `
+          <p>Hello <strong>${freelancer_name}</strong>,</p>
+          <p>Your invoice <strong>${invoice_number}</strong> has been generated.</p>
+          <p><strong>Net Payable:</strong> ₹${net_payable}</p>
+        `,
         filePath,
         fileName
       );
+
+      logger.info(`Invoice email sent to ${freelancer_email}`);
     } catch (emailErr) {
-      console.warn("Failed to send invoice email:", emailErr.message);
+      logger.warn(`Invoice email failed | ${emailErr.message}`);
     }
 
     /* -----------------------------------------------------
        G. Final Response
     ----------------------------------------------------- */
+
+    logger.info(`Invoice process completed | ${invoice_number}`);
+
     res.json({
       success: true,
       message: "Invoice created in EMS + Zoho + PDF generated + Email sent",
@@ -4100,7 +4299,7 @@ if (branding) {
     });
 
   } catch (err) {
-    console.error("Invoice Create Error:", err);
+    logger.error(`Invoice Create Error | ${err.message}`);
     res.status(500).json({ error: "Failed to create invoice" });
   }
 };
@@ -4111,6 +4310,8 @@ if (branding) {
 export const getAllInvoices = async (req, res) => {
   try {
     const serverUrl = process.env.SERVER_URL;
+
+    logger.info("Fetch all invoices API called");
 
     const sql = `
       SELECT inv.*, u.name AS freelancer_name, u.email AS freelancer_email
@@ -4133,12 +4334,15 @@ export const getAllInvoices = async (req, res) => {
       }
     }));
 
+    logger.info(`Invoices fetched successfully | count=${rows.length}`);
+
     res.json(updated);
   } catch (err) {
-    console.error("Get All Invoice Error:", err);
+    logger.error(`Get All Invoice Error | ${err.message}`);
     res.status(500).json({ error: "Failed to fetch invoices" });
   }
 };
+
 
 /* -----------------------------------------------------
    3. GET INVOICE BY ID
@@ -4148,11 +4352,15 @@ export const getInvoiceById = async (req, res) => {
     const { invoice_id } = req.params;
     const serverUrl = process.env.SERVER_URL;
 
+    logger.info(`Fetch invoice by ID called | invoiceId=${invoice_id}`);
+
     const sql = `SELECT * FROM invoices WHERE id=$1`;
     const { rows } = await pool.query(sql, [invoice_id]);
 
-    if (rows.length === 0)
+    if (rows.length === 0) {
+      logger.warn(`Invoice not found | invoiceId=${invoice_id}`);
       return res.status(404).json({ error: "Invoice not found" });
+    }
 
     const invoice = rows[0];
 
@@ -4166,12 +4374,17 @@ export const getInvoiceById = async (req, res) => {
       url: invoice.zoho_invoice_url
     };
 
+    logger.info(`Invoice fetched successfully | invoiceId=${invoice_id}`);
+
     res.json(invoice);
   } catch (err) {
-    console.error("Get Invoice Error:", err);
+    logger.error(
+      `Get Invoice Error | invoiceId=${req.params.invoice_id} | ${err.message}`
+    );
     res.status(500).json({ error: "Failed to fetch invoice" });
   }
 };
+
 
 /* -----------------------------------------------------
    4. UPDATE INVOICE STATUS
@@ -4181,8 +4394,15 @@ export const updateInvoiceStatus = async (req, res) => {
     const { invoice_id } = req.params;
     const { status, updated_by } = req.body;
 
+    logger.info(
+      `Update invoice status requested | invoiceId=${invoice_id} | status=${status} | updatedBy=${updated_by}`
+    );
+
     const valid = ["pending", "approved", "rejected", "paid"];
     if (!valid.includes(status)) {
+      logger.warn(
+        `Invalid invoice status attempt | invoiceId=${invoice_id} | status=${status}`
+      );
       return res.status(400).json({ error: "Invalid invoice status" });
     }
 
@@ -4191,12 +4411,19 @@ export const updateInvoiceStatus = async (req, res) => {
       [status, updated_by, invoice_id]
     );
 
+    logger.info(
+      `Invoice status updated successfully | invoiceId=${invoice_id} | newStatus=${status}`
+    );
+
     res.json({ success: true, message: "Status updated" });
   } catch (err) {
-    console.error("Update Invoice Status Error:", err);
+    logger.error(
+      `Update Invoice Status Error | invoiceId=${req.params.invoice_id} | ${err.message}`
+    );
     res.status(500).json({ error: "Failed to update invoice status" });
   }
 };
+
 
 /* -----------------------------------------------------
    5. GENERATE PDF (PUPPETEER)
@@ -4204,6 +4431,8 @@ export const updateInvoiceStatus = async (req, res) => {
 export const generateInvoicePDF = async (req, res) => {
   try {
     const { invoice_id } = req.params;
+
+    logger.info(`Generate invoice PDF requested | invoiceId=${invoice_id}`);
 
     const sql = `
       SELECT inv.*, u.name AS freelancer_name, u.email AS freelancer_email
@@ -4213,10 +4442,14 @@ export const generateInvoicePDF = async (req, res) => {
     `;
     const { rows } = await pool.query(sql, [invoice_id]);
 
-    if (rows.length === 0)
+    if (rows.length === 0) {
+      logger.warn(`Invoice not found for PDF | invoiceId=${invoice_id}`);
       return res.status(404).json({ error: "Invoice not found" });
+    }
 
     const invoice = rows[0];
+
+    logger.info(`Invoice data loaded | invoice=${invoice.invoice_number}`);
 
     // Load template
     const templatePath = path.join(process.cwd(), "src/templates/invoiceTemplate.html");
@@ -4243,6 +4476,8 @@ export const generateInvoicePDF = async (req, res) => {
     const fileName = `Invoice_${invoice.invoice_number}.pdf`;
     const filePath = path.join(pdfDir, fileName);
 
+    logger.info(`Generating PDF file | ${fileName}`);
+
     // Generate PDF
     const browser = await puppeteer.launch({
       headless: "new",
@@ -4260,11 +4495,15 @@ export const generateInvoicePDF = async (req, res) => {
 
     await browser.close();
 
+    logger.info(`PDF generated successfully | ${fileName}`);
+
     // Update DB
     await pool.query(`UPDATE invoices SET pdf_file=$1 WHERE id=$2`, [
       fileName,
       invoice_id,
     ]);
+
+    logger.info(`Invoice DB updated with PDF | invoiceId=${invoice_id}`);
 
     res.json({
       success: true,
@@ -4272,10 +4511,11 @@ export const generateInvoicePDF = async (req, res) => {
       pdf_url: `${process.env.SERVER_URL}/uploads/invoices/${fileName}`,
     });
   } catch (err) {
-    console.error("Invoice PDF Error:", err);
+    logger.error(`Invoice PDF Error | invoiceId=${req.params.invoice_id} | ${err.message}`);
     res.status(500).json({ error: "Failed to generate invoice PDF" });
   }
 };
+
 
 /* -----------------------------------------------------
    6. SEND REMINDER EMAIL
@@ -4283,6 +4523,8 @@ export const generateInvoicePDF = async (req, res) => {
 export const sendInvoiceReminder = async (req, res) => {
   try {
     const { invoice_id } = req.params;
+
+    logger.info(`Send invoice reminder requested | invoiceId=${invoice_id}`);
 
     const sql = `
       SELECT 
@@ -4299,17 +4541,18 @@ export const sendInvoiceReminder = async (req, res) => {
     const { rows } = await pool.query(sql, [invoice_id]);
 
     if (rows.length === 0) {
+      logger.warn(`Invoice not found for reminder | invoiceId=${invoice_id}`);
       return res.status(404).json({ error: "Invoice not found" });
     }
 
     const invoice = rows[0];
 
-    console.log("DEBUG EMAIL:", {
-      to: invoice.freelancer_email,
-      name: invoice.freelancer_name
-    });
+    logger.info(
+      `Reminder email target | invoice=${invoice.invoice_number} | email=${invoice.freelancer_email}`
+    );
 
     if (!invoice.freelancer_email) {
+      logger.warn(`Freelancer email missing | invoiceId=${invoice_id}`);
       return res.status(400).json({ error: "Freelancer email not found" });
     }
 
@@ -4324,10 +4567,12 @@ export const sendInvoiceReminder = async (req, res) => {
       `
     });
 
+    logger.info(`Invoice reminder sent successfully | invoiceId=${invoice_id}`);
+
     res.json({ success: true, message: "Reminder sent!" });
 
   } catch (err) {
-    console.error("Reminder Error:", err);
+    logger.error(`Reminder Error | invoiceId=${req.params.invoice_id} | ${err.message}`);
     res.status(500).json({ error: "Failed to send reminder" });
   }
 };
@@ -4340,14 +4585,20 @@ export const deleteInvoice = async (req, res) => {
   try {
     const { invoice_id } = req.params;
 
+    logger.info(`Delete invoice request received | invoiceId=${invoice_id}`);
+
     await pool.query(`DELETE FROM invoices WHERE id=$1`, [invoice_id]);
 
+    logger.info(`Invoice deleted successfully | invoiceId=${invoice_id}`);
+
     res.json({ success: true, message: "Invoice deleted" });
+
   } catch (err) {
-    console.error("Delete Invoice Error:", err);
+    logger.error(`Delete Invoice Error | invoiceId=${req.params.invoice_id} | ${err.message}`);
     res.status(500).json({ error: "Failed to delete invoice" });
   }
 };
+
 
 /*----------------------------Probation ------------------------------*/
 // get a new employee (who joined within 3 months )
@@ -4355,6 +4606,8 @@ export const getNewEmployees = async (req, res) => {
   const client = await pool.connect();
 
   try {
+    logger.info("Fetching new employees (last 3 months)");
+
     const query = `
       SELECT id,email, name, department, designation, date_of_joining
       FROM user_employees_master
@@ -4364,6 +4617,8 @@ export const getNewEmployees = async (req, res) => {
 
     const result = await client.query(query);
 
+    logger.info(`New employees fetched successfully | count=${result.rows.length}`);
+
     return res.status(200).json({
       success: true,
       count: result.rows.length,
@@ -4371,13 +4626,14 @@ export const getNewEmployees = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("Error fetching new employees:", err);
+    logger.error(`Error fetching new employees | ${err.message}`);
     return res.status(500).json({ message: "Database error" });
   } finally {
     client.release();
+    logger.info("DB client released (getNewEmployees)");
   }
 };
-//creating probation period 
+
 export const createProbation = async (req, res) => {
   const client = await pool.connect();
 
@@ -4391,34 +4647,34 @@ export const createProbation = async (req, res) => {
       status = "active",
     } = req.body;
 
+    logger.info(`Create probation request for employee_id=${employee_id}`);
+
     // ---------------- VALIDATION ----------------
     if (!employee_id) {
+      logger.warn("Missing employee_id");
       return res.status(400).json({ error: "Employee (employee_id) is required" });
     }
 
     if (!startDate) {
+      logger.warn("Missing startDate");
       return res.status(400).json({ error: "Start date is required" });
     }
 
     if (!endDate) {
+      logger.warn("Missing endDate");
       return res.status(400).json({ error: "End date is required" });
     }
 
     if (!reportingManager) {
+      logger.warn("Missing reportingManager");
       return res.status(400).json({ error: "Reporting Manager is required" });
     }
 
     if (notes && notes.length > 300) {
+      logger.warn("Notes length exceeded");
       return res.status(400).json({ error: "Notes cannot exceed 300 characters" });
     }
 
-    // ----------------- PROGRESS CALC -----------------
-    // const start = new Date(startDate);
-    // const end = new Date(endDate);
-
-    // const diffDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-
-    // ----------------- INSERT QUERY ------------------
     const insertQuery = `
       INSERT INTO probation (
         employee_id,
@@ -4435,14 +4691,15 @@ export const createProbation = async (req, res) => {
     `;
 
     const result = await client.query(insertQuery, [
-     
-       employee_id,
-  startDate,
-  endDate,
-  status,
-  reportingManager,
-  notes || ""
+      employee_id,
+      startDate,
+      endDate,
+      status,
+      reportingManager,
+      notes || ""
     ]);
+
+    logger.info(`Probation created successfully for employee_id=${employee_id}`);
 
     return res.status(201).json({
       message: "Probation assigned successfully",
@@ -4450,9 +4707,9 @@ export const createProbation = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("Create Probation Error:", err);
-    return res.status(500).json({ error: "Failed to assign probation" });
-    } finally {
+    logger.error(`Create Probation Error: ${err.message}`);
+    return res.status(500).json({ error: err.message || "Failed to assign probation" });
+  } finally {
     client.release();
   }
 };
@@ -4461,6 +4718,8 @@ export const getProbationDashboardCounts = async (req, res) => {
   const client = await pool.connect();
 
   try {
+    console.log("📊 Fetching probation dashboard counts...");
+
     const query = `
       SELECT
         COUNT(*) FILTER (WHERE status = 'active') AS active_count,
@@ -4476,6 +4735,8 @@ export const getProbationDashboardCounts = async (req, res) => {
 
     const { rows } = await client.query(query);
 
+    console.log("✅ Probation dashboard counts fetched:", rows[0]);
+
     return res.status(200).json({
       success: true,
       active: Number(rows[0].active_count),
@@ -4484,10 +4745,11 @@ export const getProbationDashboardCounts = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("Dashboard Count Error:", err);
+    console.error("❌ Dashboard Count Error:", err);
     return res.status(500).json({ message: "Failed to fetch dashboard counts" });
   } finally {
     client.release();
+    console.log("🔌 DB connection released (probation dashboard)");
   }
 };
 
@@ -4498,6 +4760,8 @@ export const exportProbationList = async (req, res) => {
   const client = await pool.connect();
 
   try {
+    console.log("📤 Starting probation list export...");
+
     const query = `
       SELECT 
         u.email,
@@ -4511,7 +4775,11 @@ export const exportProbationList = async (req, res) => {
       ORDER BY p.startdate DESC
     `;
 
+    console.log("📄 Fetching probation records from database...");
+
     const result = await client.query(query);
+
+    console.log(`✅ Retrieved ${result.rows.length} probation records`);
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Probation List");
@@ -4540,6 +4808,8 @@ export const exportProbationList = async (req, res) => {
       });
     });
 
+    console.log("📊 Excel sheet populated successfully");
+
     res.setHeader(
       "Content-Disposition",
       "attachment; filename=probation_list.xlsx"
@@ -4549,13 +4819,19 @@ export const exportProbationList = async (req, res) => {
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     );
 
+    console.log("⬇️ Sending Excel file to client...");
+
     await workbook.xlsx.write(res);
     res.status(200).end();
+
+    console.log("✅ Probation list export completed");
+
   } catch (err) {
-    console.error("Export Probation Error:", err);
+    console.error("❌ Export Probation Error:", err);
     res.status(500).json({ message: "Export failed" });
   } finally {
     client.release();
+    console.log("🔌 DB connection released (export probation)");
   }
 };
 
@@ -4563,13 +4839,19 @@ export const exportNewEmployees = async (req, res) => {
   const client = await pool.connect();
 
   try {
+    console.log("📤 Starting new employees export...");
+
     const query = `
       SELECT email, name, department, designation
       FROM user_employees_master
       ORDER BY created_at DESC
     `;
 
+    console.log("📄 Fetching new employee records from database...");
+
     const { rows } = await client.query(query);
+
+    console.log(`✅ Retrieved ${rows.length} employee records`);
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("New Employees");
@@ -4583,6 +4865,8 @@ export const exportNewEmployees = async (req, res) => {
 
     worksheet.addRows(rows);
 
+    console.log("📊 Excel sheet created and filled successfully");
+
     res.setHeader(
       "Content-Type",
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -4592,13 +4876,19 @@ export const exportNewEmployees = async (req, res) => {
       "attachment; filename=new_employees.xlsx"
     );
 
+    console.log("⬇️ Sending Excel file to client...");
+
     await workbook.xlsx.write(res);
     res.end();
+
+    console.log("✅ New employees export completed");
+
   } catch (err) {
-    console.error("Export New Employees Error:", err);
+    console.error("❌ Export New Employees Error:", err);
     res.status(500).json({ message: "Export failed" });
   } finally {
     client.release();
+    console.log("🔌 DB connection released (export new employees)");
   }
 };
 
@@ -4606,11 +4896,16 @@ export const extendProbation = async (req, res) => {
   const client = await pool.connect();
 
   try {
+    console.log("⏳ Extend probation request received");
+
     const { probationId, extendDays } = req.body;
 
     if (!probationId || !extendDays) {
+      console.warn("⚠️ Missing probationId or extendDays in request");
       return res.status(400).json({ message: "probationId and extendDays required" });
     }
+
+    console.log(`📌 Extending probation ID: ${probationId} by ${extendDays} days`);
 
     const updateQuery = `
       UPDATE probation
@@ -4627,18 +4922,24 @@ export const extendProbation = async (req, res) => {
     ]);
 
     if (rows.length === 0) {
+      console.warn(`❌ Probation not found for ID: ${probationId}`);
       return res.status(404).json({ message: "Probation not found" });
     }
+
+    console.log(`✅ Probation extended successfully for ID: ${probationId}`);
+    console.log("📅 New end date:", rows[0].enddate);
 
     res.status(200).json({
       message: "Probation extended successfully",
       probation: rows[0],
     });
+
   } catch (err) {
-    console.error("Extend Probation Error:", err);
+    console.error("❌ Extend Probation Error:", err);
     res.status(500).json({ message: "Failed to extend probation" });
   } finally {
     client.release();
+    console.log("🔌 DB connection released (extend probation)");
   }
 };
 
@@ -4647,11 +4948,16 @@ export const terminateProbation = async (req, res) => {
   const client = await pool.connect();
 
   try {
+    console.log("⛔ Terminate probation request received");
+
     const { probationId } = req.body;
 
     if (!probationId) {
+      console.warn("⚠️ probationId missing in request body");
       return res.status(400).json({ message: "probationId required" });
     }
+
+    console.log(`📌 Terminating probation ID: ${probationId}`);
 
     const query = `
       UPDATE probation
@@ -4666,18 +4972,24 @@ export const terminateProbation = async (req, res) => {
     const { rows } = await client.query(query, [probationId]);
 
     if (rows.length === 0) {
+      console.warn(`❌ Probation not found for ID: ${probationId}`);
       return res.status(404).json({ message: "Probation not found" });
     }
+
+    console.log(`✅ Probation terminated successfully for ID: ${probationId}`);
+    console.log("📅 Terminated on:", rows[0].enddate);
 
     res.status(200).json({
       message: "Probation terminated successfully",
       probation: rows[0],
     });
+
   } catch (err) {
-    console.error("Terminate Probation Error:", err);
+    console.error("❌ Terminate Probation Error:", err);
     res.status(500).json({ message: "Failed to terminate probation" });
   } finally {
     client.release();
+    console.log("🔌 DB connection released (terminate probation)");
   }
 };
 
@@ -4688,8 +5000,11 @@ export const adminLogout = async (req, res) => {
   try {
     const { email } = req.body;
 
+    logger.info(`Admin logout attempt | email=${email}`);
+
     // 1️⃣ Validate input
     if (!email) {
+      logger.warn("Logout failed — email missing");
       return res.status(400).json({ error: "Email is required for logout" });
     }
 
@@ -4705,10 +5020,13 @@ export const adminLogout = async (req, res) => {
     );
 
     if (userRows.length === 0) {
+      logger.warn(`Logout failed — admin not found | email=${email}`);
       return res.status(404).json({ error: "Admin not found" });
     }
 
     const user = userRows[0]; // SAME user used during login
+
+    logger.info(`Admin found for logout | userId=${user.id}`);
 
     // 3️⃣ Update latest LOGIN audit record → mark LOGOUT
     const result = await client.query(
@@ -4731,10 +5049,13 @@ export const adminLogout = async (req, res) => {
     );
 
     if (result.rowCount === 0) {
+      logger.warn(`No active session found | userId=${user.id}`);
       return res.status(404).json({
         error: "No active login session found to logout",
       });
     }
+
+    logger.info(`Admin logout successful | userId=${user.id}`);
 
     // 4️⃣ Success response
     return res.status(200).json({
@@ -4743,12 +5064,13 @@ export const adminLogout = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("Admin Logout Error:", err.message);
+    logger.error(`Admin Logout Error | ${err.message}`);
     return res.status(500).json({ error: err.message });
   } finally {
     client.release();
   }
 };
+
 // fecth assigned Probation details
 export const getProbationWithUser = async (req, res) => {
   try {
@@ -4781,6 +5103,8 @@ export const getAllAdminAuditLogs = async (req, res) => {
   const client = await pool.connect();
 
   try {
+    logger.info("Fetch admin audit logs API called");
+
     const result = await client.query(`
       SELECT 
         al.id AS audit_id,
@@ -4795,9 +5119,11 @@ export const getAllAdminAuditLogs = async (req, res) => {
       FROM audit_logs al
       LEFT JOIN ${USER_MASTER_TABLE} u 
         ON u.id = al.employee_id
-      WHERE al.created_by = 'login'  -- Only login-initiated audit rows
+      WHERE al.created_by = 'login'
       ORDER BY al.created_at DESC;
     `);
+
+    logger.info(`Audit logs fetched successfully | count=${result.rowCount}`);
 
     res.json({
       success: true,
@@ -4806,7 +5132,7 @@ export const getAllAdminAuditLogs = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("Fetch audit logs error:", err.message);
+    logger.error(`Fetch audit logs error | ${err.message}`);
     res.status(500).json({ error: "Failed to fetch audit logs" });
   } finally {
     client.release();
@@ -5423,13 +5749,17 @@ export const getMonthlyFinalSummary = async (req, res) => {
   } catch (err) {
     return res.status(500).json({ error: err.message });
 }};
+
 export const updateTLReview = async (req, res) => {
   const client = await pool.connect();
   try {
-    const { id } = req.params; // review_id
+    const { id } = req.params;
     const { tl_rating, tl_comments, status } = req.body;
 
+    logger.info(`Update TL Review called | reviewId=${id}`);
+
     if (!tl_rating || !status) {
+      logger.warn("TL rating or status missing");
       return res.status(400).json({ error: "TL Rating and Status are required" });
     }
 
@@ -5452,8 +5782,11 @@ export const updateTLReview = async (req, res) => {
     ]);
 
     if (rows.length === 0) {
+      logger.warn(`TL Review not found | reviewId=${id}`);
       return res.status(404).json({ error: "Review not found" });
     }
+
+    logger.info(`TL Review updated successfully | reviewId=${id}`);
 
     res.status(200).json({
       message: "TL Review updated successfully",
@@ -5461,15 +5794,19 @@ export const updateTLReview = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("TL Review Update Error:", err);
+    logger.error(`TL Review Update Error | ${err.message}`);
     res.status(500).json({ error: err.message });
   } finally {
     client.release();
+    logger.info("DB connection released | updateTLReview");
   }
 };
+
 export const fetchAllReviews = async (req, res) => {
   const client = await pool.connect();
   try {
+    logger.info("FetchAllReviews API called");
+
     const query = `
       SELECT 
         pr.id AS review_id,
@@ -5493,19 +5830,25 @@ export const fetchAllReviews = async (req, res) => {
     `;
 
     const { rows } = await client.query(query);
+
+    logger.info(`Reviews fetched successfully | count=${rows.length}`);
+
     res.json(rows);
 
   } catch (err) {
-    console.error("Fetch Review Error:", err);
+    logger.error(`Fetch Review Error | ${err.message}`);
     res.status(500).json({ error: err.message });
   } finally {
     client.release();
+    logger.info("DB connection released | fetchAllReviews");
   }
 };
 
 export const getFinalRatingsForEmployees = async (req, res) => {
   const client = await pool.connect();
   try {
+    logger.info("GetFinalRatingsForEmployees API called");
+
     const query = `
       SELECT 
         ue.id AS employee_uuid,
@@ -5523,6 +5866,8 @@ export const getFinalRatingsForEmployees = async (req, res) => {
     `;
 
     const { rows } = await client.query(query);
+
+    logger.info(`Approved reviews fetched | count=${rows.length}`);
 
     // --- calculate tenure ---
     const calculateTenure = (joinDate) => {
@@ -5550,7 +5895,9 @@ export const getFinalRatingsForEmployees = async (req, res) => {
     };
 
     const formatted = rows.map((emp) => {
-      const finalRating = Math.round(((emp.self_rating || 0) + (emp.tl_rating || 0)) / 2);
+      const finalRating = Math.round(
+        ((emp.self_rating || 0) + (emp.tl_rating || 0)) / 2
+      );
 
       return {
         employee_uuid: emp.employee_uuid,
@@ -5565,152 +5912,19 @@ export const getFinalRatingsForEmployees = async (req, res) => {
       };
     });
 
+    logger.info(`Final ratings calculated | employees=${formatted.length}`);
+
     res.status(200).json(formatted);
 
   } catch (err) {
-    console.error("Fetch Ratings Error:", err);
+    logger.error(`Fetch Ratings Error | ${err.message}`);
     res.status(500).json({ error: err.message });
   } finally {
     client.release();
+    logger.info("DB connection released | getFinalRatingsForEmployees");
   }
 };
 
-// export const validatePayroll = async (req, res) => {
-//   const client = await pool.connect();
-
-//   try {
-//     const { startDate, endDate, month, year } = req.body;
-
-//     // 1️⃣ Validate input
-//     if ((!startDate || !endDate) && (!month || !year)) {
-//       return res.status(400).json({ error: "Provide startDate/endDate or month+year" });
-//     }
-
-//     // 2️⃣ Build date range
-//     let fromDate, toDate;
-//     if (startDate && endDate) {
-//       fromDate = startDate;
-//       toDate = endDate;
-//     } else {
-//       const m = Number(month);
-//       const y = Number(year);
-//       fromDate = `${y}-${String(m).padStart(2, '0')}-01`;
-//       const lastDay = new Date(y, m, 0).getDate();
-//       toDate = `${y}-${String(m).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
-//     }
-
-//     // 3️⃣ Fetch all active employees + their active salary structure
-//     const { rows: employees } = await client.query(`
-//       SELECT u.id AS employee_id, u.name AS name,
-//              s.status AS salary_status, s.basic_pay
-//       FROM user_employees_master u
-//       LEFT JOIN salary_structure s
-//         ON s.employee_id = u.id AND s.status = 'Active'
-//       WHERE u.is_active = true
-//     `);
-
-//     // 4️⃣ Fetch monthly_status from attendance
-//     const { rows: attendanceRows } = await client.query(`
-//       SELECT employee_id,
-//              MIN(monthly_status) AS monthly_status
-//       FROM attendance
-//       WHERE date BETWEEN $1 AND $2
-//       GROUP BY employee_id
-//     `, [fromDate, toDate]);
-
-//     // 5️⃣ Create map of attendance per employee
-//     const attendanceMap = {};
-//     attendanceRows.forEach(r => {
-//       attendanceMap[r.employee_id] = r.monthly_status || "Pending_approval";
-//     });
-
-//     // 6️⃣ Validate each employee
-//     const issues = [];
-//     let approvedCount = 0;
-//     let pendingCount = 0;
-
-//     employees.forEach(emp => {
-
-//       if (!attendanceMap[emp.employee_id]) {
-//     return;
-//   }
-//       // Check salary structure
-//       if (!emp.basic_pay || emp.salary_status !== 'Active') {
-//         issues.push(`${emp.name} does not have an active salary structure`);
-//       }
-
-//       // Check attendance status
-//       const status = (attendanceMap[emp.employee_id] || "Pending_approval").toLowerCase();
-//       if (status === "approved") {
-//         approvedCount++;
-//       } else {
-//         pendingCount++;
-//         issues.push(`${emp.name} attendance is Pending_approval`);
-//       }
-//     });
-
-//     // 7️⃣ Return response
-//     return res.json({
-//       status: pendingCount === 0 && issues.length === 0 ? "ready" : "warning",
-//       attendance_summary: {
-//         approved: approvedCount,
-//         pending_approval: pendingCount
-//       },
-//       total_employees: employees.length,
-//       issues
-//     });
-
-//   } catch (err) {
-//     console.error("VALIDATE PAYROLL ERROR", err);
-//payroll analytics
-
-// ===============================
-// ⭐ PAYROLL ANALYTICS (READ-ONLY, GET REQUEST)
-// ===============================
-// export const getPayrollAnalytics = async (req, res) => {
-//   const client = await pool.connect();
-
-//   try {
-//     // Auto detect current month & year
-//     const month = new Date().getMonth() + 1;
-//     const year = new Date().getFullYear();
-
-//     const query = `
-//       SELECT 
-//         u.department,
-//         SUM(s.gross_salary) AS total_payroll,
-//         COUNT(s.employee_id) AS headcount
-//       FROM salary_structure s
-//       JOIN user_employees_master u 
-//           ON u.id = s.employee_id
-//       WHERE EXTRACT(MONTH FROM s.created_at) = $1
-//         AND EXTRACT(YEAR FROM s.created_at) = $2
-//       GROUP BY u.department;
-//     `;
-
-//     const { rows } = await client.query(query, [month, year]);
-
-//     const formatted = rows.map((row) => ({
-//       department: row.department,
-//       total_payroll: Number(row.total_payroll),
-//       headcount: Number(row.headcount)
-//     }));
-
-//     return res.status(200).json({
-//       success: true,
-//       month,
-//       year,
-//       total_departments: formatted.length,
-//       departments: formatted
-//     });
-
-//   } catch (err) {
-//     console.error("Payroll Analytics Error:", err);
-//     return res.status(500).json({ error: err.message });
-//   } finally {
-//     client.release();
-//   }
-// };
 
 export const validatePayroll = async (req, res) => {
   const client = await pool.connect();
@@ -5718,9 +5932,16 @@ export const validatePayroll = async (req, res) => {
   try {
     const { startDate, endDate, month, year } = req.body;
 
+    logger.info(
+      `ValidatePayroll API called | startDate=${startDate} | endDate=${endDate} | month=${month} | year=${year}`
+    );
+
     // 1️⃣ Validate input
     if ((!startDate || !endDate) && (!month || !year)) {
-      return res.status(400).json({ error: "Provide startDate/endDate or month+year" });
+      logger.warn("ValidatePayroll validation failed: missing date range");
+      return res.status(400).json({ 
+        error: "Provide startDate/endDate or month+year" 
+      });
     }
 
     // 2️⃣ Build date range
@@ -5736,6 +5957,8 @@ export const validatePayroll = async (req, res) => {
       toDate = `${y}-${String(m).padStart(2, '0')}-${lastDay}`;
     }
 
+    logger.info(`Payroll date range | from=${fromDate} | to=${toDate}`);
+
     // 3️⃣ Fetch all ACTIVE employees and their salary structure
     const { rows: employees } = await client.query(`
       SELECT u.id AS employee_id, u.name AS name,
@@ -5745,6 +5968,8 @@ export const validatePayroll = async (req, res) => {
         ON s.employee_id = u.id AND s.status = 'Active'
       WHERE u.is_active = true
     `);
+
+    logger.info(`Employees fetched for payroll validation | count=${employees.length}`);
 
     // 4️⃣ Get direct APPROVED count from DB
     const { rows: approvedRows } = await client.query(`
@@ -5765,6 +5990,10 @@ export const validatePayroll = async (req, res) => {
     const approvedCount = Number(approvedRows[0].approved);
     const pendingCount = Number(pendingRows[0].pending);
 
+    logger.info(
+      `Attendance summary | approved=${approvedCount} | pending=${pendingCount}`
+    );
+
     // 6️⃣ Collect issues per employee
     const issues = [];
 
@@ -5775,8 +6004,14 @@ export const validatePayroll = async (req, res) => {
       }
     });
 
+    logger.info(`Payroll issues found | count=${issues.length}`);
+
     // 7️⃣ Response
     const canGenerate = pendingCount === 0 && issues.length === 0;
+
+    logger.info(
+      `Payroll validation result | canGenerate=${canGenerate}`
+    );
 
     return res.json({
       status: canGenerate ? "ready" : "warning",
@@ -5790,19 +6025,30 @@ export const validatePayroll = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("VALIDATE PAYROLL ERROR", err);
+    logger.error(
+      `ValidatePayroll Error | ${err.message}`
+    );
     return res.status(500).json({ error: err.message });
-    } finally {
+  } finally {
     client.release();
   }
 };
+
 export const getDepartmentWisePayroll = async (req, res) => {
   const client = await pool.connect();
   try {
     const { month, year } = req.query;
 
+    logger.info(
+      `GetDepartmentWisePayroll API called | month=${month} | year=${year}`
+    );
+
     if (!month || !year) {
-      return res.status(400).json({ success: false, message: "month and year are required" });
+      logger.warn("GetDepartmentWisePayroll validation failed: missing month or year");
+      return res.status(400).json({ 
+        success: false, 
+        message: "month and year are required" 
+      });
     }
 
     // Convert month names (e.g., "MARCH") to month numbers
@@ -5823,10 +6069,14 @@ export const getDepartmentWisePayroll = async (req, res) => {
       december: "12",
     };
 
-    let monthNum = monthNames[monthLower] || monthLower; // if "3" keep "3", if "march" → "3"
+    let monthNum = monthNames[monthLower] || monthLower;
 
-    const m1 = String(monthNum);             // "3"
-    const m2 = m1.padStart(2, "0");          // "03"
+    const m1 = String(monthNum);
+    const m2 = m1.padStart(2, "0");
+
+    logger.info(
+      `Payroll month resolved | input=${month} | resolved=${m2}`
+    );
 
     const query = `
       SELECT 
@@ -5850,12 +6100,16 @@ export const getDepartmentWisePayroll = async (req, res) => {
     `;
 
     const { rows } = await client.query(query, [
-      monthLower,    // "march"
-      monthNum,      // "3"
-      m1,            // "3"
-      m2,            // "03"
+      monthLower,
+      monthNum,
+      m1,
+      m2,
       Number(year),
     ]);
+
+    logger.info(
+      `Department payroll fetched | departments=${rows.length}`
+    );
 
     return res.json({
       success: true,
@@ -5863,7 +6117,9 @@ export const getDepartmentWisePayroll = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("DEPT PAYROLL ERROR:", err);
+    logger.error(
+      `GetDepartmentWisePayroll Error | ${err.message}`
+    );
     return res.status(500).json({ success: false, error: err.message });
   } finally {
     client.release();
@@ -5871,6 +6127,8 @@ export const getDepartmentWisePayroll = async (req, res) => {
 };
 
 async function generatePayrollId(client) {
+  logger.info("GeneratePayrollId started");
+
   // Fetch all existing payroll IDs
   const { rows } = await client.query(
     `SELECT payroll_id FROM payroll WHERE payroll_id IS NOT NULL`
@@ -5880,22 +6138,24 @@ async function generatePayrollId(client) {
     .map(r => r.payroll_id)
     .filter(Boolean)
     .map(id => {
-      const m = id.match(/PR0*([0-9]+)$/i); // match PR001, PR012, etc.
+      const m = id.match(/PR0*([0-9]+)$/i);
       return m ? parseInt(m[1], 10) : NaN;
     })
     .filter(n => !isNaN(n))
     .sort((a, b) => a - b);
 
-  // Find first missing number in sequence
   let next = 1;
   for (const n of nums) {
     if (n === next) next++;
     else if (n > next) break;
   }
 
-  return `PR${next.toString().padStart(3, "0")}`;
-}
+  const payrollId = `PR${next.toString().padStart(3, "0")}`;
 
+  logger.info(`Next payroll ID generated | ${payrollId}`);
+
+  return payrollId;
+}
 
 export const runPayroll = async (req, res) => {
   const client = await pool.connect();
@@ -5903,7 +6163,12 @@ export const runPayroll = async (req, res) => {
   try {
     const { month, year } = req.body;
 
+    logger.info(
+      `RunPayroll API called | month=${month} | year=${year}`
+    );
+
     if (!month || !year) {
+      logger.warn("RunPayroll validation failed: missing month or year");
       return res.status(400).json({ error: "month and year are required" });
     }
 
@@ -5919,14 +6184,19 @@ export const runPayroll = async (req, res) => {
     if (/^\d+$/.test(month)) {
       const m = parseInt(month);
       if (m < 1 || m > 12) {
+        logger.warn(`RunPayroll invalid month number | month=${month}`);
         return res.status(400).json({ error: "Invalid month number" });
       }
-      normalizedMonth = monthNames[m - 1]; // Convert to JANUARY
+      normalizedMonth = monthNames[m - 1];
     } else {
       normalizedMonth = month.toUpperCase();
     }
 
+    logger.info(`Payroll month normalized | input=${month} | normalized=${normalizedMonth}`);
+
     const payrollId = await generatePayrollId(client);
+
+    logger.info(`Payroll ID generated | ${payrollId}`);
 
     // 2️⃣ Fetch active salary structure rows
     const { rows: employees } = await client.query(
@@ -5947,7 +6217,10 @@ export const runPayroll = async (req, res) => {
       [normalizedMonth, year]
     );
 
+    logger.info(`Active salary rows fetched | count=${employees.length}`);
+
     if (employees.length === 0) {
+      logger.warn("RunPayroll aborted: no active salary rows found");
       return res.status(400).json({ error: "No active employees found in salary structure" });
     }
 
@@ -5957,6 +6230,7 @@ export const runPayroll = async (req, res) => {
 
     const processed = employees.map(emp => {
       if (emp.gross_salary == null || emp.total_deductions == null || emp.net_salary == null) {
+        logger.error(`Missing salary fields | employee_id=${emp.employee_id}`);
         throw new Error(`Missing salary fields for employee_id=${emp.employee_id}`);
       }
 
@@ -5976,6 +6250,10 @@ export const runPayroll = async (req, res) => {
       };
     });
 
+    logger.info(
+      `Payroll totals calculated | gross=${totalGross} | deductions=${totalDeductions} | net=${totalNet}`
+    );
+
     // 3️⃣ Insert into payroll table
     const history = await client.query(
       `
@@ -5985,6 +6263,10 @@ export const runPayroll = async (req, res) => {
       RETURNING *;
       `,
       [payrollId, year, month, processed.length, totalGross, totalDeductions, totalNet]
+    );
+
+    logger.info(
+      `Payroll run completed | payrollId=${payrollId} | employees=${processed.length}`
     );
 
     return res.json({
@@ -6000,7 +6282,9 @@ export const runPayroll = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("RUN PAYROLL ERROR:", err);
+    logger.error(
+      `RunPayroll Error | ${err.message}`
+    );
     return res.status(500).json({ error: err.message });
   } finally {
     client.release();
@@ -6014,7 +6298,10 @@ export const reversePayroll = async (req, res) => {
   try {
     const { id } = req.body;
 
+    logger.info(`ReversePayroll API called | payrollId=${id}`);
+
     if (!id) {
+      logger.warn("ReversePayroll validation failed: missing id");
       return res.status(400).json({ error: "id is required" });
     }
 
@@ -6025,12 +6312,14 @@ export const reversePayroll = async (req, res) => {
     );
 
     if (rows.length === 0) {
+      logger.warn(`ReversePayroll failed: payroll not found | id=${id}`);
       return res.status(404).json({ error: "Payroll ID not found" });
     }
 
     const payroll = rows[0];
 
     if (payroll.status === "Reversed") {
+      logger.warn(`ReversePayroll skipped: already reversed | id=${id}`);
       return res.status(400).json({ error: "Payroll is already reversed" });
     }
 
@@ -6040,13 +6329,15 @@ export const reversePayroll = async (req, res) => {
       [id]
     );
 
+    logger.info(`Payroll reversed successfully | payrollId=${id}`);
+
     return res.json({
       message: `Payroll ${id} has been reversed successfully`,
       payrollId: id
     });
 
   } catch (err) {
-    console.error("REVERSE PAYROLL ERROR:", err);
+    logger.error(`ReversePayroll Error | ${err.message}`);
     return res.status(500).json({ error: err.message });
   } finally {
     client.release();
@@ -6060,7 +6351,10 @@ export const rerunPayroll = async (req, res) => {
   try {
     const { month, year } = req.body;
 
+    logger.info(`RerunPayroll API called | month=${month} | year=${year}`);
+
     if (!month || !year) {
+      logger.warn("RerunPayroll validation failed: missing month or year");
       return res.status(400).json({ error: "month and year are required" });
     }
 
@@ -6071,9 +6365,11 @@ export const rerunPayroll = async (req, res) => {
       [month, year]
     );
 
-    
+    logger.info(`Previous payroll reversed (if any) | month=${month} | year=${year}`);
 
     const payrollId = await generatePayrollId(client);
+
+    logger.info(`New payroll ID generated | ${payrollId}`);
 
     // 3️⃣ Fetch active salary structure
     const { rows: employees } = await client.query(`
@@ -6083,7 +6379,10 @@ export const rerunPayroll = async (req, res) => {
       WHERE status = 'Active'
     `);
 
+    logger.info(`Active salary rows fetched | count=${employees.length}`);
+
     if (employees.length === 0) {
+      logger.warn("RerunPayroll aborted: no active employees found");
       return res.status(400).json({ error: "No active employees found in salary structure" });
     }
 
@@ -6095,6 +6394,10 @@ export const rerunPayroll = async (req, res) => {
       totalDeductions += Number(emp.total_deductions) || 0;
     });
 
+    logger.info(
+      `Payroll totals recalculated | gross=${totalGross} | deductions=${totalDeductions} | net=${totalNet}`
+    );
+
     // 4️⃣ Insert new payroll
     const history = await client.query(
       `INSERT INTO payroll
@@ -6102,6 +6405,10 @@ export const rerunPayroll = async (req, res) => {
        VALUES ($1,$2,$3,$4,$5,$6,$7,'Completed',NOW())
        RETURNING *`,
       [payrollId, year, month, employees.length, totalGross, totalDeductions, totalNet]
+    );
+
+    logger.info(
+      `Payroll rerun completed | payrollId=${payrollId} | employees=${employees.length}`
     );
 
     return res.json({
@@ -6116,7 +6423,7 @@ export const rerunPayroll = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("RERUN PAYROLL ERROR:", err);
+    logger.error(`RerunPayroll Error | ${err.message}`);
     return res.status(500).json({ error: err.message });
   } finally {
     client.release();
@@ -6128,6 +6435,8 @@ export const getAllPayroll = async (req, res) => {
   const client = await pool.connect();
 
   try {
+    logger.info("GetAllPayroll API called");
+
     const { rows } = await client.query(`
       SELECT 
         id,
@@ -6145,13 +6454,15 @@ export const getAllPayroll = async (req, res) => {
       ORDER BY run_date DESC;
     `);
 
+    logger.info(`Payroll records fetched | count=${rows.length}`);
+
     return res.json({
       count: rows.length,
       payroll: rows
     });
 
   } catch (err) {
-    console.error("GET ALL PAYROLL ERROR:", err);
+    logger.error(`GetAllPayroll Error | ${err.message}`);
     return res.status(500).json({ error: err.message });
   } finally {
     client.release();
@@ -6164,7 +6475,12 @@ export const getMonthlyPayrollSummary = async (req, res) => {
   try {
     const { month, year } = req.query;
 
+    logger.info(
+      `GetMonthlyPayrollSummary API called | month=${month} | year=${year}`
+    );
+
     if (!month || !year) {
+      logger.warn("GetMonthlyPayrollSummary validation failed: missing month or year");
       return res.status(400).json({ error: "month and year are required" });
     }
 
@@ -6172,6 +6488,10 @@ export const getMonthlyPayrollSummary = async (req, res) => {
     const monthInt = parseInt(month, 10);
     const monthStr = String(monthInt);
     const monthZero = monthStr.padStart(2, "0");
+
+    logger.info(
+      `Payroll summary month normalized | input=${month} | values=${monthStr},${monthZero}`
+    );
 
     const query = `
       SELECT 
@@ -6193,7 +6513,12 @@ export const getMonthlyPayrollSummary = async (req, res) => {
       year
     ]);
 
+    logger.info(`Monthly payroll rows fetched | count=${rows.length}`);
+
     if (rows.length === 0) {
+      logger.warn(
+        `No payroll found | month=${month} | year=${year}`
+      );
       return res.status(404).json({ error: "No payroll found for this month/year" });
     }
 
@@ -6207,7 +6532,7 @@ export const getMonthlyPayrollSummary = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("MONTHLY PAYROLL SUMMARY ERROR:", err);
+    logger.error(`MonthlyPayrollSummary Error | ${err.message}`);
     res.status(500).json({ error: err.message });
   } finally {
     client.release();
@@ -6220,7 +6545,12 @@ export const getPayrollTrend = async (req, res) => {
   try {
     let limit = parseInt(req.query.limit) || 6;
 
-    if (limit < 1 || limit > 36) limit = 6;
+    logger.info(`GetPayrollTrend API called | limit=${req.query.limit}`);
+
+    if (limit < 1 || limit > 36) {
+      logger.warn(`Invalid limit provided (${limit}), defaulting to 6`);
+      limit = 6;
+    }
 
     const query = `
       SELECT DISTINCT ON (year, month::int)
@@ -6235,7 +6565,11 @@ export const getPayrollTrend = async (req, res) => {
       LIMIT $1;
     `;
 
+    logger.info(`Fetching payroll trend for last ${limit} months`);
+
     const { rows } = await client.query(query, [limit]);
+
+    logger.info(`Payroll trend rows fetched | count=${rows.length}`);
 
     res.json({
       success: true,
@@ -6244,7 +6578,7 @@ export const getPayrollTrend = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("PAYROLL TREND ERROR:", err);
+    logger.error(`PAYROLL TREND ERROR | ${err.message}`);
     res.status(500).json({ success: false, error: err.message });
   } finally {
     client.release();

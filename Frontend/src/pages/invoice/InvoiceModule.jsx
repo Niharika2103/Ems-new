@@ -276,7 +276,7 @@ const [rowsPerPage, setRowsPerPage] = useState(5);
           Send Reminder
         </Button>
       </DialogActions>
-0    </Dialog>
+    </Dialog>
   );
 
   /* ======================================================

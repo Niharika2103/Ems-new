@@ -256,3 +256,5 @@ LOG4J2 2026-01-22 08:24:12 INFO  com.example.project_service.service.ProjectAssi
 LOG4J2 2026-01-22 12:35:01 INFO  com.example.project_service.service.ProjectAssignmentService - Fetching active projects for employee adf96f7f-bd8c-4945-b6ef-e813ab7a7793
 LOG4J2 2026-01-22 12:39:54 INFO  com.example.project_service.service.ProjectAssignmentService - Fetching active projects for employee 8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
 LOG4J2 2026-01-23 09:44:15 INFO  com.example.project_service.service.ProjectAssignmentService - Fetching active projects for employee 8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+LOG4J2 2026-01-30 10:41:54 INFO  com.example.project_service.service.ProjectAssignmentService - Fetching active projects for employee 8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+LOG4J2 2026-01-30 10:42:10 INFO  com.example.project_service.service.ProjectAssignmentService - Fetching active projects for employee 8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
