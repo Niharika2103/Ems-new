@@ -25,13 +25,13 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, baseUploadDir);
   },
-  filename: (req, file, cb) => {
-    const uniqueName =
-      Date.now() +
-      "-" +
-      file.originalname.replace(/\s+/g, "_");
-    cb(null, uniqueName);
-  },
+filename: (req, file, cb) => {
+  const uniqueName =
+    Date.now() +
+    "-" +
+    file.originalname.replace(/[^a-zA-Z0-9.]/g, "_");
+  cb(null, uniqueName);
+},
 });
 
 const fileFilter = (req, file, cb) => {

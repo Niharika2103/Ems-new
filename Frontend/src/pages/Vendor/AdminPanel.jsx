@@ -39,6 +39,7 @@ const AdminPanel = () => {
 //   const [submissions, setSubmissions] = useState([]);
 useEffect(() => {
   fetchVendors();
+  fetchMoUDocuments();
 }, []);
 
 const fetchVendors = async () => {
@@ -51,37 +52,21 @@ const fetchVendors = async () => {
   }
 };
 
+const fetchMoUDocuments = async () => {
+  try {
+    //const res = await axios.get("http://localhost:5006/vendor/admin/mou-documents");
+    const res = await axios.get(`${API_BASES.VENDOR}/vendor/admin/mou-documents`);
+    setMouDocuments(res.data.documents || []);
+  } catch (err) {
+    console.error("Failed to fetch MoU documents", err);
+  }
+};
+
+
   const [mouDocuments, setMouDocuments] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
- useEffect(() => {
-  // Load MoU documents from localStorage
-  const savedDocuments = localStorage.getItem('mouDocuments');
-  if (savedDocuments) {
-    setMouDocuments(JSON.parse(savedDocuments));
-  } else {
-    const initialDocuments = [
-      {
-        id: 1,
-        title: "Standard Vendor Agreement",
-        fileName: "vendor_agreement_v1.pdf",
-        version: "1.0",
-        status: "approved",
-        uploadedBy: "Admin",
-        uploadedDate: "2024-01-15",
-        effectiveDate: "2024-02-01",
-        fileSize: "2.4 MB",
-        description: "Standard vendor agreement template",
-        approvalHistory: [
-          { approvedBy: "Legal Team", date: "2024-01-20", status: "approved" }
-        ]
-      }
-    ];
-
-    setMouDocuments(initialDocuments);
-    localStorage.setItem("mouDocuments", JSON.stringify(initialDocuments));
-  }
-}, []);
+ 
 
 // const updateVendorStatus = async (vendorId, status) => {
 //   try {
@@ -165,8 +150,8 @@ const handleRemoveField = (id) => {
   totalSubmissions: (submissions || []).length,
   pendingReview: (submissions || []).filter(s => s.status === "Pending").length,
   approvedVendors: (submissions || []).filter(s => s.status === "Approved").length,
-  totalDocuments: (mouDocuments || []).length,
-  pendingApprovals: (mouDocuments || []).filter(d => d.status === "pending").length
+  totalDocuments: mouDocuments.length,
+  pendingApprovals: mouDocuments.filter(d => d.mou_status?.toLowerCase() === "pending").length
 };
 
 
@@ -185,6 +170,8 @@ const handleRemoveField = (id) => {
   validTill: "",
   file: null
 });
+const fileInputRef = React.useRef(null);
+
 
 
   const handleFileUpload = (e) => {
@@ -265,10 +252,10 @@ const handleRemoveField = (id) => {
   };
 
   const filteredDocuments = mouDocuments.filter(doc =>
-    doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    doc.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    doc.fileName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  doc.company_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  doc.mou_file.toLowerCase().includes(searchTerm.toLowerCase())
+);
+
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -289,14 +276,18 @@ const handleRemoveField = (id) => {
   // };
 
       const getStatusColor = (status) => {
-      switch (status) {
-        case "ACTIVE": return "bg-green-100 text-green-800";
-        case "PENDING_ACCEPTANCE": return "bg-yellow-100 text-yellow-800";
-        case "REJECTED": return "bg-red-100 text-red-800";
-        case "EXPIRED": return "bg-gray-100 text-gray-800";
+      switch (status?.toLowerCase()) {
+        case "active": return "bg-green-100 text-green-800";
+        case "pending": return "bg-yellow-100 text-yellow-800";
+        case "rejected": return "bg-red-100 text-red-800";
         default: return "bg-gray-100 text-gray-800";
       }
     };
+    
+     const isExpired = (expiresAt) => {
+      return new Date(expiresAt) < new Date();
+    };
+
 
 
   const MouDocumentsSection = () => (
@@ -340,25 +331,27 @@ const handleRemoveField = (id) => {
     
           <input
             type="text"
+            className="px-3 py-2 border rounded-lg"
             placeholder="Document Title"
             value={uploadData.title}
             onChange={(e) =>
-              setUploadData({ ...uploadData, title: e.target.value })
-            }
-            className="border p-3 rounded-lg w-full"
+            setUploadData(prev => ({ ...prev, title: e.target.value }))
+          }
+
           />
 
           <textarea
-          placeholder="Document Description"
-          value={uploadData.description}
-          onChange={(e) =>
-            setUploadData({ ...uploadData, description: e.target.value })
-          }
-          className="border p-3 rounded-lg w-full"
-        />
+            className="px-3 py-2 border rounded-lg resize-none"
+            placeholder="Document Description"
+            rows={3}
+            value={uploadData.description}
+            onChange={(e) =>
+              setUploadData(prev => ({ ...prev, description: e.target.value }))
+            }
 
+          />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <input
             type="date"
             className="px-3 py-2 border rounded-lg"
@@ -377,76 +370,73 @@ const handleRemoveField = (id) => {
             }
           />
         </div>
-          <div className="flex items-center gap-4">
-            
 
+        <div className="flex flex-col gap-1 mt-4">
           <input
-               type="file"
-              name="mou_file"   // ✅ REQUIRED for Multer
+              type="file"
+              name="mou_file"
               accept=".pdf,.doc,.docx"
               onChange={(e) =>
-                setUploadData({ ...uploadData, file: e.target.files[0] })
+                setUploadData(prev => ({ ...prev, file: e.target.files[0] }))
               }
-              className="flex-1 border rounded-lg p-2"
-            />`
+              className="flex-1 border rounded-lg p-2 cursor-pointer"
+            />
 
-
+            {uploadData.file && (
+              <p className="text-sm text-gray-600 mt-1">
+                Selected File: <span className="font-medium">{uploadData.file.name}</span>
+              </p>
+            )}
 
            <button
             className="bg-blue-600 text-white px-6 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700"
-            onClick={async () => {
+         onClick={async () => {
+            if (
+              !uploadData.vendorId ||
+              !uploadData.title ||
+              !uploadData.file ||
+              !uploadData.validFrom ||
+              !uploadData.validTill
+            ) {
+              toast.error("Please fill all fields and select a file");
+              return;
+            }
 
-  if (!uploadData.file) {
-    fileInputRef.current?.click();   // ✅ open file chooser
-    return;
-  }
+            try {
+              const formData = new FormData();
+              formData.append("vendor_id", uploadData.vendorId);
+              formData.append("mou_effective_from", uploadData.validFrom);
+              formData.append("mou_expires_at", uploadData.validTill);
+              formData.append("mou_file", uploadData.file);
 
-  if (
-    !uploadData.vendorId ||
-    !uploadData.title ||
-    !uploadData.file ||
-    !uploadData.validFrom ||
-    !uploadData.validTill
-  ) {
-    alert("Please fill all fields and select a file");
-    return;
-  }
+              const res = await axios.post(
+                `${API_BASES.VENDOR}/vendor/upload-mou`,
+                formData,
+                { headers: { "Content-Type": "multipart/form-data" } }
+              );
 
-  try {
-    const formData = new FormData();
+              if (res.data?.success) {
+                toast.success("MoU uploaded successfully");
+                fetchMoUDocuments(); // refresh list
 
-    formData.append("vendor_id", uploadData.vendorId);
-    formData.append("mou_effective_from", uploadData.validFrom);
-    formData.append("mou_expires_at", uploadData.validTill);
-    formData.append("mou_file", uploadData.file);
+                setUploadData({
+                  vendorId: "",
+                  title: "",
+                  description: "",
+                  file: null,
+                  validFrom: "",
+                  validTill: "",
+                });
+              }
+            } catch (err) {
+              console.error("MoU upload failed:", err);
+              toast.error("MoU upload failed");
+            }
+          }}
 
-    const res = await axios.post(
-      "http://localhost:5006/vendor/upload-mou",
-      formData,
-      { headers: { "Content-Type": "multipart/form-data" } }
-    );
-
-    if (res.data.success) {
-      toast.success("MoU uploaded successfully");
-
-      setUploadData({
-        vendorId: "",
-        title: "",
-        description: "",
-        file: null,
-        validFrom: "",
-        validTill: "",
-      });
-    }
-
-  } catch (err) {
-    console.error("MoU upload failed:", err);
-    toast.error("MoU upload failed");
-  }
-}}
 
           >
-            <Upload className="w-4 h-4" /> Upload New
+            <Upload className="w-4 h-4" /> Submit
           </button>
 
           </div>
@@ -468,38 +458,60 @@ const handleRemoveField = (id) => {
               <div key={doc.id} className="border rounded-lg p-6 hover:shadow-md transition-shadow">
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex-1">
-                    <h4 className="font-semibold text-lg text-gray-800">{doc.title}</h4>
-                    <p className="text-gray-600 mt-1">{doc.description}</p>
+                    <h4 className="font-semibold text-lg text-gray-800">{doc.company_name}</h4>
                     <p className="text-sm text-gray-500">
-                      Vendor: {doc.vendorName}
+                      File: {doc.mou_file.replace(/^\d+-/, "")}
                     </p>
+
 
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(doc.status)} flex items-center gap-1`}>
-                      {getStatusIcon(doc.status)} {doc.status.toUpperCase()}
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(doc.mou_status)} flex items-center gap-1`}>
+                    {/* {getStatusIcon(doc.status)} {doc.mou_status.toUpperCase()} */}
+                    {doc.mou_status.toUpperCase()}
+
+
                     </span>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm mb-4">
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-gray-400" />
-                    <span>{doc.fileName}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <GitBranch className="w-4 h-4 text-gray-400" />
-                    <span>v{doc.version}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Download className="w-4 h-4 text-gray-400" />
-                    <span>{doc.fileSize}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-gray-400" />
-                    <span>{doc.uploadedDate}</span>
-                  </div>
+               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm mb-4">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-gray-400" />
+                  <span>{doc.mou_file}</span>
                 </div>
+
+                <div className="flex items-center gap-2">
+                  <GitBranch className="w-4 h-4 text-gray-400" />
+                  <span>
+                    From: {new Date(doc.mou_effective_from).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Download className="w-4 h-4 text-gray-400" />
+                  <span>
+                    To: {new Date(doc.mou_expires_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
+}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-gray-400" />
+                  <span>
+                    Uploaded: {new Date(doc.mou_uploaded_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                  </span>
+                </div>
+              </div>
+               
+               {doc.signed_mou_file && (
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  <span>Signed</span>
+                </div>
+              )}
+
 
                 {/* Approval History */}
                 <div className="mb-4">
@@ -522,35 +534,43 @@ const handleRemoveField = (id) => {
                 </div>
 
                 {/* Actions */}
-                <div className="flex flex-wrap gap-2">
-                  <button className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-blue-700 rounded-lg text-sm hover:bg-blue-200 transition-colors">
-                    <Download className="w-4 h-4" /> Download
-                  </button>
-                  
-                  {/* {doc.status === "pending" && (
-                    <>
-                      <button 
-                        className="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm hover:bg-green-200 transition-colors"
-                        onClick={() => approveDocument(doc.id)}
-                      >
-                        <CheckCircle className="w-4 h-4" /> Approve
-                      </button>
-                      <button 
-                        className="flex items-center gap-2 px-4 py-2 bg-red-100 text-red-700 rounded-lg text-sm hover:bg-red-200 transition-colors"
-                        onClick={() => rejectDocument(doc.id)}
-                      >
-                        <XCircle className="w-4 h-4" /> Reject
-                      </button>
-                    </>
-                  )} */}
-                  
-                  <button 
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition-colors"
-                    onClick={() => uploadNewVersion(doc)}
+               <div className="flex flex-wrap items-center gap-4 mt-4">
+                {/* Download MoU - Always visible */}
+                <a
+                  href={`${API_BASES.VENDOR}/vendor/download/${doc.signed_mou_file || doc.mou_file}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition 
+                    ${doc.signed_mou_file 
+                      ? "bg-green-100 text-green-700 hover:bg-green-200" 
+                      : "bg-sky-100 text-sky-700 hover:bg-sky-200"}`}
+                >
+                  <Download className="w-4 h-4" />
+                  {doc.signed_mou_file ? "Download Signed MoU" : "Download MoU"}
+                </a>
+
+                {/* New Version - Only if expired */}
+                {isExpired(doc.mou_expires_at) && (
+                  <button
+                    onClick={() => {
+                      setUploadData({
+                        vendorId: doc.vendor_id,
+                        title: "Renewed MoU",
+                        description: "MoU renewal after expiry",
+                        validFrom: "",
+                        validTill: "",
+                        file: null
+                      });
+                      toast.info("Upload new MoU version for this vendor");
+                    }}
+                    className="flex items-center gap-2 px-4 py-2 bg-orange-100 text-orange-800 rounded-lg text-sm font-medium hover:bg-orange-200 transition"
                   >
-                    <GitBranch className="w-4 h-4" /> New Version
+                    <GitBranch className="w-4 h-4" />
+                    New Version
                   </button>
-                </div>
+                )}
+              </div>
+
               </div>
             ))}
           </div>
@@ -711,23 +731,39 @@ const handleRemoveField = (id) => {
             )}
           </div>
 
-          {/* Recent MoU Documents */}
+         {/* Recent MoU Documents */}
           <div className="bg-white rounded-lg shadow-lg p-6">
             <h3 className="font-semibold text-lg mb-4">Recent MoU Documents</h3>
-            {(mouDocuments || []).slice(0, 5).map((doc) => (
+            {mouDocuments.slice(0, 5).map((doc) => (
               <div key={doc.id} className="border-b py-3 last:border-b-0">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="font-medium">{doc.title}</p>
-                    <p className="text-sm text-gray-500">v{doc.version} • {doc.uploadedDate}</p>
+                    <p className="font-medium">{doc.company_name}</p>
+                    <p className="text-sm text-gray-500">
+                      Expires:{" "}
+                      {new Date(doc.mou_expires_at).toLocaleDateString("en-IN", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </p>
                   </div>
-                  <span className={`px-2 py-1 rounded text-xs ${getStatusColor(doc.status)}`}>
-                    {doc.status}
+
+                  <span
+                    className={`px-2 py-1 rounded text-xs font-medium ${
+                      isExpired(doc.mou_expires_at)
+                        ? "bg-red-100 text-red-800"
+                        : getStatusColor(doc.mou_status)
+                    }`}
+                  >
+                  {isExpired(doc.mou_expires_at) ? "EXPIRED" : doc.mou_status.toUpperCase()}
                   </span>
+
                 </div>
               </div>
-            ))}
-          </div>
+              ))}
+            </div>
+
         </div>
       )}
 
@@ -848,7 +884,7 @@ const handleRemoveField = (id) => {
                 { sub.status === "Approved" && (
   <>
                 { !(mouDocuments || []).some(m => 
-                m.vendorId == sub.id && m.status === "ACTIVE"
+                m.id === sub.id && m.mou_status === "active"
               ) && (
 
                   <span className="text-red-600 text-sm">

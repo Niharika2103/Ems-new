@@ -149,62 +149,129 @@ import { toast } from "react-toastify";
 const VendorMoU = () => {
   const [mou, setMou] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [signedFile, setSignedFile] = useState(null);
+
 
   // 🔴 FIX 1: your vendor object uses `id`, NOT `_id`
   const vendor = JSON.parse(localStorage.getItem("vendor"));
 
-  useEffect(() => {
-    const fetchMou = async () => {
-      try {
-        // 🔴 FIX 2: correct backend route
-       const res = await axios.get(
-  `http://localhost:5006/vendor/${vendor?.id}/mou`
-);
-
-
-
-        if (res.data.success) {
-          setMou(res.data.mou);
-        } else {
-          setMou(null);
-        }
-      } catch (err) {
-        console.error("MoU fetch error:", err);
-        setMou(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    // 🔴 FIX 3: use vendor.id not vendor._id
-    if (vendor?.id) fetchMou();
-    else setLoading(false);
-  }, [vendor?.id]);
-
-  const handleAccept = async () => {
+ useEffect(() => {
+  const fetchMou = async () => {
     try {
-      // 🔴 FIX 4: correct backend route
-      const res = await axios.post(
-  `http://localhost:5006/vendor/${vendor?.id}/mou/accept`
-);
+      const vendorId = vendor?.id || vendor?.vendor_id;
+      console.log("Vendor ID:", vendorId);
 
+      const res = await axios.get(
+        `http://localhost:5006/vendor/${vendorId}/mou`
+      );
 
+      console.log("MoU Response:", res.data);
 
-      if (res.data.success) {
-        toast.success("MoU accepted successfully!");
-        setMou((prev) => ({
-            ...prev,
-            mou_accepted: true,
-            mou_status: "ACTIVE",
-            mou_accepted_at: new Date().toISOString(),
-            }));
-
+      if (res.data?.mou?.mou_file) {
+        setMou(res.data.mou);
+      } else {
+        setMou(null);
       }
     } catch (err) {
-      console.error("Accept MoU error:", err);
-      toast.error("Failed to accept MoU");
+      console.error("MoU fetch error:", err);
+      setMou(null);
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (vendor?.id || vendor?.vendor_id) fetchMou();
+  else setLoading(false);
+}, []);
+
+
+ const handleReject = async () => {
+  try {
+    const vendorId = vendor?.id || vendor?.vendor_id;
+
+    const res = await axios.post(
+      `http://localhost:5006/vendor/${vendorId}/mou/reject`
+    );
+
+    if (res.data.success) {
+      toast.success("MoU rejected");
+      setMou(prev => ({
+        ...prev,
+        mou_status: "rejected"
+      }));
+    }
+  } catch (err) {
+    console.error("Reject MoU error:", err);
+    toast.error("Failed to reject MoU");
+  }
+};
+
+
+
+
+const handleAccept = async () => {
+  try {
+    if (!mou?.signed_mou_file) {
+      toast.error("Please upload signed MoU before accepting");
+      return;
+    }
+
+    const vendorId = vendor?.id || vendor?.vendor_id;
+
+    const res = await axios.post(
+      `http://localhost:5006/vendor/${vendorId}/mou/accept`
+    );
+
+    if (res.data.success) {
+      toast.success("MoU accepted successfully!");
+      setMou(prev => ({
+        ...prev,
+        mou_status: "active",
+        mou_accepted: true,
+        mou_accepted_at: new Date().toISOString()
+      }));
+    }
+  } catch (err) {
+    console.error("Accept MoU error:", err);
+    toast.error("Failed to accept MoU");
+  }
+};
+
+
+const handleUploadSigned = async () => {
+  try {
+    if (!signedFile) {
+      toast.error("Please select signed MoU file");
+      return;
+    }
+
+    const vendorId = vendor?.id || vendor?.vendor_id;
+
+    const formData = new FormData();
+    formData.append("signed_mou_file", signedFile);
+
+    const res = await axios.post(
+      `http://localhost:5006/vendor/${vendorId}/mou/upload-signed`,
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } }
+    );
+
+    if (res.data.success) {
+  toast.success("Signed MoU uploaded successfully");
+  setMou(prev => ({
+    ...prev,
+    signed_mou_file: res.data.signedFile,
+    mou_status: "signed"
+  }));
+}
+
+  } catch (err) {
+    console.error("Upload signed MoU error:", err);
+    toast.error("Failed to upload signed MoU");
+  }
+};
+
+
 
   if (loading) {
     return <p className="text-gray-500">Loading MoU...</p>;
@@ -239,33 +306,95 @@ const VendorMoU = () => {
           {mou.mou_status}
         </span>
       </p>
+      {mou.signed_mou_file && (
+            <p className="text-green-600 font-medium mt-1">
+                ✔ Signed document uploaded
+            </p>
+            )}
+
     </div>
 
           {/* 🔴 FIX 5: correct download URL */}
           <a
-  href={`http://localhost:5006/${mou.mou_file}`}
-  target="_blank"
-  rel="noopener noreferrer"
-
+            // href={`/${mou.mou_file}`}
+            href={`http://localhost:5006/vendor/download/${mou.mou_file}`}
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 mr-3"
             >
             Download MoU
             </a>
 
+            {mou.signed_mou_file && (
+            <a
+                href={`http://localhost:5006/vendor/download/${mou.signed_mou_file}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 mt-2"
+            >
+                Download Signed MoU
+            </a>
+            )}
+
 
           {/* ACCEPT */}
-          {!mou.mou_accepted ? (
-            <button
-              onClick={handleAccept}
-              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-            >
-              Accept MoU
-            </button>
-          ) : (
-            <span className="ml-3 text-green-600 font-semibold">
-              ✅ MoU Accepted
-            </span>
-          )}
+        {/* Accept / Reject only when pending AND signed MoU exists */}
+               {mou.mou_status === "signed" && mou.signed_mou_file && (
+                <div className="flex gap-3 mt-3">
+                    <button
+                    onClick={handleAccept}
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    >
+                    Accept MoU
+                    </button>
+
+                    <button
+                    onClick={handleReject}
+                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                    >
+                    Reject MoU
+                    </button>
+                </div>
+                )}
+
+
+                {/* Upload Signed MoU only when pending AND not yet uploaded */}
+                {mou.mou_status === "pending" && !mou.signed_mou_file && (
+                <div className="mt-4">
+                    <label className="block font-medium mb-1">Upload Signed MoU</label>
+                    <input
+                    type="file"
+                    accept="application/pdf"
+                    onChange={(e) => setSignedFile(e.target.files[0])}
+                    className="border p-2 rounded w-full"
+                    />
+
+                    <button
+                    onClick={handleUploadSigned}
+                    className="mt-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                    >
+                    Upload Signed MoU
+                    </button>
+                </div>
+                )}
+
+
+
+
+            {mou.mou_status === "active" && (
+            <div className="mt-3 text-green-600 font-semibold">
+                ✅ Approved: Your MoU is active until{" "}
+                {new Date(mou.mou_expires_at).toLocaleDateString()}
+            </div>
+            )}
+
+            {mou.mou_status === "rejected" && (
+            <div className="mt-3 text-red-600 font-semibold">
+                ❌ Rejected: You have rejected the MoU. Please contact admin.
+            </div>
+            )}
+
+
         </>
       )}
     </div>

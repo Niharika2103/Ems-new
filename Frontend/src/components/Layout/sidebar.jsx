@@ -130,24 +130,28 @@ const activeRole =
   // const finalMenus =
   //   role === "employee" ? employeeMenus : roleMenus[role] || [];
 
-    // const finalMenus =
-    // role === "employee"
-    //   ? employeeMenus
-    //   : role === "vendor"
-    //   ? vendorMenus
-    //   : roleMenus[role] || [];
+  //   const finalMenus =
+  //   role === "employee"
+  //     ? employeeMenus
+  //     : role === "vendor"
+  //     ? vendorMenus
+  //     : roleMenus[role] || [];
 
-  let finalMenus;
+      let finalMenus;
 
-if (activeRole === "employee") {
-  finalMenus = employeeMenus;
-} else if (activeRole === "admin") {
-  finalMenus = roleMenus.admin;
-} else if (activeRole === "superadmin") {
-  finalMenus = roleMenus.superadmin;
-} else {
-  finalMenus = employeeMenus;
-}
+      if (activeRole === "employee") {
+        finalMenus = employeeMenus;
+      } else if (activeRole === "vendor") {
+        finalMenus = vendorMenus;
+      } else if (activeRole === "admin") {
+        finalMenus = roleMenus.admin;
+      } else if (activeRole === "superadmin") {
+        finalMenus = roleMenus.superadmin;
+      } else {
+        finalMenus = employeeMenus;
+      }
+
+
 
   /* ------------------ LOGOUT ------------------ */
   const handleLogout = async () => {
@@ -173,7 +177,7 @@ if (activeRole === "employee") {
 
   let displayRole = activeRole?.toUpperCase();
 
-  if (role === "employee") {
+  if (activeRole === "employee") {
     displayRole =
       employment_type === "freelancer"
         ? "FREELANCER"
@@ -181,6 +185,11 @@ if (activeRole === "employee") {
         ? "CONTRACT"
         : "EMPLOYEE";
   }
+
+  if (activeRole === "vendor") {
+    displayRole = "VENDOR";
+  }
+
 
   return (
     <aside
