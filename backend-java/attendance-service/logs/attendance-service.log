@@ -534,3 +534,7 @@ LOG4J2 2026-01-28 10:02:25 INFO  com.example.attendance_service.AttendanceServic
 LOG4J2 2026-01-28 10:02:25 DEBUG com.example.attendance_service.AttendanceServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
 LOG4J2 2026-01-28 10:02:25 INFO  com.example.attendance_service.AttendanceServiceApplication - No active profile set, falling back to 1 default profile: "default"
 LOG4J2 2026-01-28 10:02:31 INFO  com.example.attendance_service.AttendanceServiceApplication - Started AttendanceServiceApplication in 6.674 seconds (process running for 8.035)
+LOG4J2 2026-01-29 15:04:37 INFO  com.example.attendance_service.AttendanceServiceApplication - Starting AttendanceServiceApplication using Java 21.0.8 with PID 20584 (D:\Niharika\ems1.o\EMSPROJECT1.O\backend-java\attendance-service\target\classes started by nagab in D:\Niharika\ems1.o\EMSPROJECT1.O\backend-java\attendance-service)
+LOG4J2 2026-01-29 15:04:37 DEBUG com.example.attendance_service.AttendanceServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
+LOG4J2 2026-01-29 15:04:37 INFO  com.example.attendance_service.AttendanceServiceApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-01-29 15:04:45 INFO  com.example.attendance_service.AttendanceServiceApplication - Started AttendanceServiceApplication in 8.539 seconds (process running for 10.486)
