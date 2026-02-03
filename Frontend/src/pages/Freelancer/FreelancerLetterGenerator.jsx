@@ -65,7 +65,7 @@ const FreelancerLetterGenerator = () => {
   //   }
   // };
 
-  const generateLetter = async (id) => {
+ const generateLetter = async (id) => {
   const existingLetters = lettersMap[id] || [];
 
   const normalize = (str) =>
@@ -86,36 +86,74 @@ const FreelancerLetterGenerator = () => {
   setGeneratingFor(id);
 
   try {
-    await generateFreelancerLetterApi({
+    const res = await generateFreelancerLetterApi({
       freelancerId: id,
       letterType: selectedLetterType,
     });
 
-    const res = await getFreelancerLettersApi(id);
-    setLettersMap((p) => ({ ...p, [id]: res.data.files || [] }));
+    const lettersRes = await getFreelancerLettersApi(id);
+    setLettersMap((p) => ({
+      ...p,
+      [id]: lettersRes.data.files || [],
+    }));
 
-    toast.success(`✅ ${selectedLetterType} generated successfully`);
+    // ✅ BACKEND MESSAGE SHOWN IN UI
+    toast.success(
+      res?.data?.message || `✅ ${selectedLetterType} generated successfully`
+    );
   } catch (err) {
     console.error(err);
-    toast.error("❌ Failed to generate letter");
+
+    // ✅ BACKEND ERROR SHOWN IN UI
+    toast.error(
+      err?.response?.data?.error || "❌ Failed to generate letter"
+    );
   } finally {
     setGeneratingFor(null);
   }
 };
+const deleteLetter = async (id, file) => {
+  if (!window.confirm("Delete this letter?")) return;
 
-  const deleteLetter = async (id, file) => {
-    if (!window.confirm("Delete this letter?")) return;
-    await deleteFreelancerLetterApi(id, file);
+  try {
+    const res = await deleteFreelancerLetterApi(id, file);
+
     setLettersMap((p) => ({
       ...p,
       [id]: p[id].filter((f) => f.name !== file),
     }));
-  };
+
+    // ✅ BACKEND MESSAGE
+    toast.success(
+      res?.data?.message || "✅ Letter deleted successfully"
+    );
+  } catch (err) {
+    console.error(err);
+
+    toast.error(
+      err?.response?.data?.error || "❌ Failed to delete letter"
+    );
+  }
+};
 
   const sendLetter = async (id, file) => {
-    await sendFreelancerLetterEmailApi({ freelancerId: id, fileName: file });
-    alert("Email sent");
-  };
+  try {
+    const res = await sendFreelancerLetterEmailApi({
+      freelancerId: id,
+      fileName: file,
+    });
+
+    // ✅ show backend message
+    alert(res?.data?.message || "Email sent");
+  } catch (err) {
+    console.error(err);
+
+    // ✅ show backend error
+    alert(
+      err?.response?.data?.error || "Failed to send email"
+    );
+  }
+};
 
   return (
     <div style={styles.page}>

@@ -194,18 +194,19 @@ const PayrollSystem = () => {
     }
   }, [activeTab]);
 
-  const loadPayrollHistory = async () => {
-    setIsProcessing(true);
-    try {
-      const response = await getAllPayrollApi();
-      setPayrollHistory(response.data.payroll || []);
-    } catch (err) {
-      setError('Failed to load payroll history');
-      console.error(err);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
+  // ONLY SAFE FIXES APPLIED — LOGIC SAME
+
+const loadPayrollHistory = async () => {
+  setIsProcessing(true);
+  try {
+    const response = await getAllPayrollApi();
+    setPayrollHistory(response.data.payroll || []);
+  } catch (err) {
+    setError(err.response?.data?.error || err.message || 'Failed to load payroll history');
+  } finally {
+    setIsProcessing(false);
+  }
+};
 
   // ✅ STEP 1: YEAR + MONTH DROPDOWNS (with full year range)
   const PeriodSelection = () => {
@@ -368,12 +369,17 @@ const PayrollSystem = () => {
                 year: payrollData.selectedYear
               });
               setValidationStatus(response.data);
-            } catch (err) {
-              setError(err.response?.data?.error || 'Validation failed');
-              console.error(err);
-            } finally {
-              setIsProcessing(false);
-            }
+           } catch (err) {
+                  setError(
+                    err.response?.data?.error || 
+                    err.message || 
+                    "Validation failed"
+                  );
+                  console.error(err);
+                } finally {
+                  setIsProcessing(false);
+                }
+
           }}
           disabled={isProcessing}
         >
@@ -427,11 +433,16 @@ const PayrollSystem = () => {
               await loadPayrollHistory();
               setStep(4);
             } catch (err) {
-              setError(err.response?.data?.error || 'Payroll run failed');
+              setError(
+                err.response?.data?.error || 
+                err.message || 
+                "Payroll run failed"
+              );
               console.error(err);
             } finally {
               setIsProcessing(false);
             }
+
           }}
           disabled={isProcessing}
         >
@@ -533,10 +544,15 @@ const PayrollSystem = () => {
                             await rerunPayrollApi({ month: run.month, year: run.year });
                             await loadPayrollHistory();
                           } catch (err) {
-                            setError(err.response?.data?.error || 'Failed to re-run');
+                            setError(
+                              err.response?.data?.error || 
+                              err.message || 
+                              "Failed to re-run payroll"
+                            );
                           } finally {
                             setIsProcessing(false);
                           }
+
                         })();
                       }
                     }}
@@ -557,10 +573,15 @@ const PayrollSystem = () => {
                             await reversePayrollApi({ id: run.id });
                             await loadPayrollHistory();
                           } catch (err) {
-                            setError(err.response?.data?.error || 'Failed to reverse');
-                          } finally {
-                            setIsProcessing(false);
-                          }
+                              setError(
+                                err.response?.data?.error || 
+                                err.message || 
+                                "Failed to reverse payroll"
+                              );
+                            } finally {
+                              setIsProcessing(false);
+                            }
+
                         })();
                       }
                     }}

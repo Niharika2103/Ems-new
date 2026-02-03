@@ -1,8 +1,11 @@
 import pool from "../../config/db.js";
+import logger from "../../config/logger.js";   // ✅ ADD LOGGER
 
 /* CREATE SHIFT */
 export const createShift = async (req, res) => {
   try {
+    logger.info("Create Shift API called");
+
     const {
       shift_name,
       start_time,
@@ -33,9 +36,11 @@ export const createShift = async (req, res) => {
       ]
     );
 
+    logger.info(`Shift created successfully | shiftId=${rows[0].id}`);
+
     res.status(201).json(rows[0]);
   } catch (err) {
-    console.error(err);
+    logger.error(`Create Shift Error | ${err.message}`);
     res.status(500).json({ message: "Failed to create shift" });
   }
 };
@@ -43,11 +48,17 @@ export const createShift = async (req, res) => {
 /* GET SHIFTS */
 export const getShifts = async (req, res) => {
   try {
+    logger.info("Get Shifts API called");
+
     const { rows } = await pool.query(
       "SELECT * FROM shift_master ORDER BY created_at DESC"
     );
+
+    logger.info(`Shifts fetched | count=${rows.length}`);
+
     res.json(rows);
   } catch (err) {
+    logger.error(`Get Shifts Error | ${err.message}`);
     res.status(500).json({ message: "Failed to fetch shifts" });
   }
 };
@@ -56,6 +67,9 @@ export const getShifts = async (req, res) => {
 export const updateShift = async (req, res) => {
   try {
     const { id } = req.params;
+
+    logger.info(`Update Shift API called | shiftId=${id}`);
+
     const {
       shift_name,
       start_time,
@@ -91,8 +105,11 @@ export const updateShift = async (req, res) => {
       ]
     );
 
+    logger.info(`Shift updated successfully | shiftId=${id}`);
+
     res.json(rows[0]);
   } catch (err) {
+    logger.error(`Update Shift Error | ${err.message}`);
     res.status(500).json({ message: "Failed to update shift" });
   }
 };
@@ -101,6 +118,8 @@ export const updateShift = async (req, res) => {
 export const deleteShift = async (req, res) => {
   try {
     const { id } = req.params;
+
+    logger.info(`Delete Shift API called | shiftId=${id}`);
 
     // Safety check: is shift used?
     const used = await pool.query(
@@ -114,6 +133,8 @@ export const deleteShift = async (req, res) => {
     );
 
     if (used.rowCount > 0) {
+      logger.warn(`Shift delete blocked (assigned) | shiftId=${id}`);
+
       return res.status(400).json({
         message: "Cannot delete. Shift already assigned to employees."
       });
@@ -127,9 +148,11 @@ export const deleteShift = async (req, res) => {
       [id]
     );
 
+    logger.info(`Shift deleted permanently | shiftId=${id}`);
+
     res.json({ message: "Shift deleted permanently" });
   } catch (err) {
-    console.error(err);
+    logger.error(`Delete Shift Error | ${err.message}`);
     res.status(500).json({ message: "Failed to delete shift" });
   }
 };

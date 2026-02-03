@@ -92,18 +92,15 @@ const AdminLetterGenerator = () => {
   if (!employeeId || !selectedLetterType) return;
 
   const existingLetters = employeeLettersMap[employeeId] || [];
-
-  const normalize = (str) =>
-    str.toLowerCase().replace(/\s|_/g, "");
+  const normalize = (str) => str.toLowerCase().replace(/\s|_/g, "");
 
   const alreadyGenerated = existingLetters.some(file =>
     normalize(file.name).includes(normalize(selectedLetterType))
   );
 
-  // 🚫 STOP if already generated
   if (alreadyGenerated) {
     toast.warning(
-      `⚠️ ${selectedLetterType} already generated for this employee`
+      `${selectedLetterType} already generated for this employee`
     );
     return;
   }
@@ -111,26 +108,26 @@ const AdminLetterGenerator = () => {
   setGeneratingFor(employeeId);
 
   try {
-    await generateLetterApi({
+    const res = await generateLetterApi({
       employeeId,
       letterType: selectedLetterType,
     });
 
-    const res = await getEmployeeLettersApi(employeeId);
+    const lettersRes = await getEmployeeLettersApi(employeeId);
     setEmployeeLettersMap(prev => ({
       ...prev,
-      [employeeId]: res.data.files || [],
+      [employeeId]: lettersRes.data.files || [],
     }));
 
-    toast.success(`✅ ${selectedLetterType} generated successfully`);
+    toast.success(res.data.message);
   } catch (err) {
-    console.error("Generation failed:", err);
     const msg = err.response?.data?.error || "Failed to generate letter";
-    toast.error(`❌ ${msg}`);
+    toast.error(msg);
   } finally {
     setGeneratingFor(null);
   }
 };
+
 
   const handleDeleteLetter = async (employeeId, filename) => {
   if (!window.confirm(`Are you sure you want to delete "${filename}"?\nThis action cannot be undone.`)) {
@@ -138,35 +135,34 @@ const AdminLetterGenerator = () => {
   }
 
   try {
-    // Call backend delete API
-    await deleteLetterApi(employeeId, filename);
+    const res = await deleteLetterApi(employeeId, filename);
 
-    // Update UI: remove the file from local state
     setEmployeeLettersMap(prev => {
       const updated = { ...prev };
-      updated[employeeId] = (updated[employeeId] || []).filter(file => file.name !== filename);
+      updated[employeeId] = (updated[employeeId] || []).filter(
+        file => file.name !== filename
+      );
       return updated;
     });
 
-    alert('✅ Letter deleted successfully!');
+    toast.success(res.data.message);
   } catch (err) {
-    console.error('Delete error:', err);
-    const errorMsg = err.response?.data?.error || 'Failed to delete letter. Please try again.';
-    alert(`❌ ${errorMsg}`);
+    const errorMsg =
+      err.response?.data?.error || "Failed to delete letter. Please try again.";
+    toast.error(errorMsg);
   }
 };
+
 
 const handleSend = async (employeeId, fileName) => {
   try {
-    await sendLetterEmailApi(employeeId, fileName);
-    alert("📧 Email sent successfully!");
+    const res = await sendLetterEmailApi(employeeId, fileName);
+    toast.success(res.data.message);
   } catch (err) {
-    console.error("Email send error:", err);
     const msg = err.response?.data?.error || "Failed to send email";
-    alert(`❌ ${msg}`);
+    toast.error(msg);
   }
 };
-
 
   const handleDownload = (url) => {
     window.open(url, '_blank');

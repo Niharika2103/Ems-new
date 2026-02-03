@@ -937,8 +937,9 @@ export const submitSelfReviewApi = (data) => {
 };
 
 // Get review of logged-in employee by UUID
-export const getEmployeePerformanceReviewApi = (employee_uuid) =>
-  employeeClient.get(`/employee/performance/${employee_uuid}`);
+export const getEmployeePerformanceReviewApi = (employeeId) =>
+  employeeClient.get(`/employee/performance/${employeeId}`);
+
 
 export const updateTLReviewApi = (id, data) =>
   adminClient.put(`/admin/performance/update/${id}`, data);

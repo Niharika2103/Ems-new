@@ -92,13 +92,19 @@ export default function ShiftManagement() {
 
 
   const loadAssignmentHistory = async () => {
-    try {
-      const res = await getShiftAssignmentHistoryApi();
-      setHistory(res.data);
-    } catch (err) {
-      console.error("Failed to load assignment history");
-    }
-  };
+  try {
+    const res = await getShiftAssignmentHistoryApi();
+    setHistory(res.data);
+  } catch (err) {
+    console.error("Failed to load assignment history:", err);
+
+    toast.error(
+      err.response?.data?.message ||
+      "Failed to load assignment history"
+    );
+  }
+};
+
 
   useEffect(() => {
     dispatch(fetchAllEmployees());
@@ -112,23 +118,29 @@ export default function ShiftManagement() {
 
 
 
-  const saveShift = async (data) => {
-    try {
-      if (editShift) {
-        await updateShiftApi(editShift.id, data);
-        toast.success("Shift updated successfully");
-      } else {
-        await addShiftApi(data);
-        toast.success("Shift added successfully");
-      }
-
-      setOpenShiftModal(false);
-      setEditShift(null);
-      loadShifts();
-    } catch (err) {
-      toast.error("Operation failed");
+const saveShift = async (data) => {
+  try {
+    if (editShift) {
+      await updateShiftApi(editShift.id, data);
+      toast.success("Shift updated successfully");
+    } else {
+      await addShiftApi(data);
+      toast.success("Shift added successfully");
     }
-  };
+
+    setOpenShiftModal(false);
+    setEditShift(null);
+    loadShifts();
+
+  } catch (err) {
+    console.error("Shift save error:", err);
+
+    toast.error(
+      err.response?.data?.message ||
+      "Operation failed"
+    );
+  }
+};
 
 
 
@@ -138,32 +150,37 @@ export default function ShiftManagement() {
 
 
   const handleSubmit = async () => {
-    try {
-      if (!form.employee_id || !form.shift_id) {
-        toast.error("Please select employee and shift");
-        return;
-      }
-
-      if (editShift && editShift.employee_id) {
-        // EDIT assignment
-        await updateAssignmentApi(editShift.id, form);
-        toast.success("Shift assignment updated");
-      } else {
-        // NEW assignment
-        await assignShiftApi(form);
-        toast.success("Shift assigned successfully");
-      }
-
-      setEditShift(null);
-      setForm(initialFormState);
-
-      // ✅ FORCE reload
-      await loadAssignmentHistory();
-    } catch (err) {
-      console.error(err);
-      toast.error(err.response?.data?.message || "Assignment failed");
+  try {
+    if (!form.employee_id || !form.shift_id) {
+      toast.error("Please select employee and shift");
+      return;
     }
-  };
+
+    if (editShift && editShift.employee_id) {
+      // EDIT assignment
+      await updateAssignmentApi(editShift.id, form);
+      toast.success("Shift assignment updated");
+    } else {
+      // NEW assignment
+      await assignShiftApi(form);
+      toast.success("Shift assigned successfully");
+    }
+
+    setEditShift(null);
+    setForm(initialFormState);
+
+    // ✅ FORCE reload
+    await loadAssignmentHistory();
+
+  } catch (err) {
+    console.error("Shift assignment error:", err);
+
+    toast.error(
+      err.response?.data?.message ||
+      "Assignment failed"
+    );
+  }
+};
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);

@@ -1,0 +1,1090 @@
+2026-01-23 11:42:18 [INFO] Admin service running on port 5002
+2026-01-23 11:42:18 [INFO] PostgreSQL connected successfully
+2026-01-23 11:48:18 [INFO] Admin service running on port 5002
+2026-01-23 11:48:18 [INFO] PostgreSQL connected successfully
+2026-01-23 11:48:34 [INFO] DeleteLetter API called | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | file=Experience_Letter_1768975420935.pdf
+2026-01-23 11:48:34 [INFO] DB updated after letter delete | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+2026-01-23 11:48:34 [INFO] Letter file deleted from filesystem | file=Experience_Letter_1768975420935.pdf
+2026-01-23 11:49:10 [INFO] GenerateLetter API called | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | type=Appointment Letter
+2026-01-23 11:49:10 [INFO] Employee & salary data fetched | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+2026-01-23 11:49:10 [INFO] Branding loaded for letters | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+2026-01-23 11:49:11 [WARN] Logo load failed | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | Request failed with status code 404
+2026-01-23 11:49:16 [INFO] PDF generated | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | file=Appointment_Letter_1769149151061.pdf
+2026-01-23 11:49:16 [INFO] Letter saved to DB | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | file=Appointment_Letter_1769149151061.pdf
+2026-01-23 13:02:41 [INFO] Admin service running on port 5002
+2026-01-23 13:02:41 [INFO] PostgreSQL connected successfully
+2026-01-23 14:01:38 [INFO] Admin service running on port 5002
+2026-01-23 14:01:39 [INFO] PostgreSQL connected successfully
+2026-01-23 14:02:13 [INFO] DownloadEmployeeLetter API called | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | file=Offer_Letter_1768975449411.pdf
+2026-01-23 14:02:13 [INFO] Letter download started | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | file=Offer_Letter_1768975449411.pdf
+2026-01-23 14:50:50 [INFO] Admin service running on port 5002
+2026-01-23 14:50:50 [INFO] PostgreSQL connected successfully
+2026-01-23 14:51:18 [INFO] GenerateFreelancerLetter API called | freelancerId=62bdd34e-f29d-4144-8bf9-a41a4b554000 | type=Appointment Letter
+2026-01-23 14:51:19 [INFO] Branding loaded for freelancer letters | freelancerId=62bdd34e-f29d-4144-8bf9-a41a4b554000
+2026-01-23 14:51:24 [INFO] Freelancer PDF generated | freelancerId=62bdd34e-f29d-4144-8bf9-a41a4b554000 | file=Appointment_Letter_1769160079051.pdf
+2026-01-23 14:51:24 [INFO] Freelancer letter saved to DB | freelancerId=62bdd34e-f29d-4144-8bf9-a41a4b554000 | file=Appointment_Letter_1769160079051.pdf
+2026-01-23 14:51:24 [INFO] GetFreelancerLetters API called | freelancerId=62bdd34e-f29d-4144-8bf9-a41a4b554000
+2026-01-23 14:51:24 [INFO] Freelancer letters fetched | freelancerId=62bdd34e-f29d-4144-8bf9-a41a4b554000 | count=2
+2026-01-23 14:51:29 [INFO] GenerateFreelancerLetter API called | freelancerId=62bdd34e-f29d-4144-8bf9-a41a4b554000 | type=Experience Letter
+2026-01-23 14:51:29 [INFO] Branding loaded for freelancer letters | freelancerId=62bdd34e-f29d-4144-8bf9-a41a4b554000
+2026-01-23 14:52:02 [INFO] Admin service running on port 5002
+2026-01-23 14:52:02 [INFO] PostgreSQL connected successfully
+2026-01-23 14:52:07 [INFO] GenerateFreelancerLetter API called | freelancerId=62bdd34e-f29d-4144-8bf9-a41a4b554000 | type=Experience Letter
+2026-01-23 14:52:07 [INFO] Branding loaded for freelancer letters | freelancerId=62bdd34e-f29d-4144-8bf9-a41a4b554000
+2026-01-23 14:52:16 [INFO] Freelancer PDF generated | freelancerId=62bdd34e-f29d-4144-8bf9-a41a4b554000 | file=Experience_Letter_1769160127645.pdf
+2026-01-23 14:52:17 [INFO] Freelancer letter saved to DB | freelancerId=62bdd34e-f29d-4144-8bf9-a41a4b554000 | file=Experience_Letter_1769160127645.pdf
+2026-01-23 14:52:17 [INFO] GetFreelancerLetters API called | freelancerId=62bdd34e-f29d-4144-8bf9-a41a4b554000
+2026-01-23 14:52:17 [INFO] Freelancer letters fetched | freelancerId=62bdd34e-f29d-4144-8bf9-a41a4b554000 | count=3
+2026-01-23 14:52:24 [INFO] DeleteFreelancerLetter API called | freelancerId=62bdd34e-f29d-4144-8bf9-a41a4b554000 | file=Offer_Letter_1768891396759.pdf
+2026-01-23 14:52:24 [INFO] Freelancer letter removed from DB | freelancerId=62bdd34e-f29d-4144-8bf9-a41a4b554000 | file=Offer_Letter_1768891396759.pdf
+2026-01-23 15:42:35 [INFO] GetEmployeeLetters API called | empId=b3af8f32-7a76-42d9-bd3c-b692c2dc6c8c
+2026-01-23 15:42:35 [INFO] GetEmployeeLetters API called | empId=b3af8f32-7a76-42d9-bd3c-b692c2dc6c8c
+2026-01-23 15:42:35 [INFO] Employee letters fetched | empId=b3af8f32-7a76-42d9-bd3c-b692c2dc6c8c | count=1
+2026-01-23 15:42:35 [INFO] Employee letters fetched | empId=b3af8f32-7a76-42d9-bd3c-b692c2dc6c8c | count=1
+2026-01-23 15:42:35 [INFO] GetEmployeeLetters API called | empId=68484508-7658-466f-bf1b-bbdd7db6faf0
+2026-01-23 15:42:35 [INFO] GetEmployeeLetters API called | empId=68484508-7658-466f-bf1b-bbdd7db6faf0
+2026-01-23 15:42:35 [INFO] Employee letters fetched | empId=68484508-7658-466f-bf1b-bbdd7db6faf0 | count=2
+2026-01-23 15:42:35 [INFO] Employee letters fetched | empId=68484508-7658-466f-bf1b-bbdd7db6faf0 | count=2
+2026-01-23 15:42:35 [INFO] GetEmployeeLetters API called | empId=edb4d12e-e489-4c71-9da1-10811c2e39b4
+2026-01-23 15:42:35 [INFO] GetEmployeeLetters API called | empId=edb4d12e-e489-4c71-9da1-10811c2e39b4
+2026-01-23 15:42:35 [INFO] Employee letters fetched | empId=edb4d12e-e489-4c71-9da1-10811c2e39b4 | count=1
+2026-01-23 15:42:35 [INFO] Employee letters fetched | empId=edb4d12e-e489-4c71-9da1-10811c2e39b4 | count=1
+2026-01-23 15:42:35 [INFO] GetEmployeeLetters API called | empId=a7f41990-910c-43b4-9e98-835e7a62e0a5
+2026-01-23 15:42:35 [INFO] GetEmployeeLetters API called | empId=a7f41990-910c-43b4-9e98-835e7a62e0a5
+2026-01-23 15:42:36 [INFO] Employee letters fetched | empId=a7f41990-910c-43b4-9e98-835e7a62e0a5 | count=0
+2026-01-23 15:42:36 [INFO] Employee letters fetched | empId=a7f41990-910c-43b4-9e98-835e7a62e0a5 | count=0
+2026-01-23 15:42:36 [INFO] GetEmployeeLetters API called | empId=dacf7130-3f46-4657-80bf-79639aaf215c
+2026-01-23 15:42:36 [INFO] GetEmployeeLetters API called | empId=dacf7130-3f46-4657-80bf-79639aaf215c
+2026-01-23 15:42:36 [INFO] Employee letters fetched | empId=dacf7130-3f46-4657-80bf-79639aaf215c | count=0
+2026-01-23 15:42:36 [INFO] Employee letters fetched | empId=dacf7130-3f46-4657-80bf-79639aaf215c | count=0
+2026-01-23 15:42:36 [INFO] GetEmployeeLetters API called | empId=63e44cd2-c22a-4805-a066-4490b0d42d00
+2026-01-23 15:42:36 [INFO] GetEmployeeLetters API called | empId=63e44cd2-c22a-4805-a066-4490b0d42d00
+2026-01-23 15:42:36 [INFO] Employee letters fetched | empId=63e44cd2-c22a-4805-a066-4490b0d42d00 | count=0
+2026-01-23 15:42:36 [INFO] Employee letters fetched | empId=63e44cd2-c22a-4805-a066-4490b0d42d00 | count=0
+2026-01-23 15:42:36 [INFO] GetEmployeeLetters API called | empId=9a34456f-b89c-406b-b928-e30d4deddf51
+2026-01-23 15:42:36 [INFO] GetEmployeeLetters API called | empId=9a34456f-b89c-406b-b928-e30d4deddf51
+2026-01-23 15:42:36 [INFO] Employee letters fetched | empId=9a34456f-b89c-406b-b928-e30d4deddf51 | count=0
+2026-01-23 15:42:36 [INFO] Employee letters fetched | empId=9a34456f-b89c-406b-b928-e30d4deddf51 | count=0
+2026-01-23 15:42:36 [INFO] GetEmployeeLetters API called | empId=b5050d4c-3953-4e87-9876-d66bcca4d22c
+2026-01-23 15:42:36 [INFO] GetEmployeeLetters API called | empId=b5050d4c-3953-4e87-9876-d66bcca4d22c
+2026-01-23 15:42:36 [INFO] Employee letters fetched | empId=b5050d4c-3953-4e87-9876-d66bcca4d22c | count=1
+2026-01-23 15:42:36 [INFO] GetEmployeeLetters API called | empId=ef4abdda-a931-498b-938c-df6cee6745f7
+2026-01-23 15:42:36 [INFO] Employee letters fetched | empId=b5050d4c-3953-4e87-9876-d66bcca4d22c | count=1
+2026-01-23 15:42:36 [INFO] GetEmployeeLetters API called | empId=ef4abdda-a931-498b-938c-df6cee6745f7
+2026-01-23 15:42:36 [INFO] Employee letters fetched | empId=ef4abdda-a931-498b-938c-df6cee6745f7 | count=1
+2026-01-23 15:42:36 [INFO] Employee letters fetched | empId=ef4abdda-a931-498b-938c-df6cee6745f7 | count=1
+2026-01-23 15:42:36 [INFO] GetEmployeeLetters API called | empId=d8f99fcf-3032-4cee-a7fa-f1f58722098b
+2026-01-23 15:42:36 [INFO] GetEmployeeLetters API called | empId=d8f99fcf-3032-4cee-a7fa-f1f58722098b
+2026-01-23 15:42:36 [INFO] Employee letters fetched | empId=d8f99fcf-3032-4cee-a7fa-f1f58722098b | count=0
+2026-01-23 15:42:36 [INFO] Employee letters fetched | empId=d8f99fcf-3032-4cee-a7fa-f1f58722098b | count=0
+2026-01-23 15:42:36 [INFO] GetEmployeeLetters API called | empId=bec08b98-5f78-4075-88fd-5962864e9fc7
+2026-01-23 15:42:36 [INFO] GetEmployeeLetters API called | empId=bec08b98-5f78-4075-88fd-5962864e9fc7
+2026-01-23 15:42:36 [INFO] Employee letters fetched | empId=bec08b98-5f78-4075-88fd-5962864e9fc7 | count=7
+2026-01-23 15:42:36 [INFO] Employee letters fetched | empId=bec08b98-5f78-4075-88fd-5962864e9fc7 | count=7
+2026-01-23 15:42:36 [INFO] GetEmployeeLetters API called | empId=b6f4758f-7cb5-4edf-b02e-d361f097224c
+2026-01-23 15:42:36 [INFO] GetEmployeeLetters API called | empId=b6f4758f-7cb5-4edf-b02e-d361f097224c
+2026-01-23 15:42:36 [INFO] Employee letters fetched | empId=b6f4758f-7cb5-4edf-b02e-d361f097224c | count=0
+2026-01-23 15:42:36 [INFO] Employee letters fetched | empId=b6f4758f-7cb5-4edf-b02e-d361f097224c | count=0
+2026-01-23 15:42:36 [INFO] GetEmployeeLetters API called | empId=8d5450e9-3bf9-4903-ae6a-3b4c409e117a
+2026-01-23 15:42:36 [INFO] GetEmployeeLetters API called | empId=8d5450e9-3bf9-4903-ae6a-3b4c409e117a
+2026-01-23 15:42:36 [INFO] Employee letters fetched | empId=8d5450e9-3bf9-4903-ae6a-3b4c409e117a | count=0
+2026-01-23 15:42:36 [INFO] Employee letters fetched | empId=8d5450e9-3bf9-4903-ae6a-3b4c409e117a | count=0
+2026-01-23 15:42:36 [INFO] GetEmployeeLetters API called | empId=9b643151-7623-4259-a0e5-89546e876a35
+2026-01-23 15:42:36 [INFO] GetEmployeeLetters API called | empId=9b643151-7623-4259-a0e5-89546e876a35
+2026-01-23 15:42:36 [INFO] Employee letters fetched | empId=9b643151-7623-4259-a0e5-89546e876a35 | count=0
+2026-01-23 15:42:36 [INFO] Employee letters fetched | empId=9b643151-7623-4259-a0e5-89546e876a35 | count=0
+2026-01-23 15:42:36 [INFO] GetEmployeeLetters API called | empId=7aa718da-1684-468a-b2d7-83172c38cf50
+2026-01-23 15:42:36 [INFO] GetEmployeeLetters API called | empId=7aa718da-1684-468a-b2d7-83172c38cf50
+2026-01-23 15:42:36 [INFO] Employee letters fetched | empId=7aa718da-1684-468a-b2d7-83172c38cf50 | count=0
+2026-01-23 15:42:36 [INFO] Employee letters fetched | empId=7aa718da-1684-468a-b2d7-83172c38cf50 | count=0
+2026-01-23 15:42:36 [INFO] GetEmployeeLetters API called | empId=49ad9944-77e1-4a43-a66a-ef0f5b265561
+2026-01-23 15:42:36 [INFO] GetEmployeeLetters API called | empId=49ad9944-77e1-4a43-a66a-ef0f5b265561
+2026-01-23 15:42:36 [INFO] Employee letters fetched | empId=49ad9944-77e1-4a43-a66a-ef0f5b265561 | count=0
+2026-01-23 15:42:36 [INFO] Employee letters fetched | empId=49ad9944-77e1-4a43-a66a-ef0f5b265561 | count=0
+2026-01-23 15:42:36 [INFO] GetEmployeeLetters API called | empId=79813636-6baf-42d6-bcf5-3caa14c0a6bf
+2026-01-23 15:42:36 [INFO] GetEmployeeLetters API called | empId=79813636-6baf-42d6-bcf5-3caa14c0a6bf
+2026-01-23 15:42:36 [INFO] Employee letters fetched | empId=79813636-6baf-42d6-bcf5-3caa14c0a6bf | count=0
+2026-01-23 15:42:36 [INFO] Employee letters fetched | empId=79813636-6baf-42d6-bcf5-3caa14c0a6bf | count=0
+2026-01-23 15:42:36 [INFO] GetEmployeeLetters API called | empId=b3c3ba17-2016-4628-a2f2-c6201467b5fa
+2026-01-23 15:42:36 [INFO] GetEmployeeLetters API called | empId=b3c3ba17-2016-4628-a2f2-c6201467b5fa
+2026-01-23 15:42:36 [INFO] Employee letters fetched | empId=b3c3ba17-2016-4628-a2f2-c6201467b5fa | count=0
+2026-01-23 15:42:36 [INFO] Employee letters fetched | empId=b3c3ba17-2016-4628-a2f2-c6201467b5fa | count=0
+2026-01-23 15:42:36 [INFO] GetEmployeeLetters API called | empId=adf96f7f-bd8c-4945-b6ef-e813ab7a7793
+2026-01-23 15:42:36 [INFO] GetEmployeeLetters API called | empId=adf96f7f-bd8c-4945-b6ef-e813ab7a7793
+2026-01-23 15:42:36 [INFO] Employee letters fetched | empId=adf96f7f-bd8c-4945-b6ef-e813ab7a7793 | count=0
+2026-01-23 15:42:36 [INFO] Employee letters fetched | empId=adf96f7f-bd8c-4945-b6ef-e813ab7a7793 | count=0
+2026-01-23 15:42:36 [INFO] GetEmployeeLetters API called | empId=aeccef64-8680-4376-b8ec-60c5af861745
+2026-01-23 15:42:36 [INFO] GetEmployeeLetters API called | empId=aeccef64-8680-4376-b8ec-60c5af861745
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=aeccef64-8680-4376-b8ec-60c5af861745 | count=0
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=aeccef64-8680-4376-b8ec-60c5af861745 | count=0
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=70ba81f3-cf95-4351-b9f9-f059230d2022
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=70ba81f3-cf95-4351-b9f9-f059230d2022
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=70ba81f3-cf95-4351-b9f9-f059230d2022 | count=0
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=70ba81f3-cf95-4351-b9f9-f059230d2022 | count=0
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=73d6b17a-b8e6-41e8-bf02-34cba52ed31e
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=73d6b17a-b8e6-41e8-bf02-34cba52ed31e
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=73d6b17a-b8e6-41e8-bf02-34cba52ed31e | count=0
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=73d6b17a-b8e6-41e8-bf02-34cba52ed31e | count=0
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=4c7dc154-c1a7-41f5-8a48-c5c1f1ef75f2
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=4c7dc154-c1a7-41f5-8a48-c5c1f1ef75f2
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=4c7dc154-c1a7-41f5-8a48-c5c1f1ef75f2 | count=0
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=4c7dc154-c1a7-41f5-8a48-c5c1f1ef75f2 | count=0
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=00762a51-3472-4e37-9c91-df57bdc45910
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=00762a51-3472-4e37-9c91-df57bdc45910
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=00762a51-3472-4e37-9c91-df57bdc45910 | count=0
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=00762a51-3472-4e37-9c91-df57bdc45910 | count=0
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=51caf525-2084-4806-bc88-1859faf3bb48
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=51caf525-2084-4806-bc88-1859faf3bb48
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=51caf525-2084-4806-bc88-1859faf3bb48 | count=0
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=51caf525-2084-4806-bc88-1859faf3bb48 | count=0
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=33bbdf15-bf3f-4537-825d-505d6e7db525
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=33bbdf15-bf3f-4537-825d-505d6e7db525
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=33bbdf15-bf3f-4537-825d-505d6e7db525 | count=0
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=33bbdf15-bf3f-4537-825d-505d6e7db525 | count=0
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=1eadd7f9-4489-42a6-ac05-226981ad4857
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=1eadd7f9-4489-42a6-ac05-226981ad4857
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=1eadd7f9-4489-42a6-ac05-226981ad4857 | count=0
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=1eadd7f9-4489-42a6-ac05-226981ad4857 | count=0
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=8970bf52-9671-4ac0-a69f-466719e74d18
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=8970bf52-9671-4ac0-a69f-466719e74d18
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=8970bf52-9671-4ac0-a69f-466719e74d18 | count=0
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=8970bf52-9671-4ac0-a69f-466719e74d18 | count=0
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=581bed14-93c0-4d8a-b1b8-f12f75a2ca8a
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=581bed14-93c0-4d8a-b1b8-f12f75a2ca8a
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=581bed14-93c0-4d8a-b1b8-f12f75a2ca8a | count=0
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=581bed14-93c0-4d8a-b1b8-f12f75a2ca8a | count=0
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=01575adc-7503-4281-bee3-801163a39834
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=01575adc-7503-4281-bee3-801163a39834
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=01575adc-7503-4281-bee3-801163a39834 | count=1
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=01575adc-7503-4281-bee3-801163a39834 | count=1
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=5fd2c049-4d5c-445e-ac64-df3ee9e41d3e
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=5fd2c049-4d5c-445e-ac64-df3ee9e41d3e
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=5fd2c049-4d5c-445e-ac64-df3ee9e41d3e | count=0
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=5fd2c049-4d5c-445e-ac64-df3ee9e41d3e | count=0
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=a639e931-d436-40bf-8c1f-905eee3c2a52
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=a639e931-d436-40bf-8c1f-905eee3c2a52
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=a639e931-d436-40bf-8c1f-905eee3c2a52 | count=0
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=a639e931-d436-40bf-8c1f-905eee3c2a52 | count=0
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=9330f73b-26e3-4f77-9801-d9bed4b5778a
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=9330f73b-26e3-4f77-9801-d9bed4b5778a
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=9330f73b-26e3-4f77-9801-d9bed4b5778a | count=0
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=9330f73b-26e3-4f77-9801-d9bed4b5778a | count=0
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=d370d121-186c-41c9-8277-095df748c194
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=d370d121-186c-41c9-8277-095df748c194
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=d370d121-186c-41c9-8277-095df748c194 | count=0
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=d370d121-186c-41c9-8277-095df748c194 | count=0
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=76568964-9e9e-419f-8495-dda6ac6c9301
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=76568964-9e9e-419f-8495-dda6ac6c9301
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=76568964-9e9e-419f-8495-dda6ac6c9301 | count=0
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=9d400159-3b84-4b86-a421-96dbff6652ac
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=76568964-9e9e-419f-8495-dda6ac6c9301 | count=0
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=9d400159-3b84-4b86-a421-96dbff6652ac
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=9d400159-3b84-4b86-a421-96dbff6652ac | count=0
+2026-01-23 15:42:37 [INFO] Employee letters fetched | empId=9d400159-3b84-4b86-a421-96dbff6652ac | count=0
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=3a47b4c6-4ad7-468a-b8aa-415045ae5013
+2026-01-23 15:42:37 [INFO] GetEmployeeLetters API called | empId=3a47b4c6-4ad7-468a-b8aa-415045ae5013
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=3a47b4c6-4ad7-468a-b8aa-415045ae5013 | count=0
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=ce5be619-bcfc-47f1-b02d-d17a3a2a7392
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=3a47b4c6-4ad7-468a-b8aa-415045ae5013 | count=0
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=ce5be619-bcfc-47f1-b02d-d17a3a2a7392
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=ce5be619-bcfc-47f1-b02d-d17a3a2a7392 | count=4
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=56e7e8f5-ffe2-4a0e-93f6-03f3e415e5f9
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=ce5be619-bcfc-47f1-b02d-d17a3a2a7392 | count=4
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=56e7e8f5-ffe2-4a0e-93f6-03f3e415e5f9
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=56e7e8f5-ffe2-4a0e-93f6-03f3e415e5f9 | count=0
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=56e7e8f5-ffe2-4a0e-93f6-03f3e415e5f9 | count=0
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=25e87910-22dd-472b-b6d7-eee4d602c9a3
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=25e87910-22dd-472b-b6d7-eee4d602c9a3
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=25e87910-22dd-472b-b6d7-eee4d602c9a3 | count=0
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=25e87910-22dd-472b-b6d7-eee4d602c9a3 | count=0
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=de6807a6-9e9d-4189-a66a-0de66886900f
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=de6807a6-9e9d-4189-a66a-0de66886900f
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=de6807a6-9e9d-4189-a66a-0de66886900f | count=0
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=de6807a6-9e9d-4189-a66a-0de66886900f | count=0
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=454c8e17-c1b2-4780-a7a0-282d46c6d219
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=454c8e17-c1b2-4780-a7a0-282d46c6d219
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=454c8e17-c1b2-4780-a7a0-282d46c6d219 | count=0
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=454c8e17-c1b2-4780-a7a0-282d46c6d219 | count=0
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=fb7fd646-cc10-4807-bb9d-011be0e173e3
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=fb7fd646-cc10-4807-bb9d-011be0e173e3
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=fb7fd646-cc10-4807-bb9d-011be0e173e3 | count=0
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=fb7fd646-cc10-4807-bb9d-011be0e173e3 | count=0
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=3dd7ef4b-4012-4d61-aa5c-2a51562b2a75
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=3dd7ef4b-4012-4d61-aa5c-2a51562b2a75
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=3dd7ef4b-4012-4d61-aa5c-2a51562b2a75 | count=0
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=3dd7ef4b-4012-4d61-aa5c-2a51562b2a75 | count=0
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=ed453632-85d6-41cb-b4c2-68791adf926f
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=ed453632-85d6-41cb-b4c2-68791adf926f
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=ed453632-85d6-41cb-b4c2-68791adf926f | count=0
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=ed453632-85d6-41cb-b4c2-68791adf926f | count=0
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=e6ed7e25-3255-419e-8de2-bab357acb8df
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=e6ed7e25-3255-419e-8de2-bab357acb8df
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=e6ed7e25-3255-419e-8de2-bab357acb8df | count=0
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=e6ed7e25-3255-419e-8de2-bab357acb8df | count=0
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=df28f7b4-702d-4e75-a72c-78604a2402c7
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=df28f7b4-702d-4e75-a72c-78604a2402c7
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=df28f7b4-702d-4e75-a72c-78604a2402c7 | count=3
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=df28f7b4-702d-4e75-a72c-78604a2402c7 | count=3
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=187215e2-120a-42cf-b483-94704932f5fc
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=187215e2-120a-42cf-b483-94704932f5fc
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=187215e2-120a-42cf-b483-94704932f5fc | count=0
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=187215e2-120a-42cf-b483-94704932f5fc | count=0
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=5d8c78af-71c3-475c-a84e-bb275ae8d1df
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=5d8c78af-71c3-475c-a84e-bb275ae8d1df
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=5d8c78af-71c3-475c-a84e-bb275ae8d1df | count=0
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=5d8c78af-71c3-475c-a84e-bb275ae8d1df | count=0
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=4aa677f7-fef2-4c42-9d29-e81928c60dfc
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=4aa677f7-fef2-4c42-9d29-e81928c60dfc
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=4aa677f7-fef2-4c42-9d29-e81928c60dfc | count=0
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=4aa677f7-fef2-4c42-9d29-e81928c60dfc | count=0
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=a80da972-0839-4f7a-990f-d543a01b6c20
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=a80da972-0839-4f7a-990f-d543a01b6c20
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=a80da972-0839-4f7a-990f-d543a01b6c20 | count=0
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=a80da972-0839-4f7a-990f-d543a01b6c20 | count=0
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=0113c597-a242-490c-9bc9-2e645ceef8df
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=0113c597-a242-490c-9bc9-2e645ceef8df
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=0113c597-a242-490c-9bc9-2e645ceef8df | count=0
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=0113c597-a242-490c-9bc9-2e645ceef8df | count=0
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=09b4c107-0e4b-4dd6-ba5b-9536df28fbbe
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=09b4c107-0e4b-4dd6-ba5b-9536df28fbbe
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=09b4c107-0e4b-4dd6-ba5b-9536df28fbbe | count=0
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=09b4c107-0e4b-4dd6-ba5b-9536df28fbbe | count=0
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=b1324d52-5164-4892-bb8c-c72a9ce8f0af
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=b1324d52-5164-4892-bb8c-c72a9ce8f0af
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=b1324d52-5164-4892-bb8c-c72a9ce8f0af | count=0
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=b1324d52-5164-4892-bb8c-c72a9ce8f0af | count=0
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=5c2d3c3e-788b-44f3-b15f-08114cf4135c
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=5c2d3c3e-788b-44f3-b15f-08114cf4135c
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=5c2d3c3e-788b-44f3-b15f-08114cf4135c | count=0
+2026-01-23 15:42:38 [INFO] Employee letters fetched | empId=5c2d3c3e-788b-44f3-b15f-08114cf4135c | count=0
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+2026-01-23 15:42:38 [INFO] GetEmployeeLetters API called | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+2026-01-23 15:42:39 [INFO] Employee letters fetched | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | count=3
+2026-01-23 15:42:39 [INFO] Employee letters fetched | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | count=3
+2026-01-23 15:42:39 [INFO] GetEmployeeLetters API called | empId=17e43883-60ab-45f8-aff0-ca5a49f3245b
+2026-01-23 15:42:39 [INFO] GetEmployeeLetters API called | empId=17e43883-60ab-45f8-aff0-ca5a49f3245b
+2026-01-23 15:42:39 [INFO] Employee letters fetched | empId=17e43883-60ab-45f8-aff0-ca5a49f3245b | count=0
+2026-01-23 15:42:39 [INFO] Employee letters fetched | empId=17e43883-60ab-45f8-aff0-ca5a49f3245b | count=0
+2026-01-23 15:42:39 [INFO] GetEmployeeLetters API called | empId=ab021307-a98a-443a-8988-b25342598d5b
+2026-01-23 15:42:39 [INFO] GetEmployeeLetters API called | empId=ab021307-a98a-443a-8988-b25342598d5b
+2026-01-23 15:42:39 [INFO] Employee letters fetched | empId=ab021307-a98a-443a-8988-b25342598d5b | count=0
+2026-01-23 15:42:39 [INFO] Employee letters fetched | empId=ab021307-a98a-443a-8988-b25342598d5b | count=0
+2026-01-23 15:42:39 [INFO] GetEmployeeLetters API called | empId=cf04008e-9825-42e4-8538-ae13fc69043f
+2026-01-23 15:42:39 [INFO] GetEmployeeLetters API called | empId=cf04008e-9825-42e4-8538-ae13fc69043f
+2026-01-23 15:42:39 [INFO] Employee letters fetched | empId=cf04008e-9825-42e4-8538-ae13fc69043f | count=0
+2026-01-23 15:42:39 [INFO] Employee letters fetched | empId=cf04008e-9825-42e4-8538-ae13fc69043f | count=0
+2026-01-23 15:42:39 [INFO] GetEmployeeLetters API called | empId=b84ec12f-cf6b-4866-9e32-e2d31ebf0859
+2026-01-23 15:42:39 [INFO] GetEmployeeLetters API called | empId=b84ec12f-cf6b-4866-9e32-e2d31ebf0859
+2026-01-23 15:42:39 [INFO] Employee letters fetched | empId=b84ec12f-cf6b-4866-9e32-e2d31ebf0859 | count=0
+2026-01-23 15:42:39 [INFO] Employee letters fetched | empId=b84ec12f-cf6b-4866-9e32-e2d31ebf0859 | count=0
+2026-01-23 15:42:39 [INFO] GetEmployeeLetters API called | empId=c95ab1df-4e94-49cf-8161-5b8d936184f0
+2026-01-23 15:42:39 [INFO] GetEmployeeLetters API called | empId=c95ab1df-4e94-49cf-8161-5b8d936184f0
+2026-01-23 15:42:39 [INFO] Employee letters fetched | empId=c95ab1df-4e94-49cf-8161-5b8d936184f0 | count=0
+2026-01-23 15:42:39 [INFO] Employee letters fetched | empId=c95ab1df-4e94-49cf-8161-5b8d936184f0 | count=0
+2026-01-23 15:42:39 [INFO] GetEmployeeLetters API called | empId=644944b6-9267-4d30-bde1-cf3f574dfb60
+2026-01-23 15:42:39 [INFO] GetEmployeeLetters API called | empId=644944b6-9267-4d30-bde1-cf3f574dfb60
+2026-01-23 15:42:39 [INFO] Employee letters fetched | empId=644944b6-9267-4d30-bde1-cf3f574dfb60 | count=0
+2026-01-23 15:42:39 [INFO] Employee letters fetched | empId=644944b6-9267-4d30-bde1-cf3f574dfb60 | count=0
+2026-01-23 15:42:39 [INFO] GetEmployeeLetters API called | empId=ae5626af-2da0-47f4-9a4e-a79ceb52b57e
+2026-01-23 15:42:39 [INFO] GetEmployeeLetters API called | empId=ae5626af-2da0-47f4-9a4e-a79ceb52b57e
+2026-01-23 15:42:39 [INFO] Employee letters fetched | empId=ae5626af-2da0-47f4-9a4e-a79ceb52b57e | count=0
+2026-01-23 15:42:39 [INFO] Employee letters fetched | empId=ae5626af-2da0-47f4-9a4e-a79ceb52b57e | count=0
+2026-01-23 15:42:39 [INFO] GetEmployeeLetters API called | empId=cd154091-12ef-4774-829e-b28c0217ea7c
+2026-01-23 15:42:39 [INFO] GetEmployeeLetters API called | empId=cd154091-12ef-4774-829e-b28c0217ea7c
+2026-01-23 15:42:39 [INFO] Employee letters fetched | empId=cd154091-12ef-4774-829e-b28c0217ea7c | count=0
+2026-01-23 15:42:39 [INFO] Employee letters fetched | empId=cd154091-12ef-4774-829e-b28c0217ea7c | count=0
+2026-01-23 15:42:39 [INFO] GetEmployeeLetters API called | empId=d37318bc-4bef-4865-a016-03c9bc0a69ee
+2026-01-23 15:42:39 [INFO] GetEmployeeLetters API called | empId=d37318bc-4bef-4865-a016-03c9bc0a69ee
+2026-01-23 15:42:39 [INFO] Employee letters fetched | empId=d37318bc-4bef-4865-a016-03c9bc0a69ee | count=0
+2026-01-23 15:42:39 [INFO] Employee letters fetched | empId=d37318bc-4bef-4865-a016-03c9bc0a69ee | count=0
+2026-01-23 15:42:39 [INFO] GetEmployeeLetters API called | empId=a7d20928-676a-4637-b16c-59d420357d7b
+2026-01-23 15:42:39 [INFO] GetEmployeeLetters API called | empId=a7d20928-676a-4637-b16c-59d420357d7b
+2026-01-23 15:42:39 [INFO] Employee letters fetched | empId=a7d20928-676a-4637-b16c-59d420357d7b | count=0
+2026-01-23 15:42:39 [INFO] Employee letters fetched | empId=a7d20928-676a-4637-b16c-59d420357d7b | count=0
+2026-01-23 15:42:39 [INFO] GetEmployeeLetters API called | empId=a7b324ca-8c5c-45fa-acb1-723a1b7bec69
+2026-01-23 15:42:39 [INFO] GetEmployeeLetters API called | empId=a7b324ca-8c5c-45fa-acb1-723a1b7bec69
+2026-01-23 15:42:39 [INFO] Employee letters fetched | empId=a7b324ca-8c5c-45fa-acb1-723a1b7bec69 | count=0
+2026-01-23 15:42:39 [INFO] Employee letters fetched | empId=a7b324ca-8c5c-45fa-acb1-723a1b7bec69 | count=0
+2026-01-23 15:42:39 [INFO] GetEmployeeLetters API called | empId=4a5f5160-d90d-4b68-b64c-7c6b5fda68dd
+2026-01-23 15:42:39 [INFO] GetEmployeeLetters API called | empId=4a5f5160-d90d-4b68-b64c-7c6b5fda68dd
+2026-01-23 15:42:39 [INFO] Employee letters fetched | empId=4a5f5160-d90d-4b68-b64c-7c6b5fda68dd | count=0
+2026-01-23 15:42:39 [INFO] Employee letters fetched | empId=4a5f5160-d90d-4b68-b64c-7c6b5fda68dd | count=0
+2026-01-23 15:42:39 [INFO] GetEmployeeLetters API called | empId=e1551635-8b08-411b-aca7-52ca556b8630
+2026-01-23 15:42:39 [INFO] GetEmployeeLetters API called | empId=e1551635-8b08-411b-aca7-52ca556b8630
+2026-01-23 15:42:39 [INFO] Employee letters fetched | empId=e1551635-8b08-411b-aca7-52ca556b8630 | count=0
+2026-01-23 15:42:39 [INFO] Employee letters fetched | empId=e1551635-8b08-411b-aca7-52ca556b8630 | count=0
+2026-01-23 15:42:39 [INFO] GetEmployeeLetters API called | empId=dda7aee1-aaf0-4a51-bc0d-26b5fd03596f
+2026-01-23 15:42:39 [INFO] GetEmployeeLetters API called | empId=dda7aee1-aaf0-4a51-bc0d-26b5fd03596f
+2026-01-23 15:42:39 [INFO] Employee letters fetched | empId=dda7aee1-aaf0-4a51-bc0d-26b5fd03596f | count=0
+2026-01-23 15:42:39 [INFO] Employee letters fetched | empId=dda7aee1-aaf0-4a51-bc0d-26b5fd03596f | count=0
+2026-01-23 15:42:51 [INFO] GenerateLetter API called | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | type=Experience Letter
+2026-01-23 15:42:52 [INFO] Employee & salary data fetched | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+2026-01-23 15:42:52 [INFO] Branding loaded for letters | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+2026-01-23 15:42:52 [WARN] Logo load failed | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | Request failed with status code 404
+2026-01-23 15:42:56 [INFO] PDF generated | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | file=Experience_Letter_1769163172170.pdf
+2026-01-23 15:42:56 [INFO] Letter saved to DB | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | file=Experience_Letter_1769163172170.pdf
+2026-01-23 15:42:56 [INFO] GetEmployeeLetters API called | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+2026-01-23 15:42:56 [INFO] Employee letters fetched | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | count=4
+2026-01-28 11:19:29 [INFO] GetEmployeeLetters API called | empId=b3af8f32-7a76-42d9-bd3c-b692c2dc6c8c
+2026-01-28 11:19:29 [INFO] GetEmployeeLetters API called | empId=b3af8f32-7a76-42d9-bd3c-b692c2dc6c8c
+2026-01-28 11:19:29 [INFO] Employee letters fetched | empId=b3af8f32-7a76-42d9-bd3c-b692c2dc6c8c | count=1
+2026-01-28 11:19:29 [INFO] Employee letters fetched | empId=b3af8f32-7a76-42d9-bd3c-b692c2dc6c8c | count=1
+2026-01-28 11:19:29 [INFO] GetEmployeeLetters API called | empId=68484508-7658-466f-bf1b-bbdd7db6faf0
+2026-01-28 11:19:29 [INFO] GetEmployeeLetters API called | empId=68484508-7658-466f-bf1b-bbdd7db6faf0
+2026-01-28 11:19:30 [INFO] Employee letters fetched | empId=68484508-7658-466f-bf1b-bbdd7db6faf0 | count=2
+2026-01-28 11:19:30 [INFO] Employee letters fetched | empId=68484508-7658-466f-bf1b-bbdd7db6faf0 | count=2
+2026-01-28 11:19:30 [INFO] GetEmployeeLetters API called | empId=edb4d12e-e489-4c71-9da1-10811c2e39b4
+2026-01-28 11:19:30 [INFO] GetEmployeeLetters API called | empId=edb4d12e-e489-4c71-9da1-10811c2e39b4
+2026-01-28 11:19:30 [INFO] Employee letters fetched | empId=edb4d12e-e489-4c71-9da1-10811c2e39b4 | count=1
+2026-01-28 11:19:30 [INFO] Employee letters fetched | empId=edb4d12e-e489-4c71-9da1-10811c2e39b4 | count=1
+2026-01-28 11:19:30 [INFO] GetEmployeeLetters API called | empId=a7f41990-910c-43b4-9e98-835e7a62e0a5
+2026-01-28 11:19:30 [INFO] GetEmployeeLetters API called | empId=a7f41990-910c-43b4-9e98-835e7a62e0a5
+2026-01-28 11:19:30 [INFO] Employee letters fetched | empId=a7f41990-910c-43b4-9e98-835e7a62e0a5 | count=0
+2026-01-28 11:19:30 [INFO] Employee letters fetched | empId=a7f41990-910c-43b4-9e98-835e7a62e0a5 | count=0
+2026-01-28 11:19:30 [INFO] GetEmployeeLetters API called | empId=dacf7130-3f46-4657-80bf-79639aaf215c
+2026-01-28 11:19:30 [INFO] GetEmployeeLetters API called | empId=dacf7130-3f46-4657-80bf-79639aaf215c
+2026-01-28 11:19:30 [INFO] Employee letters fetched | empId=dacf7130-3f46-4657-80bf-79639aaf215c | count=0
+2026-01-28 11:19:30 [INFO] Employee letters fetched | empId=dacf7130-3f46-4657-80bf-79639aaf215c | count=0
+2026-01-28 11:19:30 [INFO] GetEmployeeLetters API called | empId=63e44cd2-c22a-4805-a066-4490b0d42d00
+2026-01-28 11:19:30 [INFO] GetEmployeeLetters API called | empId=63e44cd2-c22a-4805-a066-4490b0d42d00
+2026-01-28 11:19:30 [INFO] Employee letters fetched | empId=63e44cd2-c22a-4805-a066-4490b0d42d00 | count=0
+2026-01-28 11:19:30 [INFO] Employee letters fetched | empId=63e44cd2-c22a-4805-a066-4490b0d42d00 | count=0
+2026-01-28 11:19:30 [INFO] GetEmployeeLetters API called | empId=9a34456f-b89c-406b-b928-e30d4deddf51
+2026-01-28 11:19:30 [INFO] GetEmployeeLetters API called | empId=9a34456f-b89c-406b-b928-e30d4deddf51
+2026-01-28 11:19:30 [INFO] Employee letters fetched | empId=9a34456f-b89c-406b-b928-e30d4deddf51 | count=0
+2026-01-28 11:19:30 [INFO] Employee letters fetched | empId=9a34456f-b89c-406b-b928-e30d4deddf51 | count=0
+2026-01-28 11:19:30 [INFO] GetEmployeeLetters API called | empId=b5050d4c-3953-4e87-9876-d66bcca4d22c
+2026-01-28 11:19:30 [INFO] GetEmployeeLetters API called | empId=b5050d4c-3953-4e87-9876-d66bcca4d22c
+2026-01-28 11:19:30 [INFO] Employee letters fetched | empId=b5050d4c-3953-4e87-9876-d66bcca4d22c | count=1
+2026-01-28 11:19:30 [INFO] Employee letters fetched | empId=b5050d4c-3953-4e87-9876-d66bcca4d22c | count=1
+2026-01-28 11:19:30 [INFO] GetEmployeeLetters API called | empId=ef4abdda-a931-498b-938c-df6cee6745f7
+2026-01-28 11:19:30 [INFO] GetEmployeeLetters API called | empId=ef4abdda-a931-498b-938c-df6cee6745f7
+2026-01-28 11:19:30 [INFO] Employee letters fetched | empId=ef4abdda-a931-498b-938c-df6cee6745f7 | count=1
+2026-01-28 11:19:30 [INFO] Employee letters fetched | empId=ef4abdda-a931-498b-938c-df6cee6745f7 | count=1
+2026-01-28 11:19:30 [INFO] GetEmployeeLetters API called | empId=d8f99fcf-3032-4cee-a7fa-f1f58722098b
+2026-01-28 11:19:30 [INFO] GetEmployeeLetters API called | empId=d8f99fcf-3032-4cee-a7fa-f1f58722098b
+2026-01-28 11:19:30 [INFO] Employee letters fetched | empId=d8f99fcf-3032-4cee-a7fa-f1f58722098b | count=0
+2026-01-28 11:19:30 [INFO] Employee letters fetched | empId=d8f99fcf-3032-4cee-a7fa-f1f58722098b | count=0
+2026-01-28 11:19:30 [INFO] GetEmployeeLetters API called | empId=bec08b98-5f78-4075-88fd-5962864e9fc7
+2026-01-28 11:19:30 [INFO] GetEmployeeLetters API called | empId=bec08b98-5f78-4075-88fd-5962864e9fc7
+2026-01-28 11:19:30 [INFO] Employee letters fetched | empId=bec08b98-5f78-4075-88fd-5962864e9fc7 | count=7
+2026-01-28 11:19:30 [INFO] Employee letters fetched | empId=bec08b98-5f78-4075-88fd-5962864e9fc7 | count=7
+2026-01-28 11:19:30 [INFO] GetEmployeeLetters API called | empId=b6f4758f-7cb5-4edf-b02e-d361f097224c
+2026-01-28 11:19:30 [INFO] GetEmployeeLetters API called | empId=b6f4758f-7cb5-4edf-b02e-d361f097224c
+2026-01-28 11:19:30 [INFO] Employee letters fetched | empId=b6f4758f-7cb5-4edf-b02e-d361f097224c | count=0
+2026-01-28 11:19:30 [INFO] Employee letters fetched | empId=b6f4758f-7cb5-4edf-b02e-d361f097224c | count=0
+2026-01-28 11:19:30 [INFO] GetEmployeeLetters API called | empId=8d5450e9-3bf9-4903-ae6a-3b4c409e117a
+2026-01-28 11:19:30 [INFO] GetEmployeeLetters API called | empId=8d5450e9-3bf9-4903-ae6a-3b4c409e117a
+2026-01-28 11:19:30 [INFO] Employee letters fetched | empId=8d5450e9-3bf9-4903-ae6a-3b4c409e117a | count=0
+2026-01-28 11:19:30 [INFO] Employee letters fetched | empId=8d5450e9-3bf9-4903-ae6a-3b4c409e117a | count=0
+2026-01-28 11:19:30 [INFO] GetEmployeeLetters API called | empId=9b643151-7623-4259-a0e5-89546e876a35
+2026-01-28 11:19:30 [INFO] GetEmployeeLetters API called | empId=9b643151-7623-4259-a0e5-89546e876a35
+2026-01-28 11:19:30 [INFO] Employee letters fetched | empId=9b643151-7623-4259-a0e5-89546e876a35 | count=0
+2026-01-28 11:19:30 [INFO] Employee letters fetched | empId=9b643151-7623-4259-a0e5-89546e876a35 | count=0
+2026-01-28 11:19:30 [INFO] GetEmployeeLetters API called | empId=7aa718da-1684-468a-b2d7-83172c38cf50
+2026-01-28 11:19:30 [INFO] GetEmployeeLetters API called | empId=7aa718da-1684-468a-b2d7-83172c38cf50
+2026-01-28 11:19:31 [INFO] Employee letters fetched | empId=7aa718da-1684-468a-b2d7-83172c38cf50 | count=0
+2026-01-28 11:19:31 [INFO] Employee letters fetched | empId=7aa718da-1684-468a-b2d7-83172c38cf50 | count=0
+2026-01-28 11:19:31 [INFO] GetEmployeeLetters API called | empId=49ad9944-77e1-4a43-a66a-ef0f5b265561
+2026-01-28 11:19:31 [INFO] GetEmployeeLetters API called | empId=49ad9944-77e1-4a43-a66a-ef0f5b265561
+2026-01-28 11:19:31 [INFO] Employee letters fetched | empId=49ad9944-77e1-4a43-a66a-ef0f5b265561 | count=0
+2026-01-28 11:19:31 [INFO] Employee letters fetched | empId=49ad9944-77e1-4a43-a66a-ef0f5b265561 | count=0
+2026-01-28 11:19:31 [INFO] GetEmployeeLetters API called | empId=79813636-6baf-42d6-bcf5-3caa14c0a6bf
+2026-01-28 11:19:31 [INFO] GetEmployeeLetters API called | empId=79813636-6baf-42d6-bcf5-3caa14c0a6bf
+2026-01-28 11:19:31 [INFO] Employee letters fetched | empId=79813636-6baf-42d6-bcf5-3caa14c0a6bf | count=0
+2026-01-28 11:19:31 [INFO] Employee letters fetched | empId=79813636-6baf-42d6-bcf5-3caa14c0a6bf | count=0
+2026-01-28 11:19:31 [INFO] GetEmployeeLetters API called | empId=b3c3ba17-2016-4628-a2f2-c6201467b5fa
+2026-01-28 11:19:31 [INFO] GetEmployeeLetters API called | empId=b3c3ba17-2016-4628-a2f2-c6201467b5fa
+2026-01-28 11:19:31 [INFO] Employee letters fetched | empId=b3c3ba17-2016-4628-a2f2-c6201467b5fa | count=0
+2026-01-28 11:19:31 [INFO] Employee letters fetched | empId=b3c3ba17-2016-4628-a2f2-c6201467b5fa | count=0
+2026-01-28 11:19:31 [INFO] GetEmployeeLetters API called | empId=adf96f7f-bd8c-4945-b6ef-e813ab7a7793
+2026-01-28 11:19:31 [INFO] GetEmployeeLetters API called | empId=adf96f7f-bd8c-4945-b6ef-e813ab7a7793
+2026-01-28 11:19:31 [INFO] Employee letters fetched | empId=adf96f7f-bd8c-4945-b6ef-e813ab7a7793 | count=0
+2026-01-28 11:19:31 [INFO] Employee letters fetched | empId=adf96f7f-bd8c-4945-b6ef-e813ab7a7793 | count=0
+2026-01-28 11:19:31 [INFO] GetEmployeeLetters API called | empId=aeccef64-8680-4376-b8ec-60c5af861745
+2026-01-28 11:19:31 [INFO] GetEmployeeLetters API called | empId=aeccef64-8680-4376-b8ec-60c5af861745
+2026-01-28 11:19:31 [INFO] Employee letters fetched | empId=aeccef64-8680-4376-b8ec-60c5af861745 | count=0
+2026-01-28 11:19:31 [INFO] Employee letters fetched | empId=aeccef64-8680-4376-b8ec-60c5af861745 | count=0
+2026-01-28 11:19:31 [INFO] GetEmployeeLetters API called | empId=70ba81f3-cf95-4351-b9f9-f059230d2022
+2026-01-28 11:19:31 [INFO] GetEmployeeLetters API called | empId=70ba81f3-cf95-4351-b9f9-f059230d2022
+2026-01-28 11:19:31 [INFO] Employee letters fetched | empId=70ba81f3-cf95-4351-b9f9-f059230d2022 | count=0
+2026-01-28 11:19:31 [INFO] Employee letters fetched | empId=70ba81f3-cf95-4351-b9f9-f059230d2022 | count=0
+2026-01-28 11:19:31 [INFO] GetEmployeeLetters API called | empId=73d6b17a-b8e6-41e8-bf02-34cba52ed31e
+2026-01-28 11:19:31 [INFO] GetEmployeeLetters API called | empId=73d6b17a-b8e6-41e8-bf02-34cba52ed31e
+2026-01-28 11:19:31 [INFO] Employee letters fetched | empId=73d6b17a-b8e6-41e8-bf02-34cba52ed31e | count=0
+2026-01-28 11:19:31 [INFO] Employee letters fetched | empId=73d6b17a-b8e6-41e8-bf02-34cba52ed31e | count=0
+2026-01-28 11:19:31 [INFO] GetEmployeeLetters API called | empId=4c7dc154-c1a7-41f5-8a48-c5c1f1ef75f2
+2026-01-28 11:19:31 [INFO] GetEmployeeLetters API called | empId=4c7dc154-c1a7-41f5-8a48-c5c1f1ef75f2
+2026-01-28 11:19:31 [INFO] Employee letters fetched | empId=4c7dc154-c1a7-41f5-8a48-c5c1f1ef75f2 | count=0
+2026-01-28 11:19:31 [INFO] Employee letters fetched | empId=4c7dc154-c1a7-41f5-8a48-c5c1f1ef75f2 | count=0
+2026-01-28 11:19:31 [INFO] GetEmployeeLetters API called | empId=00762a51-3472-4e37-9c91-df57bdc45910
+2026-01-28 11:19:31 [INFO] GetEmployeeLetters API called | empId=00762a51-3472-4e37-9c91-df57bdc45910
+2026-01-28 11:19:31 [INFO] Employee letters fetched | empId=00762a51-3472-4e37-9c91-df57bdc45910 | count=0
+2026-01-28 11:19:31 [INFO] Employee letters fetched | empId=00762a51-3472-4e37-9c91-df57bdc45910 | count=0
+2026-01-28 11:19:31 [INFO] GetEmployeeLetters API called | empId=51caf525-2084-4806-bc88-1859faf3bb48
+2026-01-28 11:19:31 [INFO] GetEmployeeLetters API called | empId=51caf525-2084-4806-bc88-1859faf3bb48
+2026-01-28 11:19:31 [INFO] Employee letters fetched | empId=51caf525-2084-4806-bc88-1859faf3bb48 | count=0
+2026-01-28 11:19:31 [INFO] Employee letters fetched | empId=51caf525-2084-4806-bc88-1859faf3bb48 | count=0
+2026-01-28 11:19:31 [INFO] GetEmployeeLetters API called | empId=33bbdf15-bf3f-4537-825d-505d6e7db525
+2026-01-28 11:19:31 [INFO] GetEmployeeLetters API called | empId=33bbdf15-bf3f-4537-825d-505d6e7db525
+2026-01-28 11:19:31 [INFO] Employee letters fetched | empId=33bbdf15-bf3f-4537-825d-505d6e7db525 | count=0
+2026-01-28 11:19:31 [INFO] Employee letters fetched | empId=33bbdf15-bf3f-4537-825d-505d6e7db525 | count=0
+2026-01-28 11:19:31 [INFO] GetEmployeeLetters API called | empId=1eadd7f9-4489-42a6-ac05-226981ad4857
+2026-01-28 11:19:31 [INFO] GetEmployeeLetters API called | empId=1eadd7f9-4489-42a6-ac05-226981ad4857
+2026-01-28 11:19:31 [INFO] Employee letters fetched | empId=1eadd7f9-4489-42a6-ac05-226981ad4857 | count=0
+2026-01-28 11:19:31 [INFO] Employee letters fetched | empId=1eadd7f9-4489-42a6-ac05-226981ad4857 | count=0
+2026-01-28 11:19:31 [INFO] GetEmployeeLetters API called | empId=8970bf52-9671-4ac0-a69f-466719e74d18
+2026-01-28 11:19:31 [INFO] GetEmployeeLetters API called | empId=8970bf52-9671-4ac0-a69f-466719e74d18
+2026-01-28 11:19:31 [INFO] Employee letters fetched | empId=8970bf52-9671-4ac0-a69f-466719e74d18 | count=0
+2026-01-28 11:19:31 [INFO] Employee letters fetched | empId=8970bf52-9671-4ac0-a69f-466719e74d18 | count=0
+2026-01-28 11:19:31 [INFO] GetEmployeeLetters API called | empId=581bed14-93c0-4d8a-b1b8-f12f75a2ca8a
+2026-01-28 11:19:31 [INFO] GetEmployeeLetters API called | empId=581bed14-93c0-4d8a-b1b8-f12f75a2ca8a
+2026-01-28 11:19:31 [INFO] Employee letters fetched | empId=581bed14-93c0-4d8a-b1b8-f12f75a2ca8a | count=0
+2026-01-28 11:19:31 [INFO] Employee letters fetched | empId=581bed14-93c0-4d8a-b1b8-f12f75a2ca8a | count=0
+2026-01-28 11:19:31 [INFO] GetEmployeeLetters API called | empId=01575adc-7503-4281-bee3-801163a39834
+2026-01-28 11:19:31 [INFO] GetEmployeeLetters API called | empId=01575adc-7503-4281-bee3-801163a39834
+2026-01-28 11:19:31 [INFO] Employee letters fetched | empId=01575adc-7503-4281-bee3-801163a39834 | count=1
+2026-01-28 11:19:32 [INFO] Employee letters fetched | empId=01575adc-7503-4281-bee3-801163a39834 | count=1
+2026-01-28 11:19:32 [INFO] GetEmployeeLetters API called | empId=5fd2c049-4d5c-445e-ac64-df3ee9e41d3e
+2026-01-28 11:19:32 [INFO] GetEmployeeLetters API called | empId=5fd2c049-4d5c-445e-ac64-df3ee9e41d3e
+2026-01-28 11:19:32 [INFO] Employee letters fetched | empId=5fd2c049-4d5c-445e-ac64-df3ee9e41d3e | count=0
+2026-01-28 11:19:32 [INFO] Employee letters fetched | empId=5fd2c049-4d5c-445e-ac64-df3ee9e41d3e | count=0
+2026-01-28 11:19:32 [INFO] GetEmployeeLetters API called | empId=a639e931-d436-40bf-8c1f-905eee3c2a52
+2026-01-28 11:19:32 [INFO] GetEmployeeLetters API called | empId=a639e931-d436-40bf-8c1f-905eee3c2a52
+2026-01-28 11:19:32 [INFO] Employee letters fetched | empId=a639e931-d436-40bf-8c1f-905eee3c2a52 | count=0
+2026-01-28 11:19:32 [INFO] Employee letters fetched | empId=a639e931-d436-40bf-8c1f-905eee3c2a52 | count=0
+2026-01-28 11:19:32 [INFO] GetEmployeeLetters API called | empId=9330f73b-26e3-4f77-9801-d9bed4b5778a
+2026-01-28 11:19:32 [INFO] GetEmployeeLetters API called | empId=9330f73b-26e3-4f77-9801-d9bed4b5778a
+2026-01-28 11:19:32 [INFO] Employee letters fetched | empId=9330f73b-26e3-4f77-9801-d9bed4b5778a | count=0
+2026-01-28 11:19:32 [INFO] Employee letters fetched | empId=9330f73b-26e3-4f77-9801-d9bed4b5778a | count=0
+2026-01-28 11:19:32 [INFO] GetEmployeeLetters API called | empId=d370d121-186c-41c9-8277-095df748c194
+2026-01-28 11:19:32 [INFO] GetEmployeeLetters API called | empId=d370d121-186c-41c9-8277-095df748c194
+2026-01-28 11:19:32 [INFO] Employee letters fetched | empId=d370d121-186c-41c9-8277-095df748c194 | count=0
+2026-01-28 11:19:32 [INFO] Employee letters fetched | empId=d370d121-186c-41c9-8277-095df748c194 | count=0
+2026-01-28 11:19:32 [INFO] GetEmployeeLetters API called | empId=76568964-9e9e-419f-8495-dda6ac6c9301
+2026-01-28 11:19:32 [INFO] GetEmployeeLetters API called | empId=76568964-9e9e-419f-8495-dda6ac6c9301
+2026-01-28 11:19:32 [INFO] Employee letters fetched | empId=76568964-9e9e-419f-8495-dda6ac6c9301 | count=0
+2026-01-28 11:19:32 [INFO] Employee letters fetched | empId=76568964-9e9e-419f-8495-dda6ac6c9301 | count=0
+2026-01-28 11:19:32 [INFO] GetEmployeeLetters API called | empId=9d400159-3b84-4b86-a421-96dbff6652ac
+2026-01-28 11:19:32 [INFO] GetEmployeeLetters API called | empId=9d400159-3b84-4b86-a421-96dbff6652ac
+2026-01-28 11:19:32 [INFO] Employee letters fetched | empId=9d400159-3b84-4b86-a421-96dbff6652ac | count=0
+2026-01-28 11:19:32 [INFO] Employee letters fetched | empId=9d400159-3b84-4b86-a421-96dbff6652ac | count=0
+2026-01-28 11:19:32 [INFO] GetEmployeeLetters API called | empId=3a47b4c6-4ad7-468a-b8aa-415045ae5013
+2026-01-28 11:19:32 [INFO] GetEmployeeLetters API called | empId=3a47b4c6-4ad7-468a-b8aa-415045ae5013
+2026-01-28 11:19:33 [INFO] Employee letters fetched | empId=3a47b4c6-4ad7-468a-b8aa-415045ae5013 | count=0
+2026-01-28 11:19:33 [INFO] Employee letters fetched | empId=3a47b4c6-4ad7-468a-b8aa-415045ae5013 | count=0
+2026-01-28 11:19:33 [INFO] GetEmployeeLetters API called | empId=ce5be619-bcfc-47f1-b02d-d17a3a2a7392
+2026-01-28 11:19:33 [INFO] GetEmployeeLetters API called | empId=ce5be619-bcfc-47f1-b02d-d17a3a2a7392
+2026-01-28 11:19:33 [INFO] Employee letters fetched | empId=ce5be619-bcfc-47f1-b02d-d17a3a2a7392 | count=4
+2026-01-28 11:19:33 [INFO] Employee letters fetched | empId=ce5be619-bcfc-47f1-b02d-d17a3a2a7392 | count=4
+2026-01-28 11:19:33 [INFO] GetEmployeeLetters API called | empId=56e7e8f5-ffe2-4a0e-93f6-03f3e415e5f9
+2026-01-28 11:19:33 [INFO] GetEmployeeLetters API called | empId=56e7e8f5-ffe2-4a0e-93f6-03f3e415e5f9
+2026-01-28 11:19:33 [INFO] Employee letters fetched | empId=56e7e8f5-ffe2-4a0e-93f6-03f3e415e5f9 | count=0
+2026-01-28 11:19:33 [INFO] GetEmployeeLetters API called | empId=25e87910-22dd-472b-b6d7-eee4d602c9a3
+2026-01-28 11:19:33 [INFO] Employee letters fetched | empId=56e7e8f5-ffe2-4a0e-93f6-03f3e415e5f9 | count=0
+2026-01-28 11:19:33 [INFO] Employee letters fetched | empId=25e87910-22dd-472b-b6d7-eee4d602c9a3 | count=0
+2026-01-28 11:19:33 [INFO] GetEmployeeLetters API called | empId=25e87910-22dd-472b-b6d7-eee4d602c9a3
+2026-01-28 11:19:33 [INFO] GetEmployeeLetters API called | empId=de6807a6-9e9d-4189-a66a-0de66886900f
+2026-01-28 11:19:33 [INFO] Employee letters fetched | empId=25e87910-22dd-472b-b6d7-eee4d602c9a3 | count=0
+2026-01-28 11:19:33 [INFO] Employee letters fetched | empId=de6807a6-9e9d-4189-a66a-0de66886900f | count=0
+2026-01-28 11:19:33 [INFO] GetEmployeeLetters API called | empId=de6807a6-9e9d-4189-a66a-0de66886900f
+2026-01-28 11:19:33 [INFO] GetEmployeeLetters API called | empId=454c8e17-c1b2-4780-a7a0-282d46c6d219
+2026-01-28 11:19:33 [INFO] Employee letters fetched | empId=de6807a6-9e9d-4189-a66a-0de66886900f | count=0
+2026-01-28 11:19:33 [INFO] Employee letters fetched | empId=454c8e17-c1b2-4780-a7a0-282d46c6d219 | count=0
+2026-01-28 11:19:33 [INFO] GetEmployeeLetters API called | empId=454c8e17-c1b2-4780-a7a0-282d46c6d219
+2026-01-28 11:19:33 [INFO] GetEmployeeLetters API called | empId=fb7fd646-cc10-4807-bb9d-011be0e173e3
+2026-01-28 11:19:33 [INFO] Employee letters fetched | empId=454c8e17-c1b2-4780-a7a0-282d46c6d219 | count=0
+2026-01-28 11:19:33 [INFO] Employee letters fetched | empId=fb7fd646-cc10-4807-bb9d-011be0e173e3 | count=0
+2026-01-28 11:19:33 [INFO] GetEmployeeLetters API called | empId=fb7fd646-cc10-4807-bb9d-011be0e173e3
+2026-01-28 11:19:33 [INFO] GetEmployeeLetters API called | empId=3dd7ef4b-4012-4d61-aa5c-2a51562b2a75
+2026-01-28 11:19:33 [INFO] Employee letters fetched | empId=fb7fd646-cc10-4807-bb9d-011be0e173e3 | count=0
+2026-01-28 11:19:33 [INFO] GetEmployeeLetters API called | empId=3dd7ef4b-4012-4d61-aa5c-2a51562b2a75
+2026-01-28 11:19:33 [INFO] Employee letters fetched | empId=3dd7ef4b-4012-4d61-aa5c-2a51562b2a75 | count=0
+2026-01-28 11:19:33 [INFO] GetEmployeeLetters API called | empId=ed453632-85d6-41cb-b4c2-68791adf926f
+2026-01-28 11:19:33 [INFO] Employee letters fetched | empId=3dd7ef4b-4012-4d61-aa5c-2a51562b2a75 | count=0
+2026-01-28 11:19:33 [INFO] GetEmployeeLetters API called | empId=ed453632-85d6-41cb-b4c2-68791adf926f
+2026-01-28 11:19:33 [INFO] Employee letters fetched | empId=ed453632-85d6-41cb-b4c2-68791adf926f | count=0
+2026-01-28 11:19:33 [INFO] GetEmployeeLetters API called | empId=e6ed7e25-3255-419e-8de2-bab357acb8df
+2026-01-28 11:19:33 [INFO] Employee letters fetched | empId=ed453632-85d6-41cb-b4c2-68791adf926f | count=0
+2026-01-28 11:19:33 [INFO] GetEmployeeLetters API called | empId=e6ed7e25-3255-419e-8de2-bab357acb8df
+2026-01-28 11:19:33 [INFO] Employee letters fetched | empId=e6ed7e25-3255-419e-8de2-bab357acb8df | count=0
+2026-01-28 11:19:33 [INFO] GetEmployeeLetters API called | empId=df28f7b4-702d-4e75-a72c-78604a2402c7
+2026-01-28 11:19:33 [INFO] Employee letters fetched | empId=e6ed7e25-3255-419e-8de2-bab357acb8df | count=0
+2026-01-28 11:19:33 [INFO] GetEmployeeLetters API called | empId=df28f7b4-702d-4e75-a72c-78604a2402c7
+2026-01-28 11:19:33 [INFO] Employee letters fetched | empId=df28f7b4-702d-4e75-a72c-78604a2402c7 | count=3
+2026-01-28 11:19:33 [INFO] GetEmployeeLetters API called | empId=187215e2-120a-42cf-b483-94704932f5fc
+2026-01-28 11:19:33 [INFO] Employee letters fetched | empId=df28f7b4-702d-4e75-a72c-78604a2402c7 | count=3
+2026-01-28 11:19:33 [INFO] GetEmployeeLetters API called | empId=187215e2-120a-42cf-b483-94704932f5fc
+2026-01-28 11:19:33 [INFO] Employee letters fetched | empId=187215e2-120a-42cf-b483-94704932f5fc | count=0
+2026-01-28 11:19:33 [INFO] GetEmployeeLetters API called | empId=5d8c78af-71c3-475c-a84e-bb275ae8d1df
+2026-01-28 11:19:33 [INFO] Employee letters fetched | empId=187215e2-120a-42cf-b483-94704932f5fc | count=0
+2026-01-28 11:19:33 [INFO] GetEmployeeLetters API called | empId=5d8c78af-71c3-475c-a84e-bb275ae8d1df
+2026-01-28 11:19:33 [INFO] Employee letters fetched | empId=5d8c78af-71c3-475c-a84e-bb275ae8d1df | count=0
+2026-01-28 11:19:33 [INFO] Employee letters fetched | empId=5d8c78af-71c3-475c-a84e-bb275ae8d1df | count=0
+2026-01-28 11:19:33 [INFO] GetEmployeeLetters API called | empId=4aa677f7-fef2-4c42-9d29-e81928c60dfc
+2026-01-28 11:19:33 [INFO] GetEmployeeLetters API called | empId=4aa677f7-fef2-4c42-9d29-e81928c60dfc
+2026-01-28 11:19:34 [INFO] Employee letters fetched | empId=4aa677f7-fef2-4c42-9d29-e81928c60dfc | count=0
+2026-01-28 11:19:34 [INFO] Employee letters fetched | empId=4aa677f7-fef2-4c42-9d29-e81928c60dfc | count=0
+2026-01-28 11:19:34 [INFO] GetEmployeeLetters API called | empId=a80da972-0839-4f7a-990f-d543a01b6c20
+2026-01-28 11:19:34 [INFO] GetEmployeeLetters API called | empId=a80da972-0839-4f7a-990f-d543a01b6c20
+2026-01-28 11:19:34 [INFO] Employee letters fetched | empId=a80da972-0839-4f7a-990f-d543a01b6c20 | count=0
+2026-01-28 11:19:34 [INFO] Employee letters fetched | empId=a80da972-0839-4f7a-990f-d543a01b6c20 | count=0
+2026-01-28 11:19:34 [INFO] GetEmployeeLetters API called | empId=0113c597-a242-490c-9bc9-2e645ceef8df
+2026-01-28 11:19:34 [INFO] GetEmployeeLetters API called | empId=0113c597-a242-490c-9bc9-2e645ceef8df
+2026-01-28 11:19:34 [INFO] Employee letters fetched | empId=0113c597-a242-490c-9bc9-2e645ceef8df | count=0
+2026-01-28 11:19:34 [INFO] Employee letters fetched | empId=0113c597-a242-490c-9bc9-2e645ceef8df | count=0
+2026-01-28 11:19:34 [INFO] GetEmployeeLetters API called | empId=09b4c107-0e4b-4dd6-ba5b-9536df28fbbe
+2026-01-28 11:19:34 [INFO] GetEmployeeLetters API called | empId=09b4c107-0e4b-4dd6-ba5b-9536df28fbbe
+2026-01-28 11:19:34 [INFO] Employee letters fetched | empId=09b4c107-0e4b-4dd6-ba5b-9536df28fbbe | count=0
+2026-01-28 11:19:34 [INFO] Employee letters fetched | empId=09b4c107-0e4b-4dd6-ba5b-9536df28fbbe | count=0
+2026-01-28 11:19:34 [INFO] GetEmployeeLetters API called | empId=b1324d52-5164-4892-bb8c-c72a9ce8f0af
+2026-01-28 11:19:34 [INFO] GetEmployeeLetters API called | empId=b1324d52-5164-4892-bb8c-c72a9ce8f0af
+2026-01-28 11:19:34 [INFO] Employee letters fetched | empId=b1324d52-5164-4892-bb8c-c72a9ce8f0af | count=0
+2026-01-28 11:19:34 [INFO] GetEmployeeLetters API called | empId=5c2d3c3e-788b-44f3-b15f-08114cf4135c
+2026-01-28 11:19:34 [INFO] Employee letters fetched | empId=b1324d52-5164-4892-bb8c-c72a9ce8f0af | count=0
+2026-01-28 11:19:34 [INFO] GetEmployeeLetters API called | empId=5c2d3c3e-788b-44f3-b15f-08114cf4135c
+2026-01-28 11:19:34 [INFO] Employee letters fetched | empId=5c2d3c3e-788b-44f3-b15f-08114cf4135c | count=0
+2026-01-28 11:19:34 [INFO] Employee letters fetched | empId=5c2d3c3e-788b-44f3-b15f-08114cf4135c | count=0
+2026-01-28 11:19:34 [INFO] GetEmployeeLetters API called | empId=17e43883-60ab-45f8-aff0-ca5a49f3245b
+2026-01-28 11:19:34 [INFO] GetEmployeeLetters API called | empId=17e43883-60ab-45f8-aff0-ca5a49f3245b
+2026-01-28 11:19:34 [INFO] Employee letters fetched | empId=17e43883-60ab-45f8-aff0-ca5a49f3245b | count=0
+2026-01-28 11:19:34 [INFO] Employee letters fetched | empId=17e43883-60ab-45f8-aff0-ca5a49f3245b | count=0
+2026-01-28 11:19:34 [INFO] GetEmployeeLetters API called | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+2026-01-28 11:19:34 [INFO] GetEmployeeLetters API called | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+2026-01-28 11:19:34 [INFO] Employee letters fetched | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | count=4
+2026-01-28 11:19:34 [INFO] Employee letters fetched | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | count=4
+2026-01-28 11:19:34 [INFO] GetEmployeeLetters API called | empId=ab021307-a98a-443a-8988-b25342598d5b
+2026-01-28 11:19:34 [INFO] GetEmployeeLetters API called | empId=ab021307-a98a-443a-8988-b25342598d5b
+2026-01-28 11:19:34 [INFO] Employee letters fetched | empId=ab021307-a98a-443a-8988-b25342598d5b | count=0
+2026-01-28 11:19:34 [INFO] Employee letters fetched | empId=ab021307-a98a-443a-8988-b25342598d5b | count=0
+2026-01-28 11:19:34 [INFO] GetEmployeeLetters API called | empId=cf04008e-9825-42e4-8538-ae13fc69043f
+2026-01-28 11:19:34 [INFO] GetEmployeeLetters API called | empId=cf04008e-9825-42e4-8538-ae13fc69043f
+2026-01-28 11:19:34 [INFO] Employee letters fetched | empId=cf04008e-9825-42e4-8538-ae13fc69043f | count=0
+2026-01-28 11:19:34 [INFO] Employee letters fetched | empId=cf04008e-9825-42e4-8538-ae13fc69043f | count=0
+2026-01-28 11:19:34 [INFO] GetEmployeeLetters API called | empId=b84ec12f-cf6b-4866-9e32-e2d31ebf0859
+2026-01-28 11:19:34 [INFO] GetEmployeeLetters API called | empId=b84ec12f-cf6b-4866-9e32-e2d31ebf0859
+2026-01-28 11:19:34 [INFO] Employee letters fetched | empId=b84ec12f-cf6b-4866-9e32-e2d31ebf0859 | count=0
+2026-01-28 11:19:34 [INFO] Employee letters fetched | empId=b84ec12f-cf6b-4866-9e32-e2d31ebf0859 | count=0
+2026-01-28 11:19:34 [INFO] GetEmployeeLetters API called | empId=c95ab1df-4e94-49cf-8161-5b8d936184f0
+2026-01-28 11:19:34 [INFO] GetEmployeeLetters API called | empId=c95ab1df-4e94-49cf-8161-5b8d936184f0
+2026-01-28 11:19:34 [INFO] Employee letters fetched | empId=c95ab1df-4e94-49cf-8161-5b8d936184f0 | count=0
+2026-01-28 11:19:34 [INFO] Employee letters fetched | empId=c95ab1df-4e94-49cf-8161-5b8d936184f0 | count=0
+2026-01-28 11:19:34 [INFO] GetEmployeeLetters API called | empId=644944b6-9267-4d30-bde1-cf3f574dfb60
+2026-01-28 11:19:34 [INFO] GetEmployeeLetters API called | empId=644944b6-9267-4d30-bde1-cf3f574dfb60
+2026-01-28 11:19:34 [INFO] Employee letters fetched | empId=644944b6-9267-4d30-bde1-cf3f574dfb60 | count=0
+2026-01-28 11:19:34 [INFO] Employee letters fetched | empId=644944b6-9267-4d30-bde1-cf3f574dfb60 | count=0
+2026-01-28 11:19:34 [INFO] GetEmployeeLetters API called | empId=ae5626af-2da0-47f4-9a4e-a79ceb52b57e
+2026-01-28 11:19:34 [INFO] GetEmployeeLetters API called | empId=ae5626af-2da0-47f4-9a4e-a79ceb52b57e
+2026-01-28 11:19:34 [INFO] Employee letters fetched | empId=ae5626af-2da0-47f4-9a4e-a79ceb52b57e | count=0
+2026-01-28 11:19:34 [INFO] Employee letters fetched | empId=ae5626af-2da0-47f4-9a4e-a79ceb52b57e | count=0
+2026-01-28 11:19:34 [INFO] GetEmployeeLetters API called | empId=cd154091-12ef-4774-829e-b28c0217ea7c
+2026-01-28 11:19:34 [INFO] GetEmployeeLetters API called | empId=cd154091-12ef-4774-829e-b28c0217ea7c
+2026-01-28 11:19:34 [INFO] Employee letters fetched | empId=cd154091-12ef-4774-829e-b28c0217ea7c | count=0
+2026-01-28 11:19:34 [INFO] Employee letters fetched | empId=cd154091-12ef-4774-829e-b28c0217ea7c | count=0
+2026-01-28 11:19:34 [INFO] GetEmployeeLetters API called | empId=d37318bc-4bef-4865-a016-03c9bc0a69ee
+2026-01-28 11:19:34 [INFO] GetEmployeeLetters API called | empId=d37318bc-4bef-4865-a016-03c9bc0a69ee
+2026-01-28 11:19:34 [INFO] Employee letters fetched | empId=d37318bc-4bef-4865-a016-03c9bc0a69ee | count=0
+2026-01-28 11:19:34 [INFO] Employee letters fetched | empId=d37318bc-4bef-4865-a016-03c9bc0a69ee | count=0
+2026-01-28 11:19:34 [INFO] GetEmployeeLetters API called | empId=a7d20928-676a-4637-b16c-59d420357d7b
+2026-01-28 11:19:35 [INFO] GetEmployeeLetters API called | empId=a7d20928-676a-4637-b16c-59d420357d7b
+2026-01-28 11:19:35 [INFO] Employee letters fetched | empId=a7d20928-676a-4637-b16c-59d420357d7b | count=0
+2026-01-28 11:19:35 [INFO] Employee letters fetched | empId=a7d20928-676a-4637-b16c-59d420357d7b | count=0
+2026-01-28 11:19:35 [INFO] GetEmployeeLetters API called | empId=a7b324ca-8c5c-45fa-acb1-723a1b7bec69
+2026-01-28 11:19:35 [INFO] GetEmployeeLetters API called | empId=a7b324ca-8c5c-45fa-acb1-723a1b7bec69
+2026-01-28 11:19:35 [INFO] Employee letters fetched | empId=a7b324ca-8c5c-45fa-acb1-723a1b7bec69 | count=0
+2026-01-28 11:19:35 [INFO] Employee letters fetched | empId=a7b324ca-8c5c-45fa-acb1-723a1b7bec69 | count=0
+2026-01-28 11:19:35 [INFO] GetEmployeeLetters API called | empId=4a5f5160-d90d-4b68-b64c-7c6b5fda68dd
+2026-01-28 11:19:35 [INFO] GetEmployeeLetters API called | empId=4a5f5160-d90d-4b68-b64c-7c6b5fda68dd
+2026-01-28 11:19:35 [INFO] Employee letters fetched | empId=4a5f5160-d90d-4b68-b64c-7c6b5fda68dd | count=0
+2026-01-28 11:19:35 [INFO] Employee letters fetched | empId=4a5f5160-d90d-4b68-b64c-7c6b5fda68dd | count=0
+2026-01-28 11:19:35 [INFO] GetEmployeeLetters API called | empId=e1551635-8b08-411b-aca7-52ca556b8630
+2026-01-28 11:19:35 [INFO] GetEmployeeLetters API called | empId=e1551635-8b08-411b-aca7-52ca556b8630
+2026-01-28 11:19:35 [INFO] Employee letters fetched | empId=e1551635-8b08-411b-aca7-52ca556b8630 | count=0
+2026-01-28 11:19:35 [INFO] Employee letters fetched | empId=e1551635-8b08-411b-aca7-52ca556b8630 | count=0
+2026-01-28 11:19:35 [INFO] GetEmployeeLetters API called | empId=dda7aee1-aaf0-4a51-bc0d-26b5fd03596f
+2026-01-28 11:19:35 [INFO] GetEmployeeLetters API called | empId=dda7aee1-aaf0-4a51-bc0d-26b5fd03596f
+2026-01-28 11:19:35 [INFO] Employee letters fetched | empId=dda7aee1-aaf0-4a51-bc0d-26b5fd03596f | count=0
+2026-01-28 11:19:35 [INFO] Employee letters fetched | empId=dda7aee1-aaf0-4a51-bc0d-26b5fd03596f | count=0
+2026-01-28 12:59:04 [INFO] GenerateLetter API called | empId=ef4abdda-a931-498b-938c-df6cee6745f7 | type=Offer Letter
+2026-01-28 12:59:04 [INFO] Employee & salary data fetched | empId=ef4abdda-a931-498b-938c-df6cee6745f7
+2026-01-28 12:59:05 [INFO] Branding loaded for letters | empId=ef4abdda-a931-498b-938c-df6cee6745f7
+2026-01-28 12:59:05 [WARN] Logo load failed | empId=ef4abdda-a931-498b-938c-df6cee6745f7 | Request failed with status code 404
+2026-01-28 12:59:11 [INFO] PDF generated | empId=ef4abdda-a931-498b-938c-df6cee6745f7 | file=Offer_Letter_1769585345153.pdf
+2026-01-28 12:59:11 [INFO] Letter saved to DB | empId=ef4abdda-a931-498b-938c-df6cee6745f7 | file=Offer_Letter_1769585345153.pdf
+2026-01-28 12:59:11 [INFO] GetEmployeeLetters API called | empId=ef4abdda-a931-498b-938c-df6cee6745f7
+2026-01-28 12:59:11 [INFO] Employee letters fetched | empId=ef4abdda-a931-498b-938c-df6cee6745f7 | count=2
+2026-01-28 15:07:18 [INFO] GenerateLetter API called | empId=ef4abdda-a931-498b-938c-df6cee6745f7 | type=Relieving Letter
+2026-01-28 15:07:18 [INFO] Employee & salary data fetched | empId=ef4abdda-a931-498b-938c-df6cee6745f7
+2026-01-28 15:07:18 [INFO] Branding loaded for letters | empId=ef4abdda-a931-498b-938c-df6cee6745f7
+2026-01-28 15:07:18 [WARN] Logo load failed | empId=ef4abdda-a931-498b-938c-df6cee6745f7 | Request failed with status code 404
+2026-01-28 15:07:22 [INFO] PDF generated | empId=ef4abdda-a931-498b-938c-df6cee6745f7 | file=Relieving_Letter_1769593038604.pdf
+2026-01-28 15:07:22 [INFO] Letter saved to DB | empId=ef4abdda-a931-498b-938c-df6cee6745f7 | file=Relieving_Letter_1769593038604.pdf
+2026-01-28 15:07:23 [INFO] GetEmployeeLetters API called | empId=ef4abdda-a931-498b-938c-df6cee6745f7
+2026-01-28 15:07:23 [INFO] Employee letters fetched | empId=ef4abdda-a931-498b-938c-df6cee6745f7 | count=3
+2026-01-29 09:26:38 [INFO] GetEmployeeLetters API called | empId=b3af8f32-7a76-42d9-bd3c-b692c2dc6c8c
+2026-01-29 09:26:38 [INFO] GetEmployeeLetters API called | empId=b3af8f32-7a76-42d9-bd3c-b692c2dc6c8c
+2026-01-29 09:26:38 [INFO] Employee letters fetched | empId=b3af8f32-7a76-42d9-bd3c-b692c2dc6c8c | count=1
+2026-01-29 09:26:38 [INFO] Employee letters fetched | empId=b3af8f32-7a76-42d9-bd3c-b692c2dc6c8c | count=1
+2026-01-29 09:26:38 [INFO] GetEmployeeLetters API called | empId=68484508-7658-466f-bf1b-bbdd7db6faf0
+2026-01-29 09:26:38 [INFO] GetEmployeeLetters API called | empId=68484508-7658-466f-bf1b-bbdd7db6faf0
+2026-01-29 09:26:38 [INFO] Employee letters fetched | empId=68484508-7658-466f-bf1b-bbdd7db6faf0 | count=2
+2026-01-29 09:26:38 [INFO] Employee letters fetched | empId=68484508-7658-466f-bf1b-bbdd7db6faf0 | count=2
+2026-01-29 09:26:38 [INFO] GetEmployeeLetters API called | empId=edb4d12e-e489-4c71-9da1-10811c2e39b4
+2026-01-29 09:26:38 [INFO] Employee letters fetched | empId=edb4d12e-e489-4c71-9da1-10811c2e39b4 | count=1
+2026-01-29 09:26:38 [INFO] GetEmployeeLetters API called | empId=a7f41990-910c-43b4-9e98-835e7a62e0a5
+2026-01-29 09:26:38 [INFO] Employee letters fetched | empId=a7f41990-910c-43b4-9e98-835e7a62e0a5 | count=0
+2026-01-29 09:26:38 [INFO] GetEmployeeLetters API called | empId=edb4d12e-e489-4c71-9da1-10811c2e39b4
+2026-01-29 09:26:38 [INFO] GetEmployeeLetters API called | empId=dacf7130-3f46-4657-80bf-79639aaf215c
+2026-01-29 09:26:39 [INFO] Employee letters fetched | empId=edb4d12e-e489-4c71-9da1-10811c2e39b4 | count=1
+2026-01-29 09:26:39 [INFO] Employee letters fetched | empId=dacf7130-3f46-4657-80bf-79639aaf215c | count=0
+2026-01-29 09:26:39 [INFO] GetEmployeeLetters API called | empId=a7f41990-910c-43b4-9e98-835e7a62e0a5
+2026-01-29 09:26:39 [INFO] GetEmployeeLetters API called | empId=63e44cd2-c22a-4805-a066-4490b0d42d00
+2026-01-29 09:26:39 [INFO] Employee letters fetched | empId=a7f41990-910c-43b4-9e98-835e7a62e0a5 | count=0
+2026-01-29 09:26:39 [INFO] Employee letters fetched | empId=63e44cd2-c22a-4805-a066-4490b0d42d00 | count=0
+2026-01-29 09:26:39 [INFO] GetEmployeeLetters API called | empId=dacf7130-3f46-4657-80bf-79639aaf215c
+2026-01-29 09:26:39 [INFO] GetEmployeeLetters API called | empId=9a34456f-b89c-406b-b928-e30d4deddf51
+2026-01-29 09:26:39 [INFO] Employee letters fetched | empId=dacf7130-3f46-4657-80bf-79639aaf215c | count=0
+2026-01-29 09:26:39 [INFO] Employee letters fetched | empId=9a34456f-b89c-406b-b928-e30d4deddf51 | count=0
+2026-01-29 09:26:40 [INFO] GetEmployeeLetters API called | empId=63e44cd2-c22a-4805-a066-4490b0d42d00
+2026-01-29 09:26:40 [INFO] Employee letters fetched | empId=63e44cd2-c22a-4805-a066-4490b0d42d00 | count=0
+2026-01-29 09:26:40 [INFO] GetEmployeeLetters API called | empId=b5050d4c-3953-4e87-9876-d66bcca4d22c
+2026-01-29 09:26:40 [INFO] Employee letters fetched | empId=b5050d4c-3953-4e87-9876-d66bcca4d22c | count=1
+2026-01-29 09:26:40 [INFO] GetEmployeeLetters API called | empId=9a34456f-b89c-406b-b928-e30d4deddf51
+2026-01-29 09:26:40 [INFO] GetEmployeeLetters API called | empId=d8f99fcf-3032-4cee-a7fa-f1f58722098b
+2026-01-29 09:26:40 [INFO] Employee letters fetched | empId=9a34456f-b89c-406b-b928-e30d4deddf51 | count=0
+2026-01-29 09:26:40 [INFO] Employee letters fetched | empId=d8f99fcf-3032-4cee-a7fa-f1f58722098b | count=0
+2026-01-29 09:26:40 [INFO] GetEmployeeLetters API called | empId=b5050d4c-3953-4e87-9876-d66bcca4d22c
+2026-01-29 09:26:40 [INFO] GetEmployeeLetters API called | empId=bec08b98-5f78-4075-88fd-5962864e9fc7
+2026-01-29 09:26:40 [INFO] Employee letters fetched | empId=b5050d4c-3953-4e87-9876-d66bcca4d22c | count=1
+2026-01-29 09:26:40 [INFO] GetEmployeeLetters API called | empId=d8f99fcf-3032-4cee-a7fa-f1f58722098b
+2026-01-29 09:26:40 [INFO] Employee letters fetched | empId=bec08b98-5f78-4075-88fd-5962864e9fc7 | count=7
+2026-01-29 09:26:40 [INFO] Employee letters fetched | empId=d8f99fcf-3032-4cee-a7fa-f1f58722098b | count=0
+2026-01-29 09:26:40 [INFO] GetEmployeeLetters API called | empId=ef4abdda-a931-498b-938c-df6cee6745f7
+2026-01-29 09:26:40 [INFO] GetEmployeeLetters API called | empId=bec08b98-5f78-4075-88fd-5962864e9fc7
+2026-01-29 09:26:40 [INFO] Employee letters fetched | empId=ef4abdda-a931-498b-938c-df6cee6745f7 | count=3
+2026-01-29 09:26:40 [INFO] Employee letters fetched | empId=bec08b98-5f78-4075-88fd-5962864e9fc7 | count=7
+2026-01-29 09:26:40 [INFO] GetEmployeeLetters API called | empId=b6f4758f-7cb5-4edf-b02e-d361f097224c
+2026-01-29 09:26:40 [INFO] GetEmployeeLetters API called | empId=ef4abdda-a931-498b-938c-df6cee6745f7
+2026-01-29 09:26:40 [INFO] Employee letters fetched | empId=b6f4758f-7cb5-4edf-b02e-d361f097224c | count=0
+2026-01-29 09:26:40 [INFO] Employee letters fetched | empId=ef4abdda-a931-498b-938c-df6cee6745f7 | count=3
+2026-01-29 09:26:40 [INFO] GetEmployeeLetters API called | empId=8d5450e9-3bf9-4903-ae6a-3b4c409e117a
+2026-01-29 09:26:40 [INFO] GetEmployeeLetters API called | empId=b6f4758f-7cb5-4edf-b02e-d361f097224c
+2026-01-29 09:26:40 [INFO] Employee letters fetched | empId=b6f4758f-7cb5-4edf-b02e-d361f097224c | count=0
+2026-01-29 09:26:40 [INFO] Employee letters fetched | empId=8d5450e9-3bf9-4903-ae6a-3b4c409e117a | count=0
+2026-01-29 09:26:41 [INFO] GetEmployeeLetters API called | empId=8d5450e9-3bf9-4903-ae6a-3b4c409e117a
+2026-01-29 09:26:41 [INFO] GetEmployeeLetters API called | empId=9b643151-7623-4259-a0e5-89546e876a35
+2026-01-29 09:26:41 [INFO] Employee letters fetched | empId=8d5450e9-3bf9-4903-ae6a-3b4c409e117a | count=0
+2026-01-29 09:26:41 [INFO] Employee letters fetched | empId=9b643151-7623-4259-a0e5-89546e876a35 | count=0
+2026-01-29 09:26:41 [INFO] GetEmployeeLetters API called | empId=9b643151-7623-4259-a0e5-89546e876a35
+2026-01-29 09:26:41 [INFO] GetEmployeeLetters API called | empId=7aa718da-1684-468a-b2d7-83172c38cf50
+2026-01-29 09:26:41 [INFO] Employee letters fetched | empId=9b643151-7623-4259-a0e5-89546e876a35 | count=0
+2026-01-29 09:26:41 [INFO] Employee letters fetched | empId=7aa718da-1684-468a-b2d7-83172c38cf50 | count=0
+2026-01-29 09:26:41 [INFO] GetEmployeeLetters API called | empId=7aa718da-1684-468a-b2d7-83172c38cf50
+2026-01-29 09:26:41 [INFO] GetEmployeeLetters API called | empId=49ad9944-77e1-4a43-a66a-ef0f5b265561
+2026-01-29 09:26:41 [INFO] Employee letters fetched | empId=7aa718da-1684-468a-b2d7-83172c38cf50 | count=0
+2026-01-29 09:26:41 [INFO] GetEmployeeLetters API called | empId=49ad9944-77e1-4a43-a66a-ef0f5b265561
+2026-01-29 09:26:41 [INFO] Employee letters fetched | empId=49ad9944-77e1-4a43-a66a-ef0f5b265561 | count=0
+2026-01-29 09:26:41 [INFO] GetEmployeeLetters API called | empId=79813636-6baf-42d6-bcf5-3caa14c0a6bf
+2026-01-29 09:26:41 [INFO] Employee letters fetched | empId=49ad9944-77e1-4a43-a66a-ef0f5b265561 | count=0
+2026-01-29 09:26:41 [INFO] Employee letters fetched | empId=79813636-6baf-42d6-bcf5-3caa14c0a6bf | count=0
+2026-01-29 09:26:41 [INFO] GetEmployeeLetters API called | empId=79813636-6baf-42d6-bcf5-3caa14c0a6bf
+2026-01-29 09:26:41 [INFO] GetEmployeeLetters API called | empId=b3c3ba17-2016-4628-a2f2-c6201467b5fa
+2026-01-29 09:26:41 [INFO] Employee letters fetched | empId=79813636-6baf-42d6-bcf5-3caa14c0a6bf | count=0
+2026-01-29 09:26:41 [INFO] GetEmployeeLetters API called | empId=b3c3ba17-2016-4628-a2f2-c6201467b5fa
+2026-01-29 09:26:41 [INFO] Employee letters fetched | empId=b3c3ba17-2016-4628-a2f2-c6201467b5fa | count=0
+2026-01-29 09:26:41 [INFO] Employee letters fetched | empId=b3c3ba17-2016-4628-a2f2-c6201467b5fa | count=0
+2026-01-29 09:26:41 [INFO] GetEmployeeLetters API called | empId=adf96f7f-bd8c-4945-b6ef-e813ab7a7793
+2026-01-29 09:26:41 [INFO] GetEmployeeLetters API called | empId=adf96f7f-bd8c-4945-b6ef-e813ab7a7793
+2026-01-29 09:26:41 [INFO] Employee letters fetched | empId=adf96f7f-bd8c-4945-b6ef-e813ab7a7793 | count=0
+2026-01-29 09:26:41 [INFO] GetEmployeeLetters API called | empId=aeccef64-8680-4376-b8ec-60c5af861745
+2026-01-29 09:26:41 [INFO] Employee letters fetched | empId=adf96f7f-bd8c-4945-b6ef-e813ab7a7793 | count=0
+2026-01-29 09:26:41 [INFO] GetEmployeeLetters API called | empId=aeccef64-8680-4376-b8ec-60c5af861745
+2026-01-29 09:26:41 [INFO] Employee letters fetched | empId=aeccef64-8680-4376-b8ec-60c5af861745 | count=0
+2026-01-29 09:26:41 [INFO] GetEmployeeLetters API called | empId=70ba81f3-cf95-4351-b9f9-f059230d2022
+2026-01-29 09:26:41 [INFO] Employee letters fetched | empId=aeccef64-8680-4376-b8ec-60c5af861745 | count=0
+2026-01-29 09:26:41 [INFO] GetEmployeeLetters API called | empId=70ba81f3-cf95-4351-b9f9-f059230d2022
+2026-01-29 09:26:41 [INFO] Employee letters fetched | empId=70ba81f3-cf95-4351-b9f9-f059230d2022 | count=0
+2026-01-29 09:26:41 [INFO] Employee letters fetched | empId=70ba81f3-cf95-4351-b9f9-f059230d2022 | count=0
+2026-01-29 09:26:41 [INFO] GetEmployeeLetters API called | empId=73d6b17a-b8e6-41e8-bf02-34cba52ed31e
+2026-01-29 09:26:41 [INFO] GetEmployeeLetters API called | empId=73d6b17a-b8e6-41e8-bf02-34cba52ed31e
+2026-01-29 09:26:41 [INFO] Employee letters fetched | empId=73d6b17a-b8e6-41e8-bf02-34cba52ed31e | count=0
+2026-01-29 09:26:41 [INFO] Employee letters fetched | empId=73d6b17a-b8e6-41e8-bf02-34cba52ed31e | count=0
+2026-01-29 09:26:41 [INFO] GetEmployeeLetters API called | empId=4c7dc154-c1a7-41f5-8a48-c5c1f1ef75f2
+2026-01-29 09:26:41 [INFO] GetEmployeeLetters API called | empId=4c7dc154-c1a7-41f5-8a48-c5c1f1ef75f2
+2026-01-29 09:26:41 [INFO] Employee letters fetched | empId=4c7dc154-c1a7-41f5-8a48-c5c1f1ef75f2 | count=0
+2026-01-29 09:26:41 [INFO] Employee letters fetched | empId=4c7dc154-c1a7-41f5-8a48-c5c1f1ef75f2 | count=0
+2026-01-29 09:26:41 [INFO] GetEmployeeLetters API called | empId=00762a51-3472-4e37-9c91-df57bdc45910
+2026-01-29 09:26:41 [INFO] GetEmployeeLetters API called | empId=00762a51-3472-4e37-9c91-df57bdc45910
+2026-01-29 09:26:41 [INFO] Employee letters fetched | empId=00762a51-3472-4e37-9c91-df57bdc45910 | count=0
+2026-01-29 09:26:41 [INFO] Employee letters fetched | empId=00762a51-3472-4e37-9c91-df57bdc45910 | count=0
+2026-01-29 09:26:41 [INFO] GetEmployeeLetters API called | empId=51caf525-2084-4806-bc88-1859faf3bb48
+2026-01-29 09:26:41 [INFO] GetEmployeeLetters API called | empId=51caf525-2084-4806-bc88-1859faf3bb48
+2026-01-29 09:26:41 [INFO] Employee letters fetched | empId=51caf525-2084-4806-bc88-1859faf3bb48 | count=0
+2026-01-29 09:26:41 [INFO] Employee letters fetched | empId=51caf525-2084-4806-bc88-1859faf3bb48 | count=0
+2026-01-29 09:26:41 [INFO] GetEmployeeLetters API called | empId=33bbdf15-bf3f-4537-825d-505d6e7db525
+2026-01-29 09:26:41 [INFO] GetEmployeeLetters API called | empId=33bbdf15-bf3f-4537-825d-505d6e7db525
+2026-01-29 09:26:42 [INFO] Employee letters fetched | empId=33bbdf15-bf3f-4537-825d-505d6e7db525 | count=0
+2026-01-29 09:26:42 [INFO] GetEmployeeLetters API called | empId=1eadd7f9-4489-42a6-ac05-226981ad4857
+2026-01-29 09:26:42 [INFO] Employee letters fetched | empId=33bbdf15-bf3f-4537-825d-505d6e7db525 | count=0
+2026-01-29 09:26:42 [INFO] GetEmployeeLetters API called | empId=1eadd7f9-4489-42a6-ac05-226981ad4857
+2026-01-29 09:26:42 [INFO] Employee letters fetched | empId=1eadd7f9-4489-42a6-ac05-226981ad4857 | count=0
+2026-01-29 09:26:42 [INFO] GetEmployeeLetters API called | empId=8970bf52-9671-4ac0-a69f-466719e74d18
+2026-01-29 09:26:42 [INFO] Employee letters fetched | empId=1eadd7f9-4489-42a6-ac05-226981ad4857 | count=0
+2026-01-29 09:26:42 [INFO] GetEmployeeLetters API called | empId=8970bf52-9671-4ac0-a69f-466719e74d18
+2026-01-29 09:26:42 [INFO] Employee letters fetched | empId=8970bf52-9671-4ac0-a69f-466719e74d18 | count=0
+2026-01-29 09:26:42 [INFO] GetEmployeeLetters API called | empId=581bed14-93c0-4d8a-b1b8-f12f75a2ca8a
+2026-01-29 09:26:42 [INFO] Employee letters fetched | empId=8970bf52-9671-4ac0-a69f-466719e74d18 | count=0
+2026-01-29 09:26:42 [INFO] GetEmployeeLetters API called | empId=581bed14-93c0-4d8a-b1b8-f12f75a2ca8a
+2026-01-29 09:26:42 [INFO] Employee letters fetched | empId=581bed14-93c0-4d8a-b1b8-f12f75a2ca8a | count=0
+2026-01-29 09:26:42 [INFO] Employee letters fetched | empId=581bed14-93c0-4d8a-b1b8-f12f75a2ca8a | count=0
+2026-01-29 09:26:42 [INFO] GetEmployeeLetters API called | empId=01575adc-7503-4281-bee3-801163a39834
+2026-01-29 09:26:42 [INFO] GetEmployeeLetters API called | empId=01575adc-7503-4281-bee3-801163a39834
+2026-01-29 09:26:42 [INFO] Employee letters fetched | empId=01575adc-7503-4281-bee3-801163a39834 | count=1
+2026-01-29 09:26:42 [INFO] Employee letters fetched | empId=01575adc-7503-4281-bee3-801163a39834 | count=1
+2026-01-29 09:26:42 [INFO] GetEmployeeLetters API called | empId=5fd2c049-4d5c-445e-ac64-df3ee9e41d3e
+2026-01-29 09:26:42 [INFO] GetEmployeeLetters API called | empId=5fd2c049-4d5c-445e-ac64-df3ee9e41d3e
+2026-01-29 09:26:42 [INFO] Employee letters fetched | empId=5fd2c049-4d5c-445e-ac64-df3ee9e41d3e | count=0
+2026-01-29 09:26:42 [INFO] Employee letters fetched | empId=5fd2c049-4d5c-445e-ac64-df3ee9e41d3e | count=0
+2026-01-29 09:26:42 [INFO] GetEmployeeLetters API called | empId=a639e931-d436-40bf-8c1f-905eee3c2a52
+2026-01-29 09:26:42 [INFO] GetEmployeeLetters API called | empId=a639e931-d436-40bf-8c1f-905eee3c2a52
+2026-01-29 09:26:42 [INFO] Employee letters fetched | empId=a639e931-d436-40bf-8c1f-905eee3c2a52 | count=0
+2026-01-29 09:26:42 [INFO] GetEmployeeLetters API called | empId=9330f73b-26e3-4f77-9801-d9bed4b5778a
+2026-01-29 09:26:42 [INFO] Employee letters fetched | empId=a639e931-d436-40bf-8c1f-905eee3c2a52 | count=0
+2026-01-29 09:26:42 [INFO] GetEmployeeLetters API called | empId=9330f73b-26e3-4f77-9801-d9bed4b5778a
+2026-01-29 09:26:42 [INFO] Employee letters fetched | empId=9330f73b-26e3-4f77-9801-d9bed4b5778a | count=0
+2026-01-29 09:26:42 [INFO] Employee letters fetched | empId=9330f73b-26e3-4f77-9801-d9bed4b5778a | count=0
+2026-01-29 09:26:42 [INFO] GetEmployeeLetters API called | empId=d370d121-186c-41c9-8277-095df748c194
+2026-01-29 09:26:42 [INFO] GetEmployeeLetters API called | empId=d370d121-186c-41c9-8277-095df748c194
+2026-01-29 09:26:42 [INFO] Employee letters fetched | empId=d370d121-186c-41c9-8277-095df748c194 | count=0
+2026-01-29 09:26:42 [INFO] Employee letters fetched | empId=d370d121-186c-41c9-8277-095df748c194 | count=0
+2026-01-29 09:26:42 [INFO] GetEmployeeLetters API called | empId=76568964-9e9e-419f-8495-dda6ac6c9301
+2026-01-29 09:26:42 [INFO] GetEmployeeLetters API called | empId=76568964-9e9e-419f-8495-dda6ac6c9301
+2026-01-29 09:26:42 [INFO] Employee letters fetched | empId=76568964-9e9e-419f-8495-dda6ac6c9301 | count=0
+2026-01-29 09:26:42 [INFO] Employee letters fetched | empId=76568964-9e9e-419f-8495-dda6ac6c9301 | count=0
+2026-01-29 09:26:42 [INFO] GetEmployeeLetters API called | empId=9d400159-3b84-4b86-a421-96dbff6652ac
+2026-01-29 09:26:42 [INFO] GetEmployeeLetters API called | empId=9d400159-3b84-4b86-a421-96dbff6652ac
+2026-01-29 09:26:42 [INFO] Employee letters fetched | empId=9d400159-3b84-4b86-a421-96dbff6652ac | count=0
+2026-01-29 09:26:42 [INFO] Employee letters fetched | empId=9d400159-3b84-4b86-a421-96dbff6652ac | count=0
+2026-01-29 09:26:42 [INFO] GetEmployeeLetters API called | empId=3a47b4c6-4ad7-468a-b8aa-415045ae5013
+2026-01-29 09:26:42 [INFO] GetEmployeeLetters API called | empId=3a47b4c6-4ad7-468a-b8aa-415045ae5013
+2026-01-29 09:26:42 [INFO] Employee letters fetched | empId=3a47b4c6-4ad7-468a-b8aa-415045ae5013 | count=0
+2026-01-29 09:26:42 [INFO] Employee letters fetched | empId=3a47b4c6-4ad7-468a-b8aa-415045ae5013 | count=0
+2026-01-29 09:26:42 [INFO] GetEmployeeLetters API called | empId=ce5be619-bcfc-47f1-b02d-d17a3a2a7392
+2026-01-29 09:26:42 [INFO] GetEmployeeLetters API called | empId=ce5be619-bcfc-47f1-b02d-d17a3a2a7392
+2026-01-29 09:26:42 [INFO] Employee letters fetched | empId=ce5be619-bcfc-47f1-b02d-d17a3a2a7392 | count=4
+2026-01-29 09:26:42 [INFO] Employee letters fetched | empId=ce5be619-bcfc-47f1-b02d-d17a3a2a7392 | count=4
+2026-01-29 09:26:43 [INFO] GetEmployeeLetters API called | empId=56e7e8f5-ffe2-4a0e-93f6-03f3e415e5f9
+2026-01-29 09:26:43 [INFO] GetEmployeeLetters API called | empId=56e7e8f5-ffe2-4a0e-93f6-03f3e415e5f9
+2026-01-29 09:26:43 [INFO] Employee letters fetched | empId=56e7e8f5-ffe2-4a0e-93f6-03f3e415e5f9 | count=0
+2026-01-29 09:26:43 [INFO] GetEmployeeLetters API called | empId=25e87910-22dd-472b-b6d7-eee4d602c9a3
+2026-01-29 09:26:43 [INFO] Employee letters fetched | empId=56e7e8f5-ffe2-4a0e-93f6-03f3e415e5f9 | count=0
+2026-01-29 09:26:43 [INFO] GetEmployeeLetters API called | empId=25e87910-22dd-472b-b6d7-eee4d602c9a3
+2026-01-29 09:26:43 [INFO] Employee letters fetched | empId=25e87910-22dd-472b-b6d7-eee4d602c9a3 | count=0
+2026-01-29 09:26:43 [INFO] GetEmployeeLetters API called | empId=de6807a6-9e9d-4189-a66a-0de66886900f
+2026-01-29 09:26:43 [INFO] Employee letters fetched | empId=25e87910-22dd-472b-b6d7-eee4d602c9a3 | count=0
+2026-01-29 09:26:43 [INFO] Employee letters fetched | empId=de6807a6-9e9d-4189-a66a-0de66886900f | count=0
+2026-01-29 09:26:43 [INFO] GetEmployeeLetters API called | empId=de6807a6-9e9d-4189-a66a-0de66886900f
+2026-01-29 09:26:43 [INFO] GetEmployeeLetters API called | empId=454c8e17-c1b2-4780-a7a0-282d46c6d219
+2026-01-29 09:26:43 [INFO] Employee letters fetched | empId=de6807a6-9e9d-4189-a66a-0de66886900f | count=0
+2026-01-29 09:26:43 [INFO] GetEmployeeLetters API called | empId=454c8e17-c1b2-4780-a7a0-282d46c6d219
+2026-01-29 09:26:43 [INFO] Employee letters fetched | empId=454c8e17-c1b2-4780-a7a0-282d46c6d219 | count=0
+2026-01-29 09:26:43 [INFO] GetEmployeeLetters API called | empId=fb7fd646-cc10-4807-bb9d-011be0e173e3
+2026-01-29 09:26:43 [INFO] Employee letters fetched | empId=454c8e17-c1b2-4780-a7a0-282d46c6d219 | count=0
+2026-01-29 09:26:43 [INFO] GetEmployeeLetters API called | empId=fb7fd646-cc10-4807-bb9d-011be0e173e3
+2026-01-29 09:26:43 [INFO] Employee letters fetched | empId=fb7fd646-cc10-4807-bb9d-011be0e173e3 | count=0
+2026-01-29 09:26:43 [INFO] GetEmployeeLetters API called | empId=3dd7ef4b-4012-4d61-aa5c-2a51562b2a75
+2026-01-29 09:26:43 [INFO] Employee letters fetched | empId=fb7fd646-cc10-4807-bb9d-011be0e173e3 | count=0
+2026-01-29 09:26:43 [INFO] GetEmployeeLetters API called | empId=3dd7ef4b-4012-4d61-aa5c-2a51562b2a75
+2026-01-29 09:26:43 [INFO] Employee letters fetched | empId=3dd7ef4b-4012-4d61-aa5c-2a51562b2a75 | count=0
+2026-01-29 09:26:43 [INFO] Employee letters fetched | empId=3dd7ef4b-4012-4d61-aa5c-2a51562b2a75 | count=0
+2026-01-29 09:26:43 [INFO] GetEmployeeLetters API called | empId=ed453632-85d6-41cb-b4c2-68791adf926f
+2026-01-29 09:26:43 [INFO] GetEmployeeLetters API called | empId=ed453632-85d6-41cb-b4c2-68791adf926f
+2026-01-29 09:26:43 [INFO] Employee letters fetched | empId=ed453632-85d6-41cb-b4c2-68791adf926f | count=0
+2026-01-29 09:26:43 [INFO] Employee letters fetched | empId=ed453632-85d6-41cb-b4c2-68791adf926f | count=0
+2026-01-29 09:26:43 [INFO] GetEmployeeLetters API called | empId=e6ed7e25-3255-419e-8de2-bab357acb8df
+2026-01-29 09:26:43 [INFO] GetEmployeeLetters API called | empId=e6ed7e25-3255-419e-8de2-bab357acb8df
+2026-01-29 09:26:43 [INFO] Employee letters fetched | empId=e6ed7e25-3255-419e-8de2-bab357acb8df | count=0
+2026-01-29 09:26:43 [INFO] Employee letters fetched | empId=e6ed7e25-3255-419e-8de2-bab357acb8df | count=0
+2026-01-29 09:26:43 [INFO] GetEmployeeLetters API called | empId=df28f7b4-702d-4e75-a72c-78604a2402c7
+2026-01-29 09:26:43 [INFO] GetEmployeeLetters API called | empId=df28f7b4-702d-4e75-a72c-78604a2402c7
+2026-01-29 09:26:43 [INFO] Employee letters fetched | empId=df28f7b4-702d-4e75-a72c-78604a2402c7 | count=3
+2026-01-29 09:26:43 [INFO] GetEmployeeLetters API called | empId=187215e2-120a-42cf-b483-94704932f5fc
+2026-01-29 09:26:43 [INFO] Employee letters fetched | empId=df28f7b4-702d-4e75-a72c-78604a2402c7 | count=3
+2026-01-29 09:26:43 [INFO] GetEmployeeLetters API called | empId=187215e2-120a-42cf-b483-94704932f5fc
+2026-01-29 09:26:43 [INFO] Employee letters fetched | empId=187215e2-120a-42cf-b483-94704932f5fc | count=0
+2026-01-29 09:26:43 [INFO] Employee letters fetched | empId=187215e2-120a-42cf-b483-94704932f5fc | count=0
+2026-01-29 09:26:43 [INFO] GetEmployeeLetters API called | empId=5d8c78af-71c3-475c-a84e-bb275ae8d1df
+2026-01-29 09:26:43 [INFO] GetEmployeeLetters API called | empId=5d8c78af-71c3-475c-a84e-bb275ae8d1df
+2026-01-29 09:26:43 [INFO] Employee letters fetched | empId=5d8c78af-71c3-475c-a84e-bb275ae8d1df | count=0
+2026-01-29 09:26:43 [INFO] GetEmployeeLetters API called | empId=4aa677f7-fef2-4c42-9d29-e81928c60dfc
+2026-01-29 09:26:44 [INFO] Employee letters fetched | empId=5d8c78af-71c3-475c-a84e-bb275ae8d1df | count=0
+2026-01-29 09:26:44 [INFO] Employee letters fetched | empId=4aa677f7-fef2-4c42-9d29-e81928c60dfc | count=0
+2026-01-29 09:26:44 [INFO] GetEmployeeLetters API called | empId=4aa677f7-fef2-4c42-9d29-e81928c60dfc
+2026-01-29 09:26:44 [INFO] GetEmployeeLetters API called | empId=a80da972-0839-4f7a-990f-d543a01b6c20
+2026-01-29 09:26:44 [INFO] Employee letters fetched | empId=4aa677f7-fef2-4c42-9d29-e81928c60dfc | count=0
+2026-01-29 09:26:44 [INFO] Employee letters fetched | empId=a80da972-0839-4f7a-990f-d543a01b6c20 | count=0
+2026-01-29 09:26:44 [INFO] GetEmployeeLetters API called | empId=a80da972-0839-4f7a-990f-d543a01b6c20
+2026-01-29 09:26:44 [INFO] GetEmployeeLetters API called | empId=0113c597-a242-490c-9bc9-2e645ceef8df
+2026-01-29 09:26:44 [INFO] Employee letters fetched | empId=a80da972-0839-4f7a-990f-d543a01b6c20 | count=0
+2026-01-29 09:26:44 [INFO] Employee letters fetched | empId=0113c597-a242-490c-9bc9-2e645ceef8df | count=0
+2026-01-29 09:26:44 [INFO] GetEmployeeLetters API called | empId=0113c597-a242-490c-9bc9-2e645ceef8df
+2026-01-29 09:26:44 [INFO] GetEmployeeLetters API called | empId=09b4c107-0e4b-4dd6-ba5b-9536df28fbbe
+2026-01-29 09:26:44 [INFO] Employee letters fetched | empId=0113c597-a242-490c-9bc9-2e645ceef8df | count=0
+2026-01-29 09:26:44 [INFO] Employee letters fetched | empId=09b4c107-0e4b-4dd6-ba5b-9536df28fbbe | count=0
+2026-01-29 09:26:44 [INFO] GetEmployeeLetters API called | empId=09b4c107-0e4b-4dd6-ba5b-9536df28fbbe
+2026-01-29 09:26:44 [INFO] GetEmployeeLetters API called | empId=b1324d52-5164-4892-bb8c-c72a9ce8f0af
+2026-01-29 09:26:45 [INFO] Employee letters fetched | empId=09b4c107-0e4b-4dd6-ba5b-9536df28fbbe | count=0
+2026-01-29 09:26:45 [INFO] GetEmployeeLetters API called | empId=b1324d52-5164-4892-bb8c-c72a9ce8f0af
+2026-01-29 09:26:45 [INFO] Employee letters fetched | empId=b1324d52-5164-4892-bb8c-c72a9ce8f0af | count=0
+2026-01-29 09:26:45 [INFO] GetEmployeeLetters API called | empId=5c2d3c3e-788b-44f3-b15f-08114cf4135c
+2026-01-29 09:26:45 [INFO] Employee letters fetched | empId=b1324d52-5164-4892-bb8c-c72a9ce8f0af | count=0
+2026-01-29 09:26:45 [INFO] GetEmployeeLetters API called | empId=5c2d3c3e-788b-44f3-b15f-08114cf4135c
+2026-01-29 09:26:45 [INFO] Employee letters fetched | empId=5c2d3c3e-788b-44f3-b15f-08114cf4135c | count=0
+2026-01-29 09:26:45 [INFO] Employee letters fetched | empId=5c2d3c3e-788b-44f3-b15f-08114cf4135c | count=0
+2026-01-29 09:26:45 [INFO] GetEmployeeLetters API called | empId=17e43883-60ab-45f8-aff0-ca5a49f3245b
+2026-01-29 09:26:45 [INFO] GetEmployeeLetters API called | empId=17e43883-60ab-45f8-aff0-ca5a49f3245b
+2026-01-29 09:26:45 [INFO] Employee letters fetched | empId=17e43883-60ab-45f8-aff0-ca5a49f3245b | count=0
+2026-01-29 09:26:45 [INFO] GetEmployeeLetters API called | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+2026-01-29 09:26:45 [INFO] Employee letters fetched | empId=17e43883-60ab-45f8-aff0-ca5a49f3245b | count=0
+2026-01-29 09:26:45 [INFO] GetEmployeeLetters API called | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+2026-01-29 09:26:45 [INFO] Employee letters fetched | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | count=4
+2026-01-29 09:26:45 [INFO] GetEmployeeLetters API called | empId=ab021307-a98a-443a-8988-b25342598d5b
+2026-01-29 09:26:45 [INFO] Employee letters fetched | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | count=4
+2026-01-29 09:26:45 [INFO] GetEmployeeLetters API called | empId=ab021307-a98a-443a-8988-b25342598d5b
+2026-01-29 09:26:45 [INFO] Employee letters fetched | empId=ab021307-a98a-443a-8988-b25342598d5b | count=0
+2026-01-29 09:26:45 [INFO] Employee letters fetched | empId=ab021307-a98a-443a-8988-b25342598d5b | count=0
+2026-01-29 09:26:45 [INFO] GetEmployeeLetters API called | empId=cf04008e-9825-42e4-8538-ae13fc69043f
+2026-01-29 09:26:45 [INFO] GetEmployeeLetters API called | empId=cf04008e-9825-42e4-8538-ae13fc69043f
+2026-01-29 09:26:45 [INFO] Employee letters fetched | empId=cf04008e-9825-42e4-8538-ae13fc69043f | count=0
+2026-01-29 09:26:45 [INFO] Employee letters fetched | empId=cf04008e-9825-42e4-8538-ae13fc69043f | count=0
+2026-01-29 09:26:45 [INFO] GetEmployeeLetters API called | empId=b84ec12f-cf6b-4866-9e32-e2d31ebf0859
+2026-01-29 09:26:45 [INFO] GetEmployeeLetters API called | empId=b84ec12f-cf6b-4866-9e32-e2d31ebf0859
+2026-01-29 09:26:45 [INFO] Employee letters fetched | empId=b84ec12f-cf6b-4866-9e32-e2d31ebf0859 | count=0
+2026-01-29 09:26:45 [INFO] GetEmployeeLetters API called | empId=c95ab1df-4e94-49cf-8161-5b8d936184f0
+2026-01-29 09:26:45 [INFO] Employee letters fetched | empId=b84ec12f-cf6b-4866-9e32-e2d31ebf0859 | count=0
+2026-01-29 09:26:45 [INFO] Employee letters fetched | empId=c95ab1df-4e94-49cf-8161-5b8d936184f0 | count=0
+2026-01-29 09:26:45 [INFO] GetEmployeeLetters API called | empId=c95ab1df-4e94-49cf-8161-5b8d936184f0
+2026-01-29 09:26:45 [INFO] GetEmployeeLetters API called | empId=644944b6-9267-4d30-bde1-cf3f574dfb60
+2026-01-29 09:26:45 [INFO] Employee letters fetched | empId=c95ab1df-4e94-49cf-8161-5b8d936184f0 | count=0
+2026-01-29 09:26:45 [INFO] GetEmployeeLetters API called | empId=644944b6-9267-4d30-bde1-cf3f574dfb60
+2026-01-29 09:26:45 [INFO] Employee letters fetched | empId=644944b6-9267-4d30-bde1-cf3f574dfb60 | count=0
+2026-01-29 09:26:45 [INFO] Employee letters fetched | empId=644944b6-9267-4d30-bde1-cf3f574dfb60 | count=0
+2026-01-29 09:26:45 [INFO] GetEmployeeLetters API called | empId=ae5626af-2da0-47f4-9a4e-a79ceb52b57e
+2026-01-29 09:26:45 [INFO] GetEmployeeLetters API called | empId=ae5626af-2da0-47f4-9a4e-a79ceb52b57e
+2026-01-29 09:26:45 [INFO] Employee letters fetched | empId=ae5626af-2da0-47f4-9a4e-a79ceb52b57e | count=0
+2026-01-29 09:26:46 [INFO] Employee letters fetched | empId=ae5626af-2da0-47f4-9a4e-a79ceb52b57e | count=0
+2026-01-29 09:26:46 [INFO] GetEmployeeLetters API called | empId=cd154091-12ef-4774-829e-b28c0217ea7c
+2026-01-29 09:26:46 [INFO] GetEmployeeLetters API called | empId=cd154091-12ef-4774-829e-b28c0217ea7c
+2026-01-29 09:26:46 [INFO] Employee letters fetched | empId=cd154091-12ef-4774-829e-b28c0217ea7c | count=0
+2026-01-29 09:26:46 [INFO] Employee letters fetched | empId=cd154091-12ef-4774-829e-b28c0217ea7c | count=0
+2026-01-29 09:26:46 [INFO] GetEmployeeLetters API called | empId=d37318bc-4bef-4865-a016-03c9bc0a69ee
+2026-01-29 09:26:46 [INFO] GetEmployeeLetters API called | empId=d37318bc-4bef-4865-a016-03c9bc0a69ee
+2026-01-29 09:26:46 [INFO] Employee letters fetched | empId=d37318bc-4bef-4865-a016-03c9bc0a69ee | count=0
+2026-01-29 09:26:46 [INFO] Employee letters fetched | empId=d37318bc-4bef-4865-a016-03c9bc0a69ee | count=0
+2026-01-29 09:26:46 [INFO] GetEmployeeLetters API called | empId=a7d20928-676a-4637-b16c-59d420357d7b
+2026-01-29 09:26:46 [INFO] GetEmployeeLetters API called | empId=a7d20928-676a-4637-b16c-59d420357d7b
+2026-01-29 09:26:46 [INFO] Employee letters fetched | empId=a7d20928-676a-4637-b16c-59d420357d7b | count=0
+2026-01-29 09:26:46 [INFO] Employee letters fetched | empId=a7d20928-676a-4637-b16c-59d420357d7b | count=0
+2026-01-29 09:26:46 [INFO] GetEmployeeLetters API called | empId=a7b324ca-8c5c-45fa-acb1-723a1b7bec69
+2026-01-29 09:26:46 [INFO] GetEmployeeLetters API called | empId=a7b324ca-8c5c-45fa-acb1-723a1b7bec69
+2026-01-29 09:26:46 [INFO] Employee letters fetched | empId=a7b324ca-8c5c-45fa-acb1-723a1b7bec69 | count=0
+2026-01-29 09:26:46 [INFO] Employee letters fetched | empId=a7b324ca-8c5c-45fa-acb1-723a1b7bec69 | count=0
+2026-01-29 09:26:46 [INFO] GetEmployeeLetters API called | empId=4a5f5160-d90d-4b68-b64c-7c6b5fda68dd
+2026-01-29 09:26:46 [INFO] GetEmployeeLetters API called | empId=4a5f5160-d90d-4b68-b64c-7c6b5fda68dd
+2026-01-29 09:26:46 [INFO] Employee letters fetched | empId=4a5f5160-d90d-4b68-b64c-7c6b5fda68dd | count=0
+2026-01-29 09:26:46 [INFO] GetEmployeeLetters API called | empId=e1551635-8b08-411b-aca7-52ca556b8630
+2026-01-29 09:26:46 [INFO] Employee letters fetched | empId=4a5f5160-d90d-4b68-b64c-7c6b5fda68dd | count=0
+2026-01-29 09:26:46 [INFO] GetEmployeeLetters API called | empId=e1551635-8b08-411b-aca7-52ca556b8630
+2026-01-29 09:26:46 [INFO] Employee letters fetched | empId=e1551635-8b08-411b-aca7-52ca556b8630 | count=0
+2026-01-29 09:26:46 [INFO] Employee letters fetched | empId=e1551635-8b08-411b-aca7-52ca556b8630 | count=0
+2026-01-29 09:26:46 [INFO] GetEmployeeLetters API called | empId=dda7aee1-aaf0-4a51-bc0d-26b5fd03596f
+2026-01-29 09:26:46 [INFO] GetEmployeeLetters API called | empId=dda7aee1-aaf0-4a51-bc0d-26b5fd03596f
+2026-01-29 09:26:46 [INFO] Employee letters fetched | empId=dda7aee1-aaf0-4a51-bc0d-26b5fd03596f | count=0
+2026-01-29 09:26:46 [INFO] Employee letters fetched | empId=dda7aee1-aaf0-4a51-bc0d-26b5fd03596f | count=0
+2026-01-29 10:04:19 [INFO] Admin service running on port 5002
+2026-01-29 10:04:20 [INFO] PostgreSQL connected successfully
+2026-01-29 10:04:45 [INFO] ValidatePayroll API called | startDate=undefined | endDate=undefined | month=1 | year=2025
+2026-01-29 10:04:45 [INFO] Payroll date range | from=2025-01-01 | to=2025-01-31
+2026-01-29 10:04:45 [INFO] Employees fetched for payroll validation | count=86
+2026-01-29 10:04:46 [INFO] Attendance summary | approved=0 | pending=0
+2026-01-29 10:04:46 [INFO] Payroll issues found | count=85
+2026-01-29 10:04:46 [INFO] Payroll validation result | canGenerate=false
+2026-01-29 10:04:55 [INFO] RunPayroll API called | month=1 | year=2025
+2026-01-29 10:04:55 [INFO] Payroll month normalized | input=1 | normalized=JANUARY
+2026-01-29 10:04:55 [INFO] GeneratePayrollId started
+2026-01-29 10:04:55 [INFO] Next payroll ID generated | PR011
+2026-01-29 10:04:55 [INFO] Payroll ID generated | PR011
+2026-01-29 10:04:55 [INFO] Active salary rows fetched | count=1
+2026-01-29 10:04:55 [INFO] Payroll totals calculated | gross=58750 | deductions=3650 | net=55100
+2026-01-29 10:04:55 [INFO] Payroll run completed | payrollId=PR011 | employees=1
+2026-01-29 10:04:55 [INFO] GetAllPayroll API called
+2026-01-29 10:04:55 [INFO] Payroll records fetched | count=11
+2026-01-29 10:05:02 [INFO] GetAllPayroll API called
+2026-01-29 10:05:02 [INFO] Payroll records fetched | count=11
+2026-01-29 10:05:02 [INFO] GetAllPayroll API called
+2026-01-29 10:05:02 [INFO] Payroll records fetched | count=11
+2026-01-29 10:05:09 [INFO] ReversePayroll API called | payrollId=732783b8-bb93-41cb-b628-1010a50adf44
+2026-01-29 10:05:09 [INFO] Payroll reversed successfully | payrollId=732783b8-bb93-41cb-b628-1010a50adf44
+2026-01-29 10:05:09 [INFO] GetAllPayroll API called
+2026-01-29 10:05:09 [INFO] Payroll records fetched | count=11
+2026-01-29 10:05:24 [INFO] RerunPayroll API called | month=1 | year=2025
+2026-01-29 10:05:24 [INFO] Previous payroll reversed (if any) | month=1 | year=2025
+2026-01-29 10:05:24 [INFO] GeneratePayrollId started
+2026-01-29 10:05:24 [INFO] Next payroll ID generated | PR012
+2026-01-29 10:05:24 [INFO] New payroll ID generated | PR012
+2026-01-29 10:05:24 [INFO] Active salary rows fetched | count=2
+2026-01-29 10:05:24 [INFO] Payroll totals recalculated | gross=101750 | deductions=5950 | net=95800
+2026-01-29 10:05:24 [INFO] Payroll rerun completed | payrollId=PR012 | employees=2
+2026-01-29 10:05:24 [INFO] GetAllPayroll API called
+2026-01-29 10:05:24 [INFO] Payroll records fetched | count=12
+2026-01-29 10:05:34 [INFO] ReversePayroll API called | payrollId=0ef727c3-e1de-4551-9806-e39327e3261d
+2026-01-29 10:05:34 [INFO] Payroll reversed successfully | payrollId=0ef727c3-e1de-4551-9806-e39327e3261d
+2026-01-29 10:05:34 [INFO] GetAllPayroll API called
+2026-01-29 10:05:34 [INFO] Payroll records fetched | count=12
+2026-01-29 10:20:27 [INFO] GetMonthlyPayrollSummary API called | month=12 | year=2025
+2026-01-29 10:20:27 [INFO] Payroll summary month normalized | input=12 | values=12,12
+2026-01-29 10:20:27 [INFO] GetMonthlyPayrollSummary API called | month=12 | year=2025
+2026-01-29 10:20:27 [INFO] Payroll summary month normalized | input=12 | values=12,12
+2026-01-29 10:20:27 [INFO] Monthly payroll rows fetched | count=0
+2026-01-29 10:20:27 [WARN] No payroll found | month=12 | year=2025
+2026-01-29 10:20:27 [INFO] Monthly payroll rows fetched | count=0
+2026-01-29 10:20:27 [WARN] No payroll found | month=12 | year=2025
+2026-01-29 10:20:27 [INFO] GetPayrollTrend API called | limit=6
+2026-01-29 10:20:28 [INFO] Fetching payroll trend for last 6 months
+2026-01-29 10:20:28 [INFO] GetPayrollTrend API called | limit=6
+2026-01-29 10:20:28 [INFO] Fetching payroll trend for last 6 months
+2026-01-29 10:20:28 [INFO] Payroll trend rows fetched | count=2
+2026-01-29 10:20:28 [INFO] Payroll trend rows fetched | count=2
+2026-01-29 10:20:38 [INFO] GetMonthlyPayrollSummary API called | month=12 | year=2025
+2026-01-29 10:20:38 [INFO] Payroll summary month normalized | input=12 | values=12,12
+2026-01-29 10:20:38 [INFO] Monthly payroll rows fetched | count=0
+2026-01-29 10:20:38 [WARN] No payroll found | month=12 | year=2025
+2026-01-29 10:20:38 [INFO] GetPayrollTrend API called | limit=6
+2026-01-29 10:20:38 [INFO] Fetching payroll trend for last 6 months
+2026-01-29 10:20:38 [INFO] Payroll trend rows fetched | count=2
+2026-01-29 12:00:38 [INFO] Admin service running on port 5002
+2026-01-29 12:00:38 [INFO] PostgreSQL connected successfully
+2026-01-29 12:07:26 [INFO] Admin service running on port 5002
+2026-01-29 12:07:26 [INFO] PostgreSQL connected successfully
+2026-01-29 12:08:17 [INFO] Create probation request for employee_id=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+2026-01-29 12:08:17 [INFO] Probation created successfully for employee_id=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+2026-01-29 12:10:26 [INFO] FetchAllReviews API called
+2026-01-29 12:10:26 [INFO] FetchAllReviews API called
+2026-01-29 12:10:26 [INFO] Reviews fetched successfully | count=6
+2026-01-29 12:10:26 [INFO] DB connection released | fetchAllReviews
+2026-01-29 12:10:26 [INFO] Reviews fetched successfully | count=6
+2026-01-29 12:10:26 [INFO] DB connection released | fetchAllReviews
+2026-01-29 12:10:40 [INFO] Update TL Review called | reviewId=4
+2026-01-29 12:10:40 [INFO] TL Review updated successfully | reviewId=4
+2026-01-29 12:10:40 [INFO] DB connection released | updateTLReview
+2026-01-29 12:10:40 [INFO] FetchAllReviews API called
+2026-01-29 12:10:40 [INFO] Reviews fetched successfully | count=6
+2026-01-29 12:10:41 [INFO] DB connection released | fetchAllReviews
+2026-01-29 12:23:23 [INFO] FetchAllReviews API called
+2026-01-29 12:23:23 [INFO] FetchAllReviews API called
+2026-01-29 12:23:23 [INFO] Reviews fetched successfully | count=6
+2026-01-29 12:23:23 [INFO] DB connection released | fetchAllReviews
+2026-01-29 12:23:23 [INFO] Reviews fetched successfully | count=6
+2026-01-29 12:23:23 [INFO] DB connection released | fetchAllReviews
+2026-01-29 12:23:28 [INFO] Update TL Review called | reviewId=4
+2026-01-29 12:23:28 [INFO] TL Review updated successfully | reviewId=4
+2026-01-29 12:23:28 [INFO] DB connection released | updateTLReview
+2026-01-29 12:23:29 [INFO] FetchAllReviews API called
+2026-01-29 12:23:29 [INFO] Reviews fetched successfully | count=6
+2026-01-29 12:23:29 [INFO] DB connection released | fetchAllReviews
+2026-01-29 12:33:54 [INFO] FetchAllReviews API called
+2026-01-29 12:33:54 [INFO] FetchAllReviews API called
+2026-01-29 12:33:54 [INFO] Reviews fetched successfully | count=6
+2026-01-29 12:33:54 [INFO] DB connection released | fetchAllReviews
+2026-01-29 12:33:54 [INFO] Reviews fetched successfully | count=6
+2026-01-29 12:33:54 [INFO] DB connection released | fetchAllReviews
+2026-01-30 09:20:32 [INFO] FetchAllReviews API called
+2026-01-30 09:20:33 [INFO] Reviews fetched successfully | count=6
+2026-01-30 09:20:33 [INFO] DB connection released | fetchAllReviews
+2026-01-30 09:58:49 [INFO] Admin service running on port 5002
+2026-01-30 09:58:49 [INFO] PostgreSQL connected successfully
+2026-01-30 09:58:57 [INFO] Admin logout attempt | email=giri@zigmaneural.com
+2026-01-30 09:58:57 [INFO] Admin found for logout | userId=adf96f7f-bd8c-4945-b6ef-e813ab7a7793
+2026-01-30 09:58:57 [INFO] Admin logout successful | userId=adf96f7f-bd8c-4945-b6ef-e813ab7a7793
+2026-01-30 09:59:12 [INFO] Admin login attempt | email=giri@zigmaneural.com
+2026-01-30 09:59:13 [INFO] Admin login successful | userId=adf96f7f-bd8c-4945-b6ef-e813ab7a7793
+2026-01-30 09:59:18 [INFO] Fetch admin audit logs API called
+2026-01-30 09:59:18 [INFO] Fetch admin audit logs API called
+2026-01-30 09:59:19 [INFO] Audit logs fetched successfully | count=1724
+2026-01-30 09:59:19 [INFO] Audit logs fetched successfully | count=1724
+2026-01-30 10:00:14 [INFO] Admin logout attempt | email=giri@zigmaneural.com
+2026-01-30 10:00:14 [INFO] Admin found for logout | userId=adf96f7f-bd8c-4945-b6ef-e813ab7a7793
+2026-01-30 10:00:14 [INFO] Admin logout successful | userId=adf96f7f-bd8c-4945-b6ef-e813ab7a7793
+2026-01-30 10:00:23 [INFO] Admin login attempt | email=giri@zigmaneural.com
+2026-01-30 10:00:24 [INFO] Admin login successful | userId=adf96f7f-bd8c-4945-b6ef-e813ab7a7793
+2026-01-30 10:00:29 [INFO] Fetch admin audit logs API called
+2026-01-30 10:00:29 [INFO] Fetch admin audit logs API called
+2026-01-30 10:00:29 [INFO] Audit logs fetched successfully | count=1725
+2026-01-30 10:00:29 [INFO] Audit logs fetched successfully | count=1725
+2026-01-30 10:38:28 [INFO] Admin service running on port 5002
+2026-01-30 10:38:28 [INFO] PostgreSQL connected successfully
+2026-01-30 11:43:44 [INFO] FetchAllReviews API called
+2026-01-30 11:43:44 [INFO] FetchAllReviews API called
+2026-01-30 11:43:44 [INFO] Reviews fetched successfully | count=6
+2026-01-30 11:43:44 [INFO] DB connection released | fetchAllReviews
+2026-01-30 11:43:44 [INFO] Reviews fetched successfully | count=6
+2026-01-30 11:43:44 [INFO] DB connection released | fetchAllReviews
+2026-01-30 16:56:26 [INFO] Admin service running on port 5002
+2026-01-30 16:56:26 [INFO] PostgreSQL connected successfully
+2026-01-30 16:56:44 [INFO] Fetch invoice by ID called | invoiceId=27c476ec-457c-4c07-9990-e42853bf90c3
+2026-01-30 16:56:44 [INFO] Invoice fetched successfully | invoiceId=27c476ec-457c-4c07-9990-e42853bf90c3
+2026-01-30 16:56:46 [INFO] Update invoice status requested | invoiceId=27c476ec-457c-4c07-9990-e42853bf90c3 | status=approved | updatedBy=ADMIN
+2026-01-30 16:56:46 [INFO] Invoice status updated successfully | invoiceId=27c476ec-457c-4c07-9990-e42853bf90c3 | newStatus=approved
+2026-01-30 16:56:46 [INFO] Fetch all invoices API called
+2026-01-30 16:56:46 [INFO] Invoices fetched successfully | count=4
+2026-01-30 16:58:28 [INFO] Fetch all invoices API called
+2026-01-30 16:58:28 [INFO] Fetch all invoices API called
+2026-01-30 16:58:29 [INFO] Invoices fetched successfully | count=4
+2026-01-30 16:58:29 [INFO] Invoices fetched successfully | count=4
+2026-01-30 17:10:07 [INFO] GetMonthlyPayrollSummary API called | month=12 | year=2025
+2026-01-30 17:10:07 [INFO] Payroll summary month normalized | input=12 | values=12,12
+2026-01-30 17:10:07 [INFO] GetMonthlyPayrollSummary API called | month=12 | year=2025
+2026-01-30 17:10:07 [INFO] Payroll summary month normalized | input=12 | values=12,12
+2026-01-30 17:10:07 [INFO] Monthly payroll rows fetched | count=0
+2026-01-30 17:10:07 [WARN] No payroll found | month=12 | year=2025
+2026-01-30 17:10:07 [INFO] Monthly payroll rows fetched | count=0
+2026-01-30 17:10:08 [WARN] No payroll found | month=12 | year=2025
+2026-01-30 17:10:08 [INFO] GetPayrollTrend API called | limit=6
+2026-01-30 17:10:08 [INFO] Fetching payroll trend for last 6 months
+2026-01-30 17:10:08 [INFO] GetPayrollTrend API called | limit=6
+2026-01-30 17:10:08 [INFO] Fetching payroll trend for last 6 months
+2026-01-30 17:10:08 [INFO] Payroll trend rows fetched | count=2
+2026-01-30 17:10:08 [INFO] Payroll trend rows fetched | count=2
+2026-01-30 17:10:16 [INFO] GetMonthlyPayrollSummary API called | month=01 | year=2025
+2026-01-30 17:10:16 [INFO] Payroll summary month normalized | input=01 | values=1,01
+2026-01-30 17:10:16 [INFO] Monthly payroll rows fetched | count=0
+2026-01-30 17:10:16 [WARN] No payroll found | month=01 | year=2025
+2026-01-30 17:10:16 [INFO] GetPayrollTrend API called | limit=6
+2026-01-30 17:10:16 [INFO] Fetching payroll trend for last 6 months
+2026-01-30 17:10:16 [INFO] Payroll trend rows fetched | count=2
+2026-01-30 17:10:21 [INFO] GetMonthlyPayrollSummary API called | month=01 | year=2024
+2026-01-30 17:10:21 [INFO] Payroll summary month normalized | input=01 | values=1,01
+2026-01-30 17:10:21 [INFO] Monthly payroll rows fetched | count=0
+2026-01-30 17:10:21 [WARN] No payroll found | month=01 | year=2024
+2026-01-30 17:10:21 [INFO] GetPayrollTrend API called | limit=6
+2026-01-30 17:10:21 [INFO] Fetching payroll trend for last 6 months
+2026-01-30 17:10:21 [INFO] Payroll trend rows fetched | count=2
+2026-01-30 17:10:30 [INFO] GetMonthlyPayrollSummary API called | month=01 | year=2025
+2026-01-30 17:10:30 [INFO] Payroll summary month normalized | input=01 | values=1,01
+2026-01-30 17:10:30 [INFO] Monthly payroll rows fetched | count=0
+2026-01-30 17:10:30 [WARN] No payroll found | month=01 | year=2025
+2026-01-30 17:10:30 [INFO] GetPayrollTrend API called | limit=6
+2026-01-30 17:10:30 [INFO] Fetching payroll trend for last 6 months
+2026-01-30 17:10:30 [INFO] Payroll trend rows fetched | count=2
+2026-01-30 17:10:32 [INFO] GetMonthlyPayrollSummary API called | month=03 | year=2025
+2026-01-30 17:10:32 [INFO] Payroll summary month normalized | input=03 | values=3,03
+2026-01-30 17:10:32 [INFO] Monthly payroll rows fetched | count=1
+2026-01-30 17:10:32 [INFO] GetPayrollTrend API called | limit=6
+2026-01-30 17:10:32 [INFO] Fetching payroll trend for last 6 months
+2026-01-30 17:10:32 [INFO] Payroll trend rows fetched | count=2
+2026-01-30 17:10:37 [INFO] GetMonthlyPayrollSummary API called | month=03 | year=2025
+2026-01-30 17:10:37 [INFO] Payroll summary month normalized | input=03 | values=3,03
+2026-01-30 17:10:37 [INFO] Monthly payroll rows fetched | count=1
+2026-01-30 17:10:37 [INFO] GetPayrollTrend API called | limit=6
+2026-01-30 17:10:37 [INFO] Fetching payroll trend for last 6 months
+2026-01-30 17:10:37 [INFO] Payroll trend rows fetched | count=2

@@ -105,7 +105,7 @@ router.get("/salary/:employeeId", getEmployeeSalary);
 router.get("/employees/fulltime", getFullTimeEmployees);
 router.post("/performance/submit", submitSelfReview); 
 
-router.get("/performance/:employee_uuid", getEmployeeReview);
+router.get("/performance/:id", getEmployeeReview);
 
 //resume download
 router.get("/download/:filename", (req, res) => {

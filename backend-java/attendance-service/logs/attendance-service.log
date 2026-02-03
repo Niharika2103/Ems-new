@@ -26,3 +26,225 @@ LOG4J2 2026-01-19 15:12:42 DEBUG com.example.attendance_service.controller.Atten
 LOG4J2 2026-01-19 16:14:20 DEBUG com.example.attendance_service.controller.AttendanceController - Fetching weekly attendance | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | projectId=da2952de-33cc-4afd-8aed-06c79bede1bb | weekStart=2026-01-19
 LOG4J2 2026-01-19 16:14:50 INFO  com.example.attendance_service.controller.AttendanceController - Saving weekly attendance | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | projectId=da2952de-33cc-4afd-8aed-06c79bede1bb | employeeName=undefined
 LOG4J2 2026-01-19 16:14:50 INFO  com.example.attendance_service.service.AttendanceService - Save/Update attendance → employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2, projectId=da2952de-33cc-4afd-8aed-06c79bede1bb, employeeName=undefined
+LOG4J2 2026-01-20 13:24:24 INFO  com.example.attendance_service.AttendanceServiceApplication - Starting AttendanceServiceApplication using Java 24 with PID 2180 (C:\Users\DELL\Desktop\EMSPROJECT1.O\EMSPROJECT1.NEW\backend-java\attendance-service\target\classes started by DELL in C:\Users\DELL\Desktop\EMSPROJECT1.O\EMSPROJECT1.NEW\backend-java\attendance-service)
+LOG4J2 2026-01-20 13:24:24 DEBUG com.example.attendance_service.AttendanceServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
+LOG4J2 2026-01-20 13:24:24 INFO  com.example.attendance_service.AttendanceServiceApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-01-20 13:24:39 INFO  com.example.attendance_service.AttendanceServiceApplication - Started AttendanceServiceApplication in 16.028 seconds (process running for 19.39)
+LOG4J2 2026-01-20 13:25:03 DEBUG com.example.attendance_service.controller.AttendanceController - Fetching weekly attendance | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | projectId=da2952de-33cc-4afd-8aed-06c79bede1bb | weekStart=2026-01-19
+LOG4J2 2026-01-20 13:25:27 INFO  com.example.attendance_service.controller.AttendanceController - Saving weekly attendance | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | projectId=da2952de-33cc-4afd-8aed-06c79bede1bb | employeeName=undefined
+LOG4J2 2026-01-20 13:25:27 INFO  com.example.attendance_service.service.AttendanceService - Save/Update attendance → employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2, projectId=da2952de-33cc-4afd-8aed-06c79bede1bb, employeeName=undefined
+LOG4J2 2026-01-20 16:34:55 INFO  com.example.attendance_service.AttendanceServiceApplication - Starting AttendanceServiceApplication using Java 24 with PID 2272 (C:\Users\DELL\Desktop\EMSPROJECT1.O\EMSPROJECT1.NEW\backend-java\attendance-service\target\classes started by DELL in C:\Users\DELL\Desktop\EMSPROJECT1.O\EMSPROJECT1.NEW\backend-java\attendance-service)
+LOG4J2 2026-01-20 16:34:55 DEBUG com.example.attendance_service.AttendanceServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
+LOG4J2 2026-01-20 16:34:55 INFO  com.example.attendance_service.AttendanceServiceApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-01-20 16:35:14 INFO  com.example.attendance_service.AttendanceServiceApplication - Started AttendanceServiceApplication in 19.657 seconds (process running for 23.049)
+LOG4J2 2026-01-20 16:38:47 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-19 | to=2026-01-25
+LOG4J2 2026-01-20 16:38:47 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-19 | to=2026-01-25
+LOG4J2 2026-01-20 16:38:48 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-19, endDate=2026-01-25, periodType=weekly
+LOG4J2 2026-01-20 16:38:48 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-19, endDate=2026-01-25, periodType=weekly
+LOG4J2 2026-01-20 16:38:49 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 0
+LOG4J2 2026-01-20 16:38:49 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 0
+LOG4J2 2026-01-20 16:38:49 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 0
+LOG4J2 2026-01-20 16:38:49 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 0
+LOG4J2 2026-01-20 16:44:56 INFO  com.example.attendance_service.AttendanceServiceApplication - Starting AttendanceServiceApplication using Java 24 with PID 3960 (C:\Users\DELL\Desktop\EMSPROJECT1.O\EMSPROJECT1.NEW\backend-java\attendance-service\target\classes started by DELL in C:\Users\DELL\Desktop\EMSPROJECT1.O\EMSPROJECT1.NEW\backend-java\attendance-service)
+LOG4J2 2026-01-20 16:44:56 DEBUG com.example.attendance_service.AttendanceServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
+LOG4J2 2026-01-20 16:44:56 INFO  com.example.attendance_service.AttendanceServiceApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-01-20 16:45:12 INFO  com.example.attendance_service.AttendanceServiceApplication - Started AttendanceServiceApplication in 16.945 seconds (process running for 20.05)
+LOG4J2 2026-01-20 16:51:00 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-19 | to=2026-01-25
+LOG4J2 2026-01-20 16:51:00 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-19 | to=2026-01-25
+LOG4J2 2026-01-20 16:51:00 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-19, endDate=2026-01-25, periodType=weekly
+LOG4J2 2026-01-20 16:51:00 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-19, endDate=2026-01-25, periodType=weekly
+LOG4J2 2026-01-20 16:51:02 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 0
+LOG4J2 2026-01-20 16:51:02 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 0
+LOG4J2 2026-01-20 16:51:02 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 0
+LOG4J2 2026-01-20 16:51:02 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 0
+LOG4J2 2026-01-20 16:51:09 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-19 | to=2026-01-25
+LOG4J2 2026-01-20 16:51:09 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-19 | to=2026-01-25
+LOG4J2 2026-01-20 16:51:09 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-19, endDate=2026-01-25, periodType=weekly
+LOG4J2 2026-01-20 16:51:09 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-19, endDate=2026-01-25, periodType=weekly
+LOG4J2 2026-01-20 16:51:10 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 0
+LOG4J2 2026-01-20 16:51:10 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 0
+LOG4J2 2026-01-20 16:51:10 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 0
+LOG4J2 2026-01-20 16:51:10 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 0
+LOG4J2 2026-01-20 16:51:22 DEBUG com.example.attendance_service.controller.AttendanceController - Fetching leave balance for employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+LOG4J2 2026-01-20 16:51:22 DEBUG com.example.attendance_service.controller.AttendanceController - Fetching leave balance for employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+LOG4J2 2026-01-20 16:51:22 INFO  com.example.attendance_service.service.AttendanceService - Fetching employee leave balances → employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+LOG4J2 2026-01-20 16:51:22 INFO  com.example.attendance_service.service.AttendanceService - Fetching employee leave balances → employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+LOG4J2 2026-01-20 16:51:22 WARN  com.example.attendance_service.service.AttendanceService - No attendance records found for employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+LOG4J2 2026-01-20 16:51:22 WARN  com.example.attendance_service.service.AttendanceService - No attendance records found for employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+LOG4J2 2026-01-20 16:58:10 DEBUG com.example.attendance_service.controller.AttendanceController - Fetching weekly attendance | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | projectId=da2952de-33cc-4afd-8aed-06c79bede1bb | weekStart=2026-01-19
+LOG4J2 2026-01-20 17:12:15 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-19 | to=2026-01-25
+LOG4J2 2026-01-20 17:12:15 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-19 | to=2026-01-25
+LOG4J2 2026-01-20 17:12:15 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-19, endDate=2026-01-25, periodType=weekly
+LOG4J2 2026-01-20 17:12:15 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-19, endDate=2026-01-25, periodType=weekly
+LOG4J2 2026-01-20 17:12:16 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 0
+LOG4J2 2026-01-20 17:12:16 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 0
+LOG4J2 2026-01-20 17:12:16 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 0
+LOG4J2 2026-01-20 17:12:16 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 0
+LOG4J2 2026-01-20 17:12:18 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=monthly | from=2026-01-01 | to=2026-01-31
+LOG4J2 2026-01-20 17:12:18 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-01, endDate=2026-01-31, periodType=monthly
+LOG4J2 2026-01-20 17:12:19 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 7
+LOG4J2 2026-01-20 17:12:19 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 1
+LOG4J2 2026-01-20 17:12:19 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=monthly | from=2025-12-01 | to=2025-12-31
+LOG4J2 2026-01-20 17:12:19 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2025-12-01, endDate=2025-12-31, periodType=monthly
+LOG4J2 2026-01-20 17:12:20 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=monthly | from=2025-11-01 | to=2025-11-30
+LOG4J2 2026-01-20 17:12:20 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2025-11-01, endDate=2025-11-30, periodType=monthly
+LOG4J2 2026-01-20 17:12:20 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 0
+LOG4J2 2026-01-20 17:12:20 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 0
+LOG4J2 2026-01-20 17:12:21 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=monthly | from=2025-10-01 | to=2025-10-31
+LOG4J2 2026-01-20 17:12:21 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2025-10-01, endDate=2025-10-31, periodType=monthly
+LOG4J2 2026-01-20 17:12:21 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 0
+LOG4J2 2026-01-20 17:12:21 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 0
+LOG4J2 2026-01-20 17:12:23 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=monthly | from=2025-11-01 | to=2025-11-30
+LOG4J2 2026-01-20 17:12:23 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2025-11-01, endDate=2025-11-30, periodType=monthly
+LOG4J2 2026-01-20 17:12:23 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 0
+LOG4J2 2026-01-20 17:12:23 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 0
+LOG4J2 2026-01-20 17:12:23 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=monthly | from=2025-12-01 | to=2025-12-31
+LOG4J2 2026-01-20 17:12:24 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2025-12-01, endDate=2025-12-31, periodType=monthly
+LOG4J2 2026-01-20 17:12:24 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 0
+LOG4J2 2026-01-20 17:12:24 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 0
+LOG4J2 2026-01-20 17:12:24 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=monthly | from=2026-01-01 | to=2026-01-31
+LOG4J2 2026-01-20 17:12:24 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-01, endDate=2026-01-31, periodType=monthly
+LOG4J2 2026-01-20 17:12:24 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 7
+LOG4J2 2026-01-20 17:12:24 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 1
+LOG4J2 2026-01-20 17:12:37 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-19 | to=2026-01-25
+LOG4J2 2026-01-20 17:12:37 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-19 | to=2026-01-25
+LOG4J2 2026-01-20 17:12:38 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-19, endDate=2026-01-25, periodType=weekly
+LOG4J2 2026-01-20 17:12:38 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-19, endDate=2026-01-25, periodType=weekly
+LOG4J2 2026-01-20 17:13:14 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-19 | to=2026-01-25
+LOG4J2 2026-01-20 17:13:14 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-19 | to=2026-01-25
+LOG4J2 2026-01-20 17:13:14 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-19, endDate=2026-01-25, periodType=weekly
+LOG4J2 2026-01-20 17:13:14 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-19, endDate=2026-01-25, periodType=weekly
+LOG4J2 2026-01-20 17:13:15 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 0
+LOG4J2 2026-01-20 17:13:15 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 0
+LOG4J2 2026-01-20 17:13:19 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-12 | to=2026-01-18
+LOG4J2 2026-01-20 17:13:19 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-12, endDate=2026-01-18, periodType=weekly
+LOG4J2 2026-01-20 17:13:19 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 7
+LOG4J2 2026-01-20 17:13:19 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 1
+LOG4J2 2026-01-20 17:24:53 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-19 | to=2026-01-25
+LOG4J2 2026-01-20 17:24:53 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-19 | to=2026-01-25
+LOG4J2 2026-01-20 17:24:53 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-19, endDate=2026-01-25, periodType=weekly
+LOG4J2 2026-01-20 17:24:53 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-19, endDate=2026-01-25, periodType=weekly
+LOG4J2 2026-01-20 17:24:53 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 0
+LOG4J2 2026-01-20 17:24:53 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 0
+LOG4J2 2026-01-20 17:24:53 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 0
+LOG4J2 2026-01-20 17:24:53 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 0
+LOG4J2 2026-01-20 17:39:06 DEBUG com.example.attendance_service.controller.AttendanceController - Fetching monthly attendance | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | start=2026-01-01 | end=2026-01-31
+LOG4J2 2026-01-20 17:39:11 DEBUG com.example.attendance_service.controller.AttendanceController - Fetching weekly attendance | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | projectId=da2952de-33cc-4afd-8aed-06c79bede1bb | weekStart=2026-01-19
+LOG4J2 2026-01-21 12:03:49 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-19 | to=2026-01-25
+LOG4J2 2026-01-21 12:03:49 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-19 | to=2026-01-25
+LOG4J2 2026-01-21 12:03:49 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-19, endDate=2026-01-25, periodType=weekly
+LOG4J2 2026-01-21 12:03:49 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-19, endDate=2026-01-25, periodType=weekly
+LOG4J2 2026-01-21 12:03:49 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 0
+LOG4J2 2026-01-21 12:03:49 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 0
+LOG4J2 2026-01-21 12:03:49 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 0
+LOG4J2 2026-01-21 12:03:49 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 0
+LOG4J2 2026-01-21 12:03:51 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-12 | to=2026-01-18
+LOG4J2 2026-01-21 12:03:51 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-12, endDate=2026-01-18, periodType=weekly
+LOG4J2 2026-01-21 12:03:51 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 7
+LOG4J2 2026-01-21 12:03:51 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 1
+LOG4J2 2026-01-21 12:04:20 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-19 | to=2026-01-25
+LOG4J2 2026-01-21 12:04:20 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-19 | to=2026-01-25
+LOG4J2 2026-01-21 12:04:20 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-19, endDate=2026-01-25, periodType=weekly
+LOG4J2 2026-01-21 12:04:20 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-19, endDate=2026-01-25, periodType=weekly
+LOG4J2 2026-01-21 12:04:21 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 0
+LOG4J2 2026-01-21 12:04:21 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 0
+LOG4J2 2026-01-21 12:04:21 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 0
+LOG4J2 2026-01-21 12:04:21 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 0
+LOG4J2 2026-01-22 12:39:57 DEBUG com.example.attendance_service.controller.AttendanceController - Fetching weekly attendance | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | projectId=da2952de-33cc-4afd-8aed-06c79bede1bb | weekStart=2026-01-19
+LOG4J2 2026-01-22 12:40:18 INFO  com.example.attendance_service.controller.AttendanceController - Saving weekly attendance | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | projectId=da2952de-33cc-4afd-8aed-06c79bede1bb | employeeName=undefined
+LOG4J2 2026-01-22 12:40:18 INFO  com.example.attendance_service.service.AttendanceService - Save/Update attendance → employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2, projectId=da2952de-33cc-4afd-8aed-06c79bede1bb, employeeName=undefined
+LOG4J2 2026-01-22 12:44:24 INFO  com.example.attendance_service.controller.AttendanceController - Saving weekly attendance | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | projectId=da2952de-33cc-4afd-8aed-06c79bede1bb | employeeName=undefined
+LOG4J2 2026-01-22 12:44:27 INFO  com.example.attendance_service.service.AttendanceService - Save/Update attendance → employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2, projectId=da2952de-33cc-4afd-8aed-06c79bede1bb, employeeName=undefined
+LOG4J2 2026-01-22 12:44:31 INFO  com.example.attendance_service.controller.AttendanceController - Saving weekly attendance | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | projectId=da2952de-33cc-4afd-8aed-06c79bede1bb | employeeName=undefined
+LOG4J2 2026-01-22 12:44:42 INFO  com.example.attendance_service.service.AttendanceService - Save/Update attendance → employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2, projectId=da2952de-33cc-4afd-8aed-06c79bede1bb, employeeName=undefined
+LOG4J2 2026-01-22 12:53:00 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-19 | to=2026-01-25
+LOG4J2 2026-01-22 12:53:00 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-19 | to=2026-01-25
+LOG4J2 2026-01-22 12:53:00 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-19, endDate=2026-01-25, periodType=weekly
+LOG4J2 2026-01-22 12:53:00 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-19, endDate=2026-01-25, periodType=weekly
+LOG4J2 2026-01-22 12:53:01 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 7
+LOG4J2 2026-01-22 12:53:01 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 1
+LOG4J2 2026-01-22 12:53:02 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-12 | to=2026-01-18
+LOG4J2 2026-01-22 12:53:03 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-12, endDate=2026-01-18, periodType=weekly
+LOG4J2 2026-01-22 12:53:03 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 7
+LOG4J2 2026-01-22 12:53:03 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 1
+LOG4J2 2026-01-22 12:53:31 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-19 | to=2026-01-25
+LOG4J2 2026-01-22 12:53:31 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-19 | to=2026-01-25
+LOG4J2 2026-01-22 12:53:31 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-19, endDate=2026-01-25, periodType=weekly
+LOG4J2 2026-01-22 12:53:32 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-19, endDate=2026-01-25, periodType=weekly
+LOG4J2 2026-01-22 12:53:32 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 7
+LOG4J2 2026-01-22 12:53:32 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 1
+LOG4J2 2026-01-22 12:53:32 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 7
+LOG4J2 2026-01-22 12:53:32 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 1
+LOG4J2 2026-01-22 12:53:46 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-12 | to=2026-01-18
+LOG4J2 2026-01-22 12:53:46 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-12, endDate=2026-01-18, periodType=weekly
+LOG4J2 2026-01-22 12:53:46 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 7
+LOG4J2 2026-01-22 12:53:46 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 1
+LOG4J2 2026-01-22 12:53:47 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-05 | to=2026-01-11
+LOG4J2 2026-01-22 12:53:48 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-05, endDate=2026-01-11, periodType=weekly
+LOG4J2 2026-01-22 12:53:48 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 0
+LOG4J2 2026-01-22 12:53:48 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 0
+LOG4J2 2026-01-22 12:53:49 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-12 | to=2026-01-18
+LOG4J2 2026-01-22 12:53:49 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-12, endDate=2026-01-18, periodType=weekly
+LOG4J2 2026-01-22 12:53:50 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 7
+LOG4J2 2026-01-22 12:53:50 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 1
+LOG4J2 2026-01-22 12:53:54 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=monthly | from=2026-01-01 | to=2026-01-31
+LOG4J2 2026-01-22 12:53:54 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-01, endDate=2026-01-31, periodType=monthly
+LOG4J2 2026-01-22 12:53:54 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 14
+LOG4J2 2026-01-22 12:53:54 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 1
+LOG4J2 2026-01-22 12:53:56 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=monthly | from=2025-12-01 | to=2025-12-31
+LOG4J2 2026-01-22 12:53:56 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2025-12-01, endDate=2025-12-31, periodType=monthly
+LOG4J2 2026-01-22 12:53:57 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 0
+LOG4J2 2026-01-22 12:53:57 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 0
+LOG4J2 2026-01-22 12:53:58 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=monthly | from=2025-11-01 | to=2025-11-30
+LOG4J2 2026-01-22 12:53:58 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2025-11-01, endDate=2025-11-30, periodType=monthly
+LOG4J2 2026-01-22 12:53:59 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 0
+LOG4J2 2026-01-22 12:53:59 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 0
+LOG4J2 2026-01-22 12:54:01 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=monthly | from=2025-12-01 | to=2025-12-31
+LOG4J2 2026-01-22 12:54:01 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2025-12-01, endDate=2025-12-31, periodType=monthly
+LOG4J2 2026-01-22 12:54:01 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 0
+LOG4J2 2026-01-22 12:54:01 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 0
+LOG4J2 2026-01-22 12:54:01 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=monthly | from=2026-01-01 | to=2026-01-31
+LOG4J2 2026-01-22 12:54:01 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-01, endDate=2026-01-31, periodType=monthly
+LOG4J2 2026-01-22 12:54:02 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 14
+LOG4J2 2026-01-22 12:54:02 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 1
+LOG4J2 2026-01-23 09:39:49 DEBUG com.example.attendance_service.controller.AttendanceController - Fetching weekly attendance | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | projectId=da2952de-33cc-4afd-8aed-06c79bede1bb | weekStart=2026-01-19
+LOG4J2 2026-01-23 15:39:29 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-19 | to=2026-01-25
+LOG4J2 2026-01-23 15:39:29 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-19 | to=2026-01-25
+LOG4J2 2026-01-23 15:39:30 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-19, endDate=2026-01-25, periodType=weekly
+LOG4J2 2026-01-23 15:39:30 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-19, endDate=2026-01-25, periodType=weekly
+LOG4J2 2026-01-23 15:39:30 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-12 | to=2026-01-18
+LOG4J2 2026-01-23 15:39:31 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-12, endDate=2026-01-18, periodType=weekly
+LOG4J2 2026-01-23 15:39:32 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-05 | to=2026-01-11
+LOG4J2 2026-01-23 15:39:32 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-05, endDate=2026-01-11, periodType=weekly
+LOG4J2 2026-01-23 15:39:32 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 7
+LOG4J2 2026-01-23 15:39:32 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 7
+LOG4J2 2026-01-23 15:39:32 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 1
+LOG4J2 2026-01-23 15:39:32 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 1
+LOG4J2 2026-01-23 15:39:32 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 7
+LOG4J2 2026-01-23 15:39:32 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 1
+LOG4J2 2026-01-23 15:39:33 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 0
+LOG4J2 2026-01-23 15:39:33 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 0
+LOG4J2 2026-01-23 15:39:34 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-12 | to=2026-01-18
+LOG4J2 2026-01-23 15:39:34 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-12, endDate=2026-01-18, periodType=weekly
+LOG4J2 2026-01-23 15:39:34 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 7
+LOG4J2 2026-01-23 15:39:34 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 1
+LOG4J2 2026-01-23 15:42:30 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-19 | to=2026-01-25
+LOG4J2 2026-01-23 15:42:30 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-19 | to=2026-01-25
+LOG4J2 2026-01-23 15:42:30 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-19, endDate=2026-01-25, periodType=weekly
+LOG4J2 2026-01-23 15:42:30 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-19, endDate=2026-01-25, periodType=weekly
+LOG4J2 2026-01-23 15:42:30 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 7
+LOG4J2 2026-01-23 15:42:30 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 1
+LOG4J2 2026-01-23 15:42:30 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 7
+LOG4J2 2026-01-23 15:42:30 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 1
+LOG4J2 2026-01-30 10:41:57 DEBUG com.example.attendance_service.controller.AttendanceController - Fetching weekly attendance | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | projectId=da2952de-33cc-4afd-8aed-06c79bede1bb | weekStart=2026-01-26
+LOG4J2 2026-01-30 10:42:03 DEBUG com.example.attendance_service.controller.AttendanceController - Fetching weekly attendance | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | projectId=da2952de-33cc-4afd-8aed-06c79bede1bb | weekStart=2026-01-26
+LOG4J2 2026-01-30 10:42:18 DEBUG com.example.attendance_service.controller.AttendanceController - Fetching weekly attendance | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | projectId=da2952de-33cc-4afd-8aed-06c79bede1bb | weekStart=2026-01-26
+LOG4J2 2026-01-30 10:42:20 DEBUG com.example.attendance_service.controller.AttendanceController - Fetching weekly attendance | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | projectId=da2952de-33cc-4afd-8aed-06c79bede1bb | weekStart=2026-02-02
+LOG4J2 2026-01-30 10:46:51 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-26 | to=2026-02-01
+LOG4J2 2026-01-30 10:46:51 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-01-26 | to=2026-02-01
+LOG4J2 2026-01-30 10:46:51 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-26, endDate=2026-02-01, periodType=weekly
+LOG4J2 2026-01-30 10:46:51 INFO  com.example.attendance_service.service.AttendanceService - Approval summary request → startDate=2026-01-26, endDate=2026-02-01, periodType=weekly
+LOG4J2 2026-01-30 10:46:52 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 7
+LOG4J2 2026-01-30 10:46:52 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 1
+LOG4J2 2026-01-30 10:46:52 DEBUG com.example.attendance_service.service.AttendanceService - Records in range after filter → 7
+LOG4J2 2026-01-30 10:46:52 DEBUG com.example.attendance_service.service.AttendanceService - Grouped approval records → 1

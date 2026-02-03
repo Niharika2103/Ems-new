@@ -1,10 +1,12 @@
 import pool from "../../config/db.js";
-
+import logger from "../../config/logger.js";   // ✅ ADD LOGGER
 
 import { sendShiftMail } from "../utils/sendMail.js";
 
 export const assignShift = async (req, res) => {
   try {
+    logger.info("Assign Shift API called");
+
     const {
       employee_id,
       shift_id,
@@ -15,7 +17,7 @@ export const assignShift = async (req, res) => {
       reason
     } = req.body;
 
-    //  Prevent overlapping assignments
+    // Prevent overlapping assignments
     const overlap = await pool.query(
       `
       SELECT 1
@@ -28,6 +30,7 @@ export const assignShift = async (req, res) => {
     );
 
     if (overlap.rowCount > 0) {
+      logger.warn(`Shift overlap blocked | employeeId=${employee_id}`);
       return res
         .status(400)
         .json({ message: "Shift already assigned for this period" });
@@ -55,6 +58,8 @@ export const assignShift = async (req, res) => {
 
     const assignment = rows[0];
 
+    logger.info(`Shift assigned | assignmentId=${assignment.id}`);
+
     // Get employee details
     const emp = await pool.query(
       `SELECT name, email FROM user_employees_master WHERE id=$1`,
@@ -71,15 +76,16 @@ export const assignShift = async (req, res) => {
     const email = emp.rows[0].email;
     const shiftName = shift.rows[0].shift_name;
 
-    // Date checks
     const effDate = new Date(effective_from);
     const today = new Date();
 
     today.setHours(0, 0, 0, 0);
     effDate.setHours(0, 0, 0, 0);
 
-    // CASE 1 — Effective today -> send email immediately
+    // CASE 1 — Effective today
     if (effDate.getTime() === today.getTime()) {
+      logger.info(`Sending shift assignment email | employee=${empName}`);
+
       await sendShiftMail(
         email,
         "Shift Assigned",
@@ -101,10 +107,9 @@ export const assignShift = async (req, res) => {
       );
     }
 
-    // CASE 2 — Future date, reminder email handled by cron job automatically
     res.status(201).json(assignment);
   } catch (err) {
-    console.error(err);
+    logger.error(`Assign Shift Error | ${err.message}`);
     res.status(500).json({ message: "Failed to assign shift" });
   }
 };
@@ -113,6 +118,8 @@ export const assignShift = async (req, res) => {
 /* ASSIGNMENT HISTORY */
 export const getAssignmentHistory = async (req, res) => {
   try {
+    logger.info("Get Assignment History API called");
+
     const { rows } = await pool.query(`
       SELECT
         esa.id,
@@ -135,9 +142,11 @@ export const getAssignmentHistory = async (req, res) => {
       ORDER BY esa.effective_from DESC
     `);
 
+    logger.info(`Assignment history fetched | count=${rows.length}`);
+
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    logger.error(`Assignment History Error | ${err.message}`);
     res.status(500).json({ message: "Failed to load history" });
   }
 };
@@ -146,6 +155,9 @@ export const getAssignmentHistory = async (req, res) => {
 export const updateAssignment = async (req, res) => {
   try {
     const { id } = req.params;
+
+    logger.info(`Update Assignment API called | assignmentId=${id}`);
+
     const {
       shift_id,
       effective_from,
@@ -155,7 +167,7 @@ export const updateAssignment = async (req, res) => {
       reason
     } = req.body;
 
-    // 1️⃣ Fetch existing assignment
+    // Fetch existing assignment
     const { rows } = await pool.query(
       `
       SELECT employee_id, effective_from
@@ -166,19 +178,20 @@ export const updateAssignment = async (req, res) => {
     );
 
     if (rows.length === 0) {
+      logger.warn(`Assignment not found | id=${id}`);
       return res.status(404).json({ message: "Assignment not found" });
     }
 
     const existingFrom = rows[0].effective_from;
 
-    // 2️⃣ Block edit if not PENDING
+    // Block edit if not PENDING
     if (new Date(existingFrom) <= new Date()) {
+      logger.warn(`Edit blocked (not pending) | assignmentId=${id}`);
       return res
         .status(400)
         .json({ message: "Only PENDING shifts can be edited" });
     }
 
-    // 3️⃣ Update allowed fields only
     await pool.query(
       `
       UPDATE employee_shift_assignment
@@ -201,12 +214,15 @@ export const updateAssignment = async (req, res) => {
       ]
     );
 
+    logger.info(`Assignment updated successfully | assignmentId=${id}`);
+
     res.json({ message: "Shift updated successfully" });
   } catch (err) {
-    console.error(err);
+    logger.error(`Update Assignment Error | ${err.message}`);
     res.status(500).json({ message: "Failed to update assignment" });
   }
 };
+
 
 /* GET CURRENT SHIFT BY EMPLOYEE ID + DATE */
 export const getCurrentShiftByEmployee = async (req, res) => {
@@ -214,7 +230,10 @@ export const getCurrentShiftByEmployee = async (req, res) => {
     const { employeeId } = req.params;
     const { date } = req.query;
 
+    logger.info(`Get Current Shift API | employeeId=${employeeId} | date=${date}`);
+
     if (!date) {
+      logger.warn("Date missing in getCurrentShiftByEmployee");
       return res.status(400).json({ message: "Date is required" });
     }
 
@@ -241,9 +260,11 @@ export const getCurrentShiftByEmployee = async (req, res) => {
       [employeeId, date]
     );
 
+    logger.info(`Current shift fetched | found=${rows.length > 0}`);
+
     res.json(rows[0] || null);
   } catch (err) {
-    console.error("Failed to fetch current shift", err);
+    logger.error(`Get Current Shift Error | ${err.message}`);
     res.status(500).json({ message: "Failed to fetch current shift" });
   }
 };
