@@ -16,6 +16,8 @@ const AdminLetterGenerator = () => {
   const [employeeLettersMap, setEmployeeLettersMap] = useState({}); // { empId: [ {name, url}, ... ] }
   const [loadingEmployees, setLoadingEmployees] = useState(false);
   const [generatingFor, setGeneratingFor] = useState(null); // employeeId being processed
+  const [searchTerm, setSearchTerm] = useState("");
+
 
   // Supported letter types (must match backend exactly)
   const letterTypes = [
@@ -208,14 +210,35 @@ const handleSend = async (employeeId, fileName) => {
       <div style={styles.mainContent}>
         {/* Employee List */}
         <div style={styles.employeeListContainer}>
-          <h3 style={styles.listHeader}>Employees ({employees.length})</h3>
+  <h3 style={styles.listHeader}>Employees ({employees.length})</h3>
+
+  {/* 🔍 SEARCH INPUT */}
+  <input
+    type="text"
+    placeholder="Search by name, emp id, department, designation..."
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    style={styles.searchInput}
+  />
+
           {loadingEmployees ? (
             <p style={styles.loadingText}>Loading employees...</p>
           ) : employees.length === 0 ? (
             <p style={styles.emptyText}>No employees found.</p>
           ) : (
             <div style={styles.employeeList}>
-              {employees.map((emp) => {
+              {employees
+  .filter((emp) => {
+    const q = searchTerm.toLowerCase();
+    return (
+      emp.name?.toLowerCase().includes(q) ||
+      emp.employee_id?.toLowerCase().includes(q) ||
+      emp.department?.toLowerCase().includes(q) ||
+      emp.designation?.toLowerCase().includes(q)
+    );
+  })
+  .map((emp) => {
+
                 const letters = employeeLettersMap[emp.id] || [];
                 return (
                   <div key={emp.id} style={styles.employeeCard}>
@@ -286,6 +309,17 @@ const handleSend = async (employeeId, fileName) => {
 
 // Styles
 const styles = {
+
+  searchInput: {
+  width: "100%",
+  padding: "8px 12px",
+  marginBottom: "12px",
+  borderRadius: "6px",
+  border: "1px solid #ccc",
+  fontSize: "14px",
+  outline: "none",
+},
+
   container: {
     maxWidth: '1400px',
     margin: '0 auto',
@@ -451,6 +485,7 @@ deleteBtn: {
     borderRadius: '4px',
     cursor: 'pointer'
   }
+  
 };
 
 export default AdminLetterGenerator;

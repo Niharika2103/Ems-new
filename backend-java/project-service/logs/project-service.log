@@ -1,3 +1,6 @@
+LOG4J2 2026-01-27 10:49:11 INFO  com.example.project_service.ProjectServiceApplication - Starting ProjectServiceApplication using Java 21.0.8 with PID 22420 (D:\Niharika\ems1.o\EMSPROJECT1.O\backend-java\project-service\target\classes started by nagab in D:\Niharika\ems1.o\EMSPROJECT1.O\backend-java\project-service)
+LOG4J2 2026-01-27 10:49:11 DEBUG com.example.project_service.ProjectServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
+LOG4J2 2026-01-27 10:49:11 INFO  com.example.project_service.ProjectServiceApplication - No active profile set, falling back to 1 default profile: "default"
 2026-01-16 11:09:17 INFO  com.example.project_service.ProjectServiceApplication - Starting ProjectServiceApplication using Java 24 with PID 22416 (C:\Users\DELL\Desktop\EMSPROJECT1.O\EMSPROJECT1.NEW\backend-java\project-service\target\classes started by DELL in C:\Users\DELL\Desktop\EMSPROJECT1.O\EMSPROJECT1.NEW\backend-java\project-service)
 2026-01-16 11:09:17 DEBUG com.example.project_service.ProjectServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
 2026-01-16 11:09:17 INFO  com.example.project_service.ProjectServiceApplication - No active profile set, falling back to 1 default profile: "default"
@@ -91,6 +94,29 @@ LOG4J2 2026-01-19 19:01:56 INFO  com.example.project_service.controller.ProjectC
 LOG4J2 2026-01-19 19:01:56 INFO  com.example.project_service.service.ProjectService - Fetching all projects
 LOG4J2 2026-01-19 19:01:56 INFO  com.example.project_service.controller.ProjectController - Fetching all projects
 LOG4J2 2026-01-19 19:01:56 INFO  com.example.project_service.service.ProjectService - Fetching all projects
+LOG4J2 2026-01-20 17:05:23 INFO  com.example.project_service.ProjectServiceApplication - Starting ProjectServiceApplication using Java 21.0.8 with PID 12108 (C:\Users\Admin\EMSNEW\EMSProject\backend-java\project-service\target\classes started by Admin in C:\Users\Admin\EMSNEW\EMSProject\backend-java\project-service)
+LOG4J2 2026-01-20 17:05:23 DEBUG com.example.project_service.ProjectServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
+LOG4J2 2026-01-20 17:05:23 INFO  com.example.project_service.ProjectServiceApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-01-20 17:05:28 INFO  com.example.project_service.service.ProjectAssignmentService - ProjectAssignmentService initialized
+LOG4J2 2026-01-20 17:05:28 INFO  com.example.project_service.service.ProjectService - ProjectService initialized
+LOG4J2 2026-01-20 17:05:28 INFO  com.example.project_service.controller.ProjectController - ProjectController initialized
+LOG4J2 2026-01-20 17:05:28 INFO  com.example.project_service.ProjectServiceApplication - Started ProjectServiceApplication in 6.023 seconds (process running for 6.893)
+LOG4J2 2026-01-20 17:06:33 INFO  com.example.project_service.service.ProjectAssignmentService - Fetching active projects for employee 79813636-6baf-42d6-bcf5-3caa14c0a6bf
+LOG4J2 2026-01-22 12:42:48 INFO  com.example.project_service.ProjectServiceApplication - Starting ProjectServiceApplication using Java 21.0.8 with PID 2600 (C:\Users\Admin\EMSNEW\EMSProject\backend-java\project-service\target\classes started by Admin in C:\Users\Admin\EMSNEW\EMSProject\backend-java\project-service)
+LOG4J2 2026-01-22 12:42:48 DEBUG com.example.project_service.ProjectServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
+LOG4J2 2026-01-22 12:42:48 INFO  com.example.project_service.ProjectServiceApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-01-22 12:42:51 INFO  com.example.project_service.service.ProjectAssignmentService - ProjectAssignmentService initialized
+LOG4J2 2026-01-22 12:42:52 INFO  com.example.project_service.service.ProjectService - ProjectService initialized
+LOG4J2 2026-01-22 12:42:52 INFO  com.example.project_service.controller.ProjectController - ProjectController initialized
+LOG4J2 2026-01-22 12:42:52 INFO  com.example.project_service.ProjectServiceApplication - Started ProjectServiceApplication in 4.321 seconds (process running for 5.211)
+LOG4J2 2026-01-22 12:43:03 INFO  com.example.project_service.service.ProjectAssignmentService - Fetching active projects for employee 79813636-6baf-42d6-bcf5-3caa14c0a6bf
+LOG4J2 2026-01-23 15:09:45 INFO  com.example.project_service.ProjectServiceApplication - Starting ProjectServiceApplication using Java 21.0.8 with PID 16600 (C:\Users\Admin\EMSNEW\EMSProject\backend-java\project-service\target\classes started by Admin in C:\Users\Admin\EMSNEW\EMSProject\backend-java\project-service)
+LOG4J2 2026-01-23 15:09:45 DEBUG com.example.project_service.ProjectServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
+LOG4J2 2026-01-23 15:09:45 INFO  com.example.project_service.ProjectServiceApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-01-23 15:09:49 INFO  com.example.project_service.service.ProjectAssignmentService - ProjectAssignmentService initialized
+LOG4J2 2026-01-23 15:09:49 INFO  com.example.project_service.service.ProjectService - ProjectService initialized
+LOG4J2 2026-01-23 15:09:49 INFO  com.example.project_service.controller.ProjectController - ProjectController initialized
+LOG4J2 2026-01-23 15:09:49 INFO  com.example.project_service.ProjectServiceApplication - Started ProjectServiceApplication in 4.548 seconds (process running for 5.459)
 LOG4J2 2026-01-20 11:01:42 INFO  com.example.project_service.ProjectServiceApplication - Starting ProjectServiceApplication using Java 24 with PID 8416 (C:\Users\DELL\Desktop\EMSPROJECT1.O\EMSPROJECT1.NEW\backend-java\project-service\target\classes started by DELL in C:\Users\DELL\Desktop\EMSPROJECT1.O\EMSPROJECT1.NEW\backend-java\project-service)
 LOG4J2 2026-01-20 11:01:42 DEBUG com.example.project_service.ProjectServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
 LOG4J2 2026-01-20 11:01:42 INFO  com.example.project_service.ProjectServiceApplication - No active profile set, falling back to 1 default profile: "default"

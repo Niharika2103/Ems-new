@@ -175,6 +175,18 @@ const SalaryStructure = () => {
     employment_type: ''
   };
 
+  // ===== Thousand conversion helpers =====
+const toThousands = (value) => {
+  if (value === "" || value === null || value === undefined) return "";
+  return Number(value) / 1000;
+};
+
+const fromThousands = (value) => {
+  if (value === "") return "";
+  return Number(value) * 1000;
+};
+
+
   const [activeStep, setActiveStep] = useState(0);
   const dispatch = useDispatch();
   const [formData, setFormData] = useState(initialFormData);
@@ -271,11 +283,22 @@ const SalaryStructure = () => {
   ];
 
   // block negative values
+  // if (salaryFields.includes(name)) {
+  //   if (value === '-' || Number(value) < 0) {
+  //     return;
+  //   }
+  // }
+
   if (salaryFields.includes(name)) {
-    if (value === '-' || Number(value) < 0) {
-      return;
-    }
-  }
+  if (value === '-' || Number(value) < 0) return;
+
+  setFormData(prev => ({
+    ...prev,
+    [name]: fromThousands(value) // ⬅️ store actual amount
+  }));
+  return;
+}
+
 
   // digits only for account number
   if (name === "accountNumber") {
@@ -808,65 +831,86 @@ const handleSave = async () => {
 
               {/* Earnings */}
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="Basic Pay" type="number" name="basicPay" value={formData.basicPay} onChange={handleChange}
-                  error={!!errors.basicPay} helperText={errors.basicPay || ''} />
+               <TextField
+  fullWidth
+  label="Basic Pay"
+  type="number"
+  name="basicPay"
+  placeholder="Amount (in thousands)"
+  value={toThousands(formData.basicPay)}
+  onChange={handleChange}
+  error={!!errors.basicPay}
+ 
+/>
+
               </Grid>
 
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="HRA" type="number" name="houseRentAllowance" value={formData.houseRentAllowance} onChange={handleChange}
+                <TextField fullWidth label="HRA" type="number" name="houseRentAllowance"  placeholder="Amount (in thousands)" value={toThousands(formData.houseRentAllowance)}
+ onChange={handleChange}
                   error={!!errors.houseRentAllowance} helperText={errors.houseRentAllowance || ''} />
               </Grid>
 
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="Medical Allowance" type="number" name="medicalAllowance" value={formData.medicalAllowance} onChange={handleChange}
+                <TextField fullWidth label="Medical Allowance" type="number" name="medicalAllowance"  placeholder="Amount (in thousands)" value={toThousands(formData.medicalAllowance)}
+ onChange={handleChange}
                   error={!!errors.medicalAllowance} helperText={errors.medicalAllowance || ''} />
               </Grid>
 
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="Conveyance Allowance" type="number" name="conveyanceAllowance" value={formData.conveyanceAllowance} onChange={handleChange}
+                <TextField fullWidth label="Conveyance Allowance" type="number" name="conveyanceAllowance"  placeholder="Amount (in thousands)" value={toThousands(formData.conveyanceAllowance)}
+ onChange={handleChange}
                   error={!!errors.conveyanceAllowance} helperText={errors.conveyanceAllowance || ''} />
               </Grid>
 
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="Special Allowance" type="number" name="specialAllowance" value={formData.specialAllowance} onChange={handleChange}
+                <TextField fullWidth label="Special Allowance" type="number" name="specialAllowance"  placeholder="Amount (in thousands)" value={toThousands(formData.specialAllowance)}
+ onChange={handleChange}
                   error={!!errors.specialAllowance} helperText={errors.specialAllowance || ''} />
               </Grid>
 
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="Other Allowance" type="number" name="otherAllowance" value={formData.otherAllowance} onChange={handleChange}
+                <TextField fullWidth label="Other Allowance" type="number" name="otherAllowance"  placeholder="Amount (in thousands)" value={toThousands(formData.otherAllowance)}
+ onChange={handleChange}
                   error={!!errors.otherAllowance} helperText={errors.otherAllowance || ''} />
               </Grid>
 
               {/* NEW — Drift Allowance */}
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="Drift Allowance" type="number" name="driftAllowance" value={formData.driftAllowance} onChange={handleChange}
+                <TextField fullWidth label="Drift Allowance" type="number" name="driftAllowance"  placeholder="Amount (in thousands)" value={toThousands(formData.driftAllowance)}
+ onChange={handleChange}
                   error={!!errors.driftAllowance} helperText={errors.driftAllowance || ''} />
               </Grid>
 
               <Grid item xs={12}><Divider /><Typography variant="subtitle1" color="primary">Deductions</Typography></Grid>
 
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="Provident Fund" type="number" name="providentFund" value={formData.providentFund} onChange={handleChange}
+                <TextField fullWidth label="Provident Fund" type="number" name="providentFund"   placeholder="Amount (in thousands)" value={toThousands(formData.providentFund)}
+ onChange={handleChange}
                   error={!!errors.providentFund} helperText={errors.providentFund || ''} />
               </Grid>
 
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="Professional Tax" type="number" name="professionalTax" value={formData.professionalTax} onChange={handleChange}
+                <TextField fullWidth label="Professional Tax" type="number" name="professionalTax"  placeholder="Amount (in thousands)" value={toThousands(formData.professionalTax)}
+ onChange={handleChange}
                   error={!!errors.professionalTax} helperText={errors.professionalTax || ''} />
               </Grid>
 
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="Income Tax (TDS)" type="number" name="incomeTax" value={formData.incomeTax} onChange={handleChange}
+                <TextField fullWidth label="Income Tax (TDS)" type="number" name="incomeTax"  placeholder="Amount (in thousands)" value={toThousands(formData.incomeTax)}
+ onChange={handleChange}
                   error={!!errors.incomeTax} helperText={errors.incomeTax || ''} />
               </Grid>
 
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="Loan Deductions" type="number" name="loanDeductions" value={formData.loanDeductions ?? ""} onChange={handleChange}
+                <TextField fullWidth label="Loan Deductions" type="number" name="loanDeductions"  placeholder="Amount (in thousands)" value={toThousands(formData.loanDeductions)}
+ onChange={handleChange}
                   error={!!errors.loanDeductions} helperText={errors.loanDeductions || ''} />
               </Grid>
 
               <Grid item xs={12} sm={6}>
-                <TextField fullWidth label="Total Deductions" type="number" name="TotalDeductions" value={formData.TotalDeductions} onChange={handleChange}
+                <TextField fullWidth label="Total Deductions" type="number" name="TotalDeductions"  placeholder="Amount (in thousands)" value={toThousands(formData.TotalDeductions)}
+ onChange={handleChange}
                   error={!!errors.TotalDeductions} helperText={errors.TotalDeductions || ''} />
               </Grid>
 
