@@ -1088,3 +1088,5 @@
 2026-01-30 17:10:37 [INFO] GetPayrollTrend API called | limit=6
 2026-01-30 17:10:37 [INFO] Fetching payroll trend for last 6 months
 2026-01-30 17:10:37 [INFO] Payroll trend rows fetched | count=2
+2026-02-02 09:32:05 [INFO] Admin service running on port 5002
+2026-02-02 09:32:05 [INFO] PostgreSQL connected successfully

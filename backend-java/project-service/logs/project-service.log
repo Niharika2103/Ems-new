@@ -258,3 +258,20 @@ LOG4J2 2026-01-22 12:39:54 INFO  com.example.project_service.service.ProjectAssi
 LOG4J2 2026-01-23 09:44:15 INFO  com.example.project_service.service.ProjectAssignmentService - Fetching active projects for employee 8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
 LOG4J2 2026-01-30 10:41:54 INFO  com.example.project_service.service.ProjectAssignmentService - Fetching active projects for employee 8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
 LOG4J2 2026-01-30 10:42:10 INFO  com.example.project_service.service.ProjectAssignmentService - Fetching active projects for employee 8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+LOG4J2 2026-01-30 16:58:02 INFO  com.example.project_service.service.ProjectAssignmentService - Fetching all project assignments
+LOG4J2 2026-01-30 16:58:02 INFO  com.example.project_service.service.ProjectAssignmentService - Fetching all project assignments
+LOG4J2 2026-01-30 16:58:13 INFO  com.example.project_service.service.ProjectAssignmentService - Project ae15fb45-f038-45c4-912e-bab38af9f79f marked as COMPLETED
+LOG4J2 2026-01-30 16:58:13 INFO  com.example.project_service.service.ProjectAssignmentService - Project ae15fb45-f038-45c4-912e-bab38af9f79f marked as COMPLETED
+LOG4J2 2026-01-30 16:58:14 INFO  com.example.project_service.service.ProjectAssignmentService - Project 3e939d96-1a08-46f7-8a32-f33eacb0edc4 marked as COMPLETED
+LOG4J2 2026-01-30 16:58:14 INFO  com.example.project_service.service.ProjectAssignmentService - Project 3e939d96-1a08-46f7-8a32-f33eacb0edc4 marked as COMPLETED
+LOG4J2 2026-01-30 16:58:14 INFO  com.example.project_service.service.ProjectAssignmentService - Project a5aea718-f11e-4b23-a804-8a6f54183245 marked as COMPLETED
+LOG4J2 2026-01-30 16:58:14 INFO  com.example.project_service.service.ProjectAssignmentService - Project a5aea718-f11e-4b23-a804-8a6f54183245 marked as COMPLETED
+LOG4J2 2026-01-30 16:58:15 INFO  com.example.project_service.service.ProjectAssignmentService - Project 00c9bea1-a104-4205-bd08-1d32613e7fd4 marked as COMPLETED
+LOG4J2 2026-01-30 16:58:15 INFO  com.example.project_service.service.ProjectAssignmentService - Project 00c9bea1-a104-4205-bd08-1d32613e7fd4 marked as COMPLETED
+LOG4J2 2026-02-04 10:29:48 INFO  com.example.project_service.ProjectServiceApplication - Starting ProjectServiceApplication using Java 24 with PID 11452 (C:\Users\DELL\Desktop\EMSPROJECT1.O\EMSPROJECT1.NEW\backend-java\project-service\target\classes started by DELL in C:\Users\DELL\Desktop\EMSPROJECT1.O\EMSPROJECT1.NEW\backend-java\project-service)
+LOG4J2 2026-02-04 10:29:48 DEBUG com.example.project_service.ProjectServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
+LOG4J2 2026-02-04 10:29:48 INFO  com.example.project_service.ProjectServiceApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-02-04 10:29:58 INFO  com.example.project_service.service.ProjectAssignmentService - ProjectAssignmentService initialized
+LOG4J2 2026-02-04 10:29:59 INFO  com.example.project_service.service.ProjectService - ProjectService initialized
+LOG4J2 2026-02-04 10:29:59 INFO  com.example.project_service.controller.ProjectController - ProjectController initialized
+LOG4J2 2026-02-04 10:30:00 INFO  com.example.project_service.ProjectServiceApplication - Started ProjectServiceApplication in 12.821 seconds (process running for 15.493)
