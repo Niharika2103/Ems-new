@@ -162,3 +162,11 @@ LOG4J2 2026-02-04 12:06:16 INFO  com.example.salary_structure.SalaryStructureApp
 LOG4J2 2026-02-04 12:06:16 DEBUG com.example.salary_structure.SalaryStructureApplication - Running with Spring Boot v3.5.7, Spring v6.2.12
 LOG4J2 2026-02-04 12:06:16 INFO  com.example.salary_structure.SalaryStructureApplication - No active profile set, falling back to 1 default profile: "default"
 LOG4J2 2026-02-04 12:06:35 INFO  com.example.salary_structure.SalaryStructureApplication - Started SalaryStructureApplication in 21.154 seconds (process running for 27.993)
+LOG4J2 2026-02-04 17:13:30 INFO  com.example.salary_structure.Controller.SalaryStructureController - Fetching last salary for employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+LOG4J2 2026-02-04 17:13:30 INFO  com.example.salary_structure.Services.SalaryStructureService - Fetching last salary for employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+LOG4J2 2026-02-04 17:13:30 INFO  com.example.salary_structure.Controller.SalaryStructureController - Fetching last salary for employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+LOG4J2 2026-02-04 17:13:30 INFO  com.example.salary_structure.Services.SalaryStructureService - Fetching last salary for employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+LOG4J2 2026-02-04 17:14:37 INFO  com.example.salary_structure.Controller.SalaryStructureController - Creating salary structure for employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+LOG4J2 2026-02-04 17:14:37 INFO  com.example.salary_structure.Services.SalaryStructureService - Creating salary structure for employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+LOG4J2 2026-02-04 17:17:39 INFO  com.example.salary_structure.Controller.SalaryStructureController - Creating salary structure for employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+LOG4J2 2026-02-04 17:17:39 INFO  com.example.salary_structure.Services.SalaryStructureService - Creating salary structure for employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
