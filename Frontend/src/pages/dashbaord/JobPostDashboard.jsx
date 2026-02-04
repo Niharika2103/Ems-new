@@ -105,7 +105,7 @@ const JobPostDashboard = () => {
         icon: GroupIcon,
         iconBg: "bg-sky-100",
         iconColor: "text-sky-600",
-        onClick: () => navigate("/offers/status"),
+        // onClick: () => navigate("/offers/status"),
       }
     );
   }

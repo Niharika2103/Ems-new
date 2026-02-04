@@ -38,7 +38,7 @@ const AccountsDashboard = () => {
       icon: AccountBalanceIcon,
       iconBg: "bg-blue-100",
       iconColor: "text-blue-600",
-      onClick: () => navigate("/accounts/salary-structure"),
+      // onClick: () => navigate("/accounts/salary-structure"),
     },
     {
       title: "Payroll",

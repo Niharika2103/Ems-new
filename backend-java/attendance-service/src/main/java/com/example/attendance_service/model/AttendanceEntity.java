@@ -75,14 +75,21 @@ public class AttendanceEntity {
 	private String gender;
 
 
+//	@Column(nullable = false)
+//	private Integer el ;
 	@Column(nullable = false)
-	private Integer el ;
+	private Integer el = 0;
 
+//	@Column(nullable = false)
+//	private Integer extraMilar ;
 	@Column(nullable = false)
-	private Integer extraMilar ;
+	private Integer extraMilar = 0;
 
+//	@Column(nullable = false)
+//	private Integer sl ;
+	
 	@Column(nullable = false)
-	private Integer sl ;
+	private Integer sl = 0;
 
 	@Column(name = "maternity_leave")
 	private Integer maternityLeave ;

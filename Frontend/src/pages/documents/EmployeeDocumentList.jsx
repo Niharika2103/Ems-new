@@ -6,6 +6,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TablePagination,
   Paper,
   Button,
   Dialog,
@@ -40,6 +41,11 @@ const EmployeeDocumentList = () => {
   const [employees, setEmployees] = useState([]);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
+
+  const [page, setPage] = useState(0);
+const [rowsPerPage, setRowsPerPage] = useState(5);
+
+
 
   useEffect(() => {
     dispatch(employeeUploadDocFecth());
@@ -118,6 +124,8 @@ const EmployeeDocumentList = () => {
     });
 
     setEmployees(transformed);
+setPage(0); // reset pagination when data updates
+
   }, [doclist]);
 
   const handleViewDocuments = (employee) => {
@@ -130,6 +138,16 @@ const EmployeeDocumentList = () => {
     setSelectedEmployee(null);
     setViewDialogOpen(false);
   };
+
+  const handleChangePage = (event, newPage) => {
+  setPage(newPage);
+};
+
+const handleChangeRowsPerPage = (event) => {
+  setRowsPerPage(parseInt(event.target.value, 10));
+  setPage(0);
+};
+
 
  const handleDownloadDocument = async (doc) => {
   try {
@@ -183,7 +201,10 @@ const EmployeeDocumentList = () => {
           </TableHead>
 
           <TableBody>
-            {employees.map((emp) => (
+            {employees
+  .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+  .map((emp) => (
+
               <TableRow key={emp.id}>
                 <TableCell>{emp.name}</TableCell>
 
@@ -225,6 +246,16 @@ const EmployeeDocumentList = () => {
           </TableBody>
         </Table>
       </TableContainer>
+      <TablePagination
+  component="div"
+  count={employees.length}
+  page={page}
+  onPageChange={handleChangePage}
+  rowsPerPage={rowsPerPage}
+  onRowsPerPageChange={handleChangeRowsPerPage}
+  rowsPerPageOptions={[5, 10, 25]}
+/>
+
 
       {/* View Documents Dialog */}
       <Dialog

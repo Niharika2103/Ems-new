@@ -104,7 +104,7 @@ export const scheduleInterview = async (req, res) => {
           status,
           created_at
         )
-        VALUES ($1, $2, $3, $4, $5, 'SCHEDULED', NOW())
+        VALUES ($1, $2, $3, $4, $5, 'scheduled', NOW())
         RETURNING *;
       `;
 

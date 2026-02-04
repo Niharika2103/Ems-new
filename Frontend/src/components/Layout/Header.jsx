@@ -153,9 +153,9 @@ const Header = ({ isOpen, setIsOpen }) => {
             className="flex items-center gap-2 bg-white shadow-sm rounded-2xl px-2 py-1 cursor-pointer"
             onClick={handleClick}
           >
-            <span className="text-[#51b4f2] text-sm">
-              {data?.name || "User"}
-            </span>
+           <span className="text-[#51b4f2] text-sm">
+  {profileName || "User"}
+</span>
 
             <img
               src={profilePhoto}
@@ -176,7 +176,9 @@ const Header = ({ isOpen, setIsOpen }) => {
           >
             <Stack spacing={2} sx={{ p: 2, minWidth: 200 }}>
               <div>
-                <strong>{data?.name}</strong>
+                {/* <strong>{data?.name}</strong> */}
+                <strong>{profileName || "User"}</strong>
+
                 <p style={{ fontSize: "0.85rem", color: "#555" }}>
                   {data?.email}
                 </p>

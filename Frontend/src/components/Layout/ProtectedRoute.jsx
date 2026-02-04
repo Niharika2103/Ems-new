@@ -22,26 +22,35 @@
 import { Navigate } from "react-router-dom";
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
-  const activeRole = localStorage.getItem("active_role"); // 👈 MAIN
-  const actualRole = localStorage.getItem("role");        // superadmin
+  const activeRole = localStorage.getItem("active_role");
+  const actualRole = localStorage.getItem("role");
 
-  if (!activeRole || !actualRole) {
+  // ⛔ Not logged in
+  if (!actualRole) {
     return <Navigate to="/" replace />;
   }
 
-  // 🚫 Safety: employee mode la irundhu admin mode ku jump panna koodathu
+  // 🛟 Fallback: if active_role missing, default to actual role
+  const safeActiveRole = activeRole || actualRole;
+
   const ROLE_LEVEL = {
-    superadmin: 3,
-    admin: 2,
+    superadmin: 4,
+    admin: 3,
+    vendor: 2,
     employee: 1,
   };
 
-  if (ROLE_LEVEL[activeRole] > ROLE_LEVEL[actualRole]) {
+  // 🚫 Prevent role escalation
+  if (
+    ROLE_LEVEL[safeActiveRole] &&
+    ROLE_LEVEL[actualRole] &&
+    ROLE_LEVEL[safeActiveRole] > ROLE_LEVEL[actualRole]
+  ) {
     return <Navigate to="/" replace />;
   }
 
-  // ✅ Page access check (ONLY active_role)
-  if (allowedRoles && !allowedRoles.includes(activeRole)) {
+  // 🚫 Route access check
+  if (allowedRoles && !allowedRoles.includes(safeActiveRole)) {
     return <Navigate to="/" replace />;
   }
 
@@ -49,4 +58,6 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 };
 
 export default ProtectedRoute;
+
+
 

@@ -99,14 +99,42 @@ const Sidebar = ({ isOpen, handleClose }) => {
       { name: "Audit Logs", icon: <CheckSquare size={20} />, path: "/audit-logs" },
     ],
   };
+   
+    /* ------------------ VENDOR MENUS ------------------ */
+  const vendorMenus = [
+    { name: "Dashboard", icon: <Home size={20} />, path: "/dashboard/vendor" },
+    { name: "Vendor Info", icon: <Users size={20} />, path: "/dashboard/vendor/info" },
+    { name: "Attendance", icon: <Calendar size={20} />, path: "/dashboard/vendor/attendance" },
+    { name: "Projects", icon: <Briefcase size={20} />, path: "/dashboard/vendor/projects" },
+    { name: "Payments", icon: <BarChart3 size={20} />, path: "/dashboard/vendor/payments" },
+    { name: "MoU", icon: <CheckSquare size={20} />, path: "/dashboard/vendor/mou" },
+  ];
 
-  /* ------------------ FINAL MENU PICK ------------------ */
-  let finalMenus;
+  // const finalMenus =
+  //   role === "employee" ? employeeMenus : roleMenus[role] || [];
 
-  if (activeRole === "employee") finalMenus = employeeMenus;
-  else if (activeRole === "admin") finalMenus = roleMenus.admin;
-  else if (activeRole === "superadmin") finalMenus = roleMenus.superadmin;
-  else finalMenus = employeeMenus;
+  //   const finalMenus =
+  //   role === "employee"
+  //     ? employeeMenus
+  //     : role === "vendor"
+  //     ? vendorMenus
+  //     : roleMenus[role] || [];
+
+      let finalMenus;
+
+      if (activeRole === "employee") {
+        finalMenus = employeeMenus;
+      } else if (activeRole === "vendor") {
+        finalMenus = vendorMenus;
+      } else if (activeRole === "admin") {
+        finalMenus = roleMenus.admin;
+      } else if (activeRole === "superadmin") {
+        finalMenus = roleMenus.superadmin;
+      } else {
+        finalMenus = employeeMenus;
+      }
+
+
 
   /* ------------------ LOGOUT (FIXED) ------------------ */
   const handleLogout = async () => {
@@ -143,6 +171,11 @@ const Sidebar = ({ isOpen, handleClose }) => {
         ? "CONTRACT"
         : "EMPLOYEE";
   }
+
+  if (activeRole === "vendor") {
+    displayRole = "VENDOR";
+  }
+
 
   return (
     <aside

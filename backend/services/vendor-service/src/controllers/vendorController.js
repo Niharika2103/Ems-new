@@ -744,20 +744,14 @@ export const uploadVendorMoU = async (req, res) => {
     const { vendor_id, mou_effective_from, mou_expires_at } = req.body;
 
     if (!vendor_id) {
-      return res.status(400).json({
-        success: false,
-        message: "vendor_id is required",
-      });
+      return res.status(400).json({ success: false, message: "vendor_id is required" });
     }
 
     if (!req.files || !req.files.mou_file) {
-      return res.status(400).json({
-        success: false,
-        message: "No MoU file uploaded",
-      });
+      return res.status(400).json({ success: false, message: "No MoU file uploaded" });
     }
 
-    const mouFilePath = req.files.mou_file[0].path;
+    const mouFileName = req.files.mou_file[0].filename; // ✅ correct
 
     const result = await pool.query(
       `
@@ -773,14 +767,11 @@ export const uploadVendorMoU = async (req, res) => {
       WHERE id = $4
       RETURNING *
       `,
-      [mouFilePath, mou_effective_from, mou_expires_at, vendor_id]
+      [mouFileName, mou_effective_from, mou_expires_at, vendor_id]
     );
 
     if (result.rowCount === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Vendor not found",
-      });
+      return res.status(404).json({ success: false, message: "Vendor not found" });
     }
 
     res.json({
@@ -791,10 +782,7 @@ export const uploadVendorMoU = async (req, res) => {
 
   } catch (err) {
     console.error("MoU upload error:", err);
-    res.status(500).json({
-      success: false,
-      message: err.message || "MoU upload failed",
-    });
+    res.status(500).json({ success: false, message: err.message });
   }
 };
 
@@ -807,31 +795,34 @@ export const getVendorMoU = async (req, res) => {
 
     const result = await pool.query(
       `
-      SELECT
+      SELECT 
         mou_file,
         mou_uploaded_at,
         mou_effective_from,
         mou_expires_at,
+        mou_status,
+        signed_mou_file,
+        mou_signed_at,
         mou_accepted,
-        mou_accepted_at,
-        mou_status
+        mou_accepted_at
       FROM vendors
       WHERE id = $1
       `,
       [id]
     );
 
-    if (!result.rows.length) {
-      return res.status(404).json({ error: "Vendor not found" });
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: "Vendor not found" });
     }
 
     res.json({ success: true, mou: result.rows[0] });
-
   } catch (err) {
     console.error("Get MoU Error:", err);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ success: false, message: "Failed to fetch MoU" });
   }
 };
+
+
 
 /* ===================================================================
    VENDOR ACCEPT MoU
@@ -855,9 +846,10 @@ export const acceptVendorMoU = async (req, res) => {
 
     const mou = result.rows[0];
 
-    if (mou.mou_status?.toLowerCase() !== "pending") {
-      return res.status(400).json({ error: "MoU not in pending state" });
-    }
+    if (!["pending", "signed"].includes(mou.mou_status?.toLowerCase())) {
+  return res.status(400).json({ error: "MoU cannot be accepted in this state" });
+}
+
 
     if (new Date(mou.mou_expires_at) < new Date()) {
       return res.status(400).json({ error: "MoU already expired" });
@@ -879,5 +871,119 @@ export const acceptVendorMoU = async (req, res) => {
   } catch (err) {
     console.error("Accept MoU Error:", err);
     res.status(500).json({ error: "Server error" });
+  }
+};
+
+
+export const rejectVendorMoU = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `UPDATE vendors
+       SET mou_status = 'REJECTED'
+       WHERE id = $1
+       RETURNING *`,
+      [id]
+    );
+
+    res.json({ success: true, mou: result.rows[0] });
+  } catch (err) {
+    console.error("Reject MoU error:", err);
+    res.status(500).json({ success: false });
+  }
+};
+
+export const getAllMoUDocuments = async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        id,
+        company_name,
+        mou_file,
+        mou_uploaded_at,
+        mou_effective_from,
+        mou_expires_at,
+        mou_status
+      FROM vendors
+      WHERE mou_file IS NOT NULL
+      ORDER BY mou_uploaded_at DESC
+    `);
+
+    res.json({ success: true, documents: result.rows });
+  } catch (err) {
+    console.error("Get MoU documents error:", err);
+    res.status(500).json({ success: false });
+  }
+};
+
+
+export const uploadSignedMoU = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No signed MoU uploaded"
+      });
+    }
+
+    const signedFileName = req.file.filename;
+
+    const result = await pool.query(
+      `
+      UPDATE vendors
+      SET signed_mou_file = $1,
+          mou_signed_at = NOW(),
+          mou_status = 'signed'
+      WHERE id = $2
+      RETURNING *
+      `,
+      [signedFileName, id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ success: false, message: "Vendor not found" });
+    }
+
+    res.json({
+      success: true,
+      message: "Signed MoU uploaded successfully",
+      vendor: result.rows[0]
+    });
+
+  } catch (err) {
+    console.error("Upload signed MoU error:", err);
+    res.status(500).json({
+      success: false,
+      message: err.message || "Signed MoU upload failed"
+    });
+  }
+};
+
+export const downloadSignedMoU = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      "SELECT signed_mou_file FROM vendors WHERE id = $1",
+      [id]
+    );
+
+    if (!result.rows.length || !result.rows[0].signed_mou_file) {
+      return res.status(404).json({ message: "Signed MoU not found" });
+    }
+
+    const filePath = path.join(process.cwd(), result.rows[0].signed_mou_file);
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ message: "File missing on server" });
+    }
+
+    res.download(filePath);
+  } catch (err) {
+    console.error("Download signed MoU error:", err);
+    res.status(500).json({ message: "Failed to download signed MoU" });
   }
 };

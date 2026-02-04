@@ -42,8 +42,22 @@ dotenv.config();
 const app = express();
 
 // ✅ Middleware
-app.use(cors({ origin: "*" }));
-app.use(express.json());
+// app.use(cors({
+//   origin: "http://localhost:5173",   // frontend URL
+//   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+//   allowedHeaders: ["Content-Type", "Authorization", "cache-control"],
+//   credentials: true
+// }));
+
+// app.options("*", cors());
+
+app.use(cors({
+  origin: "*" // your Vercel frontend domain
+  
+}));
+
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // ✅ Serve uploaded files
 app.use(
@@ -53,6 +67,11 @@ app.use(
 
 // ✅ Routes
 app.use("/vendor", vendorRoutes);
+
+// ✅ Health check
+app.get("/health", (req, res) => {
+  res.json({ status: "Vendor service running" });
+});
 
 // ✅ Test PostgreSQL connection
 (async () => {
