@@ -1,0 +1,12 @@
+2026-02-04 11:50:44 [INFO] GetEmployeeLetters API called | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+2026-02-04 11:50:44 [INFO] GetEmployeeLetters API called | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+2026-02-04 11:50:44 [INFO] Employee letters fetched | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | count=4
+2026-02-04 11:50:44 [INFO] Employee letters fetched | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | count=4
+2026-02-04 14:25:45 [INFO] GetEmployeeLetters API called | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+2026-02-04 14:25:47 [INFO] GetEmployeeLetters API called | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+2026-02-04 14:25:49 [INFO] Employee letters fetched | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | count=6
+2026-02-04 14:25:49 [INFO] Employee letters fetched | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | count=6
+2026-02-04 14:28:39 [INFO] GetEmployeeLetters API called | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+2026-02-04 14:28:39 [INFO] GetEmployeeLetters API called | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2
+2026-02-04 14:28:39 [INFO] Employee letters fetched | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | count=6
+2026-02-04 14:28:40 [INFO] Employee letters fetched | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | count=6

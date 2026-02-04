@@ -10,3 +10,45 @@
 2026-01-30 10:42:19 [INFO] Current shift fetched | found=false
 2026-01-30 10:42:20 [INFO] Get Current Shift API | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | date=2026-02-02
 2026-01-30 10:42:20 [INFO] Current shift fetched | found=true
+2026-02-04 11:50:19 [INFO] Get Current Shift API | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | date=2026-02-02
+2026-02-04 11:50:21 [ERROR] Get Current Shift Error | Connection terminated due to connection timeout
+2026-02-04 11:50:24 [INFO] Get Current Shift API | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | date=2026-01-26
+2026-02-04 11:50:25 [INFO] Current shift fetched | found=false
+2026-02-04 11:50:25 [INFO] Get Current Shift API | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | date=2026-01-19
+2026-02-04 11:50:25 [INFO] Current shift fetched | found=false
+2026-02-04 11:50:27 [INFO] Get Current Shift API | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | date=2026-01-26
+2026-02-04 11:50:27 [INFO] Current shift fetched | found=false
+2026-02-04 11:50:27 [INFO] Get Current Shift API | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | date=2026-02-02
+2026-02-04 11:50:28 [INFO] Current shift fetched | found=true
+2026-02-04 13:36:22 [INFO] Get Assignment History API called
+2026-02-04 13:36:22 [INFO] Get Assignment History API called
+2026-02-04 13:36:22 [INFO] Get Shifts API called
+2026-02-04 13:36:22 [INFO] Get Shifts API called
+2026-02-04 13:36:23 [INFO] Shifts fetched | count=2
+2026-02-04 13:36:23 [INFO] Assignment history fetched | count=2
+2026-02-04 13:36:23 [INFO] Assignment history fetched | count=2
+2026-02-04 13:36:23 [INFO] Shifts fetched | count=2
+2026-02-04 13:36:59 [INFO] Get Assignment History API called
+2026-02-04 13:36:59 [INFO] Get Shifts API called
+2026-02-04 13:36:59 [INFO] Get Assignment History API called
+2026-02-04 13:36:59 [INFO] Get Shifts API called
+2026-02-04 13:36:59 [INFO] Assignment history fetched | count=2
+2026-02-04 13:36:59 [INFO] Shifts fetched | count=2
+2026-02-04 13:36:59 [INFO] Assignment history fetched | count=2
+2026-02-04 13:36:59 [INFO] Shifts fetched | count=2
+2026-02-04 13:37:27 [INFO] Assign Shift API called
+2026-02-04 13:37:27 [INFO] Shift assigned | assignmentId=31d49e08-166f-4ce0-a6b0-03eb831b6d1f
+2026-02-04 13:37:28 [INFO] Get Assignment History API called
+2026-02-04 13:37:28 [INFO] Assignment history fetched | count=3
+2026-02-04 14:34:06 [INFO] Get Current Shift API | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | date=2026-02-02
+2026-02-04 14:34:09 [INFO] Current shift fetched | found=true
+2026-02-04 14:56:25 [INFO] Get Current Shift API | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | date=2026-02-02
+2026-02-04 14:56:26 [INFO] Current shift fetched | found=true
+2026-02-04 14:57:16 [INFO] Get Current Shift API | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | date=2026-02-02
+2026-02-04 14:57:19 [INFO] Current shift fetched | found=true
+2026-02-04 14:58:26 [INFO] Get Current Shift API | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | date=2026-02-02
+2026-02-04 14:58:32 [INFO] Current shift fetched | found=true
+2026-02-04 15:03:36 [INFO] Get Current Shift API | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | date=2026-02-02
+2026-02-04 15:03:38 [ERROR] Get Current Shift Error | Connection terminated due to connection timeout
+2026-02-04 15:07:37 [INFO] Get Current Shift API | employeeId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | date=2026-02-02
+2026-02-04 15:07:38 [INFO] Current shift fetched | found=true

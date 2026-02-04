@@ -193,7 +193,7 @@ export default function FreelancerTable() {
       }
 
       setIsModalOpen(false);
-      dispatch(fetchAllEmployees());
+      dispatch(fetchAllFreelancer());
     } catch (err) {
       toast.error(err?.message || "Failed to update employee");
     } finally {
@@ -410,7 +410,7 @@ export default function FreelancerTable() {
                 .unwrap()
                 .then((res) => {
                   toast.success(res.message);
-                  dispatch(fetchAllEmployees());
+                  dispatch(fetchAllFreelancer());
                 })
                 .catch(() => toast.error("Failed to update admin status"))
             }

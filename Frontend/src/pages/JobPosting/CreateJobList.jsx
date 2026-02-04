@@ -207,7 +207,7 @@ const handleSubmit = async (e) => {
       created_by: "ADMIN_ID_HERE",
       department: form.department,
       employment_type: form.type,
-      status: "active",  // Add default status
+      status: "draft",  // Add default status
     };
 
     const res = await createAdminJobPostApi(payload);

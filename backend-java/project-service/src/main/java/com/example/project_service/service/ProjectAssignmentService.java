@@ -222,7 +222,7 @@ public class ProjectAssignmentService {
         assignment.setProject(project);
         assignment.setRole(role);
         assignment.setEmployee_type(employee_type);
-        assignment.setAssignedAt(LocalDateTime.now());
+        //assignment.setAssignedAt(LocalDateTime.now());
         assignment.setEndDate(null);
 
         project.setStatus("IN_PROGRESS");

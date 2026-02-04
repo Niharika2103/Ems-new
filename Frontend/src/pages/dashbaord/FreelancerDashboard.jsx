@@ -40,14 +40,14 @@ const FreelancerDashboard = () => {
     iconColor: "text-orange-600",
     onClick: () => navigate("/dashboard/freelancer/freelancerattendance"),
   },
-  {
-    title: " Freelancer Projects",
-    message: "View all assigned and active projects",
-    icon: AssignmentIcon,
-    iconBg: "bg-green-100",
-    iconColor: "text-green-600",
-    onClick: () => navigate("/dashboard/freelancer/projects"),
-  },
+  // {
+  //   title: " Freelancer Projects",
+  //   message: "View all assigned and active projects",
+  //   icon: AssignmentIcon,
+  //   iconBg: "bg-green-100",
+  //   iconColor: "text-green-600",
+  //   onClick: () => navigate("/dashboard/freelancer/projects"),
+  // },
  {
     title: " Freelancer Projects Form",
     message: "View all assigned and active projects",

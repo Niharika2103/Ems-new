@@ -33,22 +33,32 @@ export default function AdminTable() {
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState(null);
-  const currentDate = new Date().toISOString().split("T")[0];
+  const getToday = () => {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
+const currentDate = getToday();
+
 
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    date_of_joining:currentDate,
-    phone: "",
-    address: "",
-    permanent_address: "",
-    dob: currentDate,
-    department: "",
-    gender: "",
-    emergency_contact: "",
-    designation: "",
-    employment_type: "",
-  });
+  name: "",
+  email: "",
+  dob: "",                 // ❗ empty
+  date_of_joining: "",     // ❗ empty
+  phone: "",
+  address: "",
+  permanent_address: "",
+  department: "",
+  gender: "",
+  emergency_contact: "",
+  designation: "",
+  employment_type: "",
+});
+
   const [loading, setLoading] = useState(false);
 
   const handleGrant = async (email) => {
@@ -94,12 +104,21 @@ export default function AdminTable() {
 
   setEditingRecord(record);
 
+  // 🔥 FINAL SAFE DATE FORMATTER (THIS FIXES THE BUG)
   const formatDate = (value) => {
-    if (!value) return currentDate;
-    if (typeof value === "string" && value.includes("T")) {
-      return value.split("T")[0];
+    if (!value) return "";
+
+    // If backend / redux sent Date object
+    if (value instanceof Date) {
+      return value.toISOString().slice(0, 10);
     }
-    return value;
+
+    // If backend sent string (YYYY-MM-DD or ISO)
+    if (typeof value === "string") {
+      return value.slice(0, 10);
+    }
+
+    return "";
   };
 
   setFormData({
@@ -116,7 +135,7 @@ export default function AdminTable() {
     designation: record?.designation || "",
     employment_type: record?.employment_type
       ? record.employment_type.toLowerCase()
-      : "freelancer",
+      : "",
   });
 
   setIsModalOpen(true);
@@ -144,7 +163,7 @@ const handleChange = (e) => {
     if (value.length > 10) return;
   }
 
-  if (name === "date_of_joining") {
+  if (name === "date_of_joining" || name === "dob") {
     if (value && !/^\d{4}-\d{2}-\d{2}$/.test(value)) return;
   }
 
@@ -162,12 +181,14 @@ const handleSubmit = async (e) => {
 
   setLoading(true);
   try {
-    const payload = {
-      ...formData,
-      date_of_joining: formData.date_of_joining || null,
-      dob: formData.dob || null,
-      employment_type: formData.employment_type || "freelancer",
-    };
+    // 🔥 PATCH STYLE PAYLOAD (send only valid fields)
+    const payload = Object.fromEntries(
+      Object.entries(formData).filter(([key, value]) => {
+        if (value === "" || value === null || value === undefined) return false;
+        if (key === "dob" && value > currentDate) return false;
+        return true;
+      })
+    );
 
     const res = await dispatch(
       updateEmployeebyAdmin({
@@ -190,15 +211,16 @@ const handleSubmit = async (e) => {
   } catch (err) {
     console.error("Update error:", err);
     toast.error(
-      err?.message ||
-        err?.error ||
-        err?.data?.message ||
+      err?.data?.message ||
+        err?.message ||
         "Failed to update employee"
     );
   } finally {
     setLoading(false);
   }
 };
+
+
 
 const handleNavigate = (email) => {
   const query = new URLSearchParams();
@@ -398,11 +420,11 @@ const handleNavigate = (email) => {
         'Department': emp.department,
         'Phone': emp.phone,
         'Status': emp.is_active ? 'Active' : 'Inactive',
-        'Date of Joining': emp.date_of_joining,
+        'Date of Joining': emp.date_of_joining?.slice(0, 10),
         'Designation': emp.designation,
         'Employment Type': emp.employment_type,
         'Gender': emp.gender,
-        'Date of Birth': emp.dob,
+        'Date of Birth': emp.dob?.slice(0, 10),
         'Address': emp.address,
         'Permanent Address': emp.permanent_address,
         'Emergency Contact': emp.emergency_contact,
@@ -801,23 +823,22 @@ const handleNavigate = (email) => {
         </Grid>
 
         <Grid item xs={12} sm={6}>
-          <TextField
-            type="date"
-            label="Date of Joining"
-            name="date_of_joining"
-            value={formData.date_of_joining}
-            onChange={handleChange}
-            fullWidth
-            size="small"
-            margin="normal"
-            InputLabelProps={{ shrink: true }}
-            inputProps={{ max: currentDate }} 
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                borderRadius: "10px",
-              },
-            }}
-          />
+        <TextField
+          type="date"
+          label="Date of Joining"
+          name="date_of_joining"
+          value={formData.date_of_joining}
+          onChange={handleChange}
+          fullWidth
+          size="small"
+          margin="normal"
+          InputLabelProps={{ shrink: true }}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              borderRadius: "10px",
+            },
+          }}
+        />
         </Grid>
 
         {/* ---- Contact Section ---- */}
@@ -976,7 +997,8 @@ const handleNavigate = (email) => {
 
     <Select
       name="employment_type"
-      value={formData.employment_type || "freelancer"}   // ✅ default freelancer
+      value={formData.employment_type}
+   // ✅ default freelancer
       onChange={handleChange}
       label="Employment Type *"
       sx={{

@@ -82,7 +82,7 @@ public class ProjectAssignmentEntity {
     @Column(name = "employee_type", nullable = false)
     private String employee_type;
 
-    @Column(name = "assigned_at")
+    @Column(name = "assigned_at", insertable = false, updatable = false)
     private LocalDateTime assignedAt;
 
     @Column(name = "end_date")

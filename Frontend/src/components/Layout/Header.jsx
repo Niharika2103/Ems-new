@@ -28,6 +28,14 @@ const Header = ({ isOpen, setIsOpen }) => {
     JSON.parse(localStorage.getItem("user"))?.profile_photo ||
     "/default-user.jpg";
 
+    
+  // ✅ PROFILE NAME (FIXED)
+  const profileName =
+    useSelector((state) => state.employeeDetails?.profile?.name) ||
+    JSON.parse(localStorage.getItem("user"))?.name ||
+    data?.name ||
+    "User";
+    
   const open = Boolean(anchorEl);
 
   /* -------------------- INIT -------------------- */
