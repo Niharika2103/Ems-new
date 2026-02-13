@@ -99,14 +99,14 @@ const JobPostDashboard = () => {
         iconColor: "text-purple-600",
         onClick: () => navigate("/interview-table"),
       },
-      {
-        title: "Manage Offers",
-        message: "Offer jobs to candidates",
-        icon: GroupIcon,
-        iconBg: "bg-sky-100",
-        iconColor: "text-sky-600",
-        // onClick: () => navigate("/offers/status"),
-      }
+      // {
+      //   title: "Manage Offers",
+      //   message: "Offer jobs to candidates",
+      //   icon: GroupIcon,
+      //   iconBg: "bg-sky-100",
+      //   iconColor: "text-sky-600",
+      //   // onClick: () => navigate("/offers/status"),
+      // }
     );
   }
 

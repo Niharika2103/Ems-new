@@ -799,7 +799,18 @@ export const getEmployees = async (req, res) => {
 
     const { rows } = await client.query(query);
 
-    return res.status(200).json(rows);
+    const employees = rows.map(emp => ({
+      ...emp,
+      date_of_joining: emp.date_of_joining
+        ? emp.date_of_joining.toISOString().slice(0, 10)
+        : null,
+      dob: emp.dob
+        ? emp.dob.toISOString().slice(0, 10)
+        : null,
+    }));
+
+return res.status(200).json(employees);
+
   } catch (err) {
     console.error("Get Employees Error:", err.message);
     return res.status(500).json({ message: err.message });
@@ -902,20 +913,25 @@ export const fetchEmployeeById = async (req, res) => {
     if (!email) {
       return res.status(400).json({ error: "Email is required" });
     }
+
     const query = `
       SELECT *
       FROM ${USERS_TABLE}
       WHERE email = $1
       LIMIT 1;
     `;
+
     const { rows } = await client.query(query, [email]);
     if (rows.length === 0) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // ✅ FULL URL LOGIC (already present, just fix port)
-    const BASE_URL = process.env.BASE_URL || `http://localhost:${process.env.PORT || 5009}`;
+    const BASE_URL =
+      process.env.BASE_URL ||
+      `http://localhost:${process.env.PORT || 5009}`;
+
     const employee = rows[0];
+
     const safeEmployee = {
       ...employee,
       profile_photo: employee.profile_photo
@@ -925,7 +941,17 @@ export const fetchEmployeeById = async (req, res) => {
         ? `${BASE_URL}/uploads/${employee.resume}`
         : null,
     };
+
     delete safeEmployee.password;
+
+    // ✅ FIX: convert DATE safely (NO timezone conversion)
+    safeEmployee.date_of_joining = safeEmployee.date_of_joining
+      ? safeEmployee.date_of_joining.toISOString().slice(0, 10)
+      : null;
+
+    safeEmployee.dob = safeEmployee.dob
+      ? safeEmployee.dob.toISOString().slice(0, 10)
+      : null;
 
     return res.status(200).json(safeEmployee);
   } catch (err) {
@@ -936,41 +962,134 @@ export const fetchEmployeeById = async (req, res) => {
   }
 };
 // ================== Update Employee ==================
+// export const updateEmployee = async (req, res) => {
+//   const client = await pool.connect();
+//   try {
+//     const { id } = req.params;
+//     let updates = req.body;
+
+//     if (!id || id === "undefined") {
+//       return res.status(400).json({ error: "Invalid or missing employee ID" });
+//     }
+
+//     if (updates.password) {
+//       updates.password = await bcrypt.hash(updates.password, 10);
+//     }
+
+//     const setClauses = Object.keys(updates)
+//       .map((key, i) => `${key}=$${i + 1}`)
+//       .join(", ");
+//     const values = Object.values(updates);
+
+//     const query = `
+//       UPDATE ${USERS_TABLE}
+//       SET ${setClauses}
+//       WHERE id=$${values.length + 1}
+//       RETURNING *;
+//     `;
+
+//     const { rows } = await client.query(query, [...values, id]);
+//     res.json({ message: "Employee updated successfully", employee: rows[0] });
+//   } catch (err) {
+//     console.error("Update Employee Error:", err.message);
+//     res.status(500).json({ message: err.message });
+//   } finally {
+//     client.release();
+//   }
+// };
 export const updateEmployee = async (req, res) => {
   const client = await pool.connect();
+
   try {
     const { id } = req.params;
-    let updates = req.body;
 
     if (!id || id === "undefined") {
       return res.status(400).json({ error: "Invalid or missing employee ID" });
     }
 
+    // Clone request body
+    let updates = { ...req.body };
+
+    // 🔹 Remove empty / null / undefined fields
+    Object.keys(updates).forEach((key) => {
+      if (
+        updates[key] === undefined ||
+        updates[key] === null ||
+        updates[key] === ""
+      ) {
+        delete updates[key];
+      }
+    });
+
+    // 🔹 Ensure DOB & DOJ are STRING dates (YYYY-MM-DD)
+    ["dob", "date_of_joining"].forEach((field) => {
+      if (updates[field] instanceof Date) {
+        updates[field] = updates[field].toISOString().slice(0, 10);
+      }
+    });
+
+    // 🔹 Validate DOB (NO Date() usage – timezone safe)
+    if (updates.dob) {
+      const today = new Date().toISOString().slice(0, 10);
+      if (updates.dob >= today) {
+        return res.status(400).json({
+          message: "Date of Birth cannot be today or in the future",
+        });
+      }
+    }
+
+    // 🔹 Validate Date of Joining
+    if (updates.date_of_joining) {
+      const today = new Date().toISOString().slice(0, 10);
+      if (updates.date_of_joining > today) {
+        return res.status(400).json({
+          message: "Date of Joining cannot be in the future",
+        });
+      }
+    }
+
+    // 🔹 Hash password if present
     if (updates.password) {
       updates.password = await bcrypt.hash(updates.password, 10);
     }
 
+    // 🔹 Nothing to update
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ message: "No fields to update" });
+    }
+
+    // 🔹 Build dynamic UPDATE query
     const setClauses = Object.keys(updates)
-      .map((key, i) => `${key}=$${i + 1}`)
+      .map((key, i) => `${key} = $${i + 1}`)
       .join(", ");
+
     const values = Object.values(updates);
 
     const query = `
       UPDATE ${USERS_TABLE}
-      SET ${setClauses}
-      WHERE id=$${values.length + 1}
+      SET ${setClauses}, updated_at = NOW()
+      WHERE id = $${values.length + 1}
       RETURNING *;
     `;
 
-    const { rows } = await client.query(query, [...values, id]);
-    res.json({ message: "Employee updated successfully", employee: rows[0] });
+    const result = await client.query(query, [...values, id]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
+
+    return res.json({
+      message: "Employee updated successfully",
+      employee: result.rows[0],
+    });
   } catch (err) {
-    console.error("Update Employee Error:", err.message);
-    res.status(500).json({ message: err.message });
+    console.error("Update Employee Error:", err);
+    return res.status(500).json({ message: err.message });
   } finally {
     client.release();
   }
 };
+
 
 // ================== Delete Employee ==================
 export const deleteEmployee = async (req, res) => {

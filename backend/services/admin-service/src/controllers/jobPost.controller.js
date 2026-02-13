@@ -23,7 +23,7 @@ export const createJobPost = async (req, res) => {
          salary_range, location, department, employment_type, created_by, 
          posted_date, status)
       VALUES 
-        ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), $11)
+        ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, CURRENT_DATE, $11)
       RETURNING *
     `;
 
@@ -238,7 +238,7 @@ export const filterApplications = async (req, res) => {
     let query = `
       SELECT a.*, j.job_title, j.location, j.experience, j.skills
       FROM applications a
-      JOIN job_posts j ON a.job_id = j.id
+     JOIN job_posts j ON a.job_id = j.job_id
       WHERE 1 = 1
     `;
 

@@ -34,7 +34,6 @@ const Header = ({ isOpen, setIsOpen }) => {
     JSON.parse(localStorage.getItem("user"))?.name ||
     data?.name ||
     "User";
-
   const open = Boolean(anchorEl);
 
   /* -------------------- INIT -------------------- */

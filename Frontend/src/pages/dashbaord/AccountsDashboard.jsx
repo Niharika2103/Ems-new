@@ -14,14 +14,14 @@ const AccountsDashboard = () => {
 
 
   const stats = [
-  {
-      title: "Salary Structure",
-      message: "View your salary breakdown and components",
-      icon: AccountBalanceIcon,
-      iconBg: "bg-blue-100",
-      iconColor: "text-blue-600",
-      // onClick: () => navigate("/accounts/salary-structure"),
-    },
+  //{
+    //   title: "Salary Structure",
+    //   message: "View your salary breakdown and components",
+    //   icon: AccountBalanceIcon,
+    //   iconBg: "bg-blue-100",
+    //   iconColor: "text-blue-600",
+    // onClick: () => navigate("/accounts/salary-structure"),
+    // },
     {
       title: "Payroll",
       message: "Process and view payroll information",
