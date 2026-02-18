@@ -2278,3 +2278,5 @@
 2026-02-04 16:07:12 [INFO] GetFreelancerLetters API called | freelancerId=e4c7155d-3dd6-4b4e-8584-0bfde1f28509
 2026-02-04 16:07:12 [INFO] Freelancer letters fetched | freelancerId=e4c7155d-3dd6-4b4e-8584-0bfde1f28509 | count=1
 2026-02-04 16:07:12 [INFO] Freelancer letters fetched | freelancerId=e4c7155d-3dd6-4b4e-8584-0bfde1f28509 | count=1
+2026-02-05 11:20:54 [INFO] Admin service running on port 5002
+2026-02-05 11:20:57 [ERROR] PostgreSQL connection failed: connect ECONNREFUSED 100.84.196.41:6432
