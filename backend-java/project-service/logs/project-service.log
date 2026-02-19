@@ -597,3 +597,10 @@ LOG4J2 2026-02-04 17:00:29 INFO  com.example.project_service.service.ProjectAssi
 LOG4J2 2026-02-04 17:00:29 INFO  com.example.project_service.service.ProjectAssignmentService - Project 00c9bea1-a104-4205-bd08-1d32613e7fd4 marked as COMPLETED
 LOG4J2 2026-02-04 17:00:29 INFO  com.example.project_service.service.ProjectAssignmentService - Project 00c9bea1-a104-4205-bd08-1d32613e7fd4 marked as COMPLETED
 LOG4J2 2026-02-04 17:09:18 INFO  com.example.project_service.service.ProjectAssignmentService - Fetching active projects for employee 59ddf687-055f-44a8-acc4-37a5ea8921ef
+LOG4J2 2026-02-18 14:55:41 INFO  com.example.project_service.ProjectServiceApplication - Starting ProjectServiceApplication using Java 21.0.8 with PID 4264 (D:\Niharika\ems1.o\EMSPROJECT1.O\backend-java\project-service\target\classes started by nagab in D:\Niharika\ems1.o\EMSPROJECT1.O\backend-java\project-service)
+LOG4J2 2026-02-18 14:55:41 DEBUG com.example.project_service.ProjectServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
+LOG4J2 2026-02-18 14:55:41 INFO  com.example.project_service.ProjectServiceApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-02-18 14:55:47 INFO  com.example.project_service.service.ProjectAssignmentService - ProjectAssignmentService initialized
+LOG4J2 2026-02-18 14:55:47 INFO  com.example.project_service.service.ProjectService - ProjectService initialized
+LOG4J2 2026-02-18 14:55:47 INFO  com.example.project_service.controller.ProjectController - ProjectController initialized
+LOG4J2 2026-02-18 14:55:48 INFO  com.example.project_service.ProjectServiceApplication - Started ProjectServiceApplication in 7.383 seconds (process running for 9.472)

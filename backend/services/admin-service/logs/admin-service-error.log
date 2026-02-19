@@ -3,3 +3,6 @@
 2026-02-04 11:53:42 [ERROR] Generate Letter Error | empId=8aad35a9-13a6-4a0a-8bc4-6cecc87847f2 | Navigation timeout of 30000 ms exceeded
 2026-02-04 15:32:48 [ERROR] GenerateFreelancerLetter Error | freelancerId=62bdd34e-f29d-4144-8bf9-a41a4b554000 | Navigation timeout of 30000 ms exceeded
 2026-02-05 11:20:57 [ERROR] PostgreSQL connection failed: connect ECONNREFUSED 100.84.196.41:6432
+2026-02-18 14:50:27 [ERROR] Admin Login Error | permission denied for table user_employees_master
+2026-02-18 14:57:28 [ERROR] Admin Login Error | permission denied for table user_employees_master
+2026-02-19 13:29:01 [ERROR] PostgreSQL connection failed: Connection terminated due to connection timeout

@@ -2280,3 +2280,11 @@
 2026-02-04 16:07:12 [INFO] Freelancer letters fetched | freelancerId=e4c7155d-3dd6-4b4e-8584-0bfde1f28509 | count=1
 2026-02-05 11:20:54 [INFO] Admin service running on port 5002
 2026-02-05 11:20:57 [ERROR] PostgreSQL connection failed: connect ECONNREFUSED 100.84.196.41:6432
+2026-02-18 14:48:08 [INFO] Admin service running on port 5002
+2026-02-18 14:48:09 [INFO] PostgreSQL connected successfully
+2026-02-18 14:50:27 [INFO] Admin login attempt | email=harika@zigmaneural.com
+2026-02-18 14:50:27 [ERROR] Admin Login Error | permission denied for table user_employees_master
+2026-02-18 14:57:28 [INFO] Admin login attempt | email=harika@zigmaneural.com
+2026-02-18 14:57:28 [ERROR] Admin Login Error | permission denied for table user_employees_master
+2026-02-19 13:28:46 [INFO] Admin service running on port 5002
+2026-02-19 13:29:01 [ERROR] PostgreSQL connection failed: Connection terminated due to connection timeout
