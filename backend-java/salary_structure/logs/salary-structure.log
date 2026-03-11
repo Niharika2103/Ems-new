@@ -178,3 +178,44 @@ LOG4J2 2026-02-19 13:47:07 INFO  com.example.salary_structure.SalaryStructureApp
 LOG4J2 2026-02-19 13:47:07 DEBUG com.example.salary_structure.SalaryStructureApplication - Running with Spring Boot v3.5.7, Spring v6.2.12
 LOG4J2 2026-02-19 13:47:07 INFO  com.example.salary_structure.SalaryStructureApplication - No active profile set, falling back to 1 default profile: "default"
 LOG4J2 2026-02-19 13:47:13 INFO  com.example.salary_structure.SalaryStructureApplication - Started SalaryStructureApplication in 6.475 seconds (process running for 8.008)
+LOG4J2 2026-02-20 15:27:22 INFO  com.example.salary_structure.SalaryStructureApplication - Starting SalaryStructureApplication using Java 21.0.8 with PID 8984 (D:\Niharika\ems1.o\EMSPROJECT1.O\backend-java\salary_structure\target\classes started by nagab in D:\Niharika\ems1.o\EMSPROJECT1.O\backend-java\salary_structure)
+LOG4J2 2026-02-20 15:27:22 DEBUG com.example.salary_structure.SalaryStructureApplication - Running with Spring Boot v3.5.7, Spring v6.2.12
+LOG4J2 2026-02-20 15:27:22 INFO  com.example.salary_structure.SalaryStructureApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-02-20 15:27:50 INFO  com.example.salary_structure.SalaryStructureApplication - Started SalaryStructureApplication in 29.266 seconds (process running for 32.073)
+LOG4J2 2026-02-20 15:34:42 INFO  com.example.salary_structure.Controller.SalaryStructureController - Downloading payslip for employeeId=ed453632-85d6-41cb-b4c2-68791adf926f, month=11, year=2025
+LOG4J2 2026-02-20 15:34:42 INFO  com.example.salary_structure.Services.SalaryStructureService - Fetching salary for employeeId=ed453632-85d6-41cb-b4c2-68791adf926f, month=11, year=2025
+LOG4J2 2026-02-20 15:34:50 INFO  com.example.salary_structure.Controller.SalaryStructureController - Downloading payslip for employeeId=ed453632-85d6-41cb-b4c2-68791adf926f, month=11, year=2025
+LOG4J2 2026-02-20 15:34:50 INFO  com.example.salary_structure.Services.SalaryStructureService - Fetching salary for employeeId=ed453632-85d6-41cb-b4c2-68791adf926f, month=11, year=2025
+LOG4J2 2026-02-20 15:41:43 INFO  com.example.salary_structure.Controller.SalaryStructureController - Downloading payslip for employeeId=ed453632-85d6-41cb-b4c2-68791adf926f, month=11, year=2025
+LOG4J2 2026-02-20 15:41:43 INFO  com.example.salary_structure.Services.SalaryStructureService - Fetching salary for employeeId=ed453632-85d6-41cb-b4c2-68791adf926f, month=11, year=2025
+LOG4J2 2026-02-20 15:41:52 INFO  com.example.salary_structure.Controller.SalaryStructureController - Downloading payslip for employeeId=ed453632-85d6-41cb-b4c2-68791adf926f, month=11, year=2025
+LOG4J2 2026-02-20 15:41:52 INFO  com.example.salary_structure.Services.SalaryStructureService - Fetching salary for employeeId=ed453632-85d6-41cb-b4c2-68791adf926f, month=11, year=2025
+LOG4J2 2026-02-20 15:52:36 INFO  com.example.salary_structure.Controller.SalaryStructureController - Downloading payslip for employeeId=ed453632-85d6-41cb-b4c2-68791adf926f, month=NOVEMBER, year=2025
+LOG4J2 2026-02-20 15:52:36 INFO  com.example.salary_structure.Services.SalaryStructureService - Fetching salary for employeeId=ed453632-85d6-41cb-b4c2-68791adf926f, month=NOVEMBER, year=2025
+LOG4J2 2026-02-20 15:52:53 INFO  com.example.salary_structure.Controller.SalaryStructureController - Downloading payslip for employeeId=ed453632-85d6-41cb-b4c2-68791adf926f, month=NOVEMBER, year=2025
+LOG4J2 2026-02-20 15:52:53 INFO  com.example.salary_structure.Services.SalaryStructureService - Fetching salary for employeeId=ed453632-85d6-41cb-b4c2-68791adf926f, month=NOVEMBER, year=2025
+LOG4J2 2026-02-20 16:00:16 INFO  com.example.salary_structure.Controller.SalaryStructureController - Downloading payslip for employeeId=ed453632-85d6-41cb-b4c2-68791adf926f, month=NOVEMBER, year=2025
+LOG4J2 2026-02-20 16:00:16 INFO  com.example.salary_structure.Services.SalaryStructureService - Fetching salary for employeeId=ed453632-85d6-41cb-b4c2-68791adf926f, month=NOVEMBER, year=2025
+LOG4J2 2026-02-20 16:00:19 INFO  com.example.salary_structure.Controller.SalaryStructureController - Downloading payslip for employeeId=ed453632-85d6-41cb-b4c2-68791adf926f, month=NOVEMBER, year=2025
+LOG4J2 2026-02-20 16:00:19 INFO  com.example.salary_structure.Services.SalaryStructureService - Fetching salary for employeeId=ed453632-85d6-41cb-b4c2-68791adf926f, month=NOVEMBER, year=2025
+LOG4J2 2026-02-20 16:12:40 INFO  com.example.salary_structure.Controller.SalaryStructureController - Downloading payslip for employeeId=ed453632-85d6-41cb-b4c2-68791adf926f, month=NOVEMBER, year=2025
+LOG4J2 2026-02-20 16:12:40 INFO  com.example.salary_structure.Services.SalaryStructureService - Fetching salary for employeeId=ed453632-85d6-41cb-b4c2-68791adf926f, month=NOVEMBER, year=2025
+LOG4J2 2026-02-20 17:38:11 INFO  com.example.salary_structure.Controller.SalaryStructureController - Downloading payslip for employeeId=ed453632-85d6-41cb-b4c2-68791adf926f, month=NOVEMBER, year=2025
+LOG4J2 2026-02-20 17:38:11 INFO  com.example.salary_structure.Services.SalaryStructureService - Fetching salary for employeeId=ed453632-85d6-41cb-b4c2-68791adf926f, month=NOVEMBER, year=2025
+LOG4J2 2026-02-20 17:38:16 INFO  com.example.salary_structure.Controller.SalaryStructureController - Downloading payslip for employeeId=ed453632-85d6-41cb-b4c2-68791adf926f, month=NOVEMBER, year=2025
+LOG4J2 2026-02-20 17:38:16 INFO  com.example.salary_structure.Services.SalaryStructureService - Fetching salary for employeeId=ed453632-85d6-41cb-b4c2-68791adf926f, month=NOVEMBER, year=2025
+LOG4J2 2026-02-20 17:45:25 INFO  com.example.salary_structure.Controller.SalaryStructureController - Downloading payslip for employeeId=ed453632-85d6-41cb-b4c2-68791adf926f, month=NOVEMBER, year=2025
+LOG4J2 2026-02-20 17:45:25 INFO  com.example.salary_structure.Services.SalaryStructureService - Fetching salary for employeeId=ed453632-85d6-41cb-b4c2-68791adf926f, month=NOVEMBER, year=2025
+LOG4J2 2026-02-20 17:52:17 INFO  com.example.salary_structure.Controller.SalaryStructureController - Downloading payslip for employeeId=ed453632-85d6-41cb-b4c2-68791adf926f, month=NOVEMBER, year=2025
+LOG4J2 2026-02-20 17:52:17 INFO  com.example.salary_structure.Services.SalaryStructureService - Fetching salary for employeeId=ed453632-85d6-41cb-b4c2-68791adf926f, month=NOVEMBER, year=2025
+LOG4J2 2026-02-20 18:11:48 INFO  com.example.salary_structure.Controller.SalaryStructureController - Downloading payslip for employeeId=ed453632-85d6-41cb-b4c2-68791adf926f, month=AUGUST, year=2025
+LOG4J2 2026-02-20 18:11:48 INFO  com.example.salary_structure.Services.SalaryStructureService - Fetching salary for employeeId=ed453632-85d6-41cb-b4c2-68791adf926f, month=AUGUST, year=2025
+LOG4J2 2026-03-10 13:23:47 INFO  com.example.salary_structure.SalaryStructureApplication - Starting SalaryStructureApplication using Java 21.0.8 with PID 19704 (D:\Niharika\ems1.o\EMSPROJECT1.O\backend-java\salary_structure\target\classes started by nagab in D:\Niharika\ems1.o\EMSPROJECT1.O\backend-java\salary_structure)
+LOG4J2 2026-03-10 13:23:47 DEBUG com.example.salary_structure.SalaryStructureApplication - Running with Spring Boot v3.5.7, Spring v6.2.12
+LOG4J2 2026-03-10 13:23:47 INFO  com.example.salary_structure.SalaryStructureApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-03-10 13:24:02 INFO  com.example.salary_structure.SalaryStructureApplication - Starting SalaryStructureApplication using Java 21.0.8 with PID 1048 (D:\Niharika\ems1.o\EMSPROJECT1.O\backend-java\salary_structure\target\classes started by nagab in D:\Niharika\ems1.o\EMSPROJECT1.O\backend-java\salary_structure)
+LOG4J2 2026-03-10 13:24:02 DEBUG com.example.salary_structure.SalaryStructureApplication - Running with Spring Boot v3.5.7, Spring v6.2.12
+LOG4J2 2026-03-10 13:24:02 INFO  com.example.salary_structure.SalaryStructureApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-03-10 13:24:15 INFO  com.example.salary_structure.SalaryStructureApplication - Starting SalaryStructureApplication using Java 21.0.8 with PID 12016 (D:\Niharika\ems1.o\EMSPROJECT1.O\backend-java\salary_structure\target\classes started by nagab in D:\Niharika\ems1.o\EMSPROJECT1.O\backend-java\salary_structure)
+LOG4J2 2026-03-10 13:24:15 DEBUG com.example.salary_structure.SalaryStructureApplication - Running with Spring Boot v3.5.7, Spring v6.2.12
+LOG4J2 2026-03-10 13:24:15 INFO  com.example.salary_structure.SalaryStructureApplication - No active profile set, falling back to 1 default profile: "default"

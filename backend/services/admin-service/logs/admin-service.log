@@ -2288,3 +2288,11 @@
 2026-02-18 14:57:28 [ERROR] Admin Login Error | permission denied for table user_employees_master
 2026-02-19 13:28:46 [INFO] Admin service running on port 5002
 2026-02-19 13:29:01 [ERROR] PostgreSQL connection failed: Connection terminated due to connection timeout
+2026-02-20 10:40:15 [INFO] Admin service running on port 5002
+2026-02-20 10:40:30 [ERROR] PostgreSQL connection failed: Connection terminated due to connection timeout
+2026-02-20 10:43:55 [INFO] Admin login attempt | email=harika@zigmaneural.com
+2026-02-20 10:43:56 [INFO] Admin login successful | userId=56e7e8f5-ffe2-4a0e-93f6-03f3e415e5f9
+2026-02-20 15:23:29 [INFO] Admin service running on port 5002
+2026-02-20 15:23:29 [INFO] PostgreSQL connected successfully
+2026-03-10 13:27:02 [INFO] Admin service running on port 5002
+2026-03-10 13:27:17 [ERROR] PostgreSQL connection failed: Connection terminated due to connection timeout

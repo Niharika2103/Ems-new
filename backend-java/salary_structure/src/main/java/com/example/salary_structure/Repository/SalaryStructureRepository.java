@@ -9,10 +9,10 @@ import java.util.UUID;
 
 @Repository
 public interface SalaryStructureRepository extends JpaRepository<SalaryStructure, UUID> {
+
     SalaryStructure findTopByEmployeeIdOrderByEffectiveFromDesc(UUID employeeId);
-    Optional<SalaryStructure> findByEmployeeIdAndMonthAndYear(UUID employeeId, String month, Integer year);
-    
-    Optional<SalaryStructure> findFirstByEmployeeIdAndMonthIgnoreCaseAndYearOrderByCreatedAtDesc(
+
+    Optional<SalaryStructure> findFirstByEmployeeIdAndMonthIgnoreCaseAndYear(
             UUID employeeId,
             String month,
             Integer year

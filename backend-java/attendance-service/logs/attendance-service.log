@@ -352,3 +352,11 @@ LOG4J2 2026-02-19 13:46:35 INFO  com.example.attendance_service.AttendanceServic
 LOG4J2 2026-02-19 13:46:43 INFO  com.example.attendance_service.AttendanceServiceApplication - Started AttendanceServiceApplication in 8.512 seconds (process running for 10.403)
 LOG4J2 2026-02-19 16:31:33 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-02-16 | to=2026-02-22
 LOG4J2 2026-02-19 16:31:33 INFO  com.example.attendance_service.controller.AttendanceController - Fetching approval summary | periodType=weekly | from=2026-02-16 | to=2026-02-22
+LOG4J2 2026-02-20 15:27:05 INFO  com.example.attendance_service.AttendanceServiceApplication - Starting AttendanceServiceApplication using Java 21.0.8 with PID 15548 (D:\Niharika\ems1.o\EMSPROJECT1.O\backend-java\attendance-service\target\classes started by nagab in D:\Niharika\ems1.o\EMSPROJECT1.O\backend-java\attendance-service)
+LOG4J2 2026-02-20 15:27:05 DEBUG com.example.attendance_service.AttendanceServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
+LOG4J2 2026-02-20 15:27:05 INFO  com.example.attendance_service.AttendanceServiceApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-02-20 15:27:20 INFO  com.example.attendance_service.AttendanceServiceApplication - Started AttendanceServiceApplication in 16.42 seconds (process running for 19.924)
+LOG4J2 2026-03-10 13:22:59 INFO  com.example.attendance_service.AttendanceServiceApplication - Starting AttendanceServiceApplication using Java 21.0.8 with PID 18316 (D:\Niharika\ems1.o\EMSPROJECT1.O\backend-java\attendance-service\target\classes started by nagab in D:\Niharika\ems1.o\EMSPROJECT1.O\backend-java\attendance-service)
+LOG4J2 2026-03-10 13:22:59 DEBUG com.example.attendance_service.AttendanceServiceApplication - Running with Spring Boot v3.5.6, Spring v6.2.11
+LOG4J2 2026-03-10 13:22:59 INFO  com.example.attendance_service.AttendanceServiceApplication - No active profile set, falling back to 1 default profile: "default"
+LOG4J2 2026-03-10 13:23:07 INFO  com.example.attendance_service.AttendanceServiceApplication - Started AttendanceServiceApplication in 8.969 seconds (process running for 10.945)

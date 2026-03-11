@@ -64,8 +64,15 @@ const EmpPayslip = () => {
       setUserId(decoded.id);
 
       // Call backend API
+      // const res = await fetch(`http://localhost:5004/employee/salary/${decoded.id}`);
+      // const data = await res.json();
       const res = await fetch(`http://localhost:5004/employee/salary/${decoded.id}`);
-      const data = await res.json();
+
+if (!res.ok) {
+  throw new Error("Employee salary API not running (5004)");
+}
+
+const data = await res.json();
 
       if (!data.success) {
         console.error(data.error);
@@ -157,10 +164,21 @@ const EmpPayslip = () => {
 // };
 
 
+// const downloadPayslip = async () => {
+//   if (!selectedDate) return;
 const downloadPayslip = async () => {
-  if (!selectedDate) return;
+  if (!selectedDate) {
+    toast.error("Please select a month");
+    return;
+  }
+
+  if (!userId) {
+    toast.error("User not loaded. Please refresh page.");
+    return;
+  }
 
   const month = dayjs(selectedDate).format("MMMM").toUpperCase();
+  // const month = dayjs(selectedDate).format("MM");
   const year = dayjs(selectedDate).format("YYYY");
 
   try {
